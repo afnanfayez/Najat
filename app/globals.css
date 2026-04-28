@@ -1,1 +1,78 @@
 @import "tailwindcss";
+
+@theme {
+  --color-error-50: #feeceb;
+  --color-error-100: #fcc5c1;
+  --color-error-200: #faa9a3;
+  --color-error-300: #f88178;
+  --color-error-400: #f6695e;
+  --color-error-500: #f44336;
+  --color-error-600: #de3d31;
+  --color-error-700: #ad3026;
+  --color-error-800: #86251e;
+  --color-error-900: #661c17;
+
+  --color-primary-50: #e9f5fe;
+  --color-primary-100: #badefb;
+  --color-primary-200: #99cff9;
+  --color-primary-300: #6ab9f7;
+  --color-primary-400: #4dabf5;
+  --color-primary-500: #2196f3;
+  --color-primary-600: #1e89dd;
+  --color-primary-700: #176bad;
+  --color-primary-800: #125386;
+  --color-primary-900: #0e3f66;
+
+  --color-secondary-50: #fef6e9;
+  --color-secondary-100: #fbe2ba;
+  --color-secondary-200: #f9d499;
+  --color-secondary-300: #f6c06b;
+  --color-secondary-400: #f5b44e;
+  --color-secondary-500: #f2a122;
+  --color-secondary-600: #dc931f;
+  --color-secondary-700: #ac7218;
+  --color-secondary-800: #855913;
+  --color-secondary-900: #66440e;
+
+  --color-success-50: #edf7ee;
+  --color-success-100: #c8e6c9;
+  --color-success-200: #addaaf;
+  --color-success-300: #87c98a;
+  --color-success-400: #70bf73;
+  --color-success-500: #4caf50;
+  --color-success-600: #459f49;
+  --color-success-700: #367c39;
+  --color-success-800: #2a602c;
+  --color-success-900: #204a22;
+
+  --color-warning-50: #fff9e6;
+  --color-warning-100: #ffecb2;
+  --color-warning-200: #ffe28d;
+  --color-warning-300: #ffd559;
+  --color-warning-400: #ffcd39;
+  --color-warning-500: #ffc107;
+  --color-warning-600: #e8b006;
+  --color-warning-700: #b58905;
+  --color-warning-800: #8c6a04;
+  --color-warning-900: #6b5103;
+
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --font-size-h1: 3.813rem;
+  --font-size-h2: 3.063rem;
+  --font-size-h3: 2.438rem;
+  --font-size-h4: 1.938rem;
+  --font-size-h5: 1.563rem;
+  --font-size-h6: 1.250rem;
+  --font-size-base: 1.000rem;
+  --font-size-sm: 0.813rem;
+  --font-size-xs: 0.625rem;
+
+  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06);
+  --shadow-medium: 0 4px 6px 0 rgb(0 0 0 / 0.1), 0 2px 4px 0 rgb(0 0 0 / 0.06);
+  --shadow-large: 0 4px 6px 0 rgb(0 0 0 / 0.05), 0 10px 15px 0 rgb(0 0 0 / 0.1);
+  --shadow-xlarge: 0 10px 10px 0 rgb(0 0 0 / 0.04), 0 20px 25px 0 rgb(0 0 0 / 0.1);
+  --shadow-2xlarge: 0 25px 50px 0 rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+}
