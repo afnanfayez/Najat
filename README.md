@@ -73,11 +73,3 @@ npm run dev
 This project relies on an external backend (API / tRPC) for handling data and business logic.
 
 ---
-
-## 📌 Notes
-
-- Built with Server Components in mind
-- Keeps client-side state minimal
-- Performance and UX are top priorities
-
----
