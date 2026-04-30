@@ -15,7 +15,7 @@ import {
 import { toast } from 'sonner'
 
 const triggerCls =
-  'h-11 w-full rounded-[10px] border-none bg-white/95 pr-4 pl-3 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
+  'flex !h-11 w-full box-border items-center justify-between rounded-[10px] border-none bg-white/95 px-4 py-0 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:!h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
 
 const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
@@ -166,23 +166,13 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1 rounded-[10px] border border-white/30 px-4 h-11 text-[14px] font-bold text-white transition-all hover:bg-white/10 sm:h-[50px]"
-        >
-          <ChevronRight className="h-4 w-4" />
-          رجوع
-        </button>
-        <Button
-          type="submit"
-          className="flex-1 h-11 rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:text-[20px]"
-          style={{ lineHeight: '100%' }}
-        >
-          التالي
-        </Button>
-      </div>
+      <Button
+        type="submit"
+        className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
+        style={{ lineHeight: '100%' }}
+      >
+        التالي
+      </Button>
     </form>
   )
 }

@@ -139,25 +139,14 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
         </Label>
       </div>
 
-      {/* أزرار رجوع + دخول */}
-      <div className="flex items-center gap-3 mt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1 rounded-[10px] border border-white/30 px-4 h-11 text-[14px] font-bold text-white transition-all hover:bg-white/10 sm:h-[50px]"
-        >
-          <ChevronRight className="h-4 w-4" />
-          رجوع
-        </button>
-        <Button
-          type="submit"
-          className="mx-auto flex flex-1 h-11 items-center justify-center gap-2 rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:gap-[10px] sm:text-[20px]"
-          style={{ lineHeight: '100%' }}
-        >
-          دخول
-          <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
-        </Button>
-      </div>
+      <Button
+        type="submit"
+        className="mx-auto mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:gap-[10px] sm:text-[20px]"
+        style={{ lineHeight: '100%' }}
+      >
+        دخول
+        <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
+      </Button>
     </form>
   )
 }
