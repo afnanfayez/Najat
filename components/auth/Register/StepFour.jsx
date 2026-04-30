@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, LogIn, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 
-const StepFour = ({ formData, setFormData, onNext }) => {
+const StepFour = ({ formData, setFormData, onBack, onNext }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -42,19 +42,20 @@ const StepFour = ({ formData, setFormData, onNext }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-[580px] space-y-4 sm:space-y-5"
+      className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
-      <div className="space-y-1.5">
+      {/* كلمة المرور */}
+      <div className="space-y-1">
         <Label
-          htmlFor="password"
+          htmlFor="reg-password"
           className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
           style={{ lineHeight: '100%' }}
         >
-          إعادة تعيين كلمة السر
+          كلمة المرور
         </Label>
         <div className="relative">
           <Input
-            id="password"
+            id="reg-password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -80,13 +81,14 @@ const StepFour = ({ formData, setFormData, onNext }) => {
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      {/* تأكيد كلمة المرور */}
+      <div className="space-y-1">
         <Label
           htmlFor="confirmPassword"
           className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
           style={{ lineHeight: '100%' }}
         >
-          تأكيد كلمة السر
+          تأكيد كلمة المرور
         </Label>
         <div className="relative">
           <Input
@@ -118,31 +120,44 @@ const StepFour = ({ formData, setFormData, onNext }) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-1">
+      {/* تذكرني — على اليمين */}
+      <div className="flex items-center justify-start gap-2 pt-1">
         <Checkbox
           id="rememberMe"
           checked={formData.rememberMe}
           onCheckedChange={(checked) =>
             setFormData({ ...formData, rememberMe: Boolean(checked) })
           }
-          className="border-white/30 bg-white/5 data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF]"
+          className="h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF] sm:h-5 sm:w-5"
         />
         <Label
           htmlFor="rememberMe"
-          className="cursor-pointer text-[13px] font-bold text-white/80 sm:text-[14px]"
+          className="cursor-pointer text-[12px] font-semibold text-white sm:text-[14px]"
           style={{ lineHeight: '100%' }}
         >
           تذكرني على هذا الجهاز
         </Label>
       </div>
 
-      <Button
-        type="submit"
-        className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
-        style={{ lineHeight: '100%' }}
-      >
-        دخول
-      </Button>
+      {/* أزرار رجوع + دخول */}
+      <div className="flex items-center gap-3 mt-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 rounded-[10px] border border-white/30 px-4 h-11 text-[14px] font-bold text-white transition-all hover:bg-white/10 sm:h-[50px]"
+        >
+          <ChevronRight className="h-4 w-4" />
+          رجوع
+        </button>
+        <Button
+          type="submit"
+          className="mx-auto flex flex-1 h-11 items-center justify-center gap-2 rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:gap-[10px] sm:text-[20px]"
+          style={{ lineHeight: '100%' }}
+        >
+          دخول
+          <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
+        </Button>
+      </div>
     </form>
   )
 }

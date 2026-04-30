@@ -1,16 +1,31 @@
 'use client'
 
 import React from 'react'
+import { MapPin, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
 
-const StepThree = ({ formData, setFormData, onNext }) => {
+const triggerCls =
+  'h-11 w-full rounded-[10px] border-none bg-white/95 pr-4 pl-3 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
+
+const contentCls =
+  'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
+
+const StepThree = ({ formData, setFormData, onBack, onNext }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
 
     const requiredFields = [
+      formData.housingStatus,
       formData.currentMembers,
       formData.maleCount,
       formData.femaleCount,
@@ -19,7 +34,7 @@ const StepThree = ({ formData, setFormData, onNext }) => {
 
     if (requiredFields.some((value) => String(value ?? '').trim() === '')) {
       toast.error('يرجى تعبئة جميع حقول الخطوة الثالثة', {
-        description: 'أدخل عدد الأفراد الحالي، عدد الذكور، عدد الإناث، والمنطقة أو المحافظة.',
+        description: 'اختر حالة السكن وأدخل أعداد الأفراد والمنطقة.',
       })
       return
     }
@@ -30,12 +45,50 @@ const StepThree = ({ formData, setFormData, onNext }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-[580px] space-y-4 sm:space-y-5"
+      className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        {/* حالة السكن */}
         <div className="space-y-1.5">
-          <Label htmlFor="currentMembers" className="block text-right text-[13px] font-bold text-white sm:text-[14px]" style={{ lineHeight: '100%' }}>
-            عدد الأفراد الحالي
+          <Label
+            className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
+            حالة السكن
+          </Label>
+          <Select
+            value={formData.housingStatus}
+            onValueChange={(value) => setFormData({ ...formData, housingStatus: value })}
+            dir="rtl"
+          >
+            <SelectTrigger className={triggerCls}>
+              <SelectValue placeholder="اختر" />
+            </SelectTrigger>
+            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4}>
+              <SelectItem value="owned" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+                بيت ملك
+              </SelectItem>
+              <SelectItem value="rented" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+                بيت إيجار
+              </SelectItem>
+              <SelectItem value="tent" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+                خيمة
+              </SelectItem>
+              <SelectItem value="camp" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+                مخيم
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* عدد الافراد الحالي */}
+        <div className="space-y-1.5">
+          <Label
+            htmlFor="currentMembers"
+            className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
+            عدد الافراد الحالي
           </Label>
           <Input
             id="currentMembers"
@@ -43,27 +96,38 @@ const StepThree = ({ formData, setFormData, onNext }) => {
             min="1"
             value={formData.currentMembers}
             onChange={(e) => setFormData({ ...formData, currentMembers: e.target.value })}
-            placeholder="عدد الأفراد"
+            placeholder="عدد الافراد"
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
 
+        {/* عدد الاناث */}
         <div className="space-y-1.5">
-          <Label htmlFor="region" className="block text-right text-[13px] font-bold text-white sm:text-[14px]" style={{ lineHeight: '100%' }}>
-            المنطقة/المحافظة
+          <Label
+            htmlFor="femaleCount"
+            className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
+            عدد الاناث
           </Label>
           <Input
-            id="region"
-            type="text"
-            value={formData.region}
-            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-            placeholder="اكتب اسم المحافظة"
+            id="femaleCount"
+            type="number"
+            min="0"
+            value={formData.femaleCount}
+            onChange={(e) => setFormData({ ...formData, femaleCount: e.target.value })}
+            placeholder="عدد الاناث"
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
 
+        {/* عدد الذكور */}
         <div className="space-y-1.5">
-          <Label htmlFor="maleCount" className="block text-right text-[13px] font-bold text-white sm:text-[14px]" style={{ lineHeight: '100%' }}>
+          <Label
+            htmlFor="maleCount"
+            className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
             عدد الذكور
           </Label>
           <Input
@@ -76,30 +140,49 @@ const StepThree = ({ formData, setFormData, onNext }) => {
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
+      </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="femaleCount" className="block text-right text-[13px] font-bold text-white sm:text-[14px]" style={{ lineHeight: '100%' }}>
-            عدد الإناث
-          </Label>
+      {/* المنطقة/المحافظة — full width with icon */}
+      <div className="space-y-1.5">
+        <Label
+          htmlFor="region"
+          className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
+          style={{ lineHeight: '100%' }}
+        >
+          المنطقة/المحافظة
+        </Label>
+        <div className="relative">
           <Input
-            id="femaleCount"
-            type="number"
-            min="0"
-            value={formData.femaleCount}
-            onChange={(e) => setFormData({ ...formData, femaleCount: e.target.value })}
-            placeholder="عدد الإناث"
-            className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
+            id="region"
+            type="text"
+            value={formData.region}
+            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+            placeholder="اكتب اسم المحافظة"
+            className="h-11 rounded-[10px] border-none bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
           />
+          <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
+            <MapPin className="h-5 w-5 text-[#2496FF]" />
+          </div>
         </div>
       </div>
 
-      <Button
-        type="submit"
-        className="mx-auto mt-4 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
-        style={{ lineHeight: '100%' }}
-      >
-        التالي
-      </Button>
+      <div className="flex items-center gap-3 mt-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 rounded-[10px] border border-white/30 px-4 h-11 text-[14px] font-bold text-white transition-all hover:bg-white/10 sm:h-[50px]"
+        >
+          <ChevronRight className="h-4 w-4" />
+          رجوع
+        </button>
+        <Button
+          type="submit"
+          className="flex-1 h-11 rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:text-[20px]"
+          style={{ lineHeight: '100%' }}
+        >
+          التالي
+        </Button>
+      </div>
     </form>
   )
 }

@@ -26,7 +26,7 @@ const StepOne = ({ formData, setFormData, onNext }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
+      className="mx-auto w-full max-w-[580px] space-y-2 sm:space-y-3"
     >
       <div className="space-y-1">
         <Label

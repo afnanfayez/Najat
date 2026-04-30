@@ -36,6 +36,7 @@ const RegisterForm = () => {
     maritalStatus: '',
     healthStatus: '',
     identityNumber: '',
+    housingStatus: '',
     currentMembers: '',
     maleCount: '',
     femaleCount: '',
@@ -77,7 +78,6 @@ const RegisterForm = () => {
             formData={formData}
             setFormData={setFormData}
             onNext={() => {
-              // Handle final submission
               console.log('Registration complete:', formData)
               alert('تم التسجيل بنجاح!')
             }}
@@ -112,7 +112,8 @@ const RegisterForm = () => {
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
-          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
+          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-4 shadow-2xl backdrop-blur-md sm:px-8 sm:py-6"
+          style={{ fontFamily: 'Cairo, sans-serif', height: '700px' }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
             {/* Logo — same as Login */}
@@ -128,7 +129,7 @@ const RegisterForm = () => {
             </div>
 
             {/* Title */}
-            <div className="mb-4 space-y-2 text-center">
+            <div className="mb-2 space-y-1 text-center">
               <h1
                 className="text-xl font-bold tracking-tight text-white sm:text-[24px]"
                 style={{ lineHeight: '100%' }}
@@ -136,7 +137,7 @@ const RegisterForm = () => {
                 إنشاء حساب
               </h1>
               <p
-                className="text-sm font-bold text-white/80 sm:text-[18px]"
+                className="text-base font-bold text-white/80 sm:text-[22px]"
                 style={{ lineHeight: '100%' }}
               >
                 منصة نجاة للخدمات الإنسانية والطوارئ
@@ -144,16 +145,18 @@ const RegisterForm = () => {
             </div>
 
             {/* Step Indicator — RTL: 1 on right, 4 on left */}
-            <div className="relative flex w-full max-w-[500px] items-center justify-between mb-4">
+            <div className="relative flex w-full max-w-[500px] items-center justify-between mb-3">
               <div className="absolute top-1/2 left-0 z-0 h-[2px] w-full -translate-y-1/2 bg-white/20"></div>
               {[1, 2, 3, 4].map((s) => (
                 <div key={s} className="relative z-10">
                   <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${
-                      step === s
+                    onClick={() => s < step && setStep(s)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${step === s
                         ? 'scale-110 bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                        : 'bg-[#D9D9D9] text-[#707070]'
-                    }`}
+                        : s < step
+                          ? 'cursor-pointer bg-white/70 text-black hover:bg-white hover:scale-105'
+                          : 'cursor-default bg-[#D9D9D9] text-[#707070]'
+                      }`}
                   >
                     {s}
                   </div>
@@ -162,10 +165,11 @@ const RegisterForm = () => {
             </div>
 
             {/* Step Content */}
-            <div className="w-full mb-4">{renderStep()}</div>
+            <div className="w-full mb-2">{renderStep()}</div>
 
-            {/* Bottom Links */}
-            <div className="flex flex-col items-center gap-2 pt-1">
+            {/* Bottom Links — only on step 1 */}
+            {step === 1 && (
+              <div className="flex flex-col items-center gap-0 pt-0">
                 <div className="text-center">
                   <span
                     className="text-[13px] font-bold text-white sm:text-[14px]"
@@ -182,7 +186,7 @@ const RegisterForm = () => {
                   </Link>
                 </div>
 
-                <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
+                <div className="mx-auto flex w-full max-w-[580px] items-center gap-3 py-1 sm:gap-4">
                   <Separator className="flex-1 bg-white" />
                   <span
                     className="shrink-0 text-[10px] font-bold text-white sm:text-[11px]"
@@ -196,33 +200,34 @@ const RegisterForm = () => {
                   <Separator className="flex-1 bg-white" />
                 </div>
 
-                <div className="flex items-center justify-center gap-4 pb-2 sm:gap-6">
-                <button
-                  type="button"
-                  className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
-                >
-                  <Image
-                    src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
-                    alt="Google"
-                    width={28}
-                    height={28}
-                    className="sm:h-8 sm:w-8"
-                    unoptimized
-                  />
-                </button>
-                <button
-                  type="button"
-                  className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
-                >
-                  <AppleAppStoreIcon size={28} />
-                </button>
+                <div className="flex items-center justify-center gap-4 pb-0 sm:gap-6">
+                  <button
+                    type="button"
+                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
+                  >
+                    <Image
+                      src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+                      alt="Google"
+                      width={28}
+                      height={28}
+                      className="sm:h-8 sm:w-8"
+                      unoptimized
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
+                  >
+                    <AppleAppStoreIcon size={28} />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </Card>
 
         {/* Footer */}
-        <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white">
+        <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
           <div
             className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"
             style={{ lineHeight: '100%' }}
