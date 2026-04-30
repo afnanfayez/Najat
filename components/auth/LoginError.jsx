@@ -31,8 +31,21 @@ const AppleAppStoreIcon = ({
   );
 };
 
-const LoginError = ({ initialEmail = "" }) => {
+const LoginError = ({ 
+  initialEmail = "", 
+  initialPassword = "",
+  emailError = false, 
+  passwordError = false,
+  onLogin // Function to handle retry from here
+}) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState(initialPassword);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onLogin) onLogin(email, password);
+  };
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
@@ -78,31 +91,38 @@ const LoginError = ({ initialEmail = "" }) => {
             </div>
 
             {/* Form */}
-            <form className="w-full max-w-[580px] space-y-4 sm:space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="w-full max-w-[580px] space-y-4 sm:space-y-5">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="email" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
-                    defaultValue={initialEmail}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="bg-white/95 text-right border-2 border-[#F44336] transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                    className={`bg-white/95 text-right transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A] ${
+                      emailError ? 'border-2 border-[#F44336]' : 'border-none'
+                    }`}
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    <i className="bx bx-envelope text-[#F44336] text-[18px] sm:text-[20px]" />
+                    <i className={`bx bx-envelope text-[18px] sm:text-[20px] ${
+                      emailError ? 'text-[#F44336]' : 'text-[#2496FF]'
+                    }`} />
                   </div>
                 </div>
-                {/* Error Message */}
-                <p 
-                  className="text-[#F44336] text-left w-full font-bold text-[15px]" 
-                  style={{ 
-                    fontFamily: 'Cairo, sans-serif',
-                    lineHeight: '100%'
-                  }}
-                >
-                  اسم مستخدم غير صحيح
-                </p>
+                {/* Error Message for Email */}
+                {emailError && (
+                  <p 
+                    className="text-[#F44336] text-left w-full font-bold text-[15px]" 
+                    style={{ 
+                      fontFamily: 'Cairo, sans-serif',
+                      lineHeight: '100%'
+                    }}
+                  >
+                    اسم مستخدم غير صحيح
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5 sm:space-y-2">
@@ -111,11 +131,17 @@ const LoginError = ({ initialEmail = "" }) => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
-                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                    className={`bg-white/95 text-right transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A] ${
+                      passwordError ? 'border-2 border-[#F44336]' : 'border-none'
+                    }`}
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <i className="bx bx-key text-[#2496FF] text-[18px] sm:text-[20px]" />
+                    <i className={`bx bx-key text-[18px] sm:text-[20px] ${
+                      passwordError ? 'text-[#F44336]' : 'text-[#2496FF]'
+                    }`} />
                   </div>
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
                     <button
@@ -127,6 +153,18 @@ const LoginError = ({ initialEmail = "" }) => {
                     </button>
                   </div>
                 </div>
+                {/* Error Message for Password */}
+                {passwordError && (
+                  <p 
+                    className="text-[#F44336] text-left w-full font-bold text-[15px]" 
+                    style={{ 
+                      fontFamily: 'Cairo, sans-serif',
+                      lineHeight: '100%'
+                    }}
+                  >
+                    كلمة مرور غير صحيحة
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-1">
@@ -139,11 +177,12 @@ const LoginError = ({ initialEmail = "" }) => {
                 </Link>
               </div>
 
-              <Button className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
+              <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
                 دخول
                 <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
             </form>
+
 
             <div className="text-center pt-3 sm:pt-2">
               <span className="text-white font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>ليس لديك حساب؟ </span>

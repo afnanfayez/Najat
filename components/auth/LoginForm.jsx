@@ -39,17 +39,31 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (email.includes('@')) {
+  const handleLoginAttempt = (inputEmail, inputPassword) => {
+    const isEmailValid = inputEmail.includes('@');
+    const isPasswordValid = inputPassword.length >= 8;
+
+    if (isEmailValid && isPasswordValid) {
       setIsSuccess(true);
       setIsError(false);
+      setEmailError(false);
+      setPasswordError(false);
     } else {
+      setEmailError(!isEmailValid);
+      setPasswordError(!isPasswordValid);
       setIsError(true);
       setIsSuccess(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleLoginAttempt(email, password);
   };
 
   if (isSuccess) {
@@ -57,7 +71,19 @@ const LoginForm = () => {
   }
 
   if (isError) {
-    return <LoginError initialEmail={email} />;
+    return (
+      <LoginError 
+        initialEmail={email} 
+        initialPassword={password}
+        emailError={emailError} 
+        passwordError={passwordError}
+        onLogin={(newEmail, newPassword) => {
+          setEmail(newEmail);
+          setPassword(newPassword);
+          handleLoginAttempt(newEmail, newPassword);
+        }}
+      />
+    );
   }
 
   return (
@@ -130,6 +156,8 @@ const LoginForm = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
                     className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
                   />
