@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card';
 
 import LoginSuccess from './LoginSuccess';
 import LoginError from './LoginError';
+import ForgotPassword from './ForgotPassword';
 
 const AppleAppStoreIcon = ({
   size = 40,
@@ -39,6 +40,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [email, setEmail] = useState('');
@@ -70,6 +72,10 @@ const LoginForm = () => {
     return <LoginSuccess />;
   }
 
+  if (isForgot) {
+    return <ForgotPassword onBack={() => setIsForgot(false)} />;
+  }
+
   if (isError) {
     return (
       <LoginError 
@@ -82,6 +88,7 @@ const LoginForm = () => {
           setPassword(newPassword);
           handleLoginAttempt(newEmail, newPassword);
         }}
+        onForgot={() => setIsForgot(true)}
       />
     );
   }
@@ -104,12 +111,13 @@ const LoginForm = () => {
       <div className="relative z-10 w-full flex flex-col items-center justify-center h-full">
         {/* Login Card */}
         <Card
-          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-8 sm:py-10 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px]"
+          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-6 sm:py-8 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px] overflow-y-auto scrollbar-hide"
           style={{
-            fontFamily: 'Cairo, sans-serif'
+            fontFamily: 'Cairo, sans-serif',
+            height: '700px'
           }}
         >
-          <div className="w-full flex flex-col items-center gap-1">
+          <div className="w-full h-full flex flex-col items-center justify-between">
             {/* Logo Container */}
             <div
               className="relative flex items-center justify-center w-32 h-32 sm:w-[200px] sm:h-[200px] -mt-10 sm:-mt-[50px] -mb-6 sm:-mb-[40px]"
@@ -181,9 +189,14 @@ const LoginForm = () => {
                   <Checkbox id="remember" className="w-4 h-4 sm:w-5 sm:h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#2496FF] data-[state=checked]:border-[#2496FF] rounded-md transition-all" />
                   <Label htmlFor="remember" className="text-white cursor-pointer font-semibold text-[12px] sm:text-[14px]" style={{ lineHeight: '100%' }}>تذكرني على هذا الجهاز</Label>
                 </div>
-                <Link href="#" className="hover:opacity-80 transition-opacity font-bold text-[12px] sm:text-[14px]" style={{ color: '#E8B006', lineHeight: '100%' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsForgot(true)}
+                  className="hover:opacity-80 transition-opacity font-bold text-[12px] sm:text-[14px]" 
+                  style={{ color: '#E8B006', lineHeight: '100%' }}
+                >
                   نسيت كلمة المرور؟
-                </Link>
+                </button>
               </div>
 
               <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>

@@ -52,12 +52,13 @@ const LoginSuccess = () => {
       <div className="relative z-10 w-full flex flex-col items-center justify-center h-full">
         {/* Login Card */}
         <Card
-          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-8 sm:py-10 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px]"
+          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-6 sm:py-8 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px] overflow-hidden"
           style={{
-            fontFamily: 'Cairo, sans-serif'
+            fontFamily: 'Cairo, sans-serif',
+            height: '700px'
           }}
         >
-          <div className="w-full flex flex-col items-center gap-1">
+          <div className="w-full h-full flex flex-col items-center justify-between">
             {/* Logo Container */}
             <div
               className="relative flex items-center justify-center w-32 h-32 sm:w-[200px] sm:h-[200px] -mt-10 sm:-mt-[50px] -mb-6 sm:-mb-[40px]"
