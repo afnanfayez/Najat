@@ -36,7 +36,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black font-sans" dir="rtl">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-x-hidden bg-black font-sans py-10 px-4 sm:px-6 lg:px-8" dir="rtl">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -49,149 +49,126 @@ const LoginForm = () => {
         <div className="absolute inset-0"></div>
       </div>
 
-      {/* Login Card */}
-      <Card
-        className="relative z-10 bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-8 py-10 shadow-2xl rounded-[25px] flex flex-col items-center justify-center -mt-12 overflow-visible"
-        style={{
-          width: '750px',
-          height: 'min(680px, 90vh)',
-          fontFamily: 'Cairo, sans-serif'
-        }}
-      >
-        <div className="w-full flex flex-col items-center gap-1">
-          {/* Logo Container */}
-          <div
-            className="relative flex items-center justify-center"
-            style={{
-              width: '250px',
-              height: '250px',
-              marginTop: '-50px',
-              marginBottom: '-50px'
-            }}
-          >
-            <Image
-              src="/assets/Logo1.png"
-              alt="Logo"
-              width={250}
-              height={250}
-              className="object-contain drop-shadow-[0_0_15px_rgba(36,150,255,0.1)]"
-              priority
-            />
-          </div>
-
-          <div className="text-center space-y-3 mb-2">
-            <h1 className="font-bold text-white tracking-tight" style={{ fontSize: '25px', lineHeight: '100%', fontWeight: 700 }}>تسجيل الدخول</h1>
-            <p className="text-white/80 font-bold" style={{ fontSize: '25px', lineHeight: '100%', fontWeight: 700 }}>منصة نجاة للخدمات الإنسانية والطوارئ</p>
-          </div>
-
-          {/* Form */}
-          <form className="w-full max-w-[580px] space-y-5">
-            <div className="space-y-2.5">
-              <Label htmlFor="email" className="text-white mr-1 block text-right font-bold" style={{ fontSize: '15px', lineHeight: '100%', fontWeight: 700 }}>البريد الإلكتروني</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="bg-white/95 text-right border-none transition-all placeholder:text-[#D9D9D9] text-[#D9D9D9]"
-                  style={{
-                    height: '56px',
-                    borderRadius: '10px',
-                    padding: '12px 64px 12px 16px',
-                    boxShadow: '0px 4px 7.6px 0px #0000001A',
-                    fontSize: '15px',
-                    lineHeight: '100%',
-                    fontWeight: 400
-                  }}
-                />
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                  <i className="bx bx-envelope text-[#2496FF]" style={{ fontSize: '20px' }} />
-                </div>
-              </div>
+      {/* Content Wrapper */}
+      <div className="relative z-10 w-full flex flex-col items-center justify-center flex-1">
+        {/* Login Card */}
+        <Card
+          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-8 sm:py-10 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px]"
+          style={{
+            fontFamily: 'Cairo, sans-serif'
+          }}
+        >
+          <div className="w-full flex flex-col items-center gap-1">
+            {/* Logo Container */}
+            <div
+              className="relative flex items-center justify-center w-40 h-40 sm:w-[250px] sm:h-[250px] -mt-10 sm:-mt-[50px] -mb-6 sm:-mb-[50px]"
+            >
+              <Image
+                src="/assets/Logo1.png"
+                alt="Logo"
+                width={250}
+                height={250}
+                className="object-contain drop-shadow-[0_0_15px_rgba(36,150,255,0.1)] w-full h-full"
+                priority
+              />
             </div>
 
-            <div className="space-y-2.5">
-              <Label htmlFor="password" dir="rtl" className="text-white mr-1 block text-right font-bold" style={{ fontSize: '15px', lineHeight: '100%', fontWeight: 700 }}>كلمة المرور</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="********"
-                  className="bg-white/95 text-right border-none transition-all placeholder:text-[#D9D9D9] text-[#D9D9D9]"
-                  style={{
-                    height: '56px',
-                    borderRadius: '10px',
-                    padding: '12px 56px 12px 56px',
-                    boxShadow: '0px 4px 7.6px 0px #0000001A',
-                    fontSize: '15px',
-                    lineHeight: '100%',
-                    fontWeight: 400
-                  }}
-                />
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center">
-                  <i className="bx bx-key text-[#2496FF]" style={{ fontSize: '20px' }} />
-                </div>
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-[#2496FF] transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
+            <div className="text-center space-y-2 sm:space-y-3 mb-4 sm:mb-2">
+              <h1 className="font-bold text-white tracking-tight text-xl sm:text-[25px]" style={{ lineHeight: '100%' }}>تسجيل الدخول</h1>
+              <p className="text-white/80 font-bold text-base sm:text-[25px]" style={{ lineHeight: '100%' }}>منصة نجاة للخدمات الإنسانية والطوارئ</p>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center gap-3">
-                <Checkbox id="remember" className="w-5 h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#2496FF] data-[state=checked]:border-[#2496FF] rounded-md transition-all" />
-                <Label htmlFor="remember" className="text-white cursor-pointer font-semibold" style={{ fontSize: '14px', lineHeight: '100%', fontWeight: 400 }}>تذكرني على هذا الجهاز</Label>
+            {/* Form */}
+            <form className="w-full max-w-[580px] space-y-4 sm:space-y-5">
+              <div className="space-y-2 sm:space-y-2.5">
+                <Label htmlFor="email" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[15px]" style={{ lineHeight: '100%' }}>البريد الإلكتروني</Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-12 sm:h-[56px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-16 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+                    <i className="bx bx-envelope text-[#2496FF] text-[18px] sm:text-[20px]" />
+                  </div>
+                </div>
               </div>
-              <Link href="#" className="hover:opacity-80 transition-opacity font-bold" style={{ fontSize: '14px', lineHeight: '100%', fontWeight: 700, color: '#E8B006' }}>
-                نسيت كلمة المرور؟
-              </Link>
+
+              <div className="space-y-2 sm:space-y-2.5">
+                <Label htmlFor="password" dir="rtl" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[15px]" style={{ lineHeight: '100%' }}>كلمة المرور</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="********"
+                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-12 sm:h-[56px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                    <i className="bx bx-key text-[#2496FF] text-[18px] sm:text-[20px]" />
+                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-[#2496FF] transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Checkbox id="remember" className="w-4 h-4 sm:w-5 sm:h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#2496FF] data-[state=checked]:border-[#2496FF] rounded-md transition-all" />
+                  <Label htmlFor="remember" className="text-white cursor-pointer font-semibold text-[12px] sm:text-[14px]" style={{ lineHeight: '100%' }}>تذكرني على هذا الجهاز</Label>
+                </div>
+                <Link href="#" className="hover:opacity-80 transition-opacity font-bold text-[12px] sm:text-[14px]" style={{ color: '#E8B006', lineHeight: '100%' }}>
+                  نسيت كلمة المرور؟
+                </Link>
+              </div>
+
+              <Button className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-4 sm:mt-2 w-full sm:w-[300px] h-12 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[22px]" style={{ lineHeight: '100%' }}>
+                دخول
+                <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Button>
+            </form>
+
+            <div className="text-center pt-4 sm:pt-2">
+              <span className="text-white font-bold text-[13px] sm:text-[15px]" style={{ lineHeight: '100%' }}>ليس لديك حساب؟ </span>
+              <Link href="#" className="hover:opacity-80 transition-opacity font-bold text-[13px] sm:text-[15px]" style={{ color: '#FDB022', lineHeight: '100%' }}>إنشاء حساب جديد</Link>
             </div>
 
-            <Button className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-2" style={{ width: '300px', height: '50px', borderRadius: '10px', gap: '10px', fontSize: '22px', lineHeight: '100%', fontWeight: 700, padding: '10px' }}>
-              دخول
-              <LogIn className="w-6 h-6" />
-            </Button>
-          </form>
+            <div className="w-full max-w-[300px] flex items-center gap-3 sm:gap-4 py-3 sm:py-2 mx-auto">
+              <Separator className="flex-1 bg-white" />
+              <span className="text-white shrink-0 font-bold text-[10px] sm:text-[11px]" style={{ fontFamily: 'Inter, sans-serif', lineHeight: '100%' }}>المتابعة باستخدام</span>
+              <Separator className="flex-1 bg-white" />
+            </div>
 
-          <div className="text-center pt-2">
-            <span className="text-white font-bold" style={{ fontSize: '15px', lineHeight: '100%', fontWeight: 700 }}>ليس لديك حساب؟ </span>
-            <Link href="#" className="hover:opacity-80 transition-opacity font-bold" style={{ fontSize: '15px', lineHeight: '100%', fontWeight: 700, color: '#FDB022' }}>إنشاء حساب جديد</Link>
+            <div className="flex justify-center gap-12 sm:gap-20 pt-2 sm:pt-4">
+              <button className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group">
+                <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={40} height={40} className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:opacity-100 transition-opacity" />
+              </button>
+              <button className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group">
+                <AppleAppStoreIcon size={40} className="w-8 h-8 sm:w-10 sm:h-10 opacity-90 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
           </div>
-
-          <div className="w-full max-w-[300px] flex items-center gap-4 py-2 mx-auto">
-            <Separator className="flex-1 bg-white" />
-            <span className="text-white shrink-0 font-bold" style={{ fontFamily: 'Inter, sans-serif', fontSize: '11px', lineHeight: '100%', fontWeight: 700 }}>المتابعة باستخدام</span>
-            <Separator className="flex-1 bg-white" />
-          </div>
-
-          <div className="flex justify-center gap-20 pt-4">
-            <button className="w-12 h-12 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group">
-              <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={40} height={40} className="opacity-90 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button className="w-12 h-12 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group">
-              <AppleAppStoreIcon size={40} className="opacity-90 group-hover:opacity-100 transition-opacity" />
-            </button>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       {/* Footer Links */}
-      <div className="absolute bottom-6 w-full flex flex-col items-center space-y-2 text-white">
-        <div className="flex items-center gap-4 font-semibold" style={{ fontSize: '15px', lineHeight: '100%', fontWeight: 600 }}>
+      <div className="relative z-10 w-full flex flex-col items-center space-y-2 text-white mt-8 sm:mt-10">
+        <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 font-semibold text-[13px] sm:text-[15px]" style={{ lineHeight: '100%' }}>
            <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-           <div className="w-1 h-1 rounded-full bg-white"></div>
+           <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
            <Link href="#" className="hover:text-white transition-colors">اتصل بنا</Link>
-            <div className="w-1 h-1 rounded-full bg-white"></div>
+            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
           <Link href="#" className="hover:text-white transition-colors">English Version</Link>
           
         </div>
-        <p className="font-semibold text-white/60" style={{ fontSize: '12px', lineHeight: '100%', fontWeight: 600 }}>© 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.</p>
+        <p className="font-semibold text-white/60 text-[11px] sm:text-[12px] text-center" style={{ lineHeight: '100%' }}>© 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.</p>
       </div>
     </div>
   );
