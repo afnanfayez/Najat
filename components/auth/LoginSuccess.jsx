@@ -3,16 +3,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mail, KeyRound, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
-
-
-import LoginSuccess from './LoginSuccess';
 
 const AppleAppStoreIcon = ({
   size = 40,
@@ -34,18 +31,8 @@ const AppleAppStoreIcon = ({
   );
 };
 
-const LoginForm = () => {
+const LoginSuccess = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSuccess(true);
-  };
-
-  if (isSuccess) {
-    return <LoginSuccess />;
-  }
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
@@ -91,19 +78,18 @@ const LoginForm = () => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="w-full max-w-[580px] space-y-4 sm:space-y-5">
+            <form className="w-full max-w-[580px] space-y-4 sm:space-y-5">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="email" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
-                    required
                     placeholder="name@example.com"
-                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                    className="bg-white/95 text-right border-2 border-[#459F49] transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    <i className="bx bx-envelope text-[#2496FF] text-[18px] sm:text-[20px]" />
+                    <i className="bx bx-envelope text-[#459F49] text-[18px] sm:text-[20px]" />
                   </div>
                 </div>
               </div>
@@ -114,18 +100,17 @@ const LoginForm = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    required
                     placeholder="********"
-                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                    className="bg-white/95 text-right border-2 border-[#459F49] transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <i className="bx bx-key text-[#2496FF] text-[18px] sm:text-[20px]" />
+                    <i className="bx bx-key text-[#459F49] text-[18px] sm:text-[20px]" />
                   </div>
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-[#2496FF] transition-colors"
+                      className="text-[#459F49] hover:opacity-80 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
@@ -135,7 +120,7 @@ const LoginForm = () => {
 
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <Checkbox id="remember" className="w-4 h-4 sm:w-5 sm:h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#2496FF] data-[state=checked]:border-[#2496FF] rounded-md transition-all" />
+                  <Checkbox id="remember" className="w-4 h-4 sm:w-5 sm:h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#459F49] data-[state=checked]:border-[#459F49] rounded-md transition-all" />
                   <Label htmlFor="remember" className="text-white cursor-pointer font-semibold text-[12px] sm:text-[14px]" style={{ lineHeight: '100%' }}>تذكرني على هذا الجهاز</Label>
                 </div>
                 <Link href="#" className="hover:opacity-80 transition-opacity font-bold text-[12px] sm:text-[14px]" style={{ color: '#E8B006', lineHeight: '100%' }}>
@@ -143,9 +128,15 @@ const LoginForm = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
-                دخول
-                <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Button className="bg-[#459F49] hover:bg-[#3A8A3D] text-white font-bold flex items-center justify-center shadow-lg shadow-[#459F49]/20 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px]" style={{ lineHeight: '100%' }}>
+                <CheckCircle2 
+                  className="text-white" 
+                  style={{ 
+                    width: '30px', 
+                    height: '30px'
+                  }} 
+                  strokeWidth={2} 
+                />
               </Button>
             </form>
 
@@ -174,10 +165,10 @@ const LoginForm = () => {
         {/* Footer Links (Placed directly under the card) */}
         <div className="w-full flex flex-col items-center space-y-2 text-white mt-6 sm:mt-8 px-4">
           <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 font-semibold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>
-             <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-             <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
-             <Link href="#" className="hover:text-white transition-colors">اتصل بنا</Link>
-              <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
+            <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
+            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
+            <Link href="#" className="hover:text-white transition-colors">اتصل بنا</Link>
+            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
             <Link href="#" className="hover:text-white transition-colors">English Version</Link>
           </div>
           <p className="font-semibold text-white/60 text-[11px] sm:text-[12px] text-center" style={{ lineHeight: '100%' }}>© 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.</p>
@@ -187,4 +178,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default LoginSuccess;
