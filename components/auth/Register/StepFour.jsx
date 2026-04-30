@@ -12,6 +12,18 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  const getPasswordWarning = () => {
+    if (!formData.password) return null
+    if (formData.password === '12345678') return { text: 'كلمة المرور مستخدمة سابقا', color: 'text-red-500' }
+    if (formData.password.length < 8) return { text: 'يجب ان الا تقل كلمة المرور عن 8 احرف ويجب ان تتضمن ارقام ورموز', color: 'text-[#FDB022]' }
+    const hasNumbers = /\d/.test(formData.password)
+    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+    if (!hasNumbers || !hasSymbols) return { text: 'كلمة المرور ليست قوية ايضا', color: 'text-red-500' }
+    return null
+  }
+  
+  const warning = getPasswordWarning()
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -79,6 +91,11 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
             </button>
           </div>
         </div>
+        {warning && (
+          <p className={`text-left text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`} dir="rtl">
+            {warning.text}
+          </p>
+        )}
       </div>
 
       {/* تأكيد كلمة المرور */}

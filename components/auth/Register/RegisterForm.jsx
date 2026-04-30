@@ -9,6 +9,8 @@ import StepOne from './StepOne'
 import StepTwo from './StepTwo'
 import StepThree from './StepThree'
 import StepFour from './StepFour'
+import TermsStep from './TermsStep'
+import SuccessStep from './SuccessStep'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -77,12 +79,13 @@ const RegisterForm = () => {
           <StepFour
             formData={formData}
             setFormData={setFormData}
-            onNext={() => {
-              console.log('Registration complete:', formData)
-              alert('تم التسجيل بنجاح!')
-            }}
+            onNext={() => setStep(5)}
           />
         )
+      case 5:
+        return <TermsStep onNext={() => setStep(6)} />
+      case 6:
+        return <SuccessStep />
       default:
         return (
           <StepOne
@@ -96,10 +99,10 @@ const RegisterForm = () => {
 
   return (
     <div
-      className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
+      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden bg-black px-4 py-8 font-sans sm:px-6 sm:py-12 lg:px-8"
       dir="rtl"
     >
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0">
         <Image
           src="/assets/Photo1.png"
           alt="Background"
@@ -113,7 +116,7 @@ const RegisterForm = () => {
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
           className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-4 shadow-2xl backdrop-blur-md sm:px-8 sm:py-6"
-          style={{ fontFamily: 'Cairo, sans-serif', height: '700px' }}
+          style={{ fontFamily: 'Cairo, sans-serif', height: step === 5 ? 'auto' : '700px', minHeight: step === 5 ? '950px' : '700px' }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
             {/* Logo — same as Login */}
@@ -129,100 +132,111 @@ const RegisterForm = () => {
             </div>
 
             {/* Title */}
-            <div className="mb-2 space-y-1 text-center">
-              <h1
-                className="text-xl font-bold tracking-tight text-white sm:text-[24px]"
-                style={{ lineHeight: '100%' }}
-              >
-                إنشاء حساب
-              </h1>
-              <p
-                className="text-base font-bold text-white/80 sm:text-[22px]"
-                style={{ lineHeight: '100%' }}
-              >
-                منصة نجاة للخدمات الإنسانية والطوارئ
-              </p>
-            </div>
+            {step < 5 ? (
+              <div className="mb-2 space-y-1 text-center">
+                <h1
+                  className="text-xl font-bold tracking-tight text-white sm:text-[24px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  إنشاء حساب
+                </h1>
+                <p
+                  className="text-base font-bold text-white/80 sm:text-[22px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  منصة نجاة للخدمات الإنسانية والطوارئ
+                </p>
+              </div>
+            ) : step === 5 ? (
+              <div className="mb-2 text-center sm:mb-4">
+                <h1
+                  className="text-[24px] font-bold text-white sm:text-[30px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  الشروط والأحكام
+                </h1>
+              </div>
+            ) : null}
 
             {/* Step Indicator — RTL: 1 on right, 4 on left */}
-            <div className="relative flex w-full max-w-[500px] items-center justify-between mb-3">
-              <div className="absolute top-1/2 left-0 z-0 h-[2px] w-full -translate-y-1/2 bg-white/20"></div>
-              {[1, 2, 3, 4].map((s) => (
-                <div key={s} className="relative z-10">
-                  <div
-                    onClick={() => s < step && setStep(s)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${step === s
+            {step < 5 && (
+              <div className="relative flex w-full max-w-[500px] items-center justify-between mb-3">
+                <div className="absolute top-1/2 left-0 z-0 h-[2px] w-full -translate-y-1/2 bg-white/20"></div>
+                {[1, 2, 3, 4].map((s) => (
+                  <div key={s} className="relative z-10">
+                    <div
+                      onClick={() => s < step && setStep(s)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${step === s
                         ? 'scale-110 bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]'
                         : s < step
                           ? 'cursor-pointer bg-white/70 text-black hover:bg-white hover:scale-105'
                           : 'cursor-default bg-[#D9D9D9] text-[#707070]'
-                      }`}
-                  >
-                    {s}
+                        }`}
+                    >
+                      {s}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Step Content */}
             <div className="w-full mb-2">{renderStep()}</div>
 
-            {/* Bottom Links — only on step 1 */}
-            {step === 1 && (
-              <div className="flex flex-col items-center gap-0 pt-0">
-                <div className="text-center">
-                  <span
-                    className="text-[13px] font-bold text-white sm:text-[14px]"
-                    style={{ lineHeight: '100%' }}
-                  >
-                    هل تمتلك فعلاً حساب؟{' '}
-                  </span>
-                  <Link
-                    href="/login"
-                    className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
-                    style={{ color: '#FDB022', lineHeight: '100%' }}
-                  >
-                    تسجيل الدخول
-                  </Link>
-                </div>
-
-                <div className="mx-auto flex w-full max-w-[580px] items-center gap-3 py-1 sm:gap-4">
-                  <Separator className="flex-1 bg-white" />
-                  <span
-                    className="shrink-0 text-[10px] font-bold text-white sm:text-[11px]"
-                    style={{
-                      fontFamily: 'Inter, sans-serif',
-                      lineHeight: '100%',
-                    }}
-                  >
-                    المتابعة باستخدام
-                  </span>
-                  <Separator className="flex-1 bg-white" />
-                </div>
-
-                <div className="flex items-center justify-center gap-4 pb-0 sm:gap-6">
-                  <button
-                    type="button"
-                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
-                  >
-                    <Image
-                      src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
-                      alt="Google"
-                      width={28}
-                      height={28}
-                      className="sm:h-8 sm:w-8"
-                      unoptimized
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
-                  >
-                    <AppleAppStoreIcon size={28} />
-                  </button>
-                </div>
+            {/* Bottom Links */}
+            <div className={`flex flex-col items-center gap-0 pt-0 transition-opacity duration-300 ${step === 1 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+              <div className="text-center">
+                <span
+                  className="text-[13px] font-bold text-white sm:text-[14px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  هل تمتلك فعلاً حساب؟{' '}
+                </span>
+                <Link
+                  href="/login"
+                  className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
+                  style={{ color: '#FDB022', lineHeight: '100%' }}
+                >
+                  تسجيل الدخول
+                </Link>
               </div>
-            )}
+
+              <div className="mx-auto flex w-full max-w-[580px] items-center gap-3 py-1 sm:gap-4">
+                <Separator className="flex-1 bg-white" />
+                <span
+                  className="shrink-0 text-[10px] font-bold text-white sm:text-[11px]"
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    lineHeight: '100%',
+                  }}
+                >
+                  المتابعة باستخدام
+                </span>
+                <Separator className="flex-1 bg-white" />
+              </div>
+
+              <div className="flex items-center justify-center gap-4 pb-0 sm:gap-6">
+                <button
+                  type="button"
+                  className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
+                >
+                  <Image
+                    src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+                    alt="Google"
+                    width={28}
+                    height={28}
+                    className="sm:h-8 sm:w-8"
+                    unoptimized
+                  />
+                </button>
+                <button
+                  type="button"
+                  className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
+                >
+                  <AppleAppStoreIcon size={28} />
+                </button>
+              </div>
+            </div>
           </div>
         </Card>
 

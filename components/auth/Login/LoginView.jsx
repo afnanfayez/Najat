@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { Card } from '@/components/ui/card'
+import SuccessStep from '../Register/SuccessStep'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => (
   <svg
@@ -38,6 +39,14 @@ const LoginView = ({
   onSubmit,
   onForgot,
 }) => {
+  const [isSuccess, setIsSuccess] = React.useState(false)
+
+  const handleLocalSubmit = (e) => {
+    e.preventDefault()
+    if (onSubmit) onSubmit(e)
+    setIsSuccess(true)
+  }
+
   return (
     <div
       className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
@@ -71,6 +80,8 @@ const LoginView = ({
               />
             </div>
 
+            {!isSuccess ? (
+              <>
             <div className="mb-4 space-y-2 text-center sm:mb-3 sm:space-y-3">
               <h1
                 className="text-xl font-bold tracking-tight text-white sm:text-[24px]"
@@ -87,7 +98,7 @@ const LoginView = ({
             </div>
 
             <form
-              onSubmit={onSubmit}
+              onSubmit={handleLocalSubmit}
               noValidate
               className="w-full max-w-[580px] space-y-4 sm:space-y-5"
             >
@@ -235,6 +246,12 @@ const LoginView = ({
                 <AppleAppStoreIcon size={28} className="sm:h-9 sm:w-9" />
               </button>
             </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center mt-8">
+                <SuccessStep title="تم تسجيل الدخول بنجاح" />
+              </div>
+            )}
           </div>
         </Card>
 
