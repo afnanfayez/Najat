@@ -11,10 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
 
-
-import LoginSuccess from './LoginSuccess';
-import LoginError from './LoginError';
-
 const AppleAppStoreIcon = ({
   size = 40,
   opacity = 1,
@@ -35,30 +31,8 @@ const AppleAppStoreIcon = ({
   );
 };
 
-const LoginForm = () => {
+const LoginError = ({ initialEmail = "" }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (email.includes('@')) {
-      setIsSuccess(true);
-      setIsError(false);
-    } else {
-      setIsError(true);
-      setIsSuccess(false);
-    }
-  };
-
-  if (isSuccess) {
-    return <LoginSuccess />;
-  }
-
-  if (isError) {
-    return <LoginError initialEmail={email} />;
-  }
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
@@ -104,23 +78,31 @@ const LoginForm = () => {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} noValidate className="w-full max-w-[580px] space-y-4 sm:space-y-5">
+            <form className="w-full max-w-[580px] space-y-4 sm:space-y-5">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label htmlFor="email" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    defaultValue={initialEmail}
                     placeholder="name@example.com"
-                    className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
+                    className="bg-white/95 text-right border-2 border-[#F44336] transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] pl-4 pr-12 sm:pr-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
-                    <i className="bx bx-envelope text-[#2496FF] text-[18px] sm:text-[20px]" />
+                    <i className="bx bx-envelope text-[#F44336] text-[18px] sm:text-[20px]" />
                   </div>
                 </div>
+                {/* Error Message */}
+                <p 
+                  className="text-[#F44336] text-left w-full font-bold text-[15px]" 
+                  style={{ 
+                    fontFamily: 'Cairo, sans-serif',
+                    lineHeight: '100%'
+                  }}
+                >
+                  اسم مستخدم غير صحيح
+                </p>
               </div>
 
               <div className="space-y-1.5 sm:space-y-2">
@@ -129,7 +111,6 @@ const LoginForm = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    required
                     placeholder="********"
                     className="bg-white/95 text-right border-none transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A]"
                   />
@@ -158,7 +139,7 @@ const LoginForm = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
+              <Button className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-3 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
                 دخول
                 <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
@@ -202,4 +183,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default LoginError;

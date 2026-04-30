@@ -135,7 +135,7 @@ const LoginSuccess = () => {
                     width: '30px', 
                     height: '30px'
                   }} 
-                  strokeWidth={2} 
+                  strokeWidth={3} 
                 />
               </Button>
             </form>
