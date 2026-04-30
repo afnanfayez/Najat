@@ -16,6 +16,8 @@ import LoginSuccess from './LoginSuccess';
 import LoginError from './LoginError';
 import ForgotPassword from './ForgotPassword';
 
+import EnterCode from './EnterCode';
+
 const AppleAppStoreIcon = ({
   size = 40,
   opacity = 1,
@@ -41,6 +43,7 @@ const LoginForm = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [email, setEmail] = useState('');
@@ -72,8 +75,19 @@ const LoginForm = () => {
     return <LoginSuccess />;
   }
 
+  if (isCodeSent) {
+    return <EnterCode onBack={() => setIsCodeSent(false)} />;
+  }
+
   if (isForgot) {
-    return <ForgotPassword onBack={() => setIsForgot(false)} />;
+    return <ForgotPassword 
+      onBack={() => setIsForgot(false)} 
+      onSubmit={(submittedEmail) => {
+        // Here you would typically call an API to send the email
+        // For now, we just transition to the EnterCode component
+        setIsCodeSent(true);
+      }}
+    />;
   }
 
   if (isError) {

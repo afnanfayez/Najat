@@ -9,8 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 
-const ForgotPassword = ({ onBack }) => {
+const ForgotPassword = ({ onBack, onSubmit }) => {
   const [email, setEmail] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSubmit) onSubmit(email);
+  };
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
@@ -51,19 +56,20 @@ const ForgotPassword = ({ onBack }) => {
 
             <div className="text-center w-full">
               <h1 className="font-bold text-white tracking-tight text-xl sm:text-[28px]" style={{ lineHeight: '100%' }}>نسيت كلمة المرور</h1>
-              <p className="text-white/90 font-bold text-base sm:text-[18px] max-w-[450px] mx-auto mt-14 sm:mt-16" style={{ lineHeight: '140%' }}>
+              <p className="text-white/90 font-bold text-base sm:text-[18px] max-w-[450px] mx-auto mt-8 sm:mt-12" style={{ lineHeight: '140%' }}>
                 ارسل لنا البريد الالكتروني لنرسل لك الرمز الخاص لاسترداد حسابك
               </p>
             </div>
 
             {/* Form */}
-            <form className="w-full max-w-[580px] space-y-8 sm:space-y-10">
+            <form onSubmit={handleSubmit} className="w-full max-w-[580px] space-y-8 sm:space-y-10">
               <div className="space-y-2 sm:space-y-3">
                 <Label htmlFor="email" className="text-white mr-1 block text-right font-bold text-[14px] sm:text-[15px]" style={{ lineHeight: '100%' }}>البريد الإلكتروني</Label>
                 <div className="relative">
                   <Input
                     id="email"
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
@@ -75,7 +81,7 @@ const ForgotPassword = ({ onBack }) => {
                 </div>
               </div>
 
-              <Button className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto w-full sm:w-[350px] h-11 sm:h-[50px] rounded-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
+              <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto w-full sm:w-[350px] h-11 sm:h-[50px] rounded-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
                 ارسال
               </Button>
             </form>
