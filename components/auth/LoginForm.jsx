@@ -18,6 +18,8 @@ import ForgotPassword from './ForgotPassword';
 
 import EnterCode from './EnterCode';
 
+import ResetPassword from './ResetPassword';
+
 const AppleAppStoreIcon = ({
   size = 40,
   opacity = 1,
@@ -44,6 +46,7 @@ const LoginForm = () => {
   const [isError, setIsError] = useState(false);
   const [isForgot, setIsForgot] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [email, setEmail] = useState('');
@@ -74,9 +77,25 @@ const LoginForm = () => {
   if (isSuccess) {
     return <LoginSuccess />;
   }
+  
+  if (isResetting) {
+    return <ResetPassword onLogin={() => {
+      // Simulate successful password reset and return to login
+      setIsResetting(false);
+      setIsCodeSent(false);
+      setIsForgot(false);
+    }} />;
+  }
 
   if (isCodeSent) {
-    return <EnterCode onBack={() => setIsCodeSent(false)} />;
+    return <EnterCode 
+      onBack={() => setIsCodeSent(false)} 
+      onSubmit={(code) => {
+        // Here you would verify the code
+        // For now, transition to ResetPassword
+        setIsResetting(true);
+      }}
+    />;
   }
 
   if (isForgot) {

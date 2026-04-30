@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-const EnterCode = ({ onBack }) => {
+const EnterCode = ({ onBack, onSubmit }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const inputs = useRef([]);
 
@@ -17,6 +17,14 @@ const EnterCode = ({ onBack }) => {
       inputs.current[0].focus();
     }
   }, []);
+
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    const fullCode = code.join('');
+    if (fullCode.length === 6 && onSubmit) {
+      onSubmit(fullCode);
+    }
+  };
 
   const handleChange = (e, index) => {
     const value = e.target.value;
@@ -31,6 +39,12 @@ const EnterCode = ({ onBack }) => {
     // Auto-focus next input
     if (value !== '' && index < 5) {
       inputs.current[index + 1].focus();
+    } else if (value !== '' && index === 5) {
+      // Auto-submit when the last digit is typed
+      const fullCode = newCode.join('');
+      if (fullCode.length === 6 && onSubmit) {
+        onSubmit(fullCode);
+      }
     }
   };
 
@@ -56,6 +70,11 @@ const EnterCode = ({ onBack }) => {
     // Focus the appropriate input after paste
     const focusIndex = pastedData.length < 6 ? pastedData.length : 5;
     inputs.current[focusIndex].focus();
+    
+    // Auto-submit if all 6 digits are pasted
+    if (pastedData.length === 6 && onSubmit) {
+      onSubmit(pastedData.join(''));
+    }
   };
 
   return (
@@ -103,7 +122,7 @@ const EnterCode = ({ onBack }) => {
             </div>
 
             {/* Form */}
-            <form className="w-full max-w-[580px] space-y-8 sm:space-y-10">
+            <form onSubmit={handleSubmit} className="w-full max-w-[580px] space-y-8 sm:space-y-10 mt-4 sm:mt-6">
               <div className="w-full flex flex-col items-center gap-2">
                 {/* LTR container for left-to-right sequential input */}
                 <div className="flex items-center justify-center gap-2 sm:gap-4 w-full" dir="ltr">
@@ -125,7 +144,7 @@ const EnterCode = ({ onBack }) => {
                 
                 {/* Resend Code Link */}
                 <div className="w-full max-w-[340px] sm:max-w-[440px]">
-                  <button type="button" className="text-white font-bold text-[13px] sm:text-[15px] hover:opacity-80 transition-opacity float-right">
+                  <button type="button" className="text-white font-bold text-[13px] sm:text-[15px] hover:opacity-80 transition-opacity float-left">
                     اعد ارسال الكود؟
                   </button>
                   <div className="clear-both"></div>
