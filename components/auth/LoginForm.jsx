@@ -52,6 +52,14 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleForgotClick = () => {
+    setIsForgot(true);
+    setIsError(false);
+    setIsSuccess(false);
+    setIsCodeSent(false);
+    setIsResetting(false);
+  };
+
   const handleLoginAttempt = (inputEmail, inputPassword) => {
     const isEmailValid = inputEmail.includes('@');
     const isPasswordValid = inputPassword.length >= 8;
@@ -121,7 +129,7 @@ const LoginForm = () => {
           setPassword(newPassword);
           handleLoginAttempt(newEmail, newPassword);
         }}
-        onForgot={() => setIsForgot(true)}
+        onForgot={handleForgotClick}
       />
     );
   }
@@ -224,7 +232,7 @@ const LoginForm = () => {
                 </div>
                 <button 
                   type="button" 
-                  onClick={() => setIsForgot(true)}
+                  onClick={handleForgotClick}
                   className="hover:opacity-80 transition-opacity font-bold text-[12px] sm:text-[14px]" 
                   style={{ color: '#E8B006', lineHeight: '100%' }}
                 >

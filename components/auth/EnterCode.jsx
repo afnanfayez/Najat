@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 
 const EnterCode = ({ onBack, onSubmit }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [error, setError] = useState(false);
   const inputs = useRef([]);
 
   useEffect(() => {
@@ -21,8 +22,13 @@ const EnterCode = ({ onBack, onSubmit }) => {
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     const fullCode = code.join('');
-    if (fullCode.length === 6 && onSubmit) {
-      onSubmit(fullCode);
+    if (fullCode.length === 6) {
+      if (fullCode === '000000') {
+        setError(true);
+      } else {
+        setError(false);
+        if (onSubmit) onSubmit(fullCode);
+      }
     }
   };
 
@@ -30,6 +36,8 @@ const EnterCode = ({ onBack, onSubmit }) => {
     const value = e.target.value;
     // Allow only numbers
     if (isNaN(value) || value === ' ') return;
+
+    if (error) setError(false);
 
     const newCode = [...code];
     // Take the last entered character to allow overriding
@@ -42,9 +50,22 @@ const EnterCode = ({ onBack, onSubmit }) => {
     } else if (value !== '' && index === 5) {
       // Auto-submit when the last digit is typed
       const fullCode = newCode.join('');
-      if (fullCode.length === 6 && onSubmit) {
-        onSubmit(fullCode);
+      if (fullCode.length === 6) {
+        if (fullCode === '000000') {
+          setError(true);
+        } else {
+          setError(false);
+          if (onSubmit) onSubmit(fullCode);
+        }
       }
+    }
+  };
+
+  const handleResend = () => {
+    setCode(['', '', '', '', '', '']);
+    setError(false);
+    if (inputs.current[0]) {
+      inputs.current[0].focus();
     }
   };
 
@@ -61,6 +82,8 @@ const EnterCode = ({ onBack, onSubmit }) => {
     
     if (pastedData.length === 0) return;
 
+    if (error) setError(false);
+
     const newCode = [...code];
     pastedData.forEach((char, i) => {
       newCode[i] = char;
@@ -72,8 +95,14 @@ const EnterCode = ({ onBack, onSubmit }) => {
     inputs.current[focusIndex].focus();
     
     // Auto-submit if all 6 digits are pasted
-    if (pastedData.length === 6 && onSubmit) {
-      onSubmit(pastedData.join(''));
+    if (pastedData.length === 6) {
+      const fullCode = pastedData.join('');
+      if (fullCode === '000000') {
+        setError(true);
+      } else {
+        setError(false);
+        if (onSubmit) onSubmit(fullCode);
+      }
     }
   };
 
@@ -137,14 +166,20 @@ const EnterCode = ({ onBack, onSubmit }) => {
                       onChange={(e) => handleChange(e, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onPaste={handlePaste}
-                      className="w-12 h-12 sm:w-16 sm:h-16 text-center text-[24px] sm:text-[28px] font-bold text-black bg-white/90 border-none rounded-[12px] sm:rounded-[15px] focus:ring-2 focus:ring-[#2496FF] focus:outline-none transition-all shadow-[0px_4px_7.6px_0px_#0000001A]"
+                      className={`w-12 h-12 sm:w-16 sm:h-16 text-center text-[24px] sm:text-[28px] font-bold bg-white/90 rounded-[12px] sm:rounded-[15px] focus:ring-2 focus:ring-[#2496FF] focus:outline-none transition-all shadow-[0px_4px_7.6px_0px_#0000001A] ${
+                        error ? 'border-2 border-[#F44336] text-[#F44336]' : 'border-none text-black'
+                      }`}
                     />
                   ))}
                 </div>
                 
                 {/* Resend Code Link */}
-                <div className="w-full max-w-[340px] sm:max-w-[440px]">
-                  <button type="button" className="text-white font-bold text-[13px] sm:text-[15px] hover:opacity-80 transition-opacity float-left">
+                <div className="w-full max-w-[340px] sm:max-w-[440px] mt-1">
+                  <button 
+                    type="button" 
+                    onClick={handleResend}
+                    className="text-white font-bold text-[13px] sm:text-[15px] hover:opacity-80 transition-opacity float-left"
+                  >
                     اعد ارسال الكود؟
                   </button>
                   <div className="clear-both"></div>
