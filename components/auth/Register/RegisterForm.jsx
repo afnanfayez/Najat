@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import StepOne from './StepOne'
+import StepTwo from './StepTwo'
+import StepThree from './StepThree'
+import StepFour from './StepFour'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -28,7 +31,18 @@ const RegisterForm = () => {
     name: '',
     phone: '',
     email: '',
+    gender: '',
+    age: '',
+    maritalStatus: '',
+    healthStatus: '',
+    identityNumber: '',
+    currentMembers: '',
+    maleCount: '',
+    femaleCount: '',
+    region: '',
     password: '',
+    confirmPassword: '',
+    rememberMe: false,
   })
 
   const renderStep = () => {
@@ -39,6 +53,34 @@ const RegisterForm = () => {
             formData={formData}
             setFormData={setFormData}
             onNext={() => setStep(2)}
+          />
+        )
+      case 2:
+        return (
+          <StepTwo
+            formData={formData}
+            setFormData={setFormData}
+            onNext={() => setStep(3)}
+          />
+        )
+      case 3:
+        return (
+          <StepThree
+            formData={formData}
+            setFormData={setFormData}
+            onNext={() => setStep(4)}
+          />
+        )
+      case 4:
+        return (
+          <StepFour
+            formData={formData}
+            setFormData={setFormData}
+            onNext={() => {
+              // Handle final submission
+              console.log('Registration complete:', formData)
+              alert('تم التسجيل بنجاح!')
+            }}
           />
         )
       default:
@@ -70,10 +112,9 @@ const RegisterForm = () => {
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
-          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
-          style={{ fontFamily: 'Cairo, sans-serif', height: '700px' }}
+          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
         >
-          <div className="flex h-full w-full flex-col items-center justify-center space-y-4">
+          <div className="flex h-full w-full flex-col items-center justify-between">
             {/* Logo — same as Login */}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
@@ -87,7 +128,7 @@ const RegisterForm = () => {
             </div>
 
             {/* Title */}
-            <div className="space-y-1 text-center">
+            <div className="mb-4 space-y-2 text-center">
               <h1
                 className="text-xl font-bold tracking-tight text-white sm:text-[24px]"
                 style={{ lineHeight: '100%' }}
@@ -103,7 +144,7 @@ const RegisterForm = () => {
             </div>
 
             {/* Step Indicator — RTL: 1 on right, 4 on left */}
-            <div className="relative flex w-full max-w-[500px] items-center justify-between">
+            <div className="relative flex w-full max-w-[500px] items-center justify-between mb-4">
               <div className="absolute top-1/2 left-0 z-0 h-[2px] w-full -translate-y-1/2 bg-white/20"></div>
               {[1, 2, 3, 4].map((s) => (
                 <div key={s} className="relative z-10">
@@ -121,41 +162,41 @@ const RegisterForm = () => {
             </div>
 
             {/* Step Content */}
-            <div className="w-full">{renderStep()}</div>
+            <div className="w-full mb-4">{renderStep()}</div>
 
             {/* Bottom Links */}
             <div className="flex flex-col items-center gap-2 pt-1">
-              <div className="text-center">
-                <span
-                  className="text-[13px] font-bold text-white sm:text-[14px]"
-                  style={{ lineHeight: '100%' }}
-                >
-                  هل تمتلك فعلاً حساب؟{' '}
-                </span>
-                <Link
-                  href="/login"
-                  className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
-                  style={{ color: '#FDB022', lineHeight: '100%' }}
-                >
-                  تسجيل الدخول
-                </Link>
-              </div>
+                <div className="text-center">
+                  <span
+                    className="text-[13px] font-bold text-white sm:text-[14px]"
+                    style={{ lineHeight: '100%' }}
+                  >
+                    هل تمتلك فعلاً حساب؟{' '}
+                  </span>
+                  <Link
+                    href="/login"
+                    className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
+                    style={{ color: '#FDB022', lineHeight: '100%' }}
+                  >
+                    تسجيل الدخول
+                  </Link>
+                </div>
 
-              <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
-                <Separator className="flex-1 bg-white" />
-                <span
-                  className="shrink-0 text-[10px] font-bold text-white sm:text-[11px]"
-                  style={{
-                    fontFamily: 'Inter, sans-serif',
-                    lineHeight: '100%',
-                  }}
-                >
-                  المتابعة باستخدام
-                </span>
-                <Separator className="flex-1 bg-white" />
-              </div>
+                <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
+                  <Separator className="flex-1 bg-white" />
+                  <span
+                    className="shrink-0 text-[10px] font-bold text-white sm:text-[11px]"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      lineHeight: '100%',
+                    }}
+                  >
+                    المتابعة باستخدام
+                  </span>
+                  <Separator className="flex-1 bg-white" />
+                </div>
 
-              <div className="flex items-center justify-center gap-4 pb-2 sm:gap-6">
+                <div className="flex items-center justify-center gap-4 pb-2 sm:gap-6">
                 <button
                   type="button"
                   className="flex h-12 w-12 items-center justify-center rounded-full transition-transform hover:scale-110 sm:h-[50px] sm:w-[50px]"
