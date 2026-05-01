@@ -23,8 +23,9 @@ const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
 
 const StepTwo = () => {
-  const { formData, updateFormData, nextStep } = useRegisterStore()
-  const handleSubmit = (e) => {
+  const { formData, updateFormData, nextStep, fieldErrors, validateStep, isSubmitting } = useRegisterStore()
+  
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     const requiredFields = [
@@ -40,7 +41,10 @@ const StepTwo = () => {
       return
     }
 
-    nextStep()
+    const isValid = await validateStep(2)
+    if (isValid) {
+      nextStep()
+    }
   }
 
   return (
@@ -61,7 +65,7 @@ const StepTwo = () => {
             onValueChange={(value) => updateFormData({ gender: value })}
             dir="rtl"
           >
-            <SelectTrigger className={triggerCls}>
+            <SelectTrigger className={`${triggerCls} ${fieldErrors.gender ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -99,7 +103,7 @@ const StepTwo = () => {
             onValueChange={(value) => updateFormData({ age: value })}
             dir="rtl"
           >
-            <SelectTrigger className={triggerCls}>
+            <SelectTrigger className={`${triggerCls} ${fieldErrors.ageGroup ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -143,7 +147,7 @@ const StepTwo = () => {
             onValueChange={(value) => updateFormData({ maritalStatus: value })}
             dir="rtl"
           >
-            <SelectTrigger className={triggerCls}>
+            <SelectTrigger className={`${triggerCls} ${fieldErrors.maritalStatus ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -179,6 +183,9 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          {fieldErrors.maritalStatus && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.maritalStatus}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -193,7 +200,7 @@ const StepTwo = () => {
             onValueChange={(value) => updateFormData({ healthStatus: value })}
             dir="rtl"
           >
-            <SelectTrigger className={triggerCls}>
+            <SelectTrigger className={`${triggerCls} ${fieldErrors.healthStatus ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -229,6 +236,9 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          {fieldErrors.healthStatus && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.healthStatus}</p>
+          )}
         </div>
       </div>
 
@@ -245,17 +255,21 @@ const StepTwo = () => {
           type="text"
           value={formData.identityNumber}
           onChange={(e) => updateFormData({ identityNumber: e.target.value })}
-          placeholder="اكتب رقم الهوية"
-          className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
+          placeholder="اكتب رقم الهوية (9 أرقام)"
+          className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${fieldErrors.identityNumber ? 'border-2 border-red-500' : 'border-none'}`}
         />
+        {fieldErrors.identityNumber && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.identityNumber}</p>
+        )}
       </div>
 
       <Button
         type="submit"
+        disabled={isSubmitting}
         className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
         style={{ lineHeight: '100%' }}
       >
-        التالي
+        {isSubmitting ? 'جاري التحقق...' : 'التالي'}
       </Button>
     </form>
   )

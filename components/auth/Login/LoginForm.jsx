@@ -20,6 +20,7 @@ import EnterCode from './EnterCode'
 import ResetPassword from './ResetPassword'
 
 import { useLoginStore } from '@/store/useLoginStore'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -62,6 +63,7 @@ const LoginForm = () => {
     setIsCodeSent,
     setIsForgot,
   } = useLoginStore()
+  const { resetRegister } = useRegisterStore()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -309,6 +311,7 @@ const LoginForm = () => {
               </span>
               <Link
                 href="/register"
+                onClick={() => resetRegister()}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >

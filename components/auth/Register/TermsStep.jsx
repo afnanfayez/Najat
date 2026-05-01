@@ -9,10 +9,13 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
-  const { submitRegistration, isSubmitting, error } = useRegisterStore()
+  const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors } = useRegisterStore()
+
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    clearErrors()
     if (accepted) {
       await submitRegistration()
     }
@@ -108,7 +111,8 @@ const TermsStep = () => {
           </Label>
         </div>
 
-        {error && (
+
+        {error && !hasFieldErrors && (
           <div className="text-red-500 text-sm font-bold text-center mt-2" dir="rtl">
             {error === 'Failed to fetch' || error.includes('CORS') 
               ? 'خطأ في الاتصال بالخادم (CORS Policy). يرجى إبلاغ مطور الباك إند.'

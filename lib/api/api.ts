@@ -11,18 +11,44 @@ async function request(endpoint: string, options: RequestInit = {}) {
     },
   }
 
-  const res = await fetch(url, config)
-  const data = await res.json()
+  try {
+    const res = await fetch(url, config)
+    
+    let data: any = {}
+    const contentType = res.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json()
+    } else {
+      const text = await res.text()
+      data = { message: text || res.statusText }
+    }
 
-  if (!res.ok) {
+    if (!res.ok) {
+      throw {
+        status: res.status,
+        message: data?.message || data?.error || 'Something went wrong',
+        errors: data?.errors || null,
+        fullData: data
+      }
+    }
+
+    return data
+  } catch (err: any) {
+    console.error(`API Request Error [${endpoint}]:`, {
+      name: err.name,
+      message: err.message,
+      cause: err.cause,
+      stack: err.stack
+    })
+    // If it's already our custom error object, re-throw it
+    if (err.status) throw err
+    // Otherwise, it's a network error (like CORS or connection reset)
     throw {
-      status: res.status,
-      message: data?.message || 'Something went wrong',
-      errors: data?.errors || null,
+      status: 0,
+      message: err.message || 'Network error / CORS issue',
+      errors: null
     }
   }
-
-  return data
 }
 
 export const authAPI = {

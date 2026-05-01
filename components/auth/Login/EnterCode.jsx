@@ -7,12 +7,14 @@ import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
 const EnterCode = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
   const inputs = useRef([])
   const { verifyCode, setIsCodeSent, isSubmitting } = useLoginStore()
+  const { resetRegister } = useRegisterStore()
 
   useEffect(() => {
     if (inputs.current[0]) {
@@ -211,7 +213,8 @@ const EnterCode = () => {
                   ليس لديك حساب؟{' '}
                 </span>
                 <Link
-                  href="#"
+                  href="/register"
+                  onClick={() => resetRegister()}
                   className="text-[14px] font-bold transition-opacity hover:opacity-80 sm:text-[15px]"
                   style={{ color: '#FDB022', lineHeight: '100%' }}
                 >

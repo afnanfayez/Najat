@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { Card } from '@/components/ui/card'
 
 import { useLoginStore } from '@/store/useLoginStore'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -47,6 +48,7 @@ const LoginError = () => {
     handleLoginFailure,
     handleForgotClick,
   } = useLoginStore()
+  const { resetRegister } = useRegisterStore()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -255,7 +257,8 @@ const LoginError = () => {
                 ليس لديك حساب؟{' '}
               </span>
               <Link
-                href="#"
+                href="/register"
+                onClick={() => resetRegister()}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >

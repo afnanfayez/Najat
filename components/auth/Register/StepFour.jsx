@@ -10,11 +10,12 @@ import { toast } from 'sonner'
 import { useRegisterStore } from '@/store/useRegisterStore'
 
 const StepFour = () => {
-  const { formData, updateFormData, nextStep } = useRegisterStore()
+  const { formData, updateFormData, nextStep, fieldErrors, clearErrors } = useRegisterStore()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const getPasswordWarning = () => {
+    if (fieldErrors.password) return { text: fieldErrors.password, color: 'text-red-500' }
     if (!formData.password) return null
     if (formData.password === '12345678')
       return { text: 'كلمة المرور مستخدمة سابقا', color: 'text-red-500' }
@@ -34,6 +35,11 @@ const StepFour = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    if (fieldErrors.password) {
+      toast.error('يرجى تصحيح الأخطاء قبل المتابعة')
+      return
+    }
 
     if (
       formData.password.trim() === '' ||
@@ -80,7 +86,7 @@ const StepFour = () => {
             value={formData.password}
             onChange={(e) => updateFormData({ password: e.target.value })}
             placeholder="********"
-            className="h-11 rounded-[10px] border-none bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
+            className={`h-11 rounded-[10px] bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px] ${fieldErrors.password ? 'border-2 border-red-500' : 'border-none'}`}
           />
           <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
             <i className="bx bx-key text-[18px] text-[#2496FF] sm:text-[20px]" />
@@ -101,7 +107,7 @@ const StepFour = () => {
         </div>
         {warning && (
           <p
-            className={`text-left text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`}
+            className={`text-right text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`}
             dir="rtl"
           >
             {warning.text}

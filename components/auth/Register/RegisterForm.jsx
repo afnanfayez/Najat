@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
@@ -29,7 +29,14 @@ const AppleAppStoreIcon = ({ size = 24 }) => (
 )
 
 const RegisterForm = () => {
-  const { step, goToStep } = useRegisterStore()
+  const { step, goToStep, resetRegister, formData } = useRegisterStore()
+  
+  useEffect(() => {
+    // If the user is on step 5 or 6 but hasn't even started (no name), reset to step 1
+    if ((step === 5 || step === 6) && !formData.name) {
+      resetRegister()
+    }
+  }, [step, formData.name, resetRegister])
 
   const renderStep = () => {
     switch (step) {
