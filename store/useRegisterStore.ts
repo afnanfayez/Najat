@@ -141,7 +141,7 @@ export const useRegisterStore = create<RegisterState>()(
           payload.housingStatus = state.formData.housingStatus || 'owned'
           payload.familyMembersCount = parseInt(state.formData.currentMembers) || 1
           payload.femalesCount = parseInt(state.formData.femaleCount) || 0
-          payload.malesCount = parseInt(state.formData.malesCount) || 0
+          payload.malesCount = parseInt(state.formData.maleCount) || 0
           payload.region = state.formData.region || 'Gaza'
         }
 
