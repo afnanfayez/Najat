@@ -6,9 +6,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 
-const  SuccessStep = () => {
+const SuccessStep = () => {
   const router = useRouter()
 
   useEffect(() => {
@@ -48,14 +47,13 @@ const  SuccessStep = () => {
                 className="text-[26px] font-extrabold text-white sm:text-[32px]"
                 style={{ lineHeight: '100%' }}
               >
-                تم تسجيل دخولك بنجاح
+                تم إنشاء حسابك بنجاح
               </h2>
               <p className="text-[16px] font-bold text-white/90 sm:text-[18px]">
-                مرحباً بك في منصة نجاة جاري تحويلك إلى لوحة التحكم...
+                مرحباً بك في منصة نجاة. جاري تحويلك إلى لوحة التحكم...
               </p>
             </div>
 
-            {/* Loading indicator */}
             <div className="mt-8 flex items-center justify-center gap-2">
               <div
                 className="h-3 w-3 animate-bounce rounded-full bg-[#2496FF]"

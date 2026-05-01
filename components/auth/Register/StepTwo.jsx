@@ -14,13 +14,16 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
+import { useRegisterStore } from '@/store/useRegisterStore'
+
 const triggerCls =
   'flex !h-11 w-full box-border items-center justify-between rounded-[10px] border-none bg-white/95 px-4 py-0 text-right text-[16px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:!h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
 
 const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
 
-const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
+const StepTwo = () => {
+  const { formData, updateFormData, nextStep } = useRegisterStore()
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -37,7 +40,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
       return
     }
 
-    onNext()
+    nextStep()
   }
 
   return (
@@ -46,7 +49,6 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
       className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        {/* الجنس */}
         <div className="space-y-1.5">
           <Label
             className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
@@ -56,24 +58,35 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
           </Label>
           <Select
             value={formData.gender}
-            onValueChange={(value) => setFormData({ ...formData, gender: value })}
+            onValueChange={(value) => updateFormData({ gender: value })}
             dir="rtl"
           >
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
-              <SelectItem value="male" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+            <SelectContent
+              className={contentCls}
+              dir="rtl"
+              position="popper"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
+              <SelectItem
+                value="male"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 ذكر
               </SelectItem>
-              <SelectItem value="female" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="female"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 أنثى
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* العمر */}
         <div className="space-y-1.5">
           <Label
             className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
@@ -83,27 +96,41 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
           </Label>
           <Select
             value={formData.age}
-            onValueChange={(value) => setFormData({ ...formData, age: value })}
+            onValueChange={(value) => updateFormData({ age: value })}
             dir="rtl"
           >
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
-              <SelectItem value="under-18" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+            <SelectContent
+              className={contentCls}
+              dir="rtl"
+              position="popper"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
+              <SelectItem
+                value="under-18"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 أقل من 18 عام
               </SelectItem>
-              <SelectItem value="18-40" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="18-40"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 من 18 عام الى 40 عام
               </SelectItem>
-              <SelectItem value="40+" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="40+"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 من 40 عام فما فوق
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* الحالة الاجتماعية */}
         <div className="space-y-1.5">
           <Label
             className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
@@ -113,30 +140,47 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
           </Label>
           <Select
             value={formData.maritalStatus}
-            onValueChange={(value) => setFormData({ ...formData, maritalStatus: value })}
+            onValueChange={(value) => updateFormData({ maritalStatus: value })}
             dir="rtl"
           >
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
-              <SelectItem value="single" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+            <SelectContent
+              className={contentCls}
+              dir="rtl"
+              position="popper"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
+              <SelectItem
+                value="single"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 اعزب
               </SelectItem>
-              <SelectItem value="married" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="married"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 متزوج
               </SelectItem>
-              <SelectItem value="divorced" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="divorced"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 مطلق
               </SelectItem>
-              <SelectItem value="widowed" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="widowed"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 ارمل
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* الحالة الصحية */}
         <div className="space-y-1.5">
           <Label
             className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
@@ -146,23 +190,41 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
           </Label>
           <Select
             value={formData.healthStatus}
-            onValueChange={(value) => setFormData({ ...formData, healthStatus: value })}
+            onValueChange={(value) => updateFormData({ healthStatus: value })}
             dir="rtl"
           >
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
-              <SelectItem value="good" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+            <SelectContent
+              className={contentCls}
+              dir="rtl"
+              position="popper"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
+              <SelectItem
+                value="good"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 بصحة جيدة
               </SelectItem>
-              <SelectItem value="chronic" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="chronic"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 مريض مزمن
               </SelectItem>
-              <SelectItem value="injured" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="injured"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 مصاب
               </SelectItem>
-              <SelectItem value="amputated" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="amputated"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 مبتور
               </SelectItem>
             </SelectContent>
@@ -170,7 +232,6 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
         </div>
       </div>
 
-      {/* رقم الهوية */}
       <div className="space-y-1.5">
         <Label
           htmlFor="identityNumber"
@@ -183,7 +244,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
           id="identityNumber"
           type="text"
           value={formData.identityNumber}
-          onChange={(e) => setFormData({ ...formData, identityNumber: e.target.value })}
+          onChange={(e) => updateFormData({ identityNumber: e.target.value })}
           placeholder="اكتب رقم الهوية"
           className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
         />

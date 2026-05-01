@@ -55,7 +55,6 @@ const LoginSuccess = () => {
               </p>
             </div>
 
-            {/* Loading indicator */}
             <div className="mt-8 flex items-center justify-center gap-2">
               <div
                 className="h-3 w-3 animate-bounce rounded-full bg-[#2496FF]"

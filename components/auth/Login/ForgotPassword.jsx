@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { useLoginStore } from '@/store/useLoginStore'
 
-const ForgotPassword = ({ onBack, onSubmit }) => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
+  const { setIsCodeSent, setIsForgot } = useLoginStore()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -21,7 +23,8 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
       return
     }
     setEmailError(false)
-    if (onSubmit) onSubmit(email)
+
+    setIsCodeSent(true)
   }
 
   return (
@@ -29,7 +32,6 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
       className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
       dir="rtl"
     >
-      {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/assets/Photo1.png"
@@ -41,9 +43,7 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
         <div className="absolute inset-0"></div>
       </div>
 
-      {/* Content Wrapper */}
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
-        {/* Forgot Password Card */}
         <Card
           className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
           style={{
@@ -52,7 +52,6 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {/* Logo Container */}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -79,7 +78,6 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
               </p>
             </div>
 
-            {/* Form */}
             <form
               onSubmit={handleSubmit}
               noValidate
@@ -111,7 +109,7 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
                     <Mail className="h-5 w-5 text-[#2496FF] sm:h-6 sm:w-6" />
                   </div>
                 </div>
-                {/* Error Message for Email */}
+
                 {emailError && (
                   <div dir="ltr" className="flex w-full justify-start">
                     <p
@@ -150,9 +148,8 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
                 </Link>
               </div>
 
-              {/* Back to Login Link */}
               <button
-                onClick={onBack}
+                onClick={() => setIsForgot(false)}
                 className="flex items-center gap-2 pb-2 text-[14px] font-bold text-white/60 transition-colors hover:text-white"
               >
                 <ArrowRight className="h-4 w-4" />
@@ -162,7 +159,6 @@ const ForgotPassword = ({ onBack, onSubmit }) => {
           </div>
         </Card>
 
-        {/* Footer Links (Placed directly under the card) */}
         <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
           <div
             className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"

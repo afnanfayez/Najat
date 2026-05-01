@@ -14,13 +14,16 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
+import { useRegisterStore } from '@/store/useRegisterStore'
+
 const triggerCls =
   'flex !h-11 w-full box-border items-center justify-between rounded-[10px] border-none bg-white/95 px-4 py-0 text-right text-[16px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:!h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
 
 const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
 
-const StepThree = ({ formData, setFormData, onBack, onNext }) => {
+const StepThree = () => {
+  const { formData, updateFormData, nextStep } = useRegisterStore()
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -33,13 +36,11 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
     ]
 
     if (requiredFields.some((value) => String(value ?? '').trim() === '')) {
-      toast.error('يرجى تعبئة جميع حقول الخطوة الثالثة', {
-        description: 'اختر حالة السكن وأدخل أعداد الأفراد والمنطقة.',
-      })
+      toast.error('يرجى تعبئة جميع الحقول')
       return
     }
 
-    onNext()
+    nextStep()
   }
 
   return (
@@ -48,7 +49,6 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
       className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-        {/* حالة السكن */}
         <div className="space-y-1.5">
           <Label
             className="block text-right text-[13px] font-bold text-white sm:text-[14px]"
@@ -58,30 +58,47 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
           </Label>
           <Select
             value={formData.housingStatus}
-            onValueChange={(value) => setFormData({ ...formData, housingStatus: value })}
+            onValueChange={(value) => updateFormData({ housingStatus: value })}
             dir="rtl"
           >
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
-              <SelectItem value="owned" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+            <SelectContent
+              className={contentCls}
+              dir="rtl"
+              position="popper"
+              sideOffset={4}
+              avoidCollisions={false}
+            >
+              <SelectItem
+                value="owned"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 بيت ملك
               </SelectItem>
-              <SelectItem value="rented" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="rented"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 بيت إيجار
               </SelectItem>
-              <SelectItem value="tent" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="tent"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 خيمة
               </SelectItem>
-              <SelectItem value="camp" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
+              <SelectItem
+                value="camp"
+                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
+              >
                 مخيم
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* عدد الافراد الحالي */}
         <div className="space-y-1.5">
           <Label
             htmlFor="currentMembers"
@@ -95,13 +112,12 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
             type="number"
             min="1"
             value={formData.currentMembers}
-            onChange={(e) => setFormData({ ...formData, currentMembers: e.target.value })}
+            onChange={(e) => updateFormData({ currentMembers: e.target.value })}
             placeholder="عدد الافراد"
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
 
-        {/* عدد الاناث */}
         <div className="space-y-1.5">
           <Label
             htmlFor="femaleCount"
@@ -115,13 +131,12 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
             type="number"
             min="0"
             value={formData.femaleCount}
-            onChange={(e) => setFormData({ ...formData, femaleCount: e.target.value })}
+            onChange={(e) => updateFormData({ femaleCount: e.target.value })}
             placeholder="عدد الاناث"
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
 
-        {/* عدد الذكور */}
         <div className="space-y-1.5">
           <Label
             htmlFor="maleCount"
@@ -135,14 +150,13 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
             type="number"
             min="0"
             value={formData.maleCount}
-            onChange={(e) => setFormData({ ...formData, maleCount: e.target.value })}
+            onChange={(e) => updateFormData({ maleCount: e.target.value })}
             placeholder="عدد الذكور"
             className="h-11 rounded-[10px] border-none bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px]"
           />
         </div>
       </div>
 
-      {/* المنطقة/المحافظة — full width with icon */}
       <div className="space-y-1.5">
         <Label
           htmlFor="region"
@@ -156,7 +170,7 @@ const StepThree = ({ formData, setFormData, onBack, onNext }) => {
             id="region"
             type="text"
             value={formData.region}
-            onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+            onChange={(e) => updateFormData({ region: e.target.value })}
             placeholder="اكتب اسم المحافظة"
             className="h-11 rounded-[10px] border-none bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
           />

@@ -11,6 +11,7 @@ import StepThree from './StepThree'
 import StepFour from './StepFour'
 import TermsStep from './TermsStep'
 import SuccessStep from './SuccessStep'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -28,72 +29,24 @@ const AppleAppStoreIcon = ({ size = 24 }) => (
 )
 
 const RegisterForm = () => {
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    gender: '',
-    age: '',
-    maritalStatus: '',
-    healthStatus: '',
-    identityNumber: '',
-    housingStatus: '',
-    currentMembers: '',
-    maleCount: '',
-    femaleCount: '',
-    region: '',
-    password: '',
-    confirmPassword: '',
-    rememberMe: false,
-  })
+  const { step, goToStep } = useRegisterStore()
 
   const renderStep = () => {
     switch (step) {
       case 1:
-        return (
-          <StepOne
-            formData={formData}
-            setFormData={setFormData}
-            onNext={() => setStep(2)}
-          />
-        )
+        return <StepOne />
       case 2:
-        return (
-          <StepTwo
-            formData={formData}
-            setFormData={setFormData}
-            onNext={() => setStep(3)}
-          />
-        )
+        return <StepTwo />
       case 3:
-        return (
-          <StepThree
-            formData={formData}
-            setFormData={setFormData}
-            onNext={() => setStep(4)}
-          />
-        )
+        return <StepThree />
       case 4:
-        return (
-          <StepFour
-            formData={formData}
-            setFormData={setFormData}
-            onNext={() => setStep(5)}
-          />
-        )
+        return <StepFour />
       case 5:
-        return <TermsStep onNext={() => setStep(6)} />
+        return <TermsStep />
       case 6:
         return <SuccessStep />
       default:
-        return (
-          <StepOne
-            formData={formData}
-            setFormData={setFormData}
-            onNext={() => setStep(2)}
-          />
-        )
+        return <StepOne />
     }
   }
 
@@ -120,10 +73,13 @@ const RegisterForm = () => {
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
           className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-4 shadow-2xl backdrop-blur-md sm:px-8 sm:py-6"
-          style={{ fontFamily: 'Cairo, sans-serif', height: step === 5 ? 'auto' : '700px', minHeight: step === 5 ? '950px' : '700px' }}
+          style={{
+            fontFamily: 'Cairo, sans-serif',
+            height: step === 5 ? 'auto' : '700px',
+            minHeight: step === 5 ? '950px' : '700px',
+          }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {/* Logo — same as Login */}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -135,7 +91,6 @@ const RegisterForm = () => {
               />
             </div>
 
-            {/* Title */}
             {step < 5 ? (
               <div className="mb-2 space-y-1 text-center">
                 <h1
@@ -162,20 +117,20 @@ const RegisterForm = () => {
               </div>
             ) : null}
 
-            {/* Step Indicator — RTL: 1 on right, 4 on left */}
             {step < 5 && (
-              <div className="relative flex w-full max-w-[500px] items-center justify-between mb-3">
+              <div className="relative mb-3 flex w-full max-w-[500px] items-center justify-between">
                 <div className="absolute top-1/2 left-0 z-0 h-[2px] w-full -translate-y-1/2 bg-white/20"></div>
                 {[1, 2, 3, 4].map((s) => (
                   <div key={s} className="relative z-10">
                     <div
-                      onClick={() => s < step && setStep(s)}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${step === s
-                        ? 'scale-110 bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                        : s < step
-                          ? 'cursor-pointer bg-white/70 text-black hover:bg-white hover:scale-105'
-                          : 'cursor-default bg-[#D9D9D9] text-[#707070]'
-                        }`}
+                      onClick={() => s < step && goToStep(s)}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-[16px] font-bold transition-all duration-300 sm:h-10 sm:w-10 sm:text-[20px] ${
+                        step === s
+                          ? 'scale-110 bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]'
+                          : s < step
+                            ? 'cursor-pointer bg-white/70 text-black hover:scale-105 hover:bg-white'
+                            : 'cursor-default bg-[#D9D9D9] text-[#707070]'
+                      }`}
                     >
                       {s}
                     </div>
@@ -184,11 +139,11 @@ const RegisterForm = () => {
               </div>
             )}
 
-            {/* Step Content */}
-            <div className="w-full mb-2">{renderStep()}</div>
+            <div className="mb-2 w-full">{renderStep()}</div>
 
-            {/* Bottom Links */}
-            <div className={`flex flex-col items-center gap-0 pt-0 transition-opacity duration-300 ${step === 1 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+            <div
+              className={`flex flex-col items-center gap-0 pt-0 transition-opacity duration-300 ${step === 1 ? 'visible opacity-100' : 'invisible opacity-0'}`}
+            >
               <div className="text-center">
                 <span
                   className="text-[13px] font-bold text-white sm:text-[14px]"
@@ -244,7 +199,6 @@ const RegisterForm = () => {
           </div>
         </Card>
 
-        {/* Footer */}
         <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
           <div
             className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"

@@ -19,6 +19,8 @@ import EnterCode from './EnterCode'
 
 import ResetPassword from './ResetPassword'
 
+import { useLoginStore } from '@/store/useLoginStore'
+
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
     <svg
@@ -39,71 +41,36 @@ const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
 }
 
 const LoginForm = () => {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [isError, setIsError] = useState(false)
-  const [isForgot, setIsForgot] = useState(false)
-  const [isCodeSent, setIsCodeSent] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
-  const [emailError, setEmailError] = useState(false)
-  const [passwordError, setPasswordError] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isValid, setIsValid] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const isEmailValid = email.includes('@')
-    const isPasswordValid = password.length >= 8
-    setIsValid(isEmailValid && isPasswordValid)
-  }, [email, password])
-
-  const handleForgotClick = () => {
-    setIsForgot(true)
-    setIsError(false)
-    setIsSuccess(false)
-    setIsCodeSent(false)
-    setIsResetting(false)
-  }
-
-  const handleLoginAttempt = (inputEmail, inputPassword) => {
-    const isEmailValid = inputEmail.includes('@')
-    const isPasswordValid = inputPassword.length >= 8
-
-    if (isEmailValid && isPasswordValid) {
-      // Add delay before showing success
-      setTimeout(() => {
-        setIsSuccess(true)
-        setIsError(false)
-        setEmailError(false)
-        setPasswordError(false)
-      }, 2000) // 2 seconds delay
-    } else {
-      setEmailError(!isEmailValid)
-      setPasswordError(!isPasswordValid)
-      setIsError(true)
-      setIsSuccess(false)
-    }
-  }
+  const {
+    email,
+    password,
+    showPassword,
+    isSubmitting,
+    isSuccess,
+    isError,
+    isForgot,
+    isCodeSent,
+    isResetting,
+    isValid,
+    setEmail,
+    setPassword,
+    setShowPassword,
+    handleForgotClick,
+    handleLoginSuccess,
+    handleLoginFailure,
+    setIsResetting,
+    setIsCodeSent,
+    setIsForgot,
+  } = useLoginStore()
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (isValid) {
-      setIsSubmitting(true)
-      // Show green state for 2 seconds then navigate to success
-      setTimeout(() => {
-        setIsSuccess(true)
-        setIsError(false)
-        setEmailError(false)
-        setPasswordError(false)
-      }, 2000)
+      handleLoginSuccess()
     } else {
       const isEmailValid = email.includes('@')
       const isPasswordValid = password.length >= 8
-      setEmailError(!isEmailValid)
-      setPasswordError(!isPasswordValid)
-      setIsError(true)
-      setIsSuccess(false)
+      handleLoginFailure(!isEmailValid, !isPasswordValid)
     }
   }
 
@@ -115,7 +82,6 @@ const LoginForm = () => {
     return (
       <ResetPassword
         onLogin={() => {
-          // Simulate successful password reset and return to login
           setIsResetting(false)
           setIsCodeSent(false)
           setIsForgot(false)
@@ -129,8 +95,6 @@ const LoginForm = () => {
       <EnterCode
         onBack={() => setIsCodeSent(false)}
         onSubmit={(code) => {
-          // Here you would verify the code
-          // For now, transition to ResetPassword
           setIsResetting(true)
         }}
       />
@@ -142,8 +106,6 @@ const LoginForm = () => {
       <ForgotPassword
         onBack={() => setIsForgot(false)}
         onSubmit={(submittedEmail) => {
-          // Here you would typically call an API to send the email
-          // For now, we just transition to the EnterCode component
           setIsCodeSent(true)
         }}
       />
@@ -151,20 +113,7 @@ const LoginForm = () => {
   }
 
   if (isError) {
-    return (
-      <LoginError
-        initialEmail={email}
-        initialPassword={password}
-        emailError={emailError}
-        passwordError={passwordError}
-        onLogin={(newEmail, newPassword) => {
-          setEmail(newEmail)
-          setPassword(newPassword)
-          handleLoginAttempt(newEmail, newPassword)
-        }}
-        onForgot={handleForgotClick}
-      />
-    )
+    return <LoginError />
   }
 
   return (
@@ -172,7 +121,6 @@ const LoginForm = () => {
       className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
       dir="rtl"
     >
-      {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/assets/Photo1.png"
@@ -184,9 +132,7 @@ const LoginForm = () => {
         <div className="absolute inset-0"></div>
       </div>
 
-      {/* Content Wrapper */}
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
-        {/* Login Card */}
         <Card
           className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
           style={{
@@ -195,7 +141,6 @@ const LoginForm = () => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {/* Logo Container */}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -222,7 +167,6 @@ const LoginForm = () => {
               </p>
             </div>
 
-            {/* Form */}
             <form
               onSubmit={handleSubmit}
               noValidate
@@ -245,7 +189,11 @@ const LoginForm = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
                     className="h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
-                    style={isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
+                    style={
+                      isSubmitting
+                        ? { border: '2.5px solid #459F49' }
+                        : { border: 'none' }
+                    }
                   />
                   <div className="pointer-events-none absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
                     <i
@@ -273,7 +221,11 @@ const LoginForm = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
                     className="h-11 rounded-[10px] bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
-                    style={isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
+                    style={
+                      isSubmitting
+                        ? { border: '2.5px solid #459F49' }
+                        : { border: 'none' }
+                    }
                   />
                   <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
                     <i
@@ -335,7 +287,10 @@ const LoginForm = () => {
                 style={{ lineHeight: '100%' }}
               >
                 {isSubmitting ? (
-                  <CheckCircle2 className="h-20 w-20 sm:h-24 sm:w-24" style={{ width: '30px', height: '30px' }} />
+                  <CheckCircle2
+                    className="h-20 w-20 sm:h-24 sm:w-24"
+                    style={{ width: '30px', height: '30px' }}
+                  />
                 ) : (
                   <>
                     دخول
@@ -392,7 +347,6 @@ const LoginForm = () => {
           </div>
         </Card>
 
-        {/* Footer Links (Placed directly under the card) */}
         <div className="mt-6 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
           <div
             className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"

@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
-const StepOne = ({ formData, setFormData, onNext }) => {
+const StepOne = () => {
+  const { formData, updateFormData, nextStep } = useRegisterStore()
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -20,7 +22,7 @@ const StepOne = ({ formData, setFormData, onNext }) => {
       return
     }
 
-    onNext()
+    nextStep()
   }
 
   return (
@@ -41,7 +43,7 @@ const StepOne = ({ formData, setFormData, onNext }) => {
             id="name"
             type="text"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => updateFormData({ name: e.target.value })}
             placeholder="اكتب اسمك هنا"
             className="h-11 rounded-[10px] border-none bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
           />
@@ -64,9 +66,7 @@ const StepOne = ({ formData, setFormData, onNext }) => {
             id="phone"
             type="tel"
             value={formData.phone}
-            onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
-            }
+            onChange={(e) => updateFormData({ phone: e.target.value })}
             placeholder="0590000000000"
             className="h-11 rounded-[10px] border-none bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
           />
@@ -89,9 +89,7 @@ const StepOne = ({ formData, setFormData, onNext }) => {
             id="reg-email"
             type="email"
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => updateFormData({ email: e.target.value })}
             placeholder="name@example.com"
             className="h-11 rounded-[10px] border-none bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px]"
           />

@@ -10,8 +10,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import LoginSuccess from './LoginSuccess'
+import { useLoginStore } from '@/store/useLoginStore'
 
-const ResetPassword = ({ onLogin }) => {
+const ResetPassword = () => {
   const [showPassword1, setShowPassword1] = useState(false)
   const [showPassword2, setShowPassword2] = useState(false)
   const [password, setPassword] = useState('')
@@ -20,14 +21,27 @@ const ResetPassword = ({ onLogin }) => {
   const [passwordError, setPasswordError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const { setIsResetting, setIsCodeSent, setIsForgot } = useLoginStore()
 
   const getPasswordWarning = () => {
     if (!password) return null
-    if (password === '12345678') return { text: 'كلمة المرور مستخدمة سابقاً، اختر كلمة مرور أخرى', color: 'text-red-500' }
-    if (password.length < 8) return { text: 'يجب ألا تقل كلمة المرور عن 8 أحرف وتتضمن أرقاماً ورموزاً', color: 'text-[#FDB022]' }
+    if (password === '12345678')
+      return {
+        text: 'كلمة المرور مستخدمة سابقاً، اختر كلمة مرور أخرى',
+        color: 'text-red-500',
+      }
+    if (password.length < 8)
+      return {
+        text: 'يجب ألا تقل كلمة المرور عن 8 أحرف وتتضمن أرقاماً ورموزاً',
+        color: 'text-[#FDB022]',
+      }
     const hasNumbers = /\d/.test(password)
     const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-    if (!hasNumbers || !hasSymbols) return { text: 'كلمة المرور يجب أن تحتوي على أرقام ورموز لتكون أقوى', color: 'text-red-500' }
+    if (!hasNumbers || !hasSymbols)
+      return {
+        text: 'كلمة المرور يجب أن تحتوي على أرقام ورموز لتكون أقوى',
+        color: 'text-red-500',
+      }
     return null
   }
 
@@ -65,9 +79,14 @@ const ResetPassword = ({ onLogin }) => {
     setError(false)
     setPasswordError('')
     setIsSubmitting(true)
-    // Show green state then navigate to success
+
     setTimeout(() => {
       setIsSuccess(true)
+      setTimeout(() => {
+        setIsResetting(false)
+        setIsCodeSent(false)
+        setIsForgot(false)
+      }, 3000)
     }, 2000)
   }
 
@@ -80,7 +99,6 @@ const ResetPassword = ({ onLogin }) => {
       className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
       dir="rtl"
     >
-      {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/assets/Photo1.png"
@@ -92,9 +110,7 @@ const ResetPassword = ({ onLogin }) => {
         <div className="absolute inset-0"></div>
       </div>
 
-      {/* Content Wrapper */}
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
-        {/* Reset Password Card */}
         <Card
           className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
           style={{
@@ -103,7 +119,6 @@ const ResetPassword = ({ onLogin }) => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {/* Logo Container */}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -124,7 +139,6 @@ const ResetPassword = ({ onLogin }) => {
               </h1>
             </div>
 
-            {/* Form */}
             <form
               onSubmit={handleSubmit}
               className="mt-4 w-full max-w-[580px] space-y-6 sm:mt-6 sm:space-y-8"
@@ -152,7 +166,13 @@ const ResetPassword = ({ onLogin }) => {
                     }}
                     placeholder="********"
                     className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
-                    style={error ? { border: '2.5px solid #F44336' } : isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
+                    style={
+                      error
+                        ? { border: '2.5px solid #F44336' }
+                        : isSubmitting
+                          ? { border: '2.5px solid #459F49' }
+                          : { border: 'none' }
+                    }
                   />
                   <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
                     <i
@@ -173,9 +193,11 @@ const ResetPassword = ({ onLogin }) => {
                     </button>
                   </div>
                 </div>
-                {/* Password Warning */}
+
                 {passwordWarning && !error && (
-                  <p className={`mt-1 text-right text-[11px] font-bold ${passwordWarning.color} sm:text-[12px]`}>
+                  <p
+                    className={`mt-1 text-right text-[11px] font-bold ${passwordWarning.color} sm:text-[12px]`}
+                  >
                     {passwordWarning.text}
                   </p>
                 )}
@@ -204,7 +226,13 @@ const ResetPassword = ({ onLogin }) => {
                     }}
                     placeholder="********"
                     className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
-                    style={error ? { border: '2.5px solid #F44336' } : isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
+                    style={
+                      error
+                        ? { border: '2.5px solid #F44336' }
+                        : isSubmitting
+                          ? { border: '2.5px solid #459F49' }
+                          : { border: 'none' }
+                    }
                   />
                   <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
                     <i
@@ -225,7 +253,7 @@ const ResetPassword = ({ onLogin }) => {
                     </button>
                   </div>
                 </div>
-                {/* Error Message */}
+
                 {error && (
                   <p
                     className="mt-1 w-full text-left text-[13px] font-bold text-[#F44336] sm:text-[14px]"
@@ -236,37 +264,39 @@ const ResetPassword = ({ onLogin }) => {
                 )}
               </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Checkbox
-                    id="remember"
-                    className={`h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all sm:h-5 sm:w-5 ${
-                      isSubmitting
-                        ? 'data-[state=checked]:border-[#459F49] data-[state=checked]:bg-[#459F49]'
-                        : 'data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF]'
-                    }`}
-                  />
-                  <Label
-                    htmlFor="remember"
-                    className="cursor-pointer text-[12px] font-semibold text-white sm:text-[14px]"
-                    style={{ lineHeight: '100%' }}
-                  >
-                    تذكرني على هذا الجهاز
-                  </Label>
-                </div>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Checkbox
+                  id="remember"
+                  className={`h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all sm:h-5 sm:w-5 ${
+                    isSubmitting
+                      ? 'data-[state=checked]:border-[#459F49] data-[state=checked]:bg-[#459F49]'
+                      : 'data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF]'
+                  }`}
+                />
+                <Label
+                  htmlFor="remember"
+                  className="cursor-pointer text-[12px] font-semibold text-white sm:text-[14px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  تذكرني على هذا الجهاز
+                </Label>
+              </div>
 
               <Button
                 type="submit"
                 disabled={isSubmitting}
                 className={`mx-auto mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[300px] sm:gap-[10px] sm:text-[20px] ${
                   isSubmitting
-                    ? 'bg-[#459F49] text-[20px] shadow-[#459F49]/20 scale-[0.98]'
+                    ? 'scale-[0.98] bg-[#459F49] text-[20px] shadow-[#459F49]/20'
                     : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
                 }`}
                 style={{ lineHeight: '100%' }}
               >
                 {isSubmitting ? (
-                                    <CheckCircle2 className="h-20 w-20 sm:h-24 sm:w-24" style={{ width: '30px', height: '30px' }} />
-                  
+                  <CheckCircle2
+                    className="h-20 w-20 sm:h-24 sm:w-24"
+                    style={{ width: '30px', height: '30px' }}
+                  />
                 ) : (
                   <>
                     دخول
@@ -276,12 +306,10 @@ const ResetPassword = ({ onLogin }) => {
               </Button>
             </form>
 
-            {/* Spacer to push content up slightly to match the image balance */}
             <div className="h-4 sm:h-8"></div>
           </div>
         </Card>
 
-        {/* Footer Links */}
         <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
           <div
             className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"

@@ -7,30 +7,39 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { useRegisterStore } from '@/store/useRegisterStore'
 
-const StepFour = ({ formData, setFormData, onBack, onNext }) => {
+const StepFour = () => {
+  const { formData, updateFormData, nextStep } = useRegisterStore()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const getPasswordWarning = () => {
     if (!formData.password) return null
-    if (formData.password === '12345678') return { text: 'كلمة المرور مستخدمة سابقا', color: 'text-red-500' }
-    if (formData.password.length < 8) return { text: 'يجب ان الا تقل كلمة المرور عن 8 احرف ويجب ان تتضمن ارقام ورموز', color: 'text-[#FDB022]' }
+    if (formData.password === '12345678')
+      return { text: 'كلمة المرور مستخدمة سابقا', color: 'text-red-500' }
+    if (formData.password.length < 8)
+      return {
+        text: 'يجب ان الا تقل كلمة المرور عن 8 احرف ويجب ان تتضمن ارقام ورموز',
+        color: 'text-[#FDB022]',
+      }
     const hasNumbers = /\d/.test(formData.password)
     const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
-    if (!hasNumbers || !hasSymbols) return { text: 'كلمة المرور ليست قوية ايضا', color: 'text-red-500' }
+    if (!hasNumbers || !hasSymbols)
+      return { text: 'كلمة المرور ليست قوية ايضا', color: 'text-red-500' }
     return null
   }
-  
+
   const warning = getPasswordWarning()
 
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (formData.password.trim() === '' || formData.confirmPassword.trim() === '') {
-      toast.error('يرجى تعبئة حقلي كلمة المرور', {
-        description: 'أدخل كلمة المرور ثم أعد كتابتها للتأكيد.',
-      })
+    if (
+      formData.password.trim() === '' ||
+      formData.confirmPassword.trim() === ''
+    ) {
+      toast.error('يرجى تعبئة حقلي كلمة المرور')
       return
     }
 
@@ -48,7 +57,7 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
       return
     }
 
-    onNext()
+    nextStep()
   }
 
   return (
@@ -56,7 +65,6 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
       onSubmit={handleSubmit}
       className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
-      {/* كلمة المرور */}
       <div className="space-y-1">
         <Label
           htmlFor="reg-password"
@@ -70,7 +78,7 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
             id="reg-password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) => updateFormData({ password: e.target.value })}
             placeholder="********"
             className="h-11 rounded-[10px] border-none bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
           />
@@ -92,13 +100,15 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
           </div>
         </div>
         {warning && (
-          <p className={`text-left text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`} dir="rtl">
+          <p
+            className={`text-left text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`}
+            dir="rtl"
+          >
             {warning.text}
           </p>
         )}
       </div>
 
-      {/* تأكيد كلمة المرور */}
       <div className="space-y-1">
         <Label
           htmlFor="confirmPassword"
@@ -113,7 +123,7 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
             type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={(e) =>
-              setFormData({ ...formData, confirmPassword: e.target.value })
+              updateFormData({ confirmPassword: e.target.value })
             }
             placeholder="********"
             className="h-11 rounded-[10px] border-none bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
@@ -137,7 +147,6 @@ const StepFour = ({ formData, setFormData, onBack, onNext }) => {
         </div>
       </div>
 
-      {/* تذكرني — على اليمين */}
       <div className="flex items-center justify-start gap-2 pt-1">
         <Checkbox
           id="rememberMe"
