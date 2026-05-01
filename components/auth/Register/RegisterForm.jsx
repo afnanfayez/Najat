@@ -97,6 +97,10 @@ const RegisterForm = () => {
     }
   }
 
+  if (step === 6) {
+    return <SuccessStep />
+  }
+
   return (
     <div
       className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden bg-black px-4 py-8 font-sans sm:px-6 sm:py-12 lg:px-8"

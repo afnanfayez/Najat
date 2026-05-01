@@ -15,7 +15,7 @@ import {
 import { toast } from 'sonner'
 
 const triggerCls =
-  'h-11 w-full rounded-[10px] border-none bg-white/95 pr-4 pl-3 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
+  'flex !h-11 w-full box-border items-center justify-between rounded-[10px] border-none bg-white/95 px-4 py-0 text-right text-[16px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:!h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
 
 const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
@@ -62,7 +62,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4}>
+            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
               <SelectItem value="male" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
                 ذكر
               </SelectItem>
@@ -89,7 +89,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4}>
+            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
               <SelectItem value="under-18" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
                 أقل من 18 عام
               </SelectItem>
@@ -119,7 +119,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4}>
+            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
               <SelectItem value="single" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
                 اعزب
               </SelectItem>
@@ -152,7 +152,7 @@ const StepTwo = ({ formData, setFormData, onBack, onNext }) => {
             <SelectTrigger className={triggerCls}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
-            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4}>
+            <SelectContent className={contentCls} dir="rtl" position="popper" sideOffset={4} avoidCollisions={false}>
               <SelectItem value="good" className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50">
                 بصحة جيدة
               </SelectItem>

@@ -18,7 +18,6 @@ A crisis-response platform focused on war-related scenarios, providing real-time
 ### 🧠 State Management
 
 - Zustand
-- Jotai
 
 ### 📝 Forms & Validation
 
