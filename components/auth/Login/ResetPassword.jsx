@@ -1,127 +1,314 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Eye, EyeOff, LogIn, CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import LoginSuccess from './LoginSuccess'
 
 const ResetPassword = ({ onLogin }) => {
-  const [showPassword1, setShowPassword1] = useState(false);
-  const [showPassword2, setShowPassword2] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [showPassword1, setShowPassword1] = useState(false)
+  const [showPassword2, setShowPassword2] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+
+  const getPasswordWarning = () => {
+    if (!password) return null
+    if (password === '12345678') return { text: 'كلمة المرور مستخدمة سابقاً، اختر كلمة مرور أخرى', color: 'text-red-500' }
+    if (password.length < 8) return { text: 'يجب ألا تقل كلمة المرور عن 8 أحرف وتتضمن أرقاماً ورموزاً', color: 'text-[#FDB022]' }
+    const hasNumbers = /\d/.test(password)
+    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    if (!hasNumbers || !hasSymbols) return { text: 'كلمة المرور يجب أن تحتوي على أرقام ورموز لتكون أقوى', color: 'text-red-500' }
+    return null
+  }
+
+  const passwordWarning = getPasswordWarning()
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (password === '' || confirmPassword === '' || password !== confirmPassword) {
-      setError(true);
-      return;
+    e.preventDefault()
+
+    if (password.trim() === '' || confirmPassword.trim() === '') {
+      setPasswordError('يرجى تعبئة حقلي كلمة المرور')
+      setError(true)
+      return
     }
-    setError(false);
-    if (onLogin) onLogin();
-  };
+
+    if (password.length < 8) {
+      setPasswordError('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل')
+      setError(true)
+      return
+    }
+
+    const hasNumbers = /\d/.test(password)
+    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    if (!hasNumbers || !hasSymbols) {
+      setPasswordError('يجب أن تحتوي كلمة المرور على أرقام ورموز')
+      setError(true)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError('كلمات المرور غير متطابقة')
+      setError(true)
+      return
+    }
+
+    setError(false)
+    setPasswordError('')
+    setIsSubmitting(true)
+    // Show green state then navigate to success
+    setTimeout(() => {
+      setIsSuccess(true)
+    }, 2000)
+  }
+
+  if (isSuccess) {
+    return <LoginSuccess />
+  }
 
   return (
-    <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
+    <div
+      className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
+      dir="rtl"
+    >
+      {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <Image src="/assets/Photo1.png" alt="Background" fill className="object-cover" priority />
+        <Image
+          src="/assets/Photo1.png"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
         <div className="absolute inset-0"></div>
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center h-full">
+      {/* Content Wrapper */}
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
+        {/* Reset Password Card */}
         <Card
-          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-6 sm:py-8 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px] overflow-y-auto scrollbar-hide"
-          style={{ fontFamily: 'Cairo, sans-serif', height: '700px' }}
+          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
+          style={{
+            fontFamily: 'Cairo, sans-serif',
+            height: '700px',
+          }}
         >
-          <div className="w-full h-full flex flex-col items-center justify-between">
-            <div className="relative flex items-center justify-center w-32 h-32 sm:w-[200px] sm:h-[200px] -mt-10 sm:-mt-[50px] -mb-6 sm:-mb-[40px]">
-              <Image src="/assets/Logo1.png" alt="Logo" width={200} height={200} className="object-contain drop-shadow-[0_0_15px_rgba(36,150,255,0.1)] w-full h-full" priority />
+          <div className="flex h-full w-full flex-col items-center justify-between">
+            {/* Logo Container */}
+            <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
+              <Image
+                src="/assets/Logo1.png"
+                alt="Logo"
+                width={200}
+                height={200}
+                className="h-full w-full object-contain drop-shadow-[0_0_15px_rgba(36,150,255,0.1)]"
+                priority
+              />
             </div>
 
-            <div className="text-center w-full">
-              <h1 className="font-bold text-white tracking-tight text-xl sm:text-[28px]" style={{ lineHeight: '100%' }}>اعادة تعيين كلمة مرور</h1>
+            <div className="w-full text-center">
+              <h1
+                className="text-xl font-bold tracking-tight text-white sm:text-[28px]"
+                style={{ lineHeight: '100%' }}
+              >
+                اعادة تعيين كلمة مرور
+              </h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="w-full max-w-[580px] space-y-6 sm:space-y-8 mt-4 sm:mt-6">
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="mt-4 w-full max-w-[580px] space-y-6 sm:mt-6 sm:space-y-8"
+            >
               <div className="space-y-2 sm:space-y-3">
-                <Label htmlFor="new-password" dir="rtl" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>اعادة تعيين كلمة السر</Label>
+                <Label
+                  htmlFor="new-password"
+                  dir="rtl"
+                  className="mr-1 block text-right text-[13px] font-bold text-white sm:text-[14px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  اعادة تعيين كلمة السر
+                </Label>
                 <div className="relative">
                   <Input
                     id="new-password"
-                    type={showPassword1 ? "text" : "password"}
+                    type={showPassword1 ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => { setPassword(e.target.value); if (error) setError(false); }}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (error) {
+                        setError(false)
+                        setPasswordError('')
+                      }
+                    }}
                     placeholder="********"
-                    className={`bg-white text-right transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A] ${error ? 'border-2 border-[#F44336]' : 'border-none'}`}
+                    className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
+                    style={error ? { border: '2.5px solid #F44336' } : isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <i className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : 'text-[#2496FF]'}`} />
+                  <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
+                    <i
+                      className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : isSubmitting ? 'text-[#459F49]' : 'text-[#2496FF]'}`}
+                    />
                   </div>
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <button type="button" onClick={() => setShowPassword1(!showPassword1)} className="text-gray-400 hover:text-[#2496FF] transition-colors">
-                      {showPassword1 ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  <div className="absolute top-1/2 left-4 flex -translate-y-1/2 items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword1(!showPassword1)}
+                      className="text-gray-400 transition-colors hover:text-[#2496FF]"
+                    >
+                      {showPassword1 ? (
+                        <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                      ) : (
+                        <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                      )}
                     </button>
                   </div>
                 </div>
+                {/* Password Warning */}
+                {passwordWarning && !error && (
+                  <p className={`mt-1 text-right text-[11px] font-bold ${passwordWarning.color} sm:text-[12px]`}>
+                    {passwordWarning.text}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2 sm:space-y-3">
-                <Label htmlFor="confirm-password" dir="rtl" className="text-white mr-1 block text-right font-bold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>تأكيد كلمة السر</Label>
+                <Label
+                  htmlFor="confirm-password"
+                  dir="rtl"
+                  className="mr-1 block text-right text-[13px] font-bold text-white sm:text-[14px]"
+                  style={{ lineHeight: '100%' }}
+                >
+                  تأكيد كلمة السر
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirm-password"
-                    type={showPassword2 ? "text" : "password"}
+                    type={showPassword2 ? 'text' : 'password'}
                     value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(false); }}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      if (error) {
+                        setError(false)
+                        setPasswordError('')
+                      }
+                    }}
                     placeholder="********"
-                    className={`bg-white text-right transition-all placeholder:text-gray-400 text-black h-11 sm:h-[50px] rounded-[10px] text-[14px] sm:text-[15px] px-12 sm:px-14 shadow-[0px_4px_7.6px_0px_#0000001A] ${error ? 'border-2 border-[#F44336]' : 'border-none'}`}
+                    className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
+                    style={error ? { border: '2.5px solid #F44336' } : isSubmitting ? { border: '2.5px solid #459F49' } : { border: 'none' }}
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <i className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : 'text-[#2496FF]'}`} />
+                  <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
+                    <i
+                      className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : isSubmitting ? 'text-[#459F49]' : 'text-[#2496FF]'}`}
+                    />
                   </div>
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
-                    <button type="button" onClick={() => setShowPassword2(!showPassword2)} className="text-gray-400 hover:text-[#2496FF] transition-colors">
-                      {showPassword2 ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  <div className="absolute top-1/2 left-4 flex -translate-y-1/2 items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword2(!showPassword2)}
+                      className="text-gray-400 transition-colors hover:text-[#2496FF]"
+                    >
+                      {showPassword2 ? (
+                        <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                      ) : (
+                        <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                      )}
                     </button>
                   </div>
                 </div>
-                {error && <p className="text-[#F44336] text-left w-full font-bold text-[13px] sm:text-[14px] mt-1" style={{ lineHeight: '100%' }}>كلمات المرور غير متطابقة</p>}
+                {/* Error Message */}
+                {error && (
+                  <p
+                    className="mt-1 w-full text-left text-[13px] font-bold text-[#F44336] sm:text-[14px]"
+                    style={{ lineHeight: '100%' }}
+                  >
+                    {passwordError}
+                  </p>
+                )}
               </div>
 
-              <div className="flex items-center justify-start pt-2">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <Checkbox id="remember" className="w-4 h-4 sm:w-5 sm:h-5 border-white/30 bg-white/5 data-[state=checked]:bg-[#2496FF] data-[state=checked]:border-[#2496FF] rounded-md transition-all" />
-                  <Label htmlFor="remember" className="text-white cursor-pointer font-semibold text-[12px] sm:text-[14px]" style={{ lineHeight: '100%' }}>تذكرني على هذا الجهاز</Label>
+                  <Checkbox
+                    id="remember"
+                    className={`h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all sm:h-5 sm:w-5 ${
+                      isSubmitting
+                        ? 'data-[state=checked]:border-[#459F49] data-[state=checked]:bg-[#459F49]'
+                        : 'data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF]'
+                    }`}
+                  />
+                  <Label
+                    htmlFor="remember"
+                    className="cursor-pointer text-[12px] font-semibold text-white sm:text-[14px]"
+                    style={{ lineHeight: '100%' }}
+                  >
+                    تذكرني على هذا الجهاز
+                  </Label>
                 </div>
-              </div>
 
-              <Button type="submit" className="bg-[#2496FF] hover:bg-[#1C7ED6] text-white font-bold flex items-center justify-center shadow-lg shadow-[#2496FF]/10 transition-all active:scale-[0.98] mx-auto mt-6 w-full sm:w-[300px] h-11 sm:h-[50px] rounded-[10px] gap-2 sm:gap-[10px] text-[18px] sm:text-[20px]" style={{ lineHeight: '100%' }}>
-                دخول <LogIn className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className={`mx-auto mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[300px] sm:gap-[10px] sm:text-[20px] ${
+                  isSubmitting
+                    ? 'bg-[#459F49] text-[20px] shadow-[#459F49]/20 scale-[0.98]'
+                    : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
+                }`}
+                style={{ lineHeight: '100%' }}
+              >
+                {isSubmitting ? (
+                                    <CheckCircle2 className="h-20 w-20 sm:h-24 sm:w-24" style={{ width: '30px', height: '30px' }} />
+                  
+                ) : (
+                  <>
+                    دخول
+                    <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </>
+                )}
               </Button>
             </form>
+
+            {/* Spacer to push content up slightly to match the image balance */}
             <div className="h-4 sm:h-8"></div>
           </div>
         </Card>
 
-        <div className="w-full flex flex-col items-center space-y-2 text-white mt-8 sm:mt-8 px-4">
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 font-semibold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>
-            <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
-            <Link href="#" className="hover:text-white transition-colors">اتصل بنا</Link>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
-            <Link href="#" className="hover:text-white transition-colors">English Version</Link>
+        {/* Footer Links */}
+        <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
+          <div
+            className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
+            <Link href="#" className="transition-colors hover:text-white">
+              سياسة الخصوصية
+            </Link>
+            <div className="hidden h-1 w-1 rounded-full bg-white sm:block"></div>
+            <Link href="#" className="transition-colors hover:text-white">
+              اتصل بنا
+            </Link>
+            <div className="hidden h-1 w-1 rounded-full bg-white sm:block"></div>
+            <Link href="#" className="transition-colors hover:text-white">
+              English Version
+            </Link>
           </div>
-          <p className="font-semibold text-white/60 text-[11px] sm:text-[12px] text-center" style={{ lineHeight: '100%' }}>© 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.</p>
+          <p
+            className="text-center text-[11px] font-semibold text-white/60 sm:text-[12px]"
+            style={{ lineHeight: '100%' }}
+          >
+            © 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.
+          </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ResetPassword;
+export default ResetPassword

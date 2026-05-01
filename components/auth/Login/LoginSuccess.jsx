@@ -1,53 +1,105 @@
-'use client';
+'use client'
 
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Check } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { CheckCircle2 } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 const LoginSuccess = () => {
+  const router = useRouter()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push('/dashboard')
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [router])
+
   return (
-    <div className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black font-sans px-4 sm:px-6 lg:px-8" dir="rtl">
+    <div
+      className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-black px-4 font-sans sm:px-6 lg:px-8"
+      dir="rtl"
+    >
       <div className="absolute inset-0 z-0">
-        <Image src="/assets/Photo1.png" alt="Background" fill className="object-cover" priority />
+        <Image
+          src="/assets/Photo1.png"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
         <div className="absolute inset-0"></div>
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center h-full">
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
-          className="bg-white/[0.01] backdrop-blur-md border-white/[0.1] px-5 sm:px-8 py-6 sm:py-8 shadow-2xl rounded-[25px] flex flex-col items-center justify-center w-full max-w-[750px] overflow-y-auto scrollbar-hide"
+          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
           style={{ fontFamily: 'Cairo, sans-serif', height: '700px' }}
         >
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <div className="relative flex items-center justify-center w-32 h-32 sm:w-[200px] sm:h-[200px] -mt-10 sm:-mt-[50px] mb-8 sm:mb-12">
-              <Image src="/assets/Logo1.png" alt="Logo" width={200} height={200} className="object-contain drop-shadow-[0_0_15px_rgba(36,150,255,0.1)] w-full h-full" priority />
+          <div className="flex h-full w-full flex-col items-center justify-center space-y-4 text-center">
+            <div className="rounded-full bg-white/20 p-4 shadow-lg backdrop-blur-sm">
+              <CheckCircle2 className="h-24 w-24 text-[#2496FF]" />
+            </div>
+            <div className="space-y-4">
+              <h2
+                className="text-[26px] font-extrabold text-white sm:text-[32px]"
+                style={{ lineHeight: '100%' }}
+              >
+                تم تسجيل دخولك بنجاح
+              </h2>
+              <p className="text-[16px] font-bold text-white/90 sm:text-[18px]">
+                مرحباً بك في منصة نجاة جاري تحويلك إلى لوحة التحكم...
+              </p>
             </div>
 
-            <div className="flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 bg-[#2496FF] rounded-full shadow-[0_0_30px_rgba(36,150,255,0.4)] mb-8 sm:mb-10 animate-in zoom-in duration-500">
-              <Check className="w-10 h-10 sm:w-14 sm:h-14 text-white stroke-[3]" />
-            </div>
-
-            <div className="text-center space-y-4 sm:space-y-6">
-              <h1 className="font-bold text-white tracking-tight text-2xl sm:text-[32px]" style={{ lineHeight: '100%' }}>تم تسجيل الدخول بنجاح</h1>
-              <p className="text-white/80 font-bold text-base sm:text-[20px] max-w-[400px] mx-auto" style={{ lineHeight: '140%' }}>مرحباً بك في منصة نجاة. جاري تحويلك إلى لوحة التحكم...</p>
+            {/* Loading indicator */}
+            <div className="mt-8 flex items-center justify-center gap-2">
+              <div
+                className="h-3 w-3 animate-bounce rounded-full bg-[#2496FF]"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="h-3 w-3 animate-bounce rounded-full bg-[#2496FF]"
+                style={{ animationDelay: '150ms' }}
+              ></div>
+              <div
+                className="h-3 w-3 animate-bounce rounded-full bg-[#2496FF]"
+                style={{ animationDelay: '300ms' }}
+              ></div>
             </div>
           </div>
         </Card>
 
-        <div className="w-full flex flex-col items-center space-y-2 text-white mt-8 sm:mt-8 px-4">
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 font-semibold text-[13px] sm:text-[14px]" style={{ lineHeight: '100%' }}>
-            <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
-            <Link href="#" className="hover:text-white transition-colors">اتصل بنا</Link>
-            <div className="hidden sm:block w-1 h-1 rounded-full bg-white"></div>
-            <Link href="#" className="hover:text-white transition-colors">English Version</Link>
+        <div className="mt-8 flex w-full flex-col items-center space-y-2 px-4 text-white sm:mt-8">
+          <div
+            className="flex flex-wrap items-center justify-center gap-3 text-[13px] font-semibold sm:gap-4 sm:text-[14px]"
+            style={{ lineHeight: '100%' }}
+          >
+            <Link href="#" className="transition-colors hover:text-white">
+              سياسة الخصوصية
+            </Link>
+            <div className="hidden h-1 w-1 rounded-full bg-white sm:block"></div>
+            <Link href="#" className="transition-colors hover:text-white">
+              اتصل بنا
+            </Link>
+            <div className="hidden h-1 w-1 rounded-full bg-white sm:block"></div>
+            <Link href="#" className="transition-colors hover:text-white">
+              English Version
+            </Link>
           </div>
-          <p className="font-semibold text-white/60 text-[11px] sm:text-[12px] text-center" style={{ lineHeight: '100%' }}>© 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.</p>
+          <p
+            className="text-center text-[11px] font-semibold text-white/60 sm:text-[12px]"
+            style={{ lineHeight: '100%' }}
+          >
+            © 2024 نظام نجاة للمواطنين. جميع الحقوق محفوظة.
+          </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginSuccess;
+export default LoginSuccess
