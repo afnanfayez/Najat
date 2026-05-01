@@ -152,7 +152,7 @@ const StepFour = () => {
           id="rememberMe"
           checked={formData.rememberMe}
           onCheckedChange={(checked) =>
-            setFormData({ ...formData, rememberMe: Boolean(checked) })
+            updateFormData({ rememberMe: Boolean(checked) })
           }
           className="h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF] sm:h-5 sm:w-5"
         />

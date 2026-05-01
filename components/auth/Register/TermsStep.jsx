@@ -9,12 +9,12 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
-  const { nextStep } = useRegisterStore()
+  const { submitRegistration, isSubmitting } = useRegisterStore()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (accepted) {
-      nextStep()
+      await submitRegistration()
     }
   }
 
@@ -110,15 +110,15 @@ const TermsStep = () => {
 
         <Button
           type="submit"
-          disabled={!accepted}
+          disabled={!accepted || isSubmitting}
           className={`mx-auto flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white transition-all sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
-            accepted
+            accepted && !isSubmitting
               ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
               : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
           }`}
           style={{ lineHeight: '100%' }}
         >
-          دخول
+          {isSubmitting ? 'جاري إنشاء الحساب...' : 'دخول'}
         </Button>
       </div>
     </form>
