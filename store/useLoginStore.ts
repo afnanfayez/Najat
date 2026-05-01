@@ -41,6 +41,7 @@ interface LoginState {
   handleForgotClick: () => void
   handleLoginSuccess: () => void
   handleLoginFailure: (emailErr: boolean, passErr: boolean) => void
+  verifyCode: (code: string) => Promise<void>
   resetLogin: () => void
 }
 
@@ -124,6 +125,26 @@ export const useLoginStore = create<LoginState>()(
           isError: true,
           isSuccess: false,
         }),
+
+      // Verify code
+      verifyCode: async (code: string) => {
+        const { email } = get()
+        set({ isSubmitting: true, isError: false })
+        try {
+          await authAPI.verify({ email, code })
+          set({
+            isCodeSent: false,
+            isResetting: true,
+            isSubmitting: false,
+          })
+        } catch (err: any) {
+          set({
+            isError: true,
+            isSubmitting: false,
+          })
+          throw err
+        }
+      },
 
       // Reset entire login flow
       resetLogin: () =>

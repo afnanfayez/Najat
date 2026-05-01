@@ -12,7 +12,7 @@ const EnterCode = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
   const inputs = useRef([])
-  const { setIsResetting, setIsCodeSent } = useLoginStore()
+  const { verifyCode, setIsCodeSent, isSubmitting } = useLoginStore()
 
   useEffect(() => {
     if (inputs.current[0]) {
@@ -20,16 +20,15 @@ const EnterCode = () => {
     }
   }, [])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault()
     const fullCode = code.join('')
     if (fullCode.length === 6) {
-      if (fullCode === '000000') {
-        setError(true)
-      } else {
+      try {
         setError(false)
-
-        setIsResetting(true)
+        await verifyCode(fullCode)
+      } catch (err) {
+        setError(true)
       }
     }
   }
@@ -51,13 +50,8 @@ const EnterCode = () => {
     } else if (value !== '' && index === 5) {
       const fullCode = newCode.join('')
       if (fullCode.length === 6) {
-        if (fullCode === '000000') {
-          setError(true)
-        } else {
-          setError(false)
-
-          setIsResetting(true)
-        }
+        // Option to auto-submit here, or let user click submit.
+        // We will just let them click submit to avoid unexpected loading spinners.
       }
     }
   }
@@ -99,13 +93,7 @@ const EnterCode = () => {
 
     if (pastedData.length === 6) {
       const fullCode = pastedData.join('')
-      if (fullCode === '000000') {
-        setError(true)
-      } else {
-        setError(false)
-
-        setIsResetting(true)
-      }
+      // Let the user click submit
     }
   }
 
@@ -202,10 +190,15 @@ const EnterCode = () => {
               </div>
 
               <Button
-                className="mx-auto flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
+                disabled={isSubmitting}
+                className={`mx-auto flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
+                  isSubmitting
+                    ? 'bg-[#459F49] shadow-[#459F49]/20 hover:bg-[#3A8A3F]'
+                    : 'bg-[#2496FF] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
+                }`}
                 style={{ lineHeight: '100%' }}
               >
-                ارسال
+                {isSubmitting ? 'جاري التحقق...' : 'ارسال'}
               </Button>
             </form>
 

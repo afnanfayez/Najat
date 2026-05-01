@@ -9,7 +9,7 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
-  const { submitRegistration, isSubmitting } = useRegisterStore()
+  const { submitRegistration, isSubmitting, error } = useRegisterStore()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -107,6 +107,14 @@ const TermsStep = () => {
             اوافق على سياسة الشروط والاحكام
           </Label>
         </div>
+
+        {error && (
+          <div className="text-red-500 text-sm font-bold text-center mt-2" dir="rtl">
+            {error === 'Failed to fetch' || error.includes('CORS') 
+              ? 'خطأ في الاتصال بالخادم (CORS Policy). يرجى إبلاغ مطور الباك إند.'
+              : error}
+          </div>
+        )}
 
         <Button
           type="submit"
