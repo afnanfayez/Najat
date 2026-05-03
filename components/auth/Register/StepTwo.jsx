@@ -41,6 +41,11 @@ const StepTwo = () => {
       return
     }
 
+    if (formData.identityNumber.length !== 9 || !/^\d+$/.test(formData.identityNumber)) {
+      toast.error('رقم الهوية يجب أن يتكون من 9 أرقام بالضبط')
+      return
+    }
+
     const isValid = await validateStep(2)
     if (isValid) {
       nextStep()

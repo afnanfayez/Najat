@@ -24,21 +24,27 @@ async function request(endpoint: string, options: RequestInit = {}) {
     }
 
     if (!res.ok) {
+      const rawMsg = data?.message ?? data?.error ?? data?.detail
       throw {
         status: res.status,
-        message: data?.message || data?.error || 'Something went wrong',
-        errors: data?.errors || null,
-        fullData: data
+        message: rawMsg ?? 'Something went wrong',
+        errors: data?.errors ?? null,
+        detail: data?.detail ?? null,
+        fullData: data,
       }
     }
 
     return data
   } catch (err: any) {
+    const safeMsg =
+      err?.message != null && typeof err.message === 'object'
+        ? JSON.stringify(err.message)
+        : err?.message
     console.error(`API Request Error [${endpoint}]:`, {
       name: err.name,
-      message: err.message,
+      message: safeMsg,
       cause: err.cause,
-      stack: err.stack
+      stack: err.stack,
     })
     // If it's already our custom error object, re-throw it
     if (err.status) throw err

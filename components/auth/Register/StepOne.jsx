@@ -1,37 +1,87 @@
 'use client'
 
-import React from 'react'
-import { User, Phone } from 'lucide-react'
+import React, { useEffect, useRef } from 'react'
+import { Phone } from 'lucide-react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { registerStepOneSchema } from '@/schemas/registerStepOne'
+import { probeRegisterStepOne } from '@/lib/auth/probeRegisterStepOne'
 
 const StepOne = () => {
-  const { formData, updateFormData, nextStep, fieldErrors, validateStep, isSubmitting } = useRegisterStore()
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const { formData, updateFormData, nextStep } = useRegisterStore()
+  const submitGen = useRef(0)
+  const probeInFlight = useRef(false)
 
-    if (
-      formData.name.trim() === '' ||
-      formData.phone.trim() === '' ||
-      formData.email.trim() === ''
-    ) {
-      toast.error('يرجى تعبئة جميع الحقول')
-      return
-    }
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    setError,
+    clearErrors,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerStepOneSchema),
+    defaultValues: {
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+    },
+    mode: 'onSubmit',
+  })
 
-    const isValid = await validateStep(1)
-    if (isValid) {
-      nextStep()
+  useEffect(() => {
+    reset({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email,
+    })
+  }, [formData.name, formData.phone, formData.email, reset])
+
+  const onValid = async (values) => {
+    if (probeInFlight.current) return
+    probeInFlight.current = true
+    const gen = ++submitGen.current
+    try {
+      const result = await probeRegisterStepOne({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+      })
+      if (gen !== submitGen.current) return
+
+      if (result.ok) {
+        updateFormData({
+          name: values.name.trim(),
+          phone: values.phone.trim(),
+          email: values.email.trim(),
+        })
+        nextStep()
+        return
+      }
+
+      toast.error(result.message)
+      if (result.clearEmail) setValue('email', '')
+      if (result.clearPhone) setValue('phone', '')
+      if (result.nameError) {
+        setError('name', { type: 'server', message: result.nameError })
+      } else {
+        clearErrors('name')
+      }
+    } finally {
+      probeInFlight.current = false
     }
   }
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onValid)}
+      noValidate
       className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
       <div className="space-y-1.5">
@@ -42,16 +92,25 @@ const StepOne = () => {
         >
           الاسم كاملاً
         </Label>
-        <Input
-          id="reg-name"
-          type="text"
-          value={formData.name}
-          onChange={(e) => updateFormData({ name: e.target.value })}
-          placeholder="اكتب اسمك كاملاً"
-          className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${fieldErrors.name ? 'border-2 border-red-500' : 'border-none'}`}
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="reg-name"
+              type="text"
+              onChange={(e) => {
+                field.onChange(e)
+                if (errors.name) clearErrors('name')
+              }}
+              placeholder="اكتب اسمك كاملاً"
+              className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${errors.name ? 'border-2 border-red-500' : 'border-none'}`}
+            />
+          )}
         />
-        {fieldErrors.name && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.name}</p>
+        {errors.name && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.name.message}</p>
         )}
       </div>
 
@@ -64,20 +123,29 @@ const StepOne = () => {
           رقم الجوال
         </Label>
         <div className="relative">
-          <Input
-            id="reg-phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => updateFormData({ phone: e.target.value })}
-            placeholder="05XXXXXXXX"
-            className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${fieldErrors.phone ? 'border-2 border-red-500' : 'border-none'}`}
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="reg-phone"
+                type="tel"
+                onChange={(e) => {
+                  field.onChange(e)
+                  if (errors.phone) clearErrors('phone')
+                }}
+                placeholder="05XXXXXXXX"
+                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${errors.phone ? 'border-2 border-red-500' : 'border-none'}`}
+              />
+            )}
           />
           <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
             <Phone className="h-5 w-5 text-[#2496FF]" />
           </div>
         </div>
-        {fieldErrors.phone && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.phone}</p>
+        {errors.phone && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.phone.message}</p>
         )}
       </div>
 
@@ -90,20 +158,31 @@ const StepOne = () => {
           البريد الإلكتروني
         </Label>
         <div className="relative">
-          <Input
-            id="reg-email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => updateFormData({ email: e.target.value })}
-            placeholder="name@example.com"
-            className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${fieldErrors.email ? 'border-2 border-red-500' : 'border-none'}`}
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="reg-email"
+                type="text"
+                inputMode="email"
+                autoComplete="email"
+                onChange={(e) => {
+                  field.onChange(e)
+                  if (errors.email) clearErrors('email')
+                }}
+                placeholder="name@example.com"
+                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${errors.email ? 'border-2 border-red-500' : 'border-none'}`}
+              />
+            )}
           />
           <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
             <i className="bx bx-envelope text-[18px] text-[#2496FF] sm:text-[20px]" />
           </div>
         </div>
-        {fieldErrors.email && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.email}</p>
+        {errors.email && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.email.message}</p>
         )}
       </div>
 

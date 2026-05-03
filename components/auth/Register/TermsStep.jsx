@@ -9,7 +9,11 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
-  const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors } = useRegisterStore()
+  const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors, prevStep } = useRegisterStore()
+  
+  React.useEffect(() => {
+    clearErrors()
+  }, [clearErrors])
 
   const hasFieldErrors = Object.keys(fieldErrors).length > 0
 
@@ -27,8 +31,8 @@ const TermsStep = () => {
       className="mx-auto flex h-full w-full max-w-[650px] flex-col"
     >
       <div
-        className="flex-1 space-y-6 pr-2 text-right text-[15px] font-bold text-black sm:text-[16px]"
-        style={{ lineHeight: '1.8' }}
+        className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden pr-2 text-right text-[15px] font-bold text-black sm:text-[16px] w-full break-words"
+        style={{ lineHeight: '1.8', maxHeight: '500px' }}
       >
         <p>
           مرحباً بك في موقع "نجاة" - خارطة الحياة في غزة. باستخدامك لهذا الموقع،
@@ -120,18 +124,30 @@ const TermsStep = () => {
           </div>
         )}
 
-        <Button
-          type="submit"
-          disabled={!accepted || isSubmitting}
-          className={`mx-auto flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white transition-all sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
-            accepted && !isSubmitting
-              ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
-              : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
-          }`}
-          style={{ lineHeight: '100%' }}
-        >
-          {isSubmitting ? 'جاري إنشاء الحساب...' : 'دخول'}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-4">
+          <Button
+            type="submit"
+            disabled={!accepted || isSubmitting}
+            className={`flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white transition-all sm:h-[50px] sm:w-[240px] sm:text-[20px] ${
+              accepted && !isSubmitting
+                ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
+                : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
+            }`}
+            style={{ lineHeight: '100%' }}
+          >
+            {isSubmitting ? 'جاري إنشاء الحساب...' : 'دخول'}
+          </Button>
+
+          <Button
+            type="button"
+            onClick={prevStep}
+            disabled={isSubmitting}
+            className="flex h-11 w-full items-center justify-center rounded-[10px] border-2 border-[#2496FF] bg-transparent text-[18px] font-bold text-[#2496FF] transition-all hover:bg-[#2496FF]/5 active:scale-[0.98] sm:h-[50px] sm:w-[140px] sm:text-[20px]"
+            style={{ lineHeight: '100%' }}
+          >
+            رجوع
+          </Button>
+        </div>
       </div>
     </form>
   )
