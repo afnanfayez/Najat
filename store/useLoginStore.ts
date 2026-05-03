@@ -21,6 +21,11 @@ interface LoginState {
   emailError: boolean
   passwordError: boolean
 
+  // Forgot password flow
+  forgotEmail: string
+  forgotCode: string
+  forgotError: string | null
+
   // Derived
   isValid: boolean
 
@@ -41,7 +46,9 @@ interface LoginState {
   handleForgotClick: () => void
   handleLoginSuccess: () => void
   handleLoginFailure: (emailErr: boolean, passErr: boolean) => void
-  verifyCode: (code: string) => Promise<void>
+  sendForgotPasswordCode: (email: string) => Promise<boolean>
+  verifyForgotCode: (code: string) => Promise<boolean>
+  resetPasswordWithCode: (newPassword: string) => Promise<boolean>
   resetLogin: () => void
 }
 
@@ -62,6 +69,11 @@ export const useLoginStore = create<LoginState>()(
       isResetting: false,
       emailError: false,
       passwordError: false,
+
+      // Forgot password flow
+      forgotEmail: '',
+      forgotCode: '',
+      forgotError: null,
 
       // Derived — computed on-the-fly via getter
       get isValid() {
@@ -92,6 +104,9 @@ export const useLoginStore = create<LoginState>()(
           isSuccess: false,
           isCodeSent: false,
           isResetting: false,
+          forgotEmail: '',
+          forgotCode: '',
+          forgotError: null,
         }),
 
       // Composite: successful login → make API call
@@ -126,23 +141,92 @@ export const useLoginStore = create<LoginState>()(
           isSuccess: false,
         }),
 
-      // Verify code
-      verifyCode: async (code: string) => {
-        const { email } = get()
-        set({ isSubmitting: true, isError: false })
+      // ─── Forgot Password Flow ──────────────────────────────────────────
+
+      /**
+       * Step 1: Send a password reset code to the user's email.
+       * POST /v1/auth/forgot-password { email }
+       */
+      sendForgotPasswordCode: async (email: string) => {
+        set({ isSubmitting: true, forgotError: null })
         try {
-          await authAPI.verify({ email, code })
+          await authAPI.forgotPassword({ email })
           set({
+            forgotEmail: email,
+            isCodeSent: true,
+            isSubmitting: false,
+          })
+          return true
+        } catch (err: any) {
+          const msg = err?.message ?? 'حدث خطأ أثناء إرسال الرمز'
+          set({
+            forgotError: typeof msg === 'string' ? msg : 'حدث خطأ أثناء إرسال الرمز',
+            isSubmitting: false,
+          })
+          return false
+        }
+      },
+
+      /**
+       * Step 2: Verify the 6-digit code.
+       * We store the code and move to the reset password screen.
+       * The actual verification happens server-side when we call reset-password.
+       * 
+       * If your backend has a separate verify-code endpoint for forgot-password,
+       * we can call it here. Otherwise we just store the code and verify at reset time.
+       */
+      verifyForgotCode: async (code: string) => {
+        const { forgotEmail } = get()
+        set({ isSubmitting: true, forgotError: null })
+        try {
+          // Use the verify endpoint to confirm the code is valid
+          await authAPI.verify({ email: forgotEmail, code })
+          set({
+            forgotCode: code,
             isCodeSent: false,
             isResetting: true,
             isSubmitting: false,
           })
+          return true
         } catch (err: any) {
+          const msg = err?.message ?? 'الرمز غير صحيح أو منتهي الصلاحية'
           set({
-            isError: true,
+            forgotError: typeof msg === 'string' ? msg : 'الرمز غير صحيح أو منتهي الصلاحية',
             isSubmitting: false,
           })
-          throw err
+          return false
+        }
+      },
+
+      /**
+       * Step 3: Reset the password using email + code + newPassword.
+       * POST /v1/auth/reset-password { email, code, newPassword }
+       */
+      resetPasswordWithCode: async (newPassword: string) => {
+        const { forgotEmail, forgotCode } = get()
+        set({ isSubmitting: true, forgotError: null })
+        try {
+          await authAPI.resetPassword({
+            email: forgotEmail,
+            code: forgotCode,
+            newPassword,
+          })
+          set({
+            isSubmitting: false,
+            isResetting: false,
+            isSuccess: true,
+            // Clear sensitive data
+            forgotCode: '',
+            forgotError: null,
+          })
+          return true
+        } catch (err: any) {
+          const msg = err?.message ?? 'حدث خطأ أثناء إعادة تعيين كلمة المرور'
+          set({
+            forgotError: typeof msg === 'string' ? msg : 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+            isSubmitting: false,
+          })
+          return false
         }
       },
 
@@ -160,6 +244,9 @@ export const useLoginStore = create<LoginState>()(
           isResetting: false,
           emailError: false,
           passwordError: false,
+          forgotEmail: '',
+          forgotCode: '',
+          forgotError: null,
         }),
     }),
     {

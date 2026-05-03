@@ -1,68 +1,69 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Eye, EyeOff, LogIn, ChevronRight } from 'lucide-react'
+import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { registerStepFourSchema } from '@/schemas/registerStepFour'
 
 const StepFour = () => {
   const { formData, updateFormData, nextStep, fieldErrors, clearErrors } = useRegisterStore()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [localErrors, setLocalErrors] = useState({})
 
-  const getPasswordWarning = () => {
-    if (fieldErrors.password) return { text: fieldErrors.password, color: 'text-red-500' }
+  const getError = (field) => {
+    if (localErrors[field]) return localErrors[field]
+    if (fieldErrors[field]) return fieldErrors[field]
+    return null
+  }
+
+  const getPasswordHint = () => {
+    if (getError('password')) return null // Don't show hint if there's an error
     if (!formData.password) return null
-    if (formData.password === '12345678')
-      return { text: 'كلمة المرور مستخدمة سابقا', color: 'text-red-500' }
     if (formData.password.length < 8)
       return {
-        text: 'يجب ان الا تقل كلمة المرور عن 8 احرف ويجب ان تتضمن ارقام ورموز',
+        text: 'يجب ان لا تقل كلمة المرور عن 8 أحرف ويجب أن تتضمن أرقام ورموز',
         color: 'text-[#FDB022]',
       }
     const hasNumbers = /\d/.test(formData.password)
     const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
     if (!hasNumbers || !hasSymbols)
-      return { text: 'كلمة المرور ليست قوية ايضا', color: 'text-red-500' }
-    return null
+      return { text: 'كلمة المرور يجب أن تحتوي على أرقام ورموز خاصة', color: 'text-[#FDB022]' }
+    return { text: 'كلمة المرور قوية ✓', color: 'text-green-400' }
   }
 
-  const warning = getPasswordWarning()
+  const hint = getPasswordHint()
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    setLocalErrors({})
 
-    if (fieldErrors.password) {
-      toast.error('يرجى تصحيح الأخطاء قبل المتابعة')
-      return
-    }
+    const result = registerStepFourSchema.safeParse({
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+    })
 
-    if (
-      formData.password.trim() === '' ||
-      formData.confirmPassword.trim() === ''
-    ) {
-      toast.error('يرجى تعبئة حقلي كلمة المرور')
-      return
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('كلمة المرور قصيرة', {
-        description: 'يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل.',
+    if (!result.success) {
+      const errs = {}
+      result.error.issues.forEach((err) => {
+        const field = err.path[0]
+        if (field && !errs[field]) {
+          errs[field] = err.message
+        }
       })
+      setLocalErrors(errs)
+      // Show the first error as a toast
+      const firstMsg = result.error.issues[0]?.message
+      if (firstMsg) toast.error(firstMsg)
       return
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('كلمتا المرور غير متطابقتين', {
-        description: 'تأكد من كتابة كلمة المرور نفسها في الحقلين.',
-      })
-      return
-    }
-
+    clearErrors()
     nextStep()
   }
 
@@ -84,9 +85,12 @@ const StepFour = () => {
             id="reg-password"
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
-            onChange={(e) => updateFormData({ password: e.target.value })}
+            onChange={(e) => {
+              updateFormData({ password: e.target.value })
+              setLocalErrors((prev) => { const n = {...prev}; delete n.password; return n })
+            }}
             placeholder="********"
-            className={`h-11 rounded-[10px] bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px] ${fieldErrors.password ? 'border-2 border-red-500' : 'border-none'}`}
+            className={`h-11 rounded-[10px] bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px] ${getError('password') ? 'border-2 border-red-500' : 'border-none'}`}
           />
           <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
             <i className="bx bx-key text-[18px] text-[#2496FF] sm:text-[20px]" />
@@ -105,12 +109,17 @@ const StepFour = () => {
             </button>
           </div>
         </div>
-        {warning && (
+        {getError('password') && (
+          <p className="mt-1 text-right text-[11px] font-bold text-red-500 sm:text-[12px]" dir="rtl">
+            {getError('password')}
+          </p>
+        )}
+        {!getError('password') && hint && (
           <p
-            className={`text-right text-[11px] font-bold ${warning.color} mt-1 sm:text-[12px]`}
+            className={`text-right text-[11px] font-bold ${hint.color} mt-1 sm:text-[12px]`}
             dir="rtl"
           >
-            {warning.text}
+            {hint.text}
           </p>
         )}
       </div>
@@ -128,11 +137,12 @@ const StepFour = () => {
             id="confirmPassword"
             type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
-            onChange={(e) =>
+            onChange={(e) => {
               updateFormData({ confirmPassword: e.target.value })
-            }
+              setLocalErrors((prev) => { const n = {...prev}; delete n.confirmPassword; return n })
+            }}
             placeholder="********"
-            className="h-11 rounded-[10px] border-none bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
+            className={`h-11 rounded-[10px] bg-white/95 px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px] ${getError('confirmPassword') ? 'border-2 border-red-500' : 'border-none'}`}
           />
           <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
             <i className="bx bx-key text-[18px] text-[#2496FF] sm:text-[20px]" />
@@ -151,6 +161,11 @@ const StepFour = () => {
             </button>
           </div>
         </div>
+        {getError('confirmPassword') && (
+          <p className="mt-1 text-right text-[11px] font-bold text-red-500 sm:text-[12px]" dir="rtl">
+            {getError('confirmPassword')}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-start gap-2 pt-1">

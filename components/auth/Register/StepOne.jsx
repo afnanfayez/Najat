@@ -1,29 +1,23 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { Phone } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
 import { useRegisterStore } from '@/store/useRegisterStore'
 import { registerStepOneSchema } from '@/schemas/registerStepOne'
-import { probeRegisterStepOne } from '@/lib/auth/probeRegisterStepOne'
 
 const StepOne = () => {
-  const { formData, updateFormData, nextStep } = useRegisterStore()
-  const submitGen = useRef(0)
-  const probeInFlight = useRef(false)
+  const { formData, updateFormData, nextStep, fieldErrors } = useRegisterStore()
 
   const {
     control,
     handleSubmit,
-    setValue,
-    setError,
-    clearErrors,
     reset,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerStepOneSchema),
@@ -43,39 +37,20 @@ const StepOne = () => {
     })
   }, [formData.name, formData.phone, formData.email, reset])
 
-  const onValid = async (values) => {
-    if (probeInFlight.current) return
-    probeInFlight.current = true
-    const gen = ++submitGen.current
-    try {
-      const result = await probeRegisterStepOne({
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-      })
-      if (gen !== submitGen.current) return
+  // Merge Zod client errors with any backend field errors carried over
+  const getError = (field) => {
+    if (errors[field]) return errors[field].message
+    if (fieldErrors[field]) return fieldErrors[field]
+    return null
+  }
 
-      if (result.ok) {
-        updateFormData({
-          name: values.name.trim(),
-          phone: values.phone.trim(),
-          email: values.email.trim(),
-        })
-        nextStep()
-        return
-      }
-
-      toast.error(result.message)
-      if (result.clearEmail) setValue('email', '')
-      if (result.clearPhone) setValue('phone', '')
-      if (result.nameError) {
-        setError('name', { type: 'server', message: result.nameError })
-      } else {
-        clearErrors('name')
-      }
-    } finally {
-      probeInFlight.current = false
-    }
+  const onValid = (values) => {
+    updateFormData({
+      name: values.name.trim(),
+      phone: values.phone.trim(),
+      email: values.email.trim(),
+    })
+    nextStep()
   }
 
   return (
@@ -105,12 +80,12 @@ const StepOne = () => {
                 if (errors.name) clearErrors('name')
               }}
               placeholder="اكتب اسمك كاملاً"
-              className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${errors.name ? 'border-2 border-red-500' : 'border-none'}`}
+              className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${getError('name') ? 'border-2 border-red-500' : 'border-none'}`}
             />
           )}
         />
-        {errors.name && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.name.message}</p>
+        {getError('name') && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('name')}</p>
         )}
       </div>
 
@@ -136,7 +111,7 @@ const StepOne = () => {
                   if (errors.phone) clearErrors('phone')
                 }}
                 placeholder="05XXXXXXXX"
-                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${errors.phone ? 'border-2 border-red-500' : 'border-none'}`}
+                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${getError('phone') ? 'border-2 border-red-500' : 'border-none'}`}
               />
             )}
           />
@@ -144,8 +119,8 @@ const StepOne = () => {
             <Phone className="h-5 w-5 text-[#2496FF]" />
           </div>
         </div>
-        {errors.phone && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.phone.message}</p>
+        {getError('phone') && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('phone')}</p>
         )}
       </div>
 
@@ -173,7 +148,7 @@ const StepOne = () => {
                   if (errors.email) clearErrors('email')
                 }}
                 placeholder="name@example.com"
-                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${errors.email ? 'border-2 border-red-500' : 'border-none'}`}
+                className={`h-11 rounded-[10px] bg-white/95 pr-12 pl-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:pr-14 sm:text-[15px] ${getError('email') ? 'border-2 border-red-500' : 'border-none'}`}
               />
             )}
           />
@@ -181,8 +156,8 @@ const StepOne = () => {
             <i className="bx bx-envelope text-[18px] text-[#2496FF] sm:text-[20px]" />
           </div>
         </div>
-        {errors.email && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{errors.email.message}</p>
+        {getError('email') && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('email')}</p>
         )}
       </div>
 
@@ -192,7 +167,7 @@ const StepOne = () => {
         className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
         style={{ lineHeight: '100%' }}
       >
-        {isSubmitting ? 'جاري التحقق...' : 'التالي'}
+        التالي
       </Button>
     </form>
   )

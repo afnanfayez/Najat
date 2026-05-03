@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -21,6 +20,8 @@ const TermsStep = () => {
     e.preventDefault()
     clearErrors()
     if (accepted) {
+      // submitRegistration() is the ONLY place in the entire app that calls POST /register.
+      // If it fails, the store will automatically redirect the user to the step with errors.
       await submitRegistration()
     }
   }

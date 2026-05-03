@@ -40,12 +40,11 @@ interface RegisterState {
   // Reset
   resetRegister: () => void
 
-  // API Call
+  // API Call — only used at the FINAL submit (Step 5 / TermsStep)
   isSubmitting: boolean
   error: string | null
   fieldErrors: Record<string, string>
   submitRegistration: () => Promise<void>
-  validateStep: (currentStep: number) => Promise<boolean>
   setFieldError: (field: string, error: string) => void
   clearErrors: () => void
 }
@@ -69,6 +68,153 @@ const initialFormData: RegisterFormData = {
   password: '',
   confirmPassword: '',
   rememberMe: false,
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapAgeGroup(age: string): string {
+  switch (age) {
+    case '40+':
+      return 'above 40'
+    case 'under-18':
+      return 'under 18'
+    case '18-40':
+    default:
+      return '18-40'
+  }
+}
+
+function mapHealthStatus(status: string): string {
+  switch (status) {
+    case 'chronic':
+      return 'Chronically Ill'
+    case 'injured':
+      return 'Injured'
+    case 'amputated':
+      return 'Amputee'
+    case 'good':
+    default:
+      return 'Healthy'
+  }
+}
+
+function formatPhone(phone: string): string {
+  return phone.startsWith('+') ? phone : `+970${phone.replace(/^0+/, '')}`
+}
+
+/**
+ * Parse backend error messages and map them to form field keys + Arabic messages.
+ * Returns { fieldErrors, generalError } so the caller can decide what to display.
+ */
+function parseRegistrationErrors(err: any): {
+  fieldErrors: Record<string, string>
+  generalError: string
+  /** Suggest which step the user should be sent back to */
+  errorStep: number | null
+} {
+  const messages: string[] = Array.isArray(err.message) ? err.message : [err.message ?? 'حدث خطأ غير متوقع']
+  const fieldErrors: Record<string, string> = {}
+  let errorStep: number | null = null
+
+  messages.forEach((msg: string) => {
+    const m = msg.toLowerCase()
+    let arabicMsg = msg
+
+    // ── Translate known error patterns ──
+    if (m.includes('email already exists') || m.includes('email') && (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate'))) {
+      arabicMsg = 'البريد الإلكتروني مستخدم بالفعل'
+    }
+    if (m.includes('phone') && (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate'))) {
+      arabicMsg = 'رقم الجوال مستخدم بالفعل'
+    }
+    if (m.includes('invalid email')) arabicMsg = 'البريد الإلكتروني غير صالح'
+    if (m.includes('nationalid') || m.includes('identitynumber') || m.includes('national_id')) {
+      if (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate')) arabicMsg = 'رقم الهوية مستخدم بالفعل'
+      else if (m.includes('digits')) arabicMsg = 'رقم الهوية يجب أن يتكون من 9 أرقام'
+      else arabicMsg = 'خطأ في رقم الهوية'
+    }
+    if (m.includes('password')) {
+      if (m.includes('short') || m.includes('min') || m.includes('least')) arabicMsg = 'كلمة المرور قصيرة جداً'
+      else arabicMsg = 'كلمة المرور يجب أن تحتوي على حروف وأرقام ورموز'
+    }
+    if ((m.includes('fullname') || m.includes('full_name')) && !m.includes('password')) {
+      if (m.includes('required')) arabicMsg = 'الاسم الكامل مطلوب'
+      else arabicMsg = 'الاسم غير صالح'
+    }
+    if (m.includes('marital')) arabicMsg = 'يرجى اختيار الحالة الاجتماعية'
+    if (m.includes('health')) arabicMsg = 'يرجى اختيار الحالة الصحية'
+    if (m.includes('housing')) arabicMsg = 'يرجى اختيار حالة السكن'
+    if (m.includes('region')) arabicMsg = 'يرجى تحديد المنطقة'
+    if (m.includes('gender')) arabicMsg = 'يرجى اختيار الجنس'
+    if (m.includes('age')) arabicMsg = 'يرجى اختيار الفئة العمرية'
+
+    // ── Map to field keys + determine which step ──
+    // Step 1 fields
+    if (m.includes('email')) {
+      fieldErrors.email = arabicMsg
+      if (!errorStep || errorStep > 1) errorStep = 1
+    }
+    if (m.includes('phone') || m.includes('mobile')) {
+      fieldErrors.phone = arabicMsg
+      if (!errorStep || errorStep > 1) errorStep = 1
+    }
+    if ((m.includes('fullname') || m.includes('full_name') || (m.includes('name') && !m.includes('username'))) && !m.includes('password')) {
+      fieldErrors.name = arabicMsg
+      if (!errorStep || errorStep > 1) errorStep = 1
+    }
+
+    // Step 2 fields
+    if (m.includes('nationalid') || m.includes('national_id') || m.includes('identitynumber')) {
+      fieldErrors.identityNumber = arabicMsg
+      if (!errorStep || errorStep > 2) errorStep = 2
+    }
+    if (m.includes('marital')) {
+      fieldErrors.maritalStatus = arabicMsg
+      if (!errorStep || errorStep > 2) errorStep = 2
+    }
+    if (m.includes('health')) {
+      fieldErrors.healthStatus = arabicMsg
+      if (!errorStep || errorStep > 2) errorStep = 2
+    }
+    if (m.includes('gender')) {
+      fieldErrors.gender = arabicMsg
+      if (!errorStep || errorStep > 2) errorStep = 2
+    }
+    if (m.includes('age')) {
+      fieldErrors.ageGroup = arabicMsg
+      if (!errorStep || errorStep > 2) errorStep = 2
+    }
+
+    // Step 3 fields
+    if (m.includes('housing')) {
+      fieldErrors.housingStatus = arabicMsg
+      if (!errorStep || errorStep > 3) errorStep = 3
+    }
+    if (m.includes('region')) {
+      fieldErrors.region = arabicMsg
+      if (!errorStep || errorStep > 3) errorStep = 3
+    }
+    if (m.includes('members') || m.includes('family')) {
+      fieldErrors.familyMembersCount = arabicMsg
+      if (!errorStep || errorStep > 3) errorStep = 3
+    }
+
+    // Step 4 fields
+    if (m.includes('password')) {
+      fieldErrors.password = arabicMsg
+      if (!errorStep || errorStep > 4) errorStep = 4
+    }
+  })
+
+  const generalError =
+    fieldErrors.email ||
+    fieldErrors.phone ||
+    fieldErrors.name ||
+    fieldErrors.identityNumber ||
+    fieldErrors.password ||
+    'حدث خطأ أثناء إنشاء الحساب'
+
+  return { fieldErrors, generalError, errorStep }
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -111,110 +257,7 @@ export const useRegisterStore = create<RegisterState>()(
 
       clearErrors: () => set({ fieldErrors: {}, error: null }),
 
-      validateStep: async (currentStep) => {
-        set({ isSubmitting: true, error: null, fieldErrors: {} })
-        const state = get()
-        
-        // Prepare a "validation" payload
-        // We use a dummy invalid password to prevent actual registration
-        // but trigger validation for other fields.
-        const payload: any = {
-          email: state.formData.email || 'test@test.com',
-          fullName: state.formData.name || 'Test User',
-          phoneNumber: state.formData.phone.startsWith('+') ? state.formData.phone : `+970${state.formData.phone.replace(/^0+/, '')}`,
-          password: '1', // Invalid password to ensure registration fails but triggers validation
-          role: 'resident'
-        }
-
-        if (currentStep >= 2) {
-          payload.gender = state.formData.gender || 'male'
-          payload.ageGroup = state.formData.age === '40+' ? 'above 40' : '18-40'
-          payload.maritalStatus = state.formData.maritalStatus || 'married'
-          payload.healthStatus = 
-            state.formData.healthStatus === 'chronic' ? 'Chronically Ill' :
-            state.formData.healthStatus === 'injured' ? 'Injured' :
-            state.formData.healthStatus === 'amputated' ? 'Amputee' : 'Healthy'
-          payload.nationalId = state.formData.identityNumber || '000000000'
-        }
-
-        if (currentStep >= 3) {
-          payload.housingStatus = state.formData.housingStatus || 'owned'
-          payload.familyMembersCount = parseInt(state.formData.currentMembers) || 1
-          payload.femalesCount = parseInt(state.formData.femaleCount) || 0
-          payload.malesCount = parseInt(state.formData.maleCount) || 0
-          payload.region = state.formData.region || 'Gaza'
-        }
-
-        try {
-          await authAPI.register(payload)
-          set({ isSubmitting: false })
-          return true
-        } catch (err: any) {
-          const messages = Array.isArray(err.message) ? err.message : [err.message]
-          const fieldErrors: Record<string, string> = {}
-          let hasCurrentStepErrors = false
-
-          messages.forEach((msg: string) => {
-            const m = msg.toLowerCase()
-            let arabicMsg = msg
-
-            // Translation mapping
-            if (m.includes('email already exists')) arabicMsg = 'البريد الإلكتروني مستخدم بالفعل'
-            if (m.includes('phone') && (m.includes('exists') || m.includes('unique'))) arabicMsg = 'رقم الجوال مستخدم بالفعل'
-            if (m.includes('invalid email')) arabicMsg = 'البريد الإلكتروني غير صالح'
-            if (m.includes('nationalid') || m.includes('identitynumber')) {
-              if (m.includes('exists') || m.includes('unique')) arabicMsg = 'رقم الهوية مستخدم بالفعل'
-              else if (m.includes('digits')) arabicMsg = 'رقم الهوية يجب أن يتكون من 9 أرقام'
-              else arabicMsg = 'خطأ في رقم الهوية'
-            }
-            if (m.includes('password')) {
-              if (m.includes('short')) arabicMsg = 'كلمة المرور قصيرة جداً'
-              else arabicMsg = 'كلمة المرور يجب أن تحتوي على حروف وأرقام ورموز'
-            }
-            if (m.includes('fullname') || m.includes('name')) {
-              if (m.includes('required')) arabicMsg = 'الاسم الكامل مطلوب'
-              else arabicMsg = 'الاسم غير صالح'
-            }
-            if (m.includes('marital')) arabicMsg = 'يرجى اختيار الحالة الاجتماعية'
-            if (m.includes('health')) arabicMsg = 'يرجى اختيار الحالة الصحية'
-            if (m.includes('housing')) arabicMsg = 'يرجى اختيار حالة السكن'
-            if (m.includes('region')) arabicMsg = 'يرجى تحديد المنطقة'
-            if (m.includes('gender')) arabicMsg = 'يرجى اختيار الجنس'
-            if (m.includes('age')) arabicMsg = 'يرجى اختيار الفئة العمرية'
-
-            // Step 1 fields
-            if (currentStep === 1) {
-              if (m.includes('phone')) { fieldErrors.phone = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('email')) { fieldErrors.email = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('fullname') || m.includes('name')) { fieldErrors.name = arabicMsg; hasCurrentStepErrors = true; }
-            }
-            // Step 2 fields
-            if (currentStep === 2) {
-              if (m.includes('nationalid')) { fieldErrors.identityNumber = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('marital')) { fieldErrors.maritalStatus = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('health')) { fieldErrors.healthStatus = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('gender')) { fieldErrors.gender = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('age')) { fieldErrors.ageGroup = arabicMsg; hasCurrentStepErrors = true; }
-            }
-            // Step 3 fields
-            if (currentStep === 3) {
-              if (m.includes('housing')) { fieldErrors.housingStatus = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('region')) { fieldErrors.region = arabicMsg; hasCurrentStepErrors = true; }
-              if (m.includes('members')) { fieldErrors.familyMembersCount = arabicMsg; hasCurrentStepErrors = true; }
-            }
-          })
-
-          set({ isSubmitting: false, fieldErrors })
-          
-          if (hasCurrentStepErrors) {
-            toast.error('يرجى تصحيح الأخطاء المطلوبة من النظام')
-            return false
-          }
-
-          return true
-        }
-      },
-
+      // ─── THE ONLY API CALL — called from TermsStep (Step 5) ──────────────
       submitRegistration: async () => {
         set({ isSubmitting: true, error: null, fieldErrors: {} })
         try {
@@ -223,14 +266,11 @@ export const useRegisterStore = create<RegisterState>()(
             email: state.formData.email,
             password: state.formData.password,
             fullName: state.formData.name,
-            phoneNumber: state.formData.phone.startsWith('+') ? state.formData.phone : `+970${state.formData.phone.replace(/^0+/, '')}`,
-            gender: state.formData.gender === 'ذكر' ? 'male' : state.formData.gender,
-            ageGroup: state.formData.age === '40+' ? 'above 40' : '18-40',
+            phoneNumber: formatPhone(state.formData.phone),
+            gender: state.formData.gender,
+            ageGroup: mapAgeGroup(state.formData.age),
             maritalStatus: state.formData.maritalStatus,
-            healthStatus: 
-              state.formData.healthStatus === 'chronic' ? 'Chronically Ill' :
-              state.formData.healthStatus === 'injured' ? 'Injured' :
-              state.formData.healthStatus === 'amputated' ? 'Amputee' : 'Healthy',
+            healthStatus: mapHealthStatus(state.formData.healthStatus),
             nationalId: state.formData.identityNumber,
             housingStatus: state.formData.housingStatus,
             familyMembersCount: parseInt(state.formData.currentMembers) || 1,
@@ -247,49 +287,33 @@ export const useRegisterStore = create<RegisterState>()(
           }
           set({ isSubmitting: false, step: 6 })
         } catch (err: any) {
-          console.error('Registration Error Status:', err.status)
-          console.error('Registration Error Message:', err.message)
-          console.error('Registration Full Error:', err)
-          
-          const messages = Array.isArray(err.message) ? err.message : [err.message]
-          const fieldErrors: Record<string, string> = {}
-          
-          messages.forEach((msg: string) => {
-            const m = msg.toLowerCase()
-            let arabicMsg = msg
+          console.error('Registration Error:', err)
 
-            if (m.includes('email already exists')) arabicMsg = 'البريد الإلكتروني مستخدم بالفعل'
-            if (m.includes('phone') && m.includes('exists')) arabicMsg = 'رقم الجوال مستخدم بالفعل'
-            if (m.includes('invalid email')) arabicMsg = 'البريد الإلكتروني غير صالح'
-            if (m.includes('nationalid') || m.includes('identitynumber')) {
-              if (m.includes('exists')) arabicMsg = 'رقم الهوية مستخدم بالفعل'
-              else if (m.includes('digits')) arabicMsg = 'رقم الهوية يجب أن يتكون من 9 أرقام'
-            }
-            if (m.includes('password')) arabicMsg = 'خطأ في كلمة المرور (يجب أن تحتوي على أرقام ورموز)'
-
-            if (m.includes('phone')) fieldErrors.phone = arabicMsg
-            if (m.includes('marital')) fieldErrors.maritalStatus = arabicMsg
-            if (m.includes('health')) fieldErrors.healthStatus = arabicMsg
-            if (m.includes('nationalid')) fieldErrors.identityNumber = arabicMsg
-            if (m.includes('fullname') || m.includes('name')) fieldErrors.name = arabicMsg
-            if (m.includes('email')) fieldErrors.email = arabicMsg
-            if (m.includes('password')) fieldErrors.password = arabicMsg
-          })
+          const { fieldErrors, generalError, errorStep } = parseRegistrationErrors(err)
 
           set({ 
             isSubmitting: false, 
-            error: fieldErrors.email || fieldErrors.phone || 'حدث خطأ أثناء إنشاء الحساب',
-            fieldErrors
+            error: generalError,
+            fieldErrors,
+            // If there's a step-specific error, navigate the user back to that step
+            ...(errorStep ? { step: errorStep } : {}),
           })
 
-          if (messages[0]) {
-            toast.error(fieldErrors.email || fieldErrors.phone || messages[0])
-          }
+          toast.error(generalError)
         }
       },
     }),
     {
       name: 'register-storage',
+      // Don't persist sensitive fields to localStorage
+      partialize: (state) => ({
+        step: state.step,
+        formData: {
+          ...state.formData,
+          password: '',
+          confirmPassword: '',
+        },
+      }),
     }
   )
 )

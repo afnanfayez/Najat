@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { ChevronRight } from 'lucide-react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,6 +14,7 @@ import {
 import { toast } from 'sonner'
 
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { registerStepTwoSchema } from '@/schemas/registerStepTwo'
 
 const triggerCls =
   'flex !h-11 w-full box-border items-center justify-between rounded-[10px] border-none bg-white/95 px-4 py-0 text-right text-[16px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] sm:!h-[50px] sm:text-[15px] [&>span]:flex-1 [&>span]:text-right [&>span]:text-black'
@@ -23,33 +23,42 @@ const contentCls =
   'z-50 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-[10px] border-none bg-white shadow-[0px_8px_24px_0px_rgba(0,0,0,0.15)] text-right text-[14px] text-black'
 
 const StepTwo = () => {
-  const { formData, updateFormData, nextStep, fieldErrors, validateStep, isSubmitting } = useRegisterStore()
-  
-  const handleSubmit = async (e) => {
+  const { formData, updateFormData, nextStep, fieldErrors, clearErrors } = useRegisterStore()
+  const [localErrors, setLocalErrors] = useState({})
+
+  const getError = (field) => {
+    if (localErrors[field]) return localErrors[field]
+    if (fieldErrors[field]) return fieldErrors[field]
+    return null
+  }
+
+  const handleSubmit = (e) => {
     e.preventDefault()
+    setLocalErrors({})
 
-    const requiredFields = [
-      formData.gender,
-      formData.age,
-      formData.maritalStatus,
-      formData.healthStatus,
-      formData.identityNumber,
-    ]
+    const result = registerStepTwoSchema.safeParse({
+      gender: formData.gender,
+      age: formData.age,
+      maritalStatus: formData.maritalStatus,
+      healthStatus: formData.healthStatus,
+      identityNumber: formData.identityNumber,
+    })
 
-    if (requiredFields.some((value) => String(value ?? '').trim() === '')) {
-      toast.error('يرجى تعبئة الحقول المطلوبة ')
+    if (!result.success) {
+      const errs = {}
+      result.error.issues.forEach((err) => {
+        const field = err.path[0]
+        if (field && !errs[field]) {
+          errs[field] = err.message
+        }
+      })
+      setLocalErrors(errs)
+      toast.error('يرجى تعبئة الحقول المطلوبة')
       return
     }
 
-    if (formData.identityNumber.length !== 9 || !/^\d+$/.test(formData.identityNumber)) {
-      toast.error('رقم الهوية يجب أن يتكون من 9 أرقام بالضبط')
-      return
-    }
-
-    const isValid = await validateStep(2)
-    if (isValid) {
-      nextStep()
-    }
+    clearErrors()
+    nextStep()
   }
 
   return (
@@ -67,10 +76,13 @@ const StepTwo = () => {
           </Label>
           <Select
             value={formData.gender}
-            onValueChange={(value) => updateFormData({ gender: value })}
+            onValueChange={(value) => {
+              updateFormData({ gender: value })
+              setLocalErrors((prev) => { const n = {...prev}; delete n.gender; return n })
+            }}
             dir="rtl"
           >
-            <SelectTrigger className={`${triggerCls} ${fieldErrors.gender ? 'border-2 border-red-500' : 'border-none'}`}>
+            <SelectTrigger className={`${triggerCls} ${getError('gender') ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -94,6 +106,9 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          {getError('gender') && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('gender')}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -105,10 +120,13 @@ const StepTwo = () => {
           </Label>
           <Select
             value={formData.age}
-            onValueChange={(value) => updateFormData({ age: value })}
+            onValueChange={(value) => {
+              updateFormData({ age: value })
+              setLocalErrors((prev) => { const n = {...prev}; delete n.age; return n })
+            }}
             dir="rtl"
           >
-            <SelectTrigger className={`${triggerCls} ${fieldErrors.ageGroup ? 'border-2 border-red-500' : 'border-none'}`}>
+            <SelectTrigger className={`${triggerCls} ${getError('age') || getError('ageGroup') ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -118,13 +136,8 @@ const StepTwo = () => {
               sideOffset={4}
               avoidCollisions={false}
             >
-              <SelectItem
-                value="under-18"
-                className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
-              >
-                أقل من 18 عام
-              </SelectItem>
-              <SelectItem
+             
+              <SelectItem placeholder="اختر"
                 value="18-40"
                 className="cursor-pointer py-2.5 pr-8 pl-4 text-right text-[14px] hover:bg-gray-50 focus:bg-gray-50"
               >
@@ -138,6 +151,9 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          {(getError('age') || getError('ageGroup')) && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('age') || getError('ageGroup')}</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -149,10 +165,13 @@ const StepTwo = () => {
           </Label>
           <Select
             value={formData.maritalStatus}
-            onValueChange={(value) => updateFormData({ maritalStatus: value })}
+            onValueChange={(value) => {
+              updateFormData({ maritalStatus: value })
+              setLocalErrors((prev) => { const n = {...prev}; delete n.maritalStatus; return n })
+            }}
             dir="rtl"
           >
-            <SelectTrigger className={`${triggerCls} ${fieldErrors.maritalStatus ? 'border-2 border-red-500' : 'border-none'}`}>
+            <SelectTrigger className={`${triggerCls} ${getError('maritalStatus') ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -188,8 +207,8 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
-          {fieldErrors.maritalStatus && (
-            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.maritalStatus}</p>
+          {getError('maritalStatus') && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('maritalStatus')}</p>
           )}
         </div>
 
@@ -202,10 +221,13 @@ const StepTwo = () => {
           </Label>
           <Select
             value={formData.healthStatus}
-            onValueChange={(value) => updateFormData({ healthStatus: value })}
+            onValueChange={(value) => {
+              updateFormData({ healthStatus: value })
+              setLocalErrors((prev) => { const n = {...prev}; delete n.healthStatus; return n })
+            }}
             dir="rtl"
           >
-            <SelectTrigger className={`${triggerCls} ${fieldErrors.healthStatus ? 'border-2 border-red-500' : 'border-none'}`}>
+            <SelectTrigger className={`${triggerCls} ${getError('healthStatus') ? 'border-2 border-red-500' : 'border-none'}`}>
               <SelectValue placeholder="اختر" />
             </SelectTrigger>
             <SelectContent
@@ -241,8 +263,8 @@ const StepTwo = () => {
               </SelectItem>
             </SelectContent>
           </Select>
-          {fieldErrors.healthStatus && (
-            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.healthStatus}</p>
+          {getError('healthStatus') && (
+            <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('healthStatus')}</p>
           )}
         </div>
       </div>
@@ -259,22 +281,24 @@ const StepTwo = () => {
           id="identityNumber"
           type="text"
           value={formData.identityNumber}
-          onChange={(e) => updateFormData({ identityNumber: e.target.value })}
+          onChange={(e) => {
+            updateFormData({ identityNumber: e.target.value })
+            setLocalErrors((prev) => { const n = {...prev}; delete n.identityNumber; return n })
+          }}
           placeholder="اكتب رقم الهوية (9 أرقام)"
-          className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${fieldErrors.identityNumber ? 'border-2 border-red-500' : 'border-none'}`}
+          className={`h-11 rounded-[10px] bg-white/95 px-4 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] placeholder:text-gray-400 sm:h-[50px] sm:text-[15px] ${getError('identityNumber') ? 'border-2 border-red-500' : 'border-none'}`}
         />
-        {fieldErrors.identityNumber && (
-          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{fieldErrors.identityNumber}</p>
+        {getError('identityNumber') && (
+          <p className="mt-1 text-right text-[12px] font-bold text-red-500">{getError('identityNumber')}</p>
         )}
       </div>
 
       <Button
         type="submit"
-        disabled={isSubmitting}
         className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
         style={{ lineHeight: '100%' }}
       >
-        {isSubmitting ? 'جاري التحقق...' : 'التالي'}
+        التالي
       </Button>
     </form>
   )

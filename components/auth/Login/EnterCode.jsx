@@ -13,7 +13,7 @@ const EnterCode = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
   const inputs = useRef([])
-  const { verifyCode, setIsCodeSent, isSubmitting } = useLoginStore()
+  const { verifyForgotCode, setIsCodeSent, isSubmitting, forgotError } = useLoginStore()
   const { resetRegister } = useRegisterStore()
 
   useEffect(() => {
@@ -26,10 +26,9 @@ const EnterCode = () => {
     if (e) e.preventDefault()
     const fullCode = code.join('')
     if (fullCode.length === 6) {
-      try {
-        setError(false)
-        await verifyCode(fullCode)
-      } catch (err) {
+      setError(false)
+      const success = await verifyForgotCode(fullCode)
+      if (!success) {
         setError(true)
       }
     }

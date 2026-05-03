@@ -10,14 +10,15 @@ import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { toast } from 'sonner'
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
-  const { setIsCodeSent, setIsForgot } = useLoginStore()
+  const { sendForgotPasswordCode, isSubmitting, forgotError, setIsForgot } = useLoginStore()
   const { resetRegister } = useRegisterStore()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const isEmailValid = email.includes('@') && email.includes('.')
     if (!isEmailValid) {
@@ -26,7 +27,12 @@ const ForgotPassword = () => {
     }
     setEmailError(false)
 
-    setIsCodeSent(true)
+    const success = await sendForgotPasswordCode(email)
+    if (success) {
+      toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
+    } else {
+      toast.error(forgotError || 'حدث خطأ أثناء إرسال الرمز')
+    }
   }
 
   return (
@@ -126,10 +132,11 @@ const ForgotPassword = () => {
 
               <Button
                 type="submit"
+                disabled={isSubmitting}
                 className="mx-auto flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
                 style={{ lineHeight: '100%' }}
               >
-                ارسال
+                {isSubmitting ? 'جاري الإرسال...' : 'ارسال'}
               </Button>
             </form>
 

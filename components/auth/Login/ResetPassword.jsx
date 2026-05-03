@@ -19,9 +19,8 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(false)
   const [passwordError, setPasswordError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { resetPasswordWithCode, isSubmitting, setIsResetting, setIsCodeSent, setIsForgot, forgotError } = useLoginStore()
   const [isSuccess, setIsSuccess] = useState(false)
-  const { setIsResetting, setIsCodeSent, setIsForgot } = useLoginStore()
 
   const getPasswordWarning = () => {
     if (!password) return null
@@ -47,7 +46,7 @@ const ResetPassword = () => {
 
   const passwordWarning = getPasswordWarning()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (password.trim() === '' || confirmPassword.trim() === '') {
@@ -78,16 +77,14 @@ const ResetPassword = () => {
 
     setError(false)
     setPasswordError('')
-    setIsSubmitting(true)
 
-    setTimeout(() => {
+    const success = await resetPasswordWithCode(password)
+    if (success) {
       setIsSuccess(true)
-      setTimeout(() => {
-        setIsResetting(false)
-        setIsCodeSent(false)
-        setIsForgot(false)
-      }, 3000)
-    }, 2000)
+    } else {
+      setPasswordError(forgotError || 'حدث خطأ أثناء إعادة تعيين كلمة المرور')
+      setError(true)
+    }
   }
 
   if (isSuccess) {
