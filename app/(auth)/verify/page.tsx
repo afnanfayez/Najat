@@ -1,3 +1,5 @@
+import VerifyForm from '@/components/auth/VerifyForm'
+
 export default function VerifyPage() {
-  return <div>Verify Page</div>;
+  return <VerifyForm />
 }

@@ -44,7 +44,8 @@ interface RegisterState {
   isSubmitting: boolean
   error: string | null
   fieldErrors: Record<string, string>
-  submitRegistration: () => Promise<void>
+  submitRegistration: () => Promise<boolean>
+  verifyAccount: (code: string) => Promise<boolean>
   setFieldError: (field: string, error: string) => void
   clearErrors: () => void
 }
@@ -280,15 +281,13 @@ export const useRegisterStore = create<RegisterState>()(
             role: 'resident'
           }
 
-          console.log('Registration Payload:', payload)
           const res = await authAPI.register(payload)
           if (res.token) {
             saveToken(res.token)
           }
-          set({ isSubmitting: false, step: 6 })
+          set({ isSubmitting: false })
+          return true
         } catch (err: any) {
-          console.error('Registration Error:', err)
-
           const { fieldErrors, generalError, errorStep } = parseRegistrationErrors(err)
 
           set({ 
@@ -300,6 +299,34 @@ export const useRegisterStore = create<RegisterState>()(
           })
 
           toast.error(generalError)
+          return false
+        }
+      },
+
+      // ─── Verify Account with code ─────────────────────────────────────────
+      verifyAccount: async (code: string) => {
+        set({ isSubmitting: true, error: null })
+        try {
+          const state = get()
+          const payload = {
+            email: state.formData.email,
+            code: code
+          }
+
+          const res = await authAPI.verify(payload)
+          if (res.token) {
+            saveToken(res.token)
+          }
+          set({ isSubmitting: false })
+          return true
+        } catch (err: any) {
+          const errorMsg = err?.message || 'فشل التحقق من الحساب'
+          set({ 
+            isSubmitting: false, 
+            error: errorMsg,
+          })
+          toast.error(errorMsg)
+          return false
         }
       },
     }),

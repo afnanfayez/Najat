@@ -40,12 +40,6 @@ async function request(endpoint: string, options: RequestInit = {}) {
       err?.message != null && typeof err.message === 'object'
         ? JSON.stringify(err.message)
         : err?.message
-    console.error(`API Request Error [${endpoint}]:`, {
-      name: err.name,
-      message: safeMsg,
-      cause: err.cause,
-      stack: err.stack,
-    })
     // If it's already our custom error object, re-throw it
     if (err.status) throw err
     // Otherwise, it's a network error (like CORS or connection reset)

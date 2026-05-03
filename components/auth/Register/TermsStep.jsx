@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
   const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors, prevStep } = useRegisterStore()
+  const router = useRouter()
   
   React.useEffect(() => {
     clearErrors()
@@ -22,18 +24,22 @@ const TermsStep = () => {
     if (accepted) {
       // submitRegistration() is the ONLY place in the entire app that calls POST /register.
       // If it fails, the store will automatically redirect the user to the step with errors.
-      await submitRegistration()
+      const success = await submitRegistration()
+      if (success) {
+        // Redirect to verify page after successful registration
+        router.push('/verify')
+      }
     }
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto flex h-full w-full max-w-[650px] flex-col"
+      className="mx-auto flex h-full w-full max-w-[650px] flex-col overflow-hidden"
     >
       <div
-        className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden pr-2 text-right text-[15px] font-bold text-black sm:text-[16px] w-full break-words"
-        style={{ lineHeight: '1.8', maxHeight: '500px' }}
+        className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden text-right text-[15px] font-bold text-black sm:text-[16px] w-full break-words px-2"
+        style={{ lineHeight: '1.8' }}
       >
         <p>
           مرحباً بك في موقع "نجاة" - خارطة الحياة في غزة. باستخدامك لهذا الموقع،
@@ -100,7 +106,7 @@ const TermsStep = () => {
         </div>
       </div>
 
-      <div className="mt-4 space-y-3 pt-2">
+      <div className="mt-2 space-y-2 pt-1">
         <div className="flex items-center justify-start gap-2">
           <Checkbox
             id="acceptTerms"
@@ -110,7 +116,7 @@ const TermsStep = () => {
           />
           <Label
             htmlFor="acceptTerms"
-            className="cursor-pointer text-[15px] font-extrabold text-black sm:text-[16px]"
+            className="cursor-pointer text-[14px] font-extrabold text-black sm:text-[15px]"
           >
             اوافق على سياسة الشروط والاحكام
           </Label>
@@ -118,18 +124,18 @@ const TermsStep = () => {
 
 
         {error && !hasFieldErrors && (
-          <div className="text-red-500 text-sm font-bold text-center mt-2" dir="rtl">
+          <div className="text-red-500 text-sm font-bold text-center mt-1" dir="rtl">
             {error === 'Failed to fetch' || error.includes('CORS') 
               ? 'خطأ في الاتصال بالخادم (CORS Policy). يرجى إبلاغ مطور الباك إند.'
               : error}
           </div>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-3">
           <Button
             type="submit"
             disabled={!accepted || isSubmitting}
-            className={`flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white transition-all sm:h-[50px] sm:w-[240px] sm:text-[20px] ${
+            className={`flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${
               accepted && !isSubmitting
                 ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
                 : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
@@ -143,7 +149,7 @@ const TermsStep = () => {
             type="button"
             onClick={prevStep}
             disabled={isSubmitting}
-            className="flex h-11 w-full items-center justify-center rounded-[10px] border-2 border-[#2496FF] bg-transparent text-[18px] font-bold text-[#2496FF] transition-all hover:bg-[#2496FF]/5 active:scale-[0.98] sm:h-[50px] sm:w-[140px] sm:text-[20px]"
+            className="flex h-10 w-full items-center justify-center rounded-[10px] border-2 border-[#2496FF] bg-transparent text-[16px] font-bold text-[#2496FF] transition-all hover:bg-[#2496FF]/5 active:scale-[0.98] sm:h-[45px] sm:w-[120px] sm:text-[18px]"
             style={{ lineHeight: '100%' }}
           >
             رجوع

@@ -14,10 +14,8 @@ import { Card } from '@/components/ui/card'
 import LoginSuccess from './LoginSuccess'
 import LoginError from './LoginError'
 import ForgotPassword from './ForgotPassword'
-
-import EnterCode from './EnterCode'
-
 import ResetPassword from './ResetPassword'
+import ResetPasswordForm from './ResetPasswordForm'
 
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
@@ -82,7 +80,7 @@ const LoginForm = () => {
 
   if (isResetting) {
     return (
-      <ResetPassword
+      <ResetPasswordForm
         onLogin={() => {
           setIsResetting(false)
           setIsCodeSent(false)
@@ -94,7 +92,7 @@ const LoginForm = () => {
 
   if (isCodeSent) {
     return (
-      <EnterCode
+      <ResetPassword
         onBack={() => setIsCodeSent(false)}
         onSubmit={(code) => {
           setIsResetting(true)

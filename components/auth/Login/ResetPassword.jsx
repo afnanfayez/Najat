@@ -1,94 +1,105 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Eye, EyeOff, LogIn, CheckCircle2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import LoginSuccess from './LoginSuccess'
 import { useLoginStore } from '@/store/useLoginStore'
+import ResetPasswordForm from './ResetPasswordForm'
 
 const ResetPassword = () => {
-  const [showPassword1, setShowPassword1] = useState(false)
-  const [showPassword2, setShowPassword2] = useState(false)
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
-  const [passwordError, setPasswordError] = useState('')
-  const { resetPasswordWithCode, isSubmitting, setIsResetting, setIsCodeSent, setIsForgot, forgotError } = useLoginStore()
-  const [isSuccess, setIsSuccess] = useState(false)
+  const inputs = useRef([])
+  const { verifyForgotCode, isSubmitting, isResetting, forgotError, setIsCodeSent } = useLoginStore()
 
-  const getPasswordWarning = () => {
-    if (!password) return null
-    if (password === '12345678')
-      return {
-        text: 'كلمة المرور مستخدمة سابقاً، اختر كلمة مرور أخرى',
-        color: 'text-red-500',
-      }
-    if (password.length < 8)
-      return {
-        text: 'يجب ألا تقل كلمة المرور عن 8 أحرف وتتضمن أرقاماً ورموزاً',
-        color: 'text-[#FDB022]',
-      }
-    const hasNumbers = /\d/.test(password)
-    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-    if (!hasNumbers || !hasSymbols)
-      return {
-        text: 'كلمة المرور يجب أن تحتوي على أرقام ورموز لتكون أقوى',
-        color: 'text-red-500',
-      }
-    return null
-  }
-
-  const passwordWarning = getPasswordWarning()
+  useEffect(() => {
+    if (inputs.current[0]) {
+      inputs.current[0].focus()
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (password.trim() === '' || confirmPassword.trim() === '') {
-      setPasswordError('يرجى تعبئة حقلي كلمة المرور')
-      setError(true)
-      return
-    }
-
-    if (password.length < 8) {
-      setPasswordError('يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل')
-      setError(true)
-      return
-    }
-
-    const hasNumbers = /\d/.test(password)
-    const hasSymbols = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-    if (!hasNumbers || !hasSymbols) {
-      setPasswordError('يجب أن تحتوي كلمة المرور على أرقام ورموز')
-      setError(true)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setPasswordError('كلمات المرور غير متطابقة')
-      setError(true)
-      return
-    }
-
-    setError(false)
-    setPasswordError('')
-
-    const success = await resetPasswordWithCode(password)
-    if (success) {
-      setIsSuccess(true)
-    } else {
-      setPasswordError(forgotError || 'حدث خطأ أثناء إعادة تعيين كلمة المرور')
-      setError(true)
+    if (e) e.preventDefault()
+    const fullCode = code.join('')
+    if (fullCode.length === 6) {
+      setError(false)
+      const success = await verifyForgotCode(fullCode)
+      if (!success) {
+        setError(true)
+      }
     }
   }
 
-  if (isSuccess) {
-    return <LoginSuccess />
+  const handleChange = (e, index) => {
+    const value = e.target.value
+
+    if (isNaN(value) || value === ' ') return
+
+    if (error) setError(false)
+
+    const newCode = [...code]
+
+    newCode[index] = value.substring(value.length - 1)
+    setCode(newCode)
+
+    if (value !== '' && index < 5) {
+      inputs.current[index + 1].focus()
+    } else if (value !== '' && index === 5) {
+      const fullCode = newCode.join('')
+      if (fullCode.length === 6) {
+        // Option to auto-submit here, or let user click submit.
+        // We will just let them click submit to avoid unexpected loading spinners.
+      }
+    }
+  }
+
+  const handleResend = () => {
+    setCode(['', '', '', '', '', ''])
+    setError(false)
+    if (inputs.current[0]) {
+      inputs.current[0].focus()
+    }
+  }
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && code[index] === '' && index > 0) {
+      inputs.current[index - 1].focus()
+    }
+  }
+
+  const handlePaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, 6)
+      .split('')
+
+    if (pastedData.length === 0) return
+
+    if (error) setError(false)
+
+    const newCode = [...code]
+    pastedData.forEach((char, i) => {
+      newCode[i] = char
+    })
+    setCode(newCode)
+
+    const focusIndex = pastedData.length < 6 ? pastedData.length : 5
+    inputs.current[focusIndex].focus()
+
+    if (pastedData.length === 6) {
+      const fullCode = pastedData.join('')
+      // Let the user click submit
+    }
+  }
+
+  // If user has verified the code, show password reset form
+  if (isResetting) {
+    return <ResetPasswordForm />
   }
 
   return (
@@ -132,178 +143,87 @@ const ResetPassword = () => {
                 className="text-xl font-bold tracking-tight text-white sm:text-[28px]"
                 style={{ lineHeight: '100%' }}
               >
-                اعادة تعيين كلمة مرور
+                ادخال الكود
               </h1>
+              <p
+                className="mx-auto mt-8 max-w-[450px] text-base font-bold text-white/90 sm:mt-12 sm:text-[18px]"
+                style={{ lineHeight: '140%' }}
+              >
+                قم بإدخال الكود الذي قمنا بارساله
+              </p>
             </div>
 
             <form
               onSubmit={handleSubmit}
-              className="mt-4 w-full max-w-[580px] space-y-6 sm:mt-6 sm:space-y-8"
+              className="mt-4 w-full max-w-[580px] space-y-8 sm:mt-6 sm:space-y-10"
             >
-              <div className="space-y-2 sm:space-y-3">
-                <Label
-                  htmlFor="new-password"
-                  dir="rtl"
-                  className="mr-1 block text-right text-[13px] font-bold text-white sm:text-[14px]"
-                  style={{ lineHeight: '100%' }}
+              <div className="flex w-full flex-col items-center gap-2">
+                <div
+                  className="flex w-full items-center justify-center gap-2 sm:gap-4"
+                  dir="ltr"
                 >
-                  اعادة تعيين كلمة السر
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showPassword1 ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (error) {
-                        setError(false)
-                        setPasswordError('')
-                      }
-                    }}
-                    placeholder="********"
-                    className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
-                    style={
-                      error
-                        ? { border: '2.5px solid #F44336' }
-                        : isSubmitting
-                          ? { border: '2.5px solid #459F49' }
-                          : { border: 'none' }
-                    }
-                  />
-                  <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
-                    <i
-                      className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : isSubmitting ? 'text-[#459F49]' : 'text-[#2496FF]'}`}
+                  {code.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (inputs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleChange(e, index)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      onPaste={handlePaste}
+                      className={`h-12 w-12 rounded-[12px] bg-white/90 text-center text-[24px] font-bold shadow-[0px_4px_7.6px_0px_#0000001A] transition-all focus:ring-2 focus:ring-[#2496FF] focus:outline-none sm:h-16 sm:w-16 sm:rounded-[15px] sm:text-[28px] ${
+                        error
+                          ? 'border-2 border-[#F44336] text-[#F44336]'
+                          : 'border-none text-black'
+                      }`}
                     />
-                  </div>
-                  <div className="absolute top-1/2 left-4 flex -translate-y-1/2 items-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword1(!showPassword1)}
-                      className="text-gray-400 transition-colors hover:text-[#2496FF]"
-                    >
-                      {showPassword1 ? (
-                        <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                      ) : (
-                        <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                      )}
-                    </button>
-                  </div>
+                  ))}
                 </div>
 
-                {passwordWarning && !error && (
-                  <p
-                    className={`mt-1 text-right text-[11px] font-bold ${passwordWarning.color} sm:text-[12px]`}
+                <div className="mt-1 w-full max-w-[340px] sm:max-w-[440px]">
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    className="float-left text-[13px] font-bold text-white transition-opacity hover:opacity-80 sm:text-[15px]"
                   >
-                    {passwordWarning.text}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2 sm:space-y-3">
-                <Label
-                  htmlFor="confirm-password"
-                  dir="rtl"
-                  className="mr-1 block text-right text-[13px] font-bold text-white sm:text-[14px]"
-                  style={{ lineHeight: '100%' }}
-                >
-                  تأكيد كلمة السر
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="confirm-password"
-                    type={showPassword2 ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value)
-                      if (error) {
-                        setError(false)
-                        setPasswordError('')
-                      }
-                    }}
-                    placeholder="********"
-                    className="h-11 rounded-[10px] bg-white px-12 text-right text-[14px] text-black shadow-[0px_4px_7.6px_0px_#0000001A] transition-all placeholder:text-gray-400 sm:h-[50px] sm:px-14 sm:text-[15px]"
-                    style={
-                      error
-                        ? { border: '2.5px solid #F44336' }
-                        : isSubmitting
-                          ? { border: '2.5px solid #459F49' }
-                          : { border: 'none' }
-                    }
-                  />
-                  <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center">
-                    <i
-                      className={`bx bx-key text-[18px] sm:text-[20px] ${error ? 'text-[#F44336]' : isSubmitting ? 'text-[#459F49]' : 'text-[#2496FF]'}`}
-                    />
-                  </div>
-                  <div className="absolute top-1/2 left-4 flex -translate-y-1/2 items-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword2(!showPassword2)}
-                      className="text-gray-400 transition-colors hover:text-[#2496FF]"
-                    >
-                      {showPassword2 ? (
-                        <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
-                      ) : (
-                        <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                      )}
-                    </button>
-                  </div>
+                    اعد ارسال الكود؟
+                  </button>
+                  <div className="clear-both"></div>
                 </div>
 
                 {error && (
-                  <p
-                    className="mt-1 w-full text-left text-[13px] font-bold text-[#F44336] sm:text-[14px]"
-                    style={{ lineHeight: '100%' }}
-                  >
-                    {passwordError}
+                  <p className="mt-2 text-center text-[14px] font-bold text-[#F44336]">
+                    {forgotError || 'الكود غير صحيح أو انتهت صلاحيته'}
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Checkbox
-                  id="remember"
-                  className={`h-4 w-4 rounded-md border-white/30 bg-white/5 transition-all sm:h-5 sm:w-5 ${
-                    isSubmitting
-                      ? 'data-[state=checked]:border-[#459F49] data-[state=checked]:bg-[#459F49]'
-                      : 'data-[state=checked]:border-[#2496FF] data-[state=checked]:bg-[#2496FF]'
-                  }`}
-                />
-                <Label
-                  htmlFor="remember"
-                  className="cursor-pointer text-[12px] font-semibold text-white sm:text-[14px]"
-                  style={{ lineHeight: '100%' }}
-                >
-                  تذكرني على هذا الجهاز
-                </Label>
-              </div>
-
               <Button
-                type="submit"
                 disabled={isSubmitting}
-                className={`mx-auto mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[300px] sm:gap-[10px] sm:text-[20px] ${
+                className={`mx-auto flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
                   isSubmitting
-                    ? 'scale-[0.98] bg-[#459F49] text-[20px] shadow-[#459F49]/20'
-                    : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
+                    ? 'bg-[#459F49] shadow-[#459F49]/20 hover:bg-[#3A8A3F]'
+                    : 'bg-[#2496FF] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
                 }`}
                 style={{ lineHeight: '100%' }}
               >
-                {isSubmitting ? (
-                  <CheckCircle2
-                    className="h-20 w-20 sm:h-24 sm:w-24"
-                    style={{ width: '30px', height: '30px' }}
-                  />
-                ) : (
-                  <>
-                    دخول
-                    <LogIn className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </>
-                )}
+                {isSubmitting ? 'جاري التحقق...' : 'ارسال'}
               </Button>
             </form>
 
-            <div className="h-4 sm:h-8"></div>
+            <div className="flex flex-col items-center gap-4 pt-2">
+              <button
+                onClick={() => {
+                  setIsCodeSent(false)
+                }}
+                className="flex items-center gap-2 pb-2 text-[14px] font-bold text-white/60 transition-colors hover:text-white"
+              >
+                <ArrowRight className="h-4 w-4" />
+                العودة
+              </button>
+            </div>
           </div>
         </Card>
 
