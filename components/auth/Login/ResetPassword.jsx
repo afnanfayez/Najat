@@ -8,12 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
 import ResetPasswordForm from './ResetPasswordForm'
+import { toast } from 'sonner'
 
 const ResetPassword = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
   const inputs = useRef([])
-  const { verifyForgotCode, isSubmitting, isResetting, forgotError, setIsCodeSent } = useLoginStore()
+  const {
+    verifyForgotCode,
+    isSubmitting,
+    isResetting,
+    forgotError,
+    setIsCodeSent,
+    sendForgotPasswordCode,
+    forgotEmail,
+  } = useLoginStore()
 
   useEffect(() => {
     if (inputs.current[0]) {
@@ -56,11 +65,17 @@ const ResetPassword = () => {
     }
   }
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setCode(['', '', '', '', '', ''])
     setError(false)
     if (inputs.current[0]) {
       inputs.current[0].focus()
+    }
+    if (forgotEmail) {
+      await sendForgotPasswordCode(forgotEmail)
+    } else {
+      toast.error('البريد الإلكتروني غير معروف. يرجى البدء من جديد.')
+      setIsCodeSent(false) // Go back to forgot password page
     }
   }
 

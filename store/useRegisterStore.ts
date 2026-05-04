@@ -46,6 +46,7 @@ interface RegisterState {
   fieldErrors: Record<string, string>
   submitRegistration: () => Promise<boolean>
   verifyAccount: (code: string) => Promise<boolean>
+  resendVerificationCode: () => Promise<boolean>
   setFieldError: (field: string, error: string) => void
   clearErrors: () => void
 }
@@ -258,7 +259,7 @@ export const useRegisterStore = create<RegisterState>()(
 
       clearErrors: () => set({ fieldErrors: {}, error: null }),
 
-      // ─── THE ONLY API CALL — called from TermsStep (Step 5) ──────────────
+      // Step 1: Submit registration with all user data and send verification code
       submitRegistration: async () => {
         set({ isSubmitting: true, error: null, fieldErrors: {} })
         try {
@@ -294,7 +295,6 @@ export const useRegisterStore = create<RegisterState>()(
             isSubmitting: false, 
             error: generalError,
             fieldErrors,
-            // If there's a step-specific error, navigate the user back to that step
             ...(errorStep ? { step: errorStep } : {}),
           })
 
@@ -303,16 +303,15 @@ export const useRegisterStore = create<RegisterState>()(
         }
       },
 
-      // ─── Verify Account with code ─────────────────────────────────────────
+      // Step 2: Verify account with code
       verifyAccount: async (code: string) => {
-        set({ isSubmitting: true, error: null })
+        set({ isSubmitting: true, error: null, fieldErrors: {} })
         try {
           const state = get()
           const payload = {
             email: state.formData.email,
             code: code
           }
-
           const res = await authAPI.verify(payload)
           if (res.token) {
             saveToken(res.token)
@@ -320,12 +319,31 @@ export const useRegisterStore = create<RegisterState>()(
           set({ isSubmitting: false })
           return true
         } catch (err: any) {
-          const errorMsg = err?.message || 'فشل التحقق من الحساب'
-          set({ 
-            isSubmitting: false, 
-            error: errorMsg,
-          })
-          toast.error(errorMsg)
+          const errorMsg = err?.message || 'الكود غير صحيح أو انتهت صلاحيته'
+          set({ isSubmitting: false, error: errorMsg })
+          return false
+        }
+      },
+
+      // Resend code: Send verification code again using the stored email
+      resendVerificationCode: async () => {
+        set({ isSubmitting: true, error: null })
+        try {
+          const email = get().formData.email
+          if (!email) {
+            toast.error('البريد الإلكتروني غير موجود')
+            set({ isSubmitting: false })
+            return false
+          }
+          // Use forgotPassword endpoint to resend code (it works for both scenarios)
+          await authAPI.forgotPassword({ email })
+          set({ isSubmitting: false })
+          toast.info('تم إعادة إرسال كود التحقق')
+          return true
+        } catch (err: any) {
+          const msg = err?.message ?? 'حدث خطأ أثناء إعادة إرسال الكود'
+          set({ isSubmitting: false, error: msg })
+          toast.error(msg)
           return false
         }
       },

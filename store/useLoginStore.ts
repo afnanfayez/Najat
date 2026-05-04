@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authAPI } from '@/lib/api/api'
 import { saveToken } from '@/lib/api/auth'
+import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ export const useLoginStore = create<LoginState>()(
             isCodeSent: true,
             isSubmitting: false,
           })
+          toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
           return true
         } catch (err: any) {
           const msg = err?.message ?? 'حدث خطأ أثناء إرسال الرمز'
@@ -163,6 +165,7 @@ export const useLoginStore = create<LoginState>()(
             forgotError: typeof msg === 'string' ? msg : 'حدث خطأ أثناء إرسال الرمز',
             isSubmitting: false,
           })
+          toast.error(msg)
           return false
         }
       },

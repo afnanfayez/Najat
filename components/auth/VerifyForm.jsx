@@ -15,7 +15,13 @@ const VerifyForm = () => {
   const [error, setError] = useState(false)
   const inputs = useRef([])
   const router = useRouter()
-  const { formData, verifyAccount, isSubmitting, goToStep } = useRegisterStore()
+  const {
+    formData,
+    verifyAccount,
+    isSubmitting,
+    goToStep,
+    resendVerificationCode,
+  } = useRegisterStore()
 
   // Redirect to register if no email
   useEffect(() => {
@@ -68,13 +74,13 @@ const VerifyForm = () => {
     }
   }
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setCode(['', '', '', '', '', ''])
     setError(false)
     if (inputs.current[0]) {
       inputs.current[0].focus()
     }
-    toast.info('تم إعادة إرسال الكود')
+    await resendVerificationCode()
   }
 
   const handleKeyDown = (e, index) => {

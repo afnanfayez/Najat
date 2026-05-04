@@ -28,11 +28,12 @@ const ForgotPassword = () => {
     setEmailError(false)
 
     const success = await sendForgotPasswordCode(email)
-    if (success) {
-      toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
-    } else {
-      toast.error(forgotError || 'حدث خطأ أثناء إرسال الرمز')
-    }
+    // We don't need to show toast here because it's handled in the store
+    // if (success) {
+    //   toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
+    // } else {
+    //   toast.error(forgotError || 'حدث خطأ أثناء إرسال الرمز')
+    // }
   }
 
   return (
