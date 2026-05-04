@@ -168,34 +168,19 @@ export const useLoginStore = create<LoginState>()(
       },
 
       /**
-       * Step 2: Verify the 6-digit code.
-       * We store the code and move to the reset password screen.
-       * The actual verification happens server-side when we call reset-password.
-       * 
-       * If your backend has a separate verify-code endpoint for forgot-password,
-       * we can call it here. Otherwise we just store the code and verify at reset time.
+       * Step 2: Store the 6-digit code and advance to the new password screen.
+       * No API call is made here — /v1/auth/verify is for account registration only.
+       * Calling it would consume/invalidate the OTP before /reset-password can use it,
+       * causing a 410 error. The code is validated by the backend in step 3.
        */
       verifyForgotCode: async (code: string) => {
-        const { forgotEmail } = get()
-        set({ isSubmitting: true, forgotError: null })
-        try {
-          // Use the verify endpoint to confirm the code is valid
-          await authAPI.verify({ email: forgotEmail, code })
-          set({
-            forgotCode: code,
-            isCodeSent: false,
-            isResetting: true,
-            isSubmitting: false,
-          })
-          return true
-        } catch (err: any) {
-          const msg = err?.message ?? 'الرمز غير صحيح أو منتهي الصلاحية'
-          set({
-            forgotError: typeof msg === 'string' ? msg : 'الرمز غير صحيح أو منتهي الصلاحية',
-            isSubmitting: false,
-          })
-          return false
-        }
+        set({
+          forgotCode: code,
+          isCodeSent: false,
+          isResetting: true,
+          forgotError: null,
+        })
+        return true
       },
 
       /**
