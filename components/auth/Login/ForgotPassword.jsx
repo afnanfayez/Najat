@@ -15,7 +15,8 @@ import { toast } from 'sonner'
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
-  const { sendForgotPasswordCode, isSubmitting, forgotError, setIsForgot } = useLoginStore()
+  const { sendForgotPasswordCode, isSubmitting, forgotError, setIsForgot } =
+    useLoginStore()
   const { resetRegister } = useRegisterStore()
 
   const handleSubmit = async (e) => {

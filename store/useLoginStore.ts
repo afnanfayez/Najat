@@ -84,9 +84,15 @@ export const useLoginStore = create<LoginState>()(
 
       // Basic setters
       setEmail: (email) =>
-        set({ email, isValid: email.includes('@') && get().password.length >= 8 } as any),
+        set({
+          email,
+          isValid: email.includes('@') && get().password.length >= 8,
+        } as any),
       setPassword: (password) =>
-        set({ password, isValid: get().email.includes('@') && password.length >= 8 } as any),
+        set({
+          password,
+          isValid: get().email.includes('@') && password.length >= 8,
+        } as any),
       setShowPassword: (showPassword) => set({ showPassword }),
       setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
       setIsSuccess: (isSuccess) => set({ isSuccess }),
@@ -113,7 +119,12 @@ export const useLoginStore = create<LoginState>()(
       // Composite: successful login → make API call
       handleLoginSuccess: async () => {
         const { email, password } = get()
-        set({ isSubmitting: true, isError: false, emailError: false, passwordError: false })
+        set({
+          isSubmitting: true,
+          isError: false,
+          emailError: false,
+          passwordError: false,
+        })
         try {
           const res = await authAPI.login({ email, password })
           if (res.token) {
@@ -162,7 +173,8 @@ export const useLoginStore = create<LoginState>()(
         } catch (err: any) {
           const msg = err?.message ?? 'حدث خطأ أثناء إرسال الرمز'
           set({
-            forgotError: typeof msg === 'string' ? msg : 'حدث خطأ أثناء إرسال الرمز',
+            forgotError:
+              typeof msg === 'string' ? msg : 'حدث خطأ أثناء إرسال الرمز',
             isSubmitting: false,
           })
           toast.error(msg)
@@ -211,7 +223,10 @@ export const useLoginStore = create<LoginState>()(
         } catch (err: any) {
           const msg = err?.message ?? 'حدث خطأ أثناء إعادة تعيين كلمة المرور'
           set({
-            forgotError: typeof msg === 'string' ? msg : 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
+            forgotError:
+              typeof msg === 'string'
+                ? msg
+                : 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
             isSubmitting: false,
           })
           return false
@@ -240,6 +255,6 @@ export const useLoginStore = create<LoginState>()(
     {
       name: 'login-storage',
       partialize: (state) => ({ email: state.email }), // Only persist the email for security
-    }
-  )
+    },
+  ),
 )

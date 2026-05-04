@@ -114,7 +114,9 @@ function parseRegistrationErrors(err: any): {
   /** Suggest which step the user should be sent back to */
   errorStep: number | null
 } {
-  const messages: string[] = Array.isArray(err.message) ? err.message : [err.message ?? 'حدث خطأ غير متوقع']
+  const messages: string[] = Array.isArray(err.message)
+    ? err.message
+    : [err.message ?? 'حدث خطأ غير متوقع']
   const fieldErrors: Record<string, string> = {}
   let errorStep: number | null = null
 
@@ -123,23 +125,51 @@ function parseRegistrationErrors(err: any): {
     let arabicMsg = msg
 
     // ── Translate known error patterns ──
-    if (m.includes('email already exists') || m.includes('email') && (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate'))) {
+    if (
+      m.includes('email already exists') ||
+      (m.includes('email') &&
+        (m.includes('exists') ||
+          m.includes('unique') ||
+          m.includes('taken') ||
+          m.includes('duplicate')))
+    ) {
       arabicMsg = 'البريد الإلكتروني مستخدم بالفعل'
     }
-    if (m.includes('phone') && (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate'))) {
+    if (
+      m.includes('phone') &&
+      (m.includes('exists') ||
+        m.includes('unique') ||
+        m.includes('taken') ||
+        m.includes('duplicate'))
+    ) {
       arabicMsg = 'رقم الجوال مستخدم بالفعل'
     }
     if (m.includes('invalid email')) arabicMsg = 'البريد الإلكتروني غير صالح'
-    if (m.includes('nationalid') || m.includes('identitynumber') || m.includes('national_id')) {
-      if (m.includes('exists') || m.includes('unique') || m.includes('taken') || m.includes('duplicate')) arabicMsg = 'رقم الهوية مستخدم بالفعل'
-      else if (m.includes('digits')) arabicMsg = 'رقم الهوية يجب أن يتكون من 9 أرقام'
+    if (
+      m.includes('nationalid') ||
+      m.includes('identitynumber') ||
+      m.includes('national_id')
+    ) {
+      if (
+        m.includes('exists') ||
+        m.includes('unique') ||
+        m.includes('taken') ||
+        m.includes('duplicate')
+      )
+        arabicMsg = 'رقم الهوية مستخدم بالفعل'
+      else if (m.includes('digits'))
+        arabicMsg = 'رقم الهوية يجب أن يتكون من 9 أرقام'
       else arabicMsg = 'خطأ في رقم الهوية'
     }
     if (m.includes('password')) {
-      if (m.includes('short') || m.includes('min') || m.includes('least')) arabicMsg = 'كلمة المرور قصيرة جداً'
+      if (m.includes('short') || m.includes('min') || m.includes('least'))
+        arabicMsg = 'كلمة المرور قصيرة جداً'
       else arabicMsg = 'كلمة المرور يجب أن تحتوي على حروف وأرقام ورموز'
     }
-    if ((m.includes('fullname') || m.includes('full_name')) && !m.includes('password')) {
+    if (
+      (m.includes('fullname') || m.includes('full_name')) &&
+      !m.includes('password')
+    ) {
       if (m.includes('required')) arabicMsg = 'الاسم الكامل مطلوب'
       else arabicMsg = 'الاسم غير صالح'
     }
@@ -160,13 +190,22 @@ function parseRegistrationErrors(err: any): {
       fieldErrors.phone = arabicMsg
       if (!errorStep || errorStep > 1) errorStep = 1
     }
-    if ((m.includes('fullname') || m.includes('full_name') || (m.includes('name') && !m.includes('username'))) && !m.includes('password')) {
+    if (
+      (m.includes('fullname') ||
+        m.includes('full_name') ||
+        (m.includes('name') && !m.includes('username'))) &&
+      !m.includes('password')
+    ) {
       fieldErrors.name = arabicMsg
       if (!errorStep || errorStep > 1) errorStep = 1
     }
 
     // Step 2 fields
-    if (m.includes('nationalid') || m.includes('national_id') || m.includes('identitynumber')) {
+    if (
+      m.includes('nationalid') ||
+      m.includes('national_id') ||
+      m.includes('identitynumber')
+    ) {
       fieldErrors.identityNumber = arabicMsg
       if (!errorStep || errorStep > 2) errorStep = 2
     }
@@ -239,7 +278,8 @@ export const useRegisterStore = create<RegisterState>()(
               delete newFieldErrors[key]
             }
             // Handle special cases where field name in state doesn't match error key perfectly
-            if (key === 'identityNumber' && newFieldErrors['nationalId']) delete newFieldErrors['nationalId']
+            if (key === 'identityNumber' && newFieldErrors['nationalId'])
+              delete newFieldErrors['nationalId']
           })
           return {
             formData: { ...state.formData, ...partial },
@@ -247,15 +287,23 @@ export const useRegisterStore = create<RegisterState>()(
           }
         }),
 
-      resetRegister: () => set({ step: 1, formData: initialFormData, isSubmitting: false, error: null, fieldErrors: {} }),
+      resetRegister: () =>
+        set({
+          step: 1,
+          formData: initialFormData,
+          isSubmitting: false,
+          error: null,
+          fieldErrors: {},
+        }),
 
       isSubmitting: false,
       error: null,
       fieldErrors: {},
 
-      setFieldError: (field, error) => set((state) => ({ 
-        fieldErrors: { ...state.fieldErrors, [field]: error } 
-      })),
+      setFieldError: (field, error) =>
+        set((state) => ({
+          fieldErrors: { ...state.fieldErrors, [field]: error },
+        })),
 
       clearErrors: () => set({ fieldErrors: {}, error: null }),
 
@@ -279,7 +327,7 @@ export const useRegisterStore = create<RegisterState>()(
             femalesCount: parseInt(state.formData.femaleCount) || 0,
             malesCount: parseInt(state.formData.maleCount) || 0,
             region: state.formData.region,
-            role: 'resident'
+            role: 'resident',
           }
 
           const res = await authAPI.register(payload)
@@ -289,10 +337,11 @@ export const useRegisterStore = create<RegisterState>()(
           set({ isSubmitting: false })
           return true
         } catch (err: any) {
-          const { fieldErrors, generalError, errorStep } = parseRegistrationErrors(err)
+          const { fieldErrors, generalError, errorStep } =
+            parseRegistrationErrors(err)
 
-          set({ 
-            isSubmitting: false, 
+          set({
+            isSubmitting: false,
             error: generalError,
             fieldErrors,
             ...(errorStep ? { step: errorStep } : {}),
@@ -310,7 +359,7 @@ export const useRegisterStore = create<RegisterState>()(
           const state = get()
           const payload = {
             email: state.formData.email,
-            code: code
+            code: code,
           }
           const res = await authAPI.verify(payload)
           if (res.token) {
@@ -359,6 +408,6 @@ export const useRegisterStore = create<RegisterState>()(
           confirmPassword: '',
         },
       }),
-    }
-  )
+    },
+  ),
 )
