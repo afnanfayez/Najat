@@ -5,26 +5,25 @@ import { useRouter } from 'next/navigation'
 import { removeToken } from '@/lib/api/auth'
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   LayoutGrid,
   Shield,
   Heart,
-  HelpingHand,
   Compass,
   FilePlus,
   User,
   Search,
   LogOut,
-  MessageCircle,
-  Navigation,
-  FileText,
   Siren,
   Send,
   Menu,
   X,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 
 const navItems = [
   { id: 'home',       label: 'الرئيسية',           icon: LayoutGrid,   active: true  },
@@ -98,6 +97,13 @@ export default function DashboardPage() {
   const [searchValue, setSearchValue] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+
+  const searchSuggestions = [
+    { id: 'emergency-nums', label: 'ارقام الطوارئ' },
+    { id: 'hospitals',      label: 'المستشفيات' },
+    { id: 'aid',            label: 'المساعدات' },
+  ]
 
   useEffect(() => {
     const checkMobile = () => {
@@ -132,39 +138,41 @@ export default function DashboardPage() {
       }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; overflow: hidden; width: 100%; max-width: 100%; }
         @media (max-width: 1024px) {
           .desktop-sidebar { display: none !important; }
-          .main-container { padding-right: 0 !important; }
+          .main-container { width: 100% !important; padding-right: 0 !important; }
           .services-grid { 
             grid-template-columns: repeat(2, 1fr) !important; 
             padding: 10px !important;
-            padding-bottom: 40px !important;
+            padding-bottom: 60px !important;
           }
-          .content-body { padding: 15px !important; }
+          .content-body { padding: 15px !important; overflow-y: auto !important; }
         }
         @media (max-width: 768px) {
           .services-grid { 
             grid-template-columns: 1fr !important; 
-            gap: 16px !important; 
-            padding-bottom: 120px !important; 
+            gap: 12px !important; 
+            padding-bottom: 20px !important; 
           }
-          .header-title { font-size: 22px !important; }
-          .header-desc { font-size: 14px !important; margin-bottom: 20px !important; }
+          .header-title { font-size: 20px !important; }
+          .header-desc { font-size: 13px !important; margin-bottom: 12px !important; }
           .search-container { 
             gap: 6px; 
-            padding: 4px 10px !important;
-            margin-bottom: 10px !important;
+            padding: 2px 10px !important;
+            margin-bottom: 8px !important;
             overflow: hidden;
           }
           .search-input { font-size: 13px !important; flex: 1; min-width: 0; }
           .search-btn { 
-            padding: 6px 12px !important; 
-            font-size: 13px !important;
+            padding: 4px 10px !important; 
+            font-size: 12px !important;
             flex-shrink: 0;
           }
-          .emergency-banner { height: 65px !important; margin-bottom: 24px !important; }
-          .emergency-title { font-size: 1.4rem !important; }
-          .section-header { text-align: right !important; }
+          .emergency-banner { height: 50px !important; margin-bottom: 16px !important; }
+          .emergency-title { font-size: 1.2rem !important; }
+          .section-header { text-align: right !important; margin-bottom: 12px !important; }
         }
         .mobile-sidebar {
           position: fixed;
@@ -203,18 +211,18 @@ export default function DashboardPage() {
         }
       ` }} />
 
-      {/* Mobile Menu Overlay */}
       <div className="overlay" onClick={() => setIsMobileMenuOpen(false)} />
 
-      {/* Mobile Sidebar */}
       <div className="mobile-sidebar">
         <div style={{ padding: '25px 25px 10px', display: 'flex', justifyContent: 'flex-start' }}>
-          <button 
+          <Button 
+            variant="ghost"
+            size="icon"
             onClick={() => setIsMobileMenuOpen(false)}
-            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50%' }}
           >
             <X size={24} />
-          </button>
+          </Button>
         </div>
         <SidebarContent 
           activeNav={activeNav} 
@@ -224,7 +232,7 @@ export default function DashboardPage() {
           handleLogout={handleLogout} 
         />
       </div>
-      {/* ===== Sidebar ===== */}
+
       <aside
         className="desktop-sidebar"
         style={{
@@ -238,7 +246,6 @@ export default function DashboardPage() {
           padding: '30px 0 20px',
           position: 'relative',
           top: '-0.58px',
-          opacity: 1,
           zIndex: 10,
           boxSizing: 'border-box',
         }}
@@ -253,8 +260,18 @@ export default function DashboardPage() {
       </aside>
 
       {/* ===== Main Content ===== */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', boxSizing: 'border-box' }}>
-        {/* Header */}
+      <main 
+        className="main-container"
+        style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          minWidth: 0, 
+          overflow: 'hidden', 
+          boxSizing: 'border-box',
+          position: 'relative'
+        }}
+      >
         <header
           style={{
             background: '#fff',
@@ -264,25 +281,23 @@ export default function DashboardPage() {
             boxSizing: 'border-box',
           }}
         >
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', minHeight: '60px' }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', minHeight: '50px' }}>
             {isMobile && (
-              <button 
+              <Button 
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsMobileMenuOpen(true)}
                 style={{ 
-                  background: 'none', 
-                  border: 'none', 
                   color: '#2196F3', 
-                  cursor: 'pointer', 
                   position: 'absolute',
-                  right: isMobile ? '-10px' : '0',
+                  right: '-10px',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  padding: '8px',
                   zIndex: 10,
                 }}
               >
                 <Menu size={32} />
-              </button>
+              </Button>
             )}
             <h1
               className="header-title"
@@ -318,77 +333,124 @@ export default function DashboardPage() {
             نحن هنا لضمان سلامتك. ابحث عن الخدمات الأساسية أو اطلب المساعدة الفورية في أي وقت.
           </p>
 
-          {/* Search bar */}
-          <div
-            className="search-container"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: '#f0f5fb',
-              borderRadius: '12px',
-              border: '1.5px solid #d0dcea',
-              padding: '4px 16px',
-              gap: '12px',
-              width: '100%',
-              marginRight: 'auto',
-            }}
-          >
-            <Search size={20} color="#2196F3" style={{ flexShrink: 0 }} />
-            <input
-              id="dashboard-search"
-              className="search-input"
-              type="text"
-              placeholder="ابحث عن الخدمات، المستشفيات، أو مراكز الإيواء..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+          <div style={{ position: 'relative', width: '100%', marginRight: 'auto' }}>
+            <div
+              className="search-container"
               style={{
-                flex: 1,
-                minWidth: 0,
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontSize: '1rem',
-                color: '#1a2d4a',
-                padding: '14px 0',
-                textAlign: 'right',
-                direction: 'rtl',
+                display: 'flex',
+                alignItems: 'center',
+                background: '#f0f5fb',
+                borderRadius: '12px',
+                border: isSearchFocused ? '1.5px solid #2196F3' : '1.5px solid #d0dcea',
+                padding: '4px 16px',
+                gap: '12px',
+                width: '100%',
+                transition: 'border-color 0.2s ease',
               }}
-            />
-            <button
-              id="search-btn"
-              className="search-btn"
-              style={{
-                background: 'linear-gradient(135deg, #2196f3, #1565c0)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 28px',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '1rem',
-                flexShrink: 0,
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = '0.87')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = '1')}
             >
-              بحث
-            </button>
+              <Search size={20} color="#2196F3" style={{ flexShrink: 0 }} />
+              <Input
+                id="dashboard-search"
+                className="search-input"
+                type="text"
+                placeholder="ابحث عن الخدمات، المستشفيات، أو مراكز الإيواء..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none',
+                  background: 'transparent',
+                  fontSize: '1rem',
+                  color: '#1a2d4a',
+                  padding: '10px 0',
+                  textAlign: 'right',
+                  direction: 'rtl',
+                }}
+              />
+              <Button
+                id="search-btn"
+                className="search-btn"
+                style={{
+                  background: 'linear-gradient(135deg, #2196f3, #1565c0)',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  padding: '8px 24px',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  flexShrink: 0,
+                }}
+              >
+                بحث
+              </Button>
+            </div>
+
+            {isSearchFocused && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  left: 0,
+                  background: '#fff',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                  border: '1px solid #e8eef5',
+                  zIndex: 2000,
+                  overflow: 'hidden',
+                  animation: 'slideDown 0.2s ease-out',
+                }}
+              >
+                <style dangerouslySetInnerHTML={{ __html: `
+                  @keyframes slideDown {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                  }
+                ` }} />
+                {searchSuggestions.map((item, index) => (
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      setSearchValue(item.label)
+                      setIsSearchFocused(false)
+                    }}
+                    style={{
+                      padding: '16px 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-end',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      borderBottom: index === searchSuggestions.length - 1 ? 'none' : '1px solid #f0f5fb',
+                      transition: 'background 0.2s ease',
+                      fontFamily: "'Cairo', sans-serif",
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fbff'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                  >
+                    <Search size={18} color="#a0aec0" style={{ flexShrink: 0 }} />
+                    <span style={{ color: '#4a5568', fontSize: '15px', fontWeight: 500, flex: 1 }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </header>
 
-        {/* Body */}
         <div 
           className="content-body custom-scrollbar"
-          style={{ flex: 1, padding: '25px 35px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
+          style={{ flex: 1, padding: '15px 35px', overflowY: isMobile ? 'auto' : 'hidden', overflowX: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         >
-          {/* Emergency Banner */}
           <div
             className="emergency-banner"
             style={{
               background: 'linear-gradient(135deg, #F44336, #D32F2F)',
               borderRadius: '20px',
-              marginBottom: '32px',
+              marginBottom: '20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -396,7 +458,7 @@ export default function DashboardPage() {
               overflow: 'hidden',
               boxShadow: '0 10px 30px rgba(244,67,54,0.3)',
               cursor: 'pointer',
-              height: '110px',
+              height: '120px',
               width: '100%',
               flexShrink: 0,
               transition: 'transform 0.3s ease',
@@ -404,54 +466,55 @@ export default function DashboardPage() {
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.01)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            {/* Concentric Arcs - Ring 2 (Outer) */}
             <div
               style={{
                 position: 'absolute',
-                width: '420px',
-                height: '420px',
+                width: isMobile ? '280px' : '420px',
+                height: isMobile ? '280px' : '420px',
                 borderRadius: '50%',
                 background: '#FFFFFF4D',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 0,
+                transition: 'all 0.3s ease',
               }}
             >
-              {/* Concentric Arcs - Ring 1 (Inner) */}
               <div
                 style={{
-                  width: '320px',
-                  height: '320px',
+                  width: isMobile ? '200px' : '320px',
+                  height: isMobile ? '200px' : '320px',
                   borderRadius: '50%',
                   background: '#FFFFFF99',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  transition: 'all 0.3s ease',
                 }}
               >
-                {/* Center white area */}
                 <div
                   style={{
-                    width: '200px',
-                    height: '200px',
+                    width: isMobile ? '120px' : '200px',
+                    height: isMobile ? '120px' : '200px',
                     borderRadius: '50%',
                     background: '#fff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 0 40px rgba(0,0,0,0.05)',
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   <h2
                     className="emergency-title"
                     style={{
                       color: '#F44336',
-                      fontSize: '3.2rem',
+                      fontSize: isMobile ? '1.5rem' : '3.2rem',
                       fontWeight: 900,
                       margin: 0,
                       zIndex: 2,
                       fontFamily: "'Cairo', sans-serif",
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     الطوارئ
@@ -461,7 +524,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Services Section Header */}
           <div className="section-header" style={{ marginBottom: '24px', textAlign: 'right', flexShrink: 0 }}>
             <h3
               style={{
@@ -487,29 +549,28 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Cards Grid - Filling remaining space */}
           <div
             className="services-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gridAutoRows: '1fr',
-              gap: '20px',
+              gap: '24px',
               flex: 1,
               minHeight: 0,
-              paddingBottom: '16px',
+              paddingBottom: '100px',
             }}
           >
             {serviceCards.map((card) => {
               const Icon = card.icon
               return (
-                <div
+                <Card
                   key={card.id}
                   id={`card-${card.id}`}
                   style={{
                     background: '#fff',
                     borderRadius: '16px',
-                    padding: '20px',
+                    padding: '24px 20px',
+                    minHeight: '180px',
                     boxShadow: '0 4px 12px rgba(33,150,243,0.06)',
                     border: '1px solid #e8eef5',
                     cursor: 'pointer',
@@ -517,8 +578,9 @@ export default function DashboardPage() {
                     textAlign: 'right',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '10px',
+                    gap: '8px',
                     justifyContent: 'center',
+                    minWidth: 0,
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget as HTMLDivElement
@@ -533,18 +595,17 @@ export default function DashboardPage() {
                     setHoveredServiceCard(null)
                   }}
                 >
-                  {/* Icon Rectangle Container */}
                   <div
                     style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '9px',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
                       background: hoveredServiceCard === card.id ? '#2196F3' : '#2196F333',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       alignSelf: 'flex-start',
-                      marginBottom: '4px',
+                      marginBottom: '2px',
                       transition: 'all 0.3s ease',
                     }}
                   >
@@ -553,15 +614,14 @@ export default function DashboardPage() {
                         style={{
                           color: hoveredServiceCard === card.id ? '#fff' : '#2196F3',
                           fontWeight: 700,
-                          fontSize: '0.75rem',
-                          transition: 'all 0.3s ease',
+                          fontSize: '0.7rem',
                           fontFamily: "'Cairo', sans-serif",
                         }}
                       >
                         SOS
                       </span>
                     ) : (
-                      <Icon size={18} color={hoveredServiceCard === card.id ? '#fff' : '#2196F3'} strokeWidth={1.5} style={{ transition: 'all 0.3s ease' }} />
+                      <Icon size={16} color={hoveredServiceCard === card.id ? '#fff' : '#2196F3'} strokeWidth={1.5} />
                     )}
                   </div>
 
@@ -569,12 +629,10 @@ export default function DashboardPage() {
                     style={{
                       fontFamily: "'Cairo', sans-serif",
                       fontWeight: 700,
-                      fontSize: '18px',
-                      color: '#000000',
+                      fontSize: '16px',
+                      color: '#000',
                       margin: 0,
-                      lineHeight: '100%',
-                      letterSpacing: '0%',
-                      textAlign: 'right',
+                      lineHeight: '1.2',
                     }}
                   >
                     {card.title}
@@ -582,18 +640,16 @@ export default function DashboardPage() {
                   <p
                     style={{
                       fontFamily: "'Cairo', sans-serif",
-                      fontWeight: 600,
-                      fontSize: '14px',
-                      color: '#000000',
+                      fontWeight: 500,
+                      fontSize: '15px',
+                      color: '#000000ff',
                       margin: 0,
-                      lineHeight: '100%',
-                      letterSpacing: '0%',
-                      textAlign: 'right',
+                      lineHeight: '1.4',
                     }}
                   >
                     {card.description}
                   </p>
-                </div>
+                </Card>
               )
             })}
           </div>
