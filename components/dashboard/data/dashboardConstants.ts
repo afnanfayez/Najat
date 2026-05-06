@@ -1,7 +1,9 @@
 import {
   LayoutGrid,
+  Shield,
   Heart,
   Compass,
+  FilePlus,
   User,
   Siren,
   Send,
@@ -33,6 +35,7 @@ export interface SearchSuggestion {
 
 export const navItems: NavItem[] = [
   { id: 'home',      label: 'الرئيسية',           icon: LayoutGrid, active: true  },
+  { id: 'health',    label: 'الخدمات الصحية',      icon: Shield,     active: false },
   { id: 'humanaid',  label: 'المساعدات الإنسانية', icon: Heart,      active: false },
   { id: 'maps',      label: 'الخرائط والملاحة',    icon: Compass,    active: false },
   { id: 'emergency', label: 'الطوارئ',             icon: Siren,      active: false, sos: true },
@@ -40,6 +43,15 @@ export const navItems: NavItem[] = [
 ]
 
 export const serviceCards: ServiceCardData[] = [
+  {
+    id: 'health-services',
+    title: 'الخدمات الصحية',
+    description:
+      'الوصول الفوري إلى الأطباء المتطوعين، طلب استشارة طبية، والبحث عن أقرب الصيدليات المتاحة.',
+    icon: Shield,
+    color: '#e3f4ff',
+    iconColor: '#2196f3',
+  },
   {
     id: 'humanitarian-aid',
     title: 'المساعدات الإنسانية',
@@ -59,6 +71,15 @@ export const serviceCards: ServiceCardData[] = [
     iconColor: '#9c27b0',
   },
   {
+    id: 'health-guide',
+    title: 'الدليل الصحي',
+    description:
+      'إرشادات الإسعافات الأولية، كيفية التعامل مع الإصابات الشائعة في الأزمات، ونصائح الصحة النفسية.',
+    icon: FilePlus,
+    color: '#e8f5e9',
+    iconColor: '#4caf50',
+  },
+  {
     id: 'emergency-cases',
     title: 'حالات الطوارئ',
     description:
@@ -72,7 +93,7 @@ export const serviceCards: ServiceCardData[] = [
     id: 'conversations',
     title: 'المحادثات',
     description:
-      'التواصل المباشر مع غرفة العمليات، المتطوعين، مجموعات الدعم المجتمعي في منطقتك.',
+      'التواصل المباشر مع غرفة العمليات، المتطوعين، المتطوعين، مجموعات الدعم المجتمعي في منطقتك.',
     icon: Send,
     color: '#e3f4ff',
     iconColor: '#2196f3',

@@ -38,7 +38,7 @@ export default function ServiceCard({
         justifyContent: 'center',
         minWidth: 0,
       }}
-      onClick={() => onCardClick(card.id)}
+      onClick={() => onCardClick?.(card.id)}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLDivElement
         el.style.transform = 'translateY(-4px)'
