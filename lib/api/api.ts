@@ -1,6 +1,6 @@
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
 
-async function request(endpoint: string, options: RequestInit = {}) {
+export async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${BASE_URL}${endpoint}`
 
   const config: RequestInit = {
