@@ -22,26 +22,110 @@ const DISTRIBUTION_POINTS = [
 
 export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', direction: 'rtl', fontFamily: "'Cairo', sans-serif", height: '100%', overflowY: 'auto' }} className="no-scrollbar">
+    <div 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '24px', 
+        direction: 'rtl', 
+        fontFamily: "'Cairo', sans-serif", 
+        height: '100%',
+        width: '100%',
+        overflowY: 'auto',
+        padding: '10px 4px',
+      }} 
+      className="no-scrollbar"
+    >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+          `,
+        }}
+      />
       {/* Back Button */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2196F3' }} onClick={onBack}>
+      <div 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          cursor: 'pointer', 
+          color: '#2196F3', 
+          width: 'fit-content',
+          marginBottom: '8px'
+        }} 
+        onClick={onBack}
+      >
         <ArrowRight size={20} />
         <span style={{ fontWeight: 700, fontSize: '16px' }}>العودة للمساعدات</span>
       </div>
 
       {/* Header Card */}
-      <Card style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none', padding: '32px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#2196F3', margin: 0 }}>{aid.name}</h1>
-          <p style={{ fontSize: '16px', color: '#9e9e9e', margin: '4px 0 24px', fontWeight: 600 }}>{aid.provider}</p>
-          <p style={{ fontSize: '18px', color: '#1a2d4a', fontWeight: 600, maxWidth: '800px', margin: '0 auto', lineHeight: '1.8' }}>
+      <Card style={{ borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: 'none', padding: '48px', flexShrink: 0 }}>
+        <div style={{ textAlign: 'right' }}>
+          <h1 style={{ fontSize: '42px', fontWeight: 800, color: '#2196F3', margin: 0, lineHeight: '1.3' }}>{aid.name}</h1>
+          <p style={{ fontSize: '18px', color: '#B0B0B0', margin: '4px 0 24px', fontWeight: 600 }}>{aid.provider}</p>
+          <p style={{ fontSize: '18px', color: '#000', fontWeight: 600, maxWidth: '1000px', marginLeft: 'auto', lineHeight: '1.8' }}>
             {aid.description}
           </p>
         </div>
       </Card>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: '24px', alignItems: 'start' }}>
         
+        {/* Right Column: Request Form */}
+        <Card style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none', padding: '32px' }}>
+          <div style={{ textAlign: 'right', marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#1a2d4a', margin: 0 }}>طلب مساعدة جديدة</h2>
+            <p style={{ fontSize: '14px', color: '#9e9e9e', fontWeight: 600, marginTop: '8px' }}>يرجى ملئ البيانات المطلوبة لضمان معالجة طلبكم بسرعة</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>اسم الزوج</Label>
+              <Input placeholder="الاسم كامل" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>رقم هوية الزوج</Label>
+              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>اسم الزوجة</Label>
+              <Input placeholder="الاسم كامل" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>رقم هوية الزوجة</Label>
+              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>عدد الابناء الاناث</Label>
+              <Input placeholder="مثال : 4 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>عدد الابناء الذكور</Label>
+              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>رقم الهاتف</Label>
+              <Input placeholder="0590000000" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>الموقع الحالي</Label>
+              <Input placeholder="حدد موقعك الحالي" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+            <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>ملاحظات إضافية</Label>
+              <Input placeholder="اكتب ملاحظاتك هنا" className="bg-[#f8fafc] border-none h-12 text-right" />
+            </div>
+          </div>
+
+          <Button className="w-full bg-[#2196F3] hover:bg-[#1976D2] text-white h-14 rounded-xl mt-8 flex items-center justify-center gap-2 text-lg font-bold">
+             إرسال الطلب الآن
+             <Send size={20} />
+          </Button>
+        </Card>
+
         {/* Left Column: Distribution Points */}
         <Card style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none', padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -60,11 +144,23 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: point.status === 'مفتوح الآن' ? '#4caf50' : '#f44336', fontSize: '12px', fontWeight: 700 }}>
+                    <div 
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px', 
+                        color: point.status === 'مفتوح الآن' ? '#4caf50' : '#f44336', 
+                        fontSize: '11px', 
+                        fontWeight: 800,
+                        background: point.status === 'مفتوح الآن' ? '#4caf5015' : '#f4433615',
+                        padding: '4px 10px',
+                        borderRadius: '20px'
+                      }}
+                    >
                       <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: point.status === 'مفتوح الآن' ? '#4caf50' : '#f44336' }} />
                       <span>{point.status}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f2a122', fontSize: '11px', marginTop: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f2a122', fontSize: '11px', marginTop: '6px' }}>
                       <Clock size={12} />
                       <span>{point.time}</span>
                     </div>
@@ -73,58 +169,6 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
               </div>
             ))}
           </div>
-        </Card>
-
-        {/* Right Column: Request Form */}
-        <Card style={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: 'none', padding: '32px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#1a2d4a', margin: 0 }}>طلب مساعدة جديدة</h2>
-            <p style={{ fontSize: '14px', color: '#9e9e9e', fontWeight: 600, marginTop: '8px' }}>يرجى ملئ البيانات المطلوبة لضمان معالجة طلبكم بسرعة</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px 32px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>اسم الزوج</Label>
-              <Input placeholder="الاسم كامل" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>رقم هوية الزوج</Label>
-              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>اسم الزوجة</Label>
-              <Input placeholder="الاسم كامل" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>رقم هوية الزوجة</Label>
-              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>عدد الابناء الاناث</Label>
-              <Input placeholder="مثال : 4 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>عدد الابناء الذكور</Label>
-              <Input placeholder="مثال : 8 افراد" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>رقم الهاتف</Label>
-              <Input placeholder="0590000000" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>الموقع الحالي</Label>
-              <Input placeholder="حدد موقعك الحالي" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-            <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Label style={{ fontSize: '15px', fontWeight: 700, color: '#1a2d4a' }}>ملاحظات إضافية</Label>
-              <Input placeholder="اكتب ملاحظاتك هنا" className="bg-[#f8fafc] border-none h-12 text-right" />
-            </div>
-          </div>
-
-          <Button className="w-full bg-[#2196F3] hover:bg-[#1976D2] text-white h-14 rounded-xl mt-8 flex items-center justify-center gap-2 text-lg font-bold">
-             إرسال الطلب الآن
-             <Send size={20} />
-          </Button>
         </Card>
 
       </div>

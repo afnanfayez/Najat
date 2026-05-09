@@ -24,7 +24,7 @@ export default function AidCard({ aid, onClick }: AidCardProps) {
         position: 'relative',
         direction: 'rtl',
         transition: 'transform 0.2s ease',
-        height: '200px',
+        height: '260px',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
