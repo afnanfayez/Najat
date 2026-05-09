@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter, Menu } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import FacilityCard from '@/components/health/FacilityCard'
 import { useHealthFacilities } from '@/hooks/useHealthFacilities'
+import Image from 'next/image'
 import {
   CATEGORY_LABELS,
   type FacilityCategory,
@@ -13,12 +14,24 @@ import {
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
-export default function HealthServicesPage() {
+interface HealthServicesPageProps {
+  setIsMobileMenuOpen?: (open: boolean) => void
+}
+
+export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServicesPageProps) {
   const [activeCategory, setActiveCategory] = useState<FacilityCategory>('hospitals')
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const { data, isLoading } = useHealthFacilities({
     category: activeCategory,
@@ -83,9 +96,60 @@ export default function HealthServicesPage() {
               animation: slideDown 0.2s ease-out forwards;
               transform-origin: top right;
             }
+            @media (max-width: 768px) {
+              .header-row {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
+              }
+              .map-btn {
+                width: 100% !important;
+                justify-content: center !important;
+              }
+              .search-filter-row {
+                flex-direction: column !important;
+              }
+              .filter-dropdown-container {
+                width: 100% !important;
+              }
+              .filter-btn {
+                width: 100% !important;
+              }
+            }
           `,
         }}
       />
+
+      {/* ── Mobile Navbar (Matches Dashboard) ── */}
+      {isMobile && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 0',
+            borderBottom: '1px solid #e8eef5',
+            marginBottom: '20px',
+            flexShrink: 0,
+          }}
+        >
+          <div 
+            style={{ color: '#2196F3', cursor: 'pointer' }}
+            onClick={() => setIsMobileMenuOpen?.(true)}
+          >
+            <Menu size={32} />
+          </div>
+          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+            <Image
+              src="/assets/Logo2.png"
+              alt="شعار نجاة"
+              fill
+              style={{ objectFit: 'contain' }}
+              priority
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Header ── */}
       <div
@@ -112,12 +176,16 @@ export default function HealthServicesPage() {
           الخدمات الصحية
         </h2>
 
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%'
-        }}>
+        <div 
+          className="header-row"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            gap: '12px'
+          }}
+        >
           <p
             style={{
               fontFamily: "'Cairo', sans-serif",
@@ -127,6 +195,7 @@ export default function HealthServicesPage() {
               margin: 0,
               textAlign: 'right',
               lineHeight: '1.6',
+              flex: 1,
             }}
           >
             ابحث عن أقرب مراكز الرعاية الصحية وتأكد من توفر الأدوية في الوقت الفعلي
@@ -134,8 +203,11 @@ export default function HealthServicesPage() {
 
           {/* Map button */}
           <button
+            className="map-btn"
             style={{
-              padding: '9px 44px',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '12px 44px',
               background: '#2196F3',
               border: 'none',
               borderRadius: '6px',
@@ -212,6 +284,7 @@ export default function HealthServicesPage() {
 
         {/* ── Search + Filter ── */}
         <div
+          className="search-filter-row"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -229,6 +302,7 @@ export default function HealthServicesPage() {
               background: 'rgba(217,217,217,0.38)',
               borderRadius: '8px',
               padding: '10px 14px',
+              width: '100%'
             }}
           >
             <Search size={18} color="#2196F3" style={{ flexShrink: 0 }} />
@@ -254,8 +328,9 @@ export default function HealthServicesPage() {
           </div>
 
           {/* Filter button */}
-          <div style={{ position: 'relative' }}>
+          <div className="filter-dropdown-container" style={{ position: 'relative' }}>
             <button
+              className="filter-btn"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
               style={{
                 display: 'flex',

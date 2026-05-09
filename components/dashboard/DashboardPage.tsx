@@ -154,7 +154,7 @@ export default function DashboardPage() {
               background: '#fff',
             }}
           >
-            <HealthServicesPage />
+            <HealthServicesPage setIsMobileMenuOpen={setIsMobileMenuOpen} />
           </div>
         ) : (
           /* All other sections — show dashboard header + content */

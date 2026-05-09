@@ -1,6 +1,7 @@
 'use client'
 
 import { Menu } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import SearchBar from './SearchBar'
 
@@ -25,48 +26,61 @@ export default function DashboardHeader({
     <header
       style={{
         background: '#fff',
-        padding: '12px 28px 10px',
-        borderBottom: '1px solid #e8eef5',
-        boxShadow: '0 2px 8px rgba(33,150,243,0.06)',
+        padding: isMobile ? '0 20px 24px' : '12px 28px 10px',
+        borderBottom: isMobile ? 'none' : '1px solid #e8eef5',
+        boxShadow: isMobile ? 'none' : '0 2px 8px rgba(33,150,243,0.06)',
         boxSizing: 'border-box',
       }}
     >
+      {/* ── Mobile Navbar ── */}
+      {isMobile && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 0',
+            borderBottom: '1px solid #e8eef5',
+            marginBottom: '20px',
+          }}
+        >
+          <div 
+            style={{ color: '#2196F3', cursor: 'pointer' }}
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={32} />
+          </div>
+          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+            <Image
+              src="/assets/Logo2.png"
+              alt="شعار نجاة"
+              fill
+              style={{ objectFit: 'contain' }}
+              priority
+            />
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: isMobile ? 'flex-start' : 'center',
           marginBottom: '8px',
-          minHeight: '50px',
+          minHeight: isMobile ? 'auto' : '50px',
         }}
       >
-        {isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMobileMenuOpen(true)}
-            style={{
-              color: '#2196F3',
-              position: 'absolute',
-              right: '-10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 10,
-            }}
-          >
-            <Menu size={32} />
-          </Button>
-        )}
         <h1
           className="header-title"
           style={{
             fontFamily: "'Cairo', sans-serif",
-            fontSize: '42px',
+            fontSize: isMobile ? '32px' : '42px',
             fontWeight: 800,
             color: '#1a2d4a',
             margin: 0,
-            textAlign: isMobile ? 'center' : 'right',
+            textAlign: 'right',
             lineHeight: '1.2',
             letterSpacing: '-0.02em',
             flex: 1,
@@ -80,14 +94,14 @@ export default function DashboardHeader({
         style={{
           fontFamily: "'Cairo', sans-serif",
           color: '#4a5568',
-          fontSize: '19px',
+          fontSize: isMobile ? '16px' : '19px',
           fontWeight: 600,
           margin: '0 0 24px',
-          textAlign: isMobile ? 'center' : 'right',
+          textAlign: 'right',
           lineHeight: '1.5',
           maxWidth: isMobile ? '100%' : '80%',
-          marginRight: isMobile ? 'auto' : '0',
-          marginLeft: isMobile ? 'auto' : '0',
+          marginRight: '0',
+          marginLeft: 'auto',
         }}
       >
         نحن هنا لضمان سلامتك. ابحث عن الخدمات الأساسية أو اطلب المساعدة الفورية في أي وقت.
