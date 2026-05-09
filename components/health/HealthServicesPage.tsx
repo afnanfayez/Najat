@@ -11,6 +11,9 @@ import {
   type FacilityCategory,
   type HealthFacility,
 } from '@/schemas/healthFacility'
+import HospitalDetailView from './details/HospitalDetailView'
+import HospitalMapView from './details/HospitalMapView'
+import AllDoctorsView from './details/AllDoctorsView'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
@@ -25,6 +28,9 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  
+  const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors'>('list')
+  const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)
@@ -47,12 +53,45 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     )
   }, [])
 
-  const handleNavigate = (_facility: HealthFacility) => {
-    // TODO: open facility details
+  const handleNavigate = (facility: HealthFacility) => {
+    // hospitals only for now as requested
+    if (activeCategory === 'hospitals') {
+      setSelectedFacility(facility)
+      setView('detail')
+    }
   }
 
   const handleCall = (_facility: HealthFacility) => {
     // TODO: initiate call
+  }
+
+  if (view === 'detail' && selectedFacility) {
+    return (
+      <HospitalDetailView 
+        hospital={selectedFacility} 
+        onBack={() => setView('list')} 
+        onShowMap={() => setView('map')}
+        onShowAllDoctors={() => setView('doctors')}
+      />
+    )
+  }
+
+  if (view === 'map' && selectedFacility) {
+    return (
+      <HospitalMapView 
+        hospital={selectedFacility} 
+        onBack={() => setView('detail')} 
+      />
+    )
+  }
+
+  if (view === 'doctors' && selectedFacility) {
+    return (
+      <AllDoctorsView 
+        hospital={selectedFacility} 
+        onBack={() => setView('detail')} 
+      />
+    )
   }
 
   return (
