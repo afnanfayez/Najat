@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { removeToken } from '@/lib/api/auth'
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import HealthServicesPage from '@/components/health/HealthServicesPage'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import DashboardHeader from './header/DashboardHeader'
 import HomeSection from './sections/HomeSection'
@@ -34,6 +35,13 @@ export default function DashboardPage() {
     resetLogin()
     resetRegister()
     router.push('/login')
+  }
+
+  const handleCardClick = (cardId: string) => {
+    if (cardId === 'health-services') {
+      setActiveNav('health')
+      setIsMobileMenuOpen(false)
+    }
   }
 
   return (
@@ -131,33 +139,55 @@ export default function DashboardPage() {
           position: 'relative',
         }}
       >
-        <DashboardHeader
-          isMobile={isMobile}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-          searchValue={searchValue}
-          setSearchValue={setSearchValue}
-          isSearchFocused={isSearchFocused}
-          setIsSearchFocused={setIsSearchFocused}
-        />
-
-        <div
-          className="content-body custom-scrollbar"
-          style={{
-            flex: 1,
-            padding: '15px 35px',
-            overflowY: isMobile ? 'auto' : 'hidden',
-            overflowX: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            boxSizing: 'border-box',
-          }}
-        >
-          <HomeSection
-            isMobile={isMobile}
-            hoveredServiceCard={hoveredServiceCard}
-            setHoveredServiceCard={setHoveredServiceCard}
-          />
-        </div>
+        {activeNav === 'health' ? (
+          /* Health services — full height, no dashboard header */
+          <div
+            className="custom-scrollbar"
+            style={{
+              flex: 1,
+              padding: '24px 32px',
+              overflowY: 'hidden',
+              overflowX: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box',
+              background: '#fff',
+            }}
+          >
+            <HealthServicesPage />
+          </div>
+        ) : (
+          /* All other sections — show dashboard header + content */
+          <>
+            <DashboardHeader
+              isMobile={isMobile}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+              searchValue={searchValue}
+              setSearchValue={setSearchValue}
+              isSearchFocused={isSearchFocused}
+              setIsSearchFocused={setIsSearchFocused}
+            />
+            <div
+              className="content-body custom-scrollbar"
+              style={{
+                flex: 1,
+                padding: '15px 35px',
+                overflowY: isMobile ? 'auto' : 'hidden',
+                overflowX: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                boxSizing: 'border-box',
+              }}
+            >
+              <HomeSection
+                isMobile={isMobile}
+                hoveredServiceCard={hoveredServiceCard}
+                setHoveredServiceCard={setHoveredServiceCard}
+                onCardClick={handleCardClick}
+              />
+            </div>
+          </>
+        )}
       </main>
     </div>
   )
