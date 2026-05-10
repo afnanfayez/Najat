@@ -5,6 +5,7 @@ import { ArrowRight, Phone, MapPin, Clock, Stethoscope, Pill, AlertCircle, Chevr
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import Image from 'next/image'
+import SharedHeroHeader from './SharedHeroHeader'
 
 interface HospitalDetailViewProps {
   hospital: any
@@ -18,34 +19,6 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-2 relative" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        /* ── Hero header ── */
-        .hdv-hero { height: 480px; border-radius: 32px; }
-        @media (max-width: 768px) { .hdv-hero { height: 320px; border-radius: 20px; } }
-
-        /* ── Hero title ── */
-        .hdv-title { font-size: 3.75rem; }
-        @media (max-width: 768px) { .hdv-title { font-size: 1.5rem; } }
-
-        /* ── Hero address text ── */
-        .hdv-address { font-size: 1.25rem; }
-        @media (max-width: 768px) { .hdv-address { font-size: 0.8rem; } }
-
-        /* ── Bottom-right content block ── */
-        .hdv-hero-content { bottom: 2.5rem; right: 2.5rem; gap: 1rem; }
-        @media (max-width: 768px) { .hdv-hero-content { bottom: 4.5rem; right: 1rem; gap: 0.5rem; } }
-
-        /* ── Bottom-left buttons block ── */
-        .hdv-hero-btns { bottom: 2.5rem; left: 2.5rem; gap: 1rem; }
-        @media (max-width: 768px) { .hdv-hero-btns { bottom: 1rem; right: 1rem; left: 1rem; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap; } }
-
-        /* ── Hero badges ── */
-        .hdv-badge { padding: 8px 20px; font-size: 13px; }
-        @media (max-width: 768px) { .hdv-badge { padding: 4px 10px; font-size: 10px; } }
-
-        /* ── Hero action buttons ── */
-        .hdv-btn { padding: 10px 24px; font-size: 13px; height: 44px; }
-        @media (max-width: 768px) { .hdv-btn { padding: 6px 12px; font-size: 11px; height: 34px; } }
-
         /* ── Middle 2-col grid ── */
         .hdv-mid-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 24px; margin-top: 16px; }
         @media (max-width: 900px) { .hdv-mid-grid { display: flex; flex-direction: column; gap: 24px; } }
@@ -88,43 +61,7 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
 
-      {/* ── Hero Image Header ── */}
-      <div className="hdv-hero relative w-full overflow-hidden shadow-2xl flex-shrink-0">
-        <Image src="/assets/health1.jpg" alt="Hospital Header" fill className="object-cover" priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-
-
-
-        {/* Bottom-right: title + badges */}
-        <div className="hdv-hero-content absolute flex flex-col items-start text-white text-right">
-          <div className="flex flex-wrap items-center gap-2 mb-1 w-full">
-            <div className="hdv-badge bg-amber-500 text-white rounded-full font-black flex items-center gap-2 shadow-lg">
-              <TriangleAlert size={14} />
-              قدرة استيعابية محدودة
-            </div>
-            <div className="hdv-badge bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full font-black shadow-lg">
-              آخر تحديث منذ 15 دقيقة
-            </div>
-          </div>
-          <h1 className="hdv-title font-black mb-1 drop-shadow-lg leading-tight">مستشفى شهداء الأقصى</h1>
-          <div className="hdv-address flex items-center gap-2 font-bold drop-shadow-md">
-            <MapPin size={20} className="text-white flex-shrink-0" />
-            <span>غزة - الرمال - شارع الشهداء</span>
-          </div>
-        </div>
-
-        {/* Bottom-left: action buttons */}
-        <div className="hdv-hero-btns absolute flex items-center">
-          <Button className="hdv-btn bg-white text-slate-800 hover:bg-slate-100 font-black rounded-2xl flex items-center gap-2 shadow-xl">
-            <Phone size={16} className="text-blue-500" />
-            اتصال
-          </Button>
-          <Button onClick={onShowMap} className="hdv-btn bg-blue-500 hover:bg-blue-600 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/30">
-            <MapPin size={16} />
-            عرض الخريطة
-          </Button>
-        </div>
-      </div>
+      <SharedHeroHeader hospital={hospital} onShowMap={onShowMap} />
 
       {/* ── Middle: Location + Services ── */}
       <div className="hdv-mid-grid px-1">
@@ -167,8 +104,8 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
           </div>
           <div className="flex flex-col gap-3 text-right">
             <div className="flex items-center gap-3 text-slate-700">
-              <MapPin size={20} className="text-[#F2A122] flex-shrink-0" />
-              <span className="font-black text-sm">غزة - الرمال - شارع الشهداء</span>
+              <img src="https://api.iconify.design/solar:map-point-bold.svg?color=%23F2A122" alt="Location" className="w-5 h-5 flex-shrink-0" />
+              <span className="font-black text-sm">{hospital?.address || 'غزة - الرمال - شارع الشهداء'}</span>
             </div>
             <div className="flex items-center gap-3 text-slate-700">
               <Phone size={20} className="text-[#F2A122] flex-shrink-0" />

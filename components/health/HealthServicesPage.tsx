@@ -31,6 +31,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   const [isMobile, setIsMobile] = useState(false)
   
   const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors' | 'medicines'>('list')
+  const [prevView, setPrevView] = useState<'list' | 'detail' | 'doctors' | 'medicines'>('detail')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       <HospitalDetailView 
         hospital={selectedFacility} 
         onBack={() => setView('list')} 
-        onShowMap={() => setView('map')}
+        onShowMap={() => { setPrevView('detail'); setView('map'); }}
         onShowAllDoctors={() => setView('doctors')}
         onShowAllMedicines={() => setView('medicines')}
       />
@@ -82,7 +83,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     return (
       <HospitalMapView 
         hospital={selectedFacility} 
-        onBack={() => setView('detail')} 
+        onBack={() => setView(prevView)} 
       />
     )
   }
@@ -92,7 +93,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       <AllDoctorsView 
         hospital={selectedFacility} 
         onBack={() => setView('detail')}
-        onShowMap={() => setView('map')}
+        onShowMap={() => { setPrevView('doctors'); setView('map'); }}
       />
     )
   }
@@ -102,6 +103,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       <AllMedicinesView 
         hospital={selectedFacility} 
         onBack={() => setView('detail')}
+        onShowMap={() => { setPrevView('medicines'); setView('map'); }}
       />
     )
   }

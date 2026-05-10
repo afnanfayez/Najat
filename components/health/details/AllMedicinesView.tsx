@@ -1,13 +1,16 @@
 import React from 'react'
 import Image from 'next/image'
-import { MapPin, TriangleAlert, ChevronRight } from 'lucide-react'
+import { MapPin, TriangleAlert, ChevronRight, Phone } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import SharedHeroHeader from './SharedHeroHeader'
 
 interface AllMedicinesViewProps {
   hospital: any
   onBack: () => void
+  onShowMap: () => void
 }
 
-export default function AllMedicinesView({ hospital, onBack }: AllMedicinesViewProps) {
+export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMedicinesViewProps) {
   const medicines = [
     { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
     { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
@@ -27,50 +30,12 @@ export default function AllMedicinesView({ hospital, onBack }: AllMedicinesViewP
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}
     >
       <style dangerouslySetInnerHTML={{ __html: `
-        /* ── Hero header ── */
-        .amv-hero { height: 480px; border-radius: 32px; }
-        @media (max-width: 768px) { .amv-hero { height: 320px; border-radius: 20px; } }
-
-        /* ── Hero title ── */
-        .amv-title { font-size: 3.75rem; }
-        @media (max-width: 768px) { .amv-title { font-size: 1.5rem; } }
-
-        /* ── Hero address text ── */
-        .amv-address { font-size: 1.25rem; }
-        @media (max-width: 768px) { .amv-address { font-size: 0.8rem; } }
-
-        /* ── Bottom-right content block ── */
-        .amv-hero-content { bottom: 2.5rem; right: 2.5rem; gap: 1rem; }
-        @media (max-width: 768px) { .amv-hero-content { bottom: 4.5rem; right: 1rem; gap: 0.5rem; } }
-
         /* ── Card Wrap ── */
         .amv-card-wrap { margin: 32px 0 0; padding: 32px; border-radius: 32px; }
         @media (max-width: 768px) { .amv-card-wrap { margin: 16px 0 0; padding: 16px; border-radius: 20px; } }
       `}} />
 
-      {/* ── Hero ── */}
-      <div className="amv-hero relative w-full overflow-hidden shadow-2xl flex-shrink-0">
-        <Image src="/assets/health1.jpg" alt="Hospital Header" fill className="object-cover" priority />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
-
-        {/* Bottom-right: name + badges */}
-        <div className="amv-hero-content absolute flex flex-col items-start text-white text-right">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <div className="bg-amber-500 text-white rounded-full font-black flex items-center gap-2 shadow-lg px-3 py-1 text-[13px] md:text-[15px]">
-              <TriangleAlert size={14} />
-              قدرة استيعابية محدودة
-            </div>
-            <div className="bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full font-black shadow-lg px-3 py-1 text-[13px] md:text-[15px]">
-              آخر تحديث منذ 15 دقيقة
-            </div>
-          </div>
-          <h1 className="amv-title font-black mb-1 drop-shadow-lg leading-tight">مستشفى شهداء الأقصى</h1>
-          <div className="amv-address flex items-center gap-2 font-bold drop-shadow-md">
-            <MapPin size={20} className="text-white flex-shrink-0" />
-            <span>غزة - الرمال - شارع الشهداء</span>
-          </div>
-        </div>
-      </div>
+      <SharedHeroHeader hospital={hospital} onShowMap={onShowMap} />
 
       {/* ── Medicines Card ── */}
       <div
