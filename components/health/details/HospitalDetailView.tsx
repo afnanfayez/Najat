@@ -15,10 +15,7 @@ interface HospitalDetailViewProps {
 
 export default function HospitalDetailView({ hospital, onBack, onShowMap, onShowAllDoctors }: HospitalDetailViewProps) {
   return (
-    <div
-      className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-10"
-      style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}
-    >
+    <div className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-2 relative" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}>
       <style dangerouslySetInnerHTML={{ __html: `
         /* ── Hero header ── */
         .hdv-hero { height: 480px; border-radius: 32px; }
@@ -74,7 +71,7 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
         @media (max-width: 480px) { .hdv-doctors-grid { grid-template-columns: repeat(1, 1fr); } }
 
         /* ── Bottom 2-col grid ── */
-        .hdv-bottom-grid { display: grid; grid-template-columns: 8fr 4fr; gap: 24px; margin-top: 24px; }
+        .hdv-bottom-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 24px; margin-top: 24px; }
         @media (max-width: 900px) { .hdv-bottom-grid { grid-template-columns: 1fr; } }
 
         /* ── Footer card buttons ── */
@@ -95,32 +92,7 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
         <Image src="/assets/health1.jpg" alt="Hospital Header" fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
-        {/* Top-right: Simple back button */}
-        <button
-          onClick={onBack}
-          style={{
-            position: 'absolute',
-            top: '1.5rem',
-            right: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255,255,255,0.2)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            color: '#fff',
-            fontFamily: "'Cairo', sans-serif",
-            fontWeight: 700,
-            fontSize: '14px',
-            padding: '8px 16px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            zIndex: 10,
-          }}
-        >
-          <ArrowRight size={18} />
-          <span>رجوع</span>
-        </button>
+
 
         {/* Bottom-right: title + badges */}
         <div className="hdv-hero-content absolute flex flex-col items-start text-white text-right">
@@ -246,12 +218,12 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
                   <p style={{ margin: '3px 0 0', fontSize: '12px', fontWeight: 600, color: '#64748b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.3 }}>{doctor.specialty}</p>
                 </div>
               </div>
-              <div>
-                <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', fontFamily: "'Cairo', sans-serif" }}>مواعيد العمل اسبوعيا</p>
+              <div style={{ marginTop: 'auto' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 800, color: '#64748b', fontFamily: "'Cairo', sans-serif" }}>مواعيد العمل أسبوعياً</p>
                 {doctor.days.map((day, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#334155', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
-                    <span dir="ltr" style={{ fontSize: '11px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 900, color: '#1e293b', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
+                    <span dir="ltr" style={{ fontSize: '13px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
                   </div>
                 ))}
               </div>
@@ -261,38 +233,38 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
       </div>
 
       {/* ── Bottom: Medicines + Hours ── */}
-      <div className="hdv-bottom-grid">
+      <div className="hdv-bottom-grid px-1">
         {/* Medicines Table */}
-        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white" style={{ order: 2 }}>
+        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Pill size={22} /></div>
-              <h3 className="text-lg font-black text-slate-800">الأدوية الأساسية المتوفرة</h3>
+            <div className="flex items-center gap-2">
+              <img src="https://api.iconify.design/healthicons:medicines.svg?color=%232196f3" alt="medicines" className="w-6 h-6" />
+              <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>الأدوية الأساسية المتوفرة</h3>
             </div>
-            <Button variant="ghost" className="text-blue-500 font-black flex items-center gap-1 hover:bg-blue-50 text-sm">
-              عرض الكل <ChevronLeft size={16} />
+            <Button variant="ghost" className="text-[#2196F3] font-bold flex items-center gap-1 hover:bg-blue-50 text-[15px]">
+              عرض الكل <ChevronLeft size={18} />
             </Button>
           </div>
-          <div className="w-full overflow-x-auto">
-            <table className="w-full text-right border-separate border-spacing-y-3">
+          <div className="w-full overflow-x-auto no-scrollbar">
+            <table className="w-full text-right" style={{ borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="text-slate-400 text-sm">
-                  <th className="pb-2 pr-4 font-black">الدواء</th>
-                  <th className="pb-2 font-black">الفئة</th>
-                  <th className="pb-2 font-black text-center">الحالة</th>
+                <tr className="rounded-xl text-slate-800 text-[14px]" style={{ background: '#7E7D7D0F' }}>
+                  <th className="py-4 pr-5 font-black rounded-r-xl w-[50%]">الدواء</th>
+                  <th className="py-4 font-black text-center w-[25%]">الفئة</th>
+                  <th className="py-4 font-black text-center rounded-l-xl w-[25%]">الحالة</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: 'amber' },
-                  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: 'green' },
-                  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: 'green' },
+                  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
+                  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
+                  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
                 ].map((med, i) => (
-                  <tr key={i} className="bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
-                    <td className="py-4 pr-5 rounded-r-2xl font-black text-slate-800 text-sm">{med.name}</td>
-                    <td className="py-4 font-bold text-slate-500 text-sm">{med.category}</td>
-                    <td className="py-4 rounded-l-2xl text-center">
-                      <span className={`font-black text-sm text-${med.color}-500`}>{med.status}</span>
+                  <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                    <td className="py-5 pr-5 font-black text-slate-800 text-[14px]">{med.name}</td>
+                    <td className="py-5 font-bold text-slate-600 text-[14px] text-center">{med.category}</td>
+                    <td className="py-5 text-center">
+                      <span className="font-black text-[13px]" style={{ color: med.color }}>{med.status}</span>
                     </td>
                   </tr>
                 ))}
@@ -302,52 +274,60 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
         </Card>
 
         {/* Working Hours */}
-        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white" style={{ order: 1 }}>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-50 rounded-xl text-blue-500"><Clock size={22} /></div>
-            <h3 className="text-lg font-black text-slate-800">ساعات العمل</h3>
+        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white">
+          <div className="flex items-center gap-2 mb-6">
+            <img src="https://api.iconify.design/solar:clock-circle-bold.svg?color=%232196f3" alt="time" className="w-6 h-6" />
+            <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>ساعات العمل</h3>
           </div>
-          <div className="bg-red-50 p-4 rounded-[20px] flex items-center gap-3 mb-6 border border-red-100">
-            <AlertCircle size={22} className="text-red-500 flex-shrink-0" />
-            <span className="text-red-600 font-black text-sm leading-tight">قسم الطوارئ يعمل على مدار 24 ساعة</span>
+          <div className="bg-red-50 py-4 px-5 rounded-[16px] flex items-center justify-center gap-3 mb-8 w-full border border-red-100">
+            <img src="https://api.iconify.design/solar:bell-bold.svg?color=%23ef4444" alt="emergency" className="w-7 h-7 flex-shrink-0" />
+            <span className="text-[#EF4444] font-[900] text-[20px] text-center tracking-wide">قسم الطوارئ يعمل على مدار 24 ساعة</span>
           </div>
-          <div className="flex flex-col gap-5 font-bold text-sm">
-            {[
-              { label: 'السبت - الخميس (العيادات)', time: 'من 8:00 ص - 2:00 م', red: false },
-              { label: 'الجمعة', time: 'مغلق (للطوارئ فقط)', red: true },
-              { label: 'الصيدلية الخارجية', time: 'من 8:00 ص - 8:00 م', red: false },
-            ].map((row, i) => (
-              <div key={i} className="flex justify-between items-center">
-                <span className="text-slate-800 font-black">{row.label}</span>
-                <span className={row.red ? 'text-red-500 font-black' : 'text-slate-500'}>{row.time}</span>
-              </div>
-            ))}
+          <div className="flex flex-col font-bold text-[14px]">
+            <div className="flex justify-between items-center px-1 mb-6">
+              <span className="text-slate-800 font-black">السبت - الخميس (العيادات)</span>
+              <span dir="ltr" className="text-slate-600">من 8:00 ص - 2:00 م</span>
+            </div>
+            
+            <div className="flex justify-between items-center px-1 pb-6 mb-6 border-b border-slate-100">
+              <span className="text-slate-800 font-black">الجمعة</span>
+              <span dir="ltr" className="text-[#EF4444] font-black">مغلق (للطوارئ فقط)</span>
+            </div>
+            
+            <div className="flex justify-between items-center px-1">
+              <span className="text-slate-800 font-black">الصيدلية الخارجية</span>
+              <span dir="ltr" className="text-slate-600">من 8:00 ص - 8:00 م</span>
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* ── Footer ── */}
-      <Card className="mt-6 mb-4 rounded-[28px] border-none shadow-md bg-white overflow-hidden p-0">
-        <div className="hdv-footer-inner flex items-center justify-between p-6 bg-slate-50/50">
-          <div className="flex items-center gap-4">
-            <div className="relative w-14 h-14 bg-white rounded-2xl shadow-sm p-1 flex-shrink-0">
-              <Image src="/assets/Logo2.png" alt="Health Logo" fill className="object-contain p-1" />
+      {/* ── Footer Section ── */}
+      <div className="w-full px-1 flex justify-center mt-6 mb-2">
+        <Card className="w-full h-auto xl:h-[100px] rounded-[24px] xl:rounded-[40px] border-2 border-slate-100 shadow-md bg-white p-0 overflow-hidden">
+          <div className="flex flex-col xl:flex-row items-center justify-between h-full py-5 xl:py-0 px-6 sm:px-8 gap-6">
+            {/* Right Content */}
+            <div className="flex items-center gap-2 sm:gap-3 w-full xl:w-auto justify-center xl:justify-start">
+              <div className="relative w-[100px] h-[100px] flex-shrink-0">
+                <Image src="/assets/logo1.png" alt="Health Logo" fill className="object-contain" />
+              </div>
+              <div className="flex flex-col text-right">
+                <h4 className="text-[18px] sm:text-[21px] font-[900] text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>منصة نجاة للخدمات الإنسانية والطوارئ</h4>
+                <p className="text-slate-500 text-[15px] sm:text-[16px] font-[800] mt-0.5" style={{ fontFamily: "'Cairo', sans-serif" }}>دليلك الصحي في قطاع غزة</p>
+              </div>
             </div>
-            <div className="flex flex-col text-right">
-              <h4 className="text-base font-black text-slate-800">منصة نجاة للخدمات الإنسانية والطوارئ</h4>
-              <p className="text-slate-500 text-xs font-bold mt-1">دليلك الصحي في قطاع غزة</p>
+            {/* Left Content (Buttons) */}
+            <div className="flex items-center justify-center gap-3 w-full xl:w-auto">
+              <Button onClick={onBack} className="bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-[900] px-8 py-7 rounded-full text-[15px] sm:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
+                رجوع للخدمات الصحية
+              </Button>
+              <Button className="bg-[#EF4444] hover:bg-[#DC2626] text-white font-[900] px-10 py-7 rounded-full text-[15px] sm:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
+                اتصال بالطوارئ
+              </Button>
             </div>
           </div>
-          <div className="hdv-footer-btns flex items-center">
-            <Button variant="outline" className="border-slate-200 text-slate-600 font-black px-6 py-4 rounded-2xl text-sm hover:bg-slate-100 transition-all" onClick={onBack}>
-              رجوع للخدمات الصحية
-            </Button>
-            <Button className="bg-red-500 hover:bg-red-600 text-white font-black px-6 py-4 rounded-2xl text-sm shadow-lg shadow-red-500/20">
-              اتصال بالطوارئ
-            </Button>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

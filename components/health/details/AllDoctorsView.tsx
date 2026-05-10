@@ -189,14 +189,14 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
               </div>
 
               {/* Schedule */}
-              <div>
-                <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', fontFamily: "'Cairo', sans-serif" }}>
-                  مواعيد العمل اسبوعيا
+              <div style={{ marginTop: 'auto' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 800, color: '#64748b', fontFamily: "'Cairo', sans-serif" }}>
+                  مواعيد العمل أسبوعياً
                 </p>
                 {doctor.days.map((day, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#334155', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
-                    <span dir="ltr" style={{ fontSize: '11px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 900, color: '#1e293b', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
+                    <span dir="ltr" style={{ fontSize: '13px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
                   </div>
                 ))}
               </div>
