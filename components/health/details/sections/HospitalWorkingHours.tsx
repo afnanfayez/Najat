@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 export default function HospitalWorkingHours() {
   return (
     <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-2">
         <img src="https://api.iconify.design/solar:clock-circle-bold.svg?color=%232196f3" alt="time" className="w-6 h-6" />
         <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>ساعات العمل</h3>
       </div>

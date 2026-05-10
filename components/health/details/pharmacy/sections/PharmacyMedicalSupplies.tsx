@@ -15,7 +15,7 @@ const SUPPLIES = [
 export default function PharmacyMedicalSupplies() {
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">
-      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+      <div className="flex items-center gap-3 mb-4 sm:mb-5">
         <img src="https://api.iconify.design/healthicons:mask.svg?color=%232196f3" alt="icon" className="w-5 h-5 sm:w-6 sm:h-6" />
         <h3 className="text-lg sm:text-xl font-black text-slate-800">المستلزمات الطبية</h3>
       </div>

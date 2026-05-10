@@ -12,8 +12,10 @@ import {
 
 import HospitalDetailView from './details/HospitalDetailView'
 import PharmacyDetailView from './details/pharmacy/PharmacyDetailView'
+import LabDetailView from './details/lab/LabDetailView'
 import HospitalMapView from './details/HospitalMapView'
 import PharmacyMapView from './details/pharmacy/PharmacyMapView'
+import LabMapView from './details/lab/LabMapView'
 import AllDoctorsView from './details/AllDoctorsView'
 import AllMedicinesView from './details/AllMedicinesView'
 
@@ -94,6 +96,16 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       )
     }
 
+    if (activeCategory === 'labs') {
+      return (
+        <LabDetailView 
+          lab={selectedFacility} 
+          onBack={() => setView('list')} 
+          onShowMap={() => { setPrevView('detail'); setView('map'); }}
+        />
+      )
+    }
+
     return (
       <div className="p-10 text-center font-bold">
         جاري العمل على تفاصيل هذا القسم...
@@ -107,6 +119,14 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       return (
         <PharmacyMapView 
           pharmacy={selectedFacility} 
+          onBack={() => setView(prevView)} 
+        />
+      )
+    }
+    if (activeCategory === 'labs') {
+      return (
+        <LabMapView 
+          lab={selectedFacility} 
           onBack={() => setView(prevView)} 
         />
       )

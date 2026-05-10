@@ -20,7 +20,7 @@ const SERVICES = [
 export default function HospitalServices() {
   return (
     <Card className="hdv-services-card p-5 rounded-[28px] border-2 border-slate-100 shadow-md bg-white flex flex-col">
-      <div className="flex items-center gap-3 mb-4 flex-shrink-0">
+      <div className="flex items-center gap-3 mb-2 flex-shrink-0">
         <Activity size={22} className="text-[#2196F3]" />
         <h3 className="text-lg font-black text-slate-800">الخدمات الطبية المتاحة</h3>
       </div>
