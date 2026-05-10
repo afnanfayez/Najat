@@ -7,6 +7,7 @@ import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
 import HealthServicesPage from '@/components/health/HealthServicesPage'
 import HumanitarianAidPage from '@/components/aid/HumanitarianAidPage'
+import HealthGuidePage from '@/components/guide/HealthGuidePage'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import DashboardHeader from './header/DashboardHeader'
 import HomeSection from './sections/HomeSection'
@@ -176,6 +177,23 @@ export default function DashboardPage() {
             }}
           >
             <HumanitarianAidPage setIsMobileMenuOpen={setIsMobileMenuOpen} />
+          </div>
+        ) : activeNav === 'guide' ? (
+          /* Health Guide — full height, no dashboard header */
+          <div
+            className="custom-scrollbar"
+            style={{
+              flex: 1,
+              padding: '24px 32px',
+              overflowY: 'hidden',
+              overflowX: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box',
+              background: '#fff',
+            }}
+          >
+            <HealthGuidePage />
           </div>
         ) : (
           /* All other sections — show dashboard header + content */

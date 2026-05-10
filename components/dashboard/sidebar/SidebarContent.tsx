@@ -45,9 +45,9 @@ export default function SidebarContent({
         }}
       >
         {navItems.map((item) => {
-          const Icon = item.icon
           const isActive = activeNav === item.id
           const isHovered = hoveredNav === item.id
+          
           return (
             <button
               key={item.id}
@@ -131,8 +131,10 @@ export default function SidebarContent({
                       strokeLinejoin="round"
                     />
                   </svg>
+                ) : typeof item.icon === 'string' ? (
+                  <img src={item.icon} alt="icon" style={{ width: '24px', height: '24px' }} />
                 ) : (
-                  <Icon size={24} strokeWidth={2} />
+                  <item.icon size={24} strokeWidth={2} />
                 )}
               </div>
               <span style={{ flex: 1 }}>{item.label}</span>

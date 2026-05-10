@@ -13,7 +13,7 @@ import type { LucideIcon } from 'lucide-react'
 export interface NavItem {
   id: string
   label: string
-  icon: LucideIcon
+  icon: LucideIcon | string
   active: boolean
   sos?: boolean
 }
@@ -38,6 +38,7 @@ export const navItems: NavItem[] = [
   { id: 'health',    label: 'الخدمات الصحية',      icon: Shield,     active: false },
   { id: 'humanaid',  label: 'المساعدات الإنسانية', icon: Heart,      active: false },
   { id: 'maps',      label: 'الخرائط والملاحة',    icon: Compass,    active: false },
+  { id: 'guide',     label: 'الدليل الصحي',       icon: 'https://api.iconify.design/solar:document-add-bold.svg?color=white',   active: false },
   { id: 'emergency', label: 'الطوارئ',             icon: Siren,      active: false, sos: true },
   { id: 'profile',   label: 'الملف الشخصي',        icon: User,       active: false },
 ]
