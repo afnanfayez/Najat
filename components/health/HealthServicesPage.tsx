@@ -89,7 +89,8 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     return (
       <AllDoctorsView 
         hospital={selectedFacility} 
-        onBack={() => setView('detail')} 
+        onBack={() => setView('detail')}
+        onShowMap={() => setView('map')}
       />
     )
   }

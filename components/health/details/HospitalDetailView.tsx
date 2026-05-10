@@ -119,7 +119,7 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
             </div>
             
             <div className="relative w-full h-32 rounded-2xl overflow-hidden mb-4 shadow-inner border border-slate-100">
-               <Image src="/assets/map_snippet.png" alt="Map Snippet" fill className="object-cover" />
+               <Image src="/assets/health5.jpg" alt="Map Snippet" fill className="object-cover" />
             </div>
 
             <div className="flex flex-col gap-3 text-right items-start">
@@ -138,51 +138,89 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
       </div>
 
       {/* ── Doctors Section ── */}
-      <div className="flex flex-col gap-6 mt-8 text-right">
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-             <div className="p-2.5 bg-blue-50 rounded-xl text-blue-500">
-                <Stethoscope size={24} />
-             </div>
-             <h3 className="text-2xl font-black text-slate-800">الأطباء المناوبون الآن</h3>
+      <div style={{
+        padding: '32px',
+        marginTop: '32px',
+        border: '2px solid #f1f5f9',
+        borderRadius: '32px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+        background: '#fff',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'visible',
+      }}>
+        {/* Section Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="https://api.iconify.design/healthicons:doctor-male.svg?color=%232196f3" alt="doctor" style={{ width: '28px', height: '28px' }} />
+            <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b', margin: 0, fontFamily: "'Cairo', sans-serif" }}>الأطباء المناوبون الآن</h3>
           </div>
-          <Button variant="ghost" className="text-blue-500 font-black flex items-center gap-1 hover:bg-blue-50 px-4" onClick={onShowAllDoctors}>
-             <ChevronLeft size={18} />
-             عرض الكل
+          <Button variant="ghost" className="text-[#2196F3] font-black flex items-center gap-2 hover:bg-blue-50 px-4" onClick={onShowAllDoctors}>
+            عرض الكل
+            <ChevronLeft size={20} />
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* 4 Doctor Cards Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '16px',
+          width: '100%',
+        }}>
           {[
-            { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', time: 'من 10:00 ص - 2:00 م', days: 'الأحد / الخميس' },
-            { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', time: 'من 1:30 ص - 5:00 م', days: 'السبت / الخميس' },
-            { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', time: 'من 1:30 ص - 5:00 م', days: 'السبت / الخميس' },
-            { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', time: 'من 10:00 ص - 2:00 م', days: 'الأحد / الأربعاء' },
+            { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
+            { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+            { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+            { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
           ].map((doctor, i) => (
-            <Card key={i} className="p-6 rounded-[28px] border-none shadow-sm bg-[#F4F9FF] flex flex-col gap-6 text-right items-start">
-              <div className="flex items-center gap-4 w-full">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white border-2 border-white shadow-md flex-shrink-0">
-                   <Image src="/assets/doctor_avatar.png" alt="Doctor" fill className="object-cover" />
+            <div
+              key={i}
+              style={{
+                background: '#EAF6FD',
+                borderRadius: '16px',
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                textAlign: 'right',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Avatar + Info */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{
+                  width: '52px',
+                  height: '52px',
+                  minWidth: '52px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  background: '#fff',
+                  border: '2px solid #fff',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                }}>
+                  <img
+                    src={doctor.photo}
+                    alt={doctor.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
                 </div>
-                <div className="flex flex-col">
-                  <h4 className="font-black text-slate-800 text-base">{doctor.name}</h4>
-                  <p className="text-[11px] font-bold text-slate-500 mt-1">{doctor.specialty}</p>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontWeight: 900, fontSize: '15px', color: '#1e293b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.4 }}>{doctor.name}</p>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', fontWeight: 600, color: '#64748b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.4 }}>{doctor.specialty}</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-3 bg-white/60 backdrop-blur-sm p-4 rounded-2xl w-full">
-                 <div className="flex justify-between items-center text-[12px] font-bold text-slate-400">
-                    <span>مواعيد العمل أسبوعياً</span>
-                 </div>
-                 <div className="flex justify-between items-center text-[12px] font-black text-slate-700 border-b border-slate-100 pb-2">
-                    <span>{doctor.days.split(' / ')[0]}</span>
-                    <span>{doctor.time}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-[12px] font-black text-slate-700">
-                    <span>{doctor.days.split(' / ')[1]}</span>
-                    <span>{doctor.time}</span>
-                 </div>
+
+              {/* Schedule */}
+              <div>
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', fontFamily: "'Cairo', sans-serif" }}>مواعيد العمل اسبوعيا</p>
+                {doctor.days.map((day, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#334155', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
+                    <span dir="ltr" style={{ fontSize: '12px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
+                  </div>
+                ))}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>
