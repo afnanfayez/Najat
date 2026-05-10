@@ -14,6 +14,7 @@ import {
 import HospitalDetailView from './details/HospitalDetailView'
 import HospitalMapView from './details/HospitalMapView'
 import AllDoctorsView from './details/AllDoctorsView'
+import AllMedicinesView from './details/AllMedicinesView'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
@@ -29,7 +30,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   
-  const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors'>('list')
+  const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors' | 'medicines'>('list')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
 
   useEffect(() => {
@@ -72,6 +73,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
         onBack={() => setView('list')} 
         onShowMap={() => setView('map')}
         onShowAllDoctors={() => setView('doctors')}
+        onShowAllMedicines={() => setView('medicines')}
       />
     )
   }
@@ -91,6 +93,15 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
         hospital={selectedFacility} 
         onBack={() => setView('detail')}
         onShowMap={() => setView('map')}
+      />
+    )
+  }
+
+  if (view === 'medicines' && selectedFacility) {
+    return (
+      <AllMedicinesView 
+        hospital={selectedFacility} 
+        onBack={() => setView('detail')}
       />
     )
   }

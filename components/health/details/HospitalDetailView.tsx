@@ -11,9 +11,10 @@ interface HospitalDetailViewProps {
   onBack: () => void
   onShowMap: () => void
   onShowAllDoctors: () => void
+  onShowAllMedicines: () => void
 }
 
-export default function HospitalDetailView({ hospital, onBack, onShowMap, onShowAllDoctors }: HospitalDetailViewProps) {
+export default function HospitalDetailView({ hospital, onBack, onShowMap, onShowAllDoctors, onShowAllMedicines }: HospitalDetailViewProps) {
   return (
     <div className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-2 relative" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -235,13 +236,13 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
       {/* ── Bottom: Medicines + Hours ── */}
       <div className="hdv-bottom-grid px-1">
         {/* Medicines Table */}
-        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white">
-          <div className="flex items-center justify-between mb-6">
+        <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <img src="https://api.iconify.design/healthicons:medicines.svg?color=%232196f3" alt="medicines" className="w-6 h-6" />
               <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>الأدوية الأساسية المتوفرة</h3>
             </div>
-            <Button variant="ghost" className="text-[#2196F3] font-bold flex items-center gap-1 hover:bg-blue-50 text-[15px]">
+            <Button onClick={onShowAllMedicines} variant="ghost" className="text-[#2196F3] font-bold flex items-center gap-1 hover:bg-blue-50 text-[15px]">
               عرض الكل <ChevronLeft size={18} />
             </Button>
           </div>
@@ -249,9 +250,9 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
             <table className="w-full text-right" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr className="rounded-xl text-slate-800 text-[14px]" style={{ background: '#7E7D7D0F' }}>
-                  <th className="py-4 pr-5 font-black rounded-r-xl w-[50%]">الدواء</th>
-                  <th className="py-4 font-black text-center w-[25%]">الفئة</th>
-                  <th className="py-4 font-black text-center rounded-l-xl w-[25%]">الحالة</th>
+                  <th className="py-3 pr-4 font-black rounded-r-xl w-[50%]">الدواء</th>
+                  <th className="py-3 font-black text-center w-[25%]">الفئة</th>
+                  <th className="py-3 font-black text-center rounded-l-xl w-[25%]">الحالة</th>
                 </tr>
               </thead>
               <tbody>
@@ -261,9 +262,9 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
                   { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
                 ].map((med, i) => (
                   <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="py-5 pr-5 font-black text-slate-800 text-[14px]">{med.name}</td>
-                    <td className="py-5 font-bold text-slate-600 text-[14px] text-center">{med.category}</td>
-                    <td className="py-5 text-center">
+                    <td className="py-3.5 pr-4 font-black text-slate-800 text-[14px]">{med.name}</td>
+                    <td className="py-3.5 font-bold text-slate-600 text-[14px] text-center">{med.category}</td>
+                    <td className="py-3.5 text-center">
                       <span className="font-black text-[13px]" style={{ color: med.color }}>{med.status}</span>
                     </td>
                   </tr>
@@ -274,22 +275,22 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
         </Card>
 
         {/* Working Hours */}
-        <Card className="p-6 rounded-[28px] border border-slate-100 shadow-md bg-white">
-          <div className="flex items-center gap-2 mb-6">
+        <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">
+          <div className="flex items-center gap-2 mb-4">
             <img src="https://api.iconify.design/solar:clock-circle-bold.svg?color=%232196f3" alt="time" className="w-6 h-6" />
             <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>ساعات العمل</h3>
           </div>
-          <div className="bg-red-50 py-4 px-5 rounded-[16px] flex items-center justify-center gap-3 mb-8 w-full border border-red-100">
+          <div className="bg-red-50 py-3 px-4 rounded-[16px] flex items-center justify-center gap-3 mb-6 w-full border border-red-100">
             <img src="https://api.iconify.design/solar:bell-bold.svg?color=%23ef4444" alt="emergency" className="w-7 h-7 flex-shrink-0" />
             <span className="text-[#EF4444] font-[900] text-[20px] text-center tracking-wide">قسم الطوارئ يعمل على مدار 24 ساعة</span>
           </div>
           <div className="flex flex-col font-bold text-[14px]">
-            <div className="flex justify-between items-center px-1 mb-6">
+            <div className="flex justify-between items-center px-1 mb-4">
               <span className="text-slate-800 font-black">السبت - الخميس (العيادات)</span>
               <span dir="ltr" className="text-slate-600">من 8:00 ص - 2:00 م</span>
             </div>
             
-            <div className="flex justify-between items-center px-1 pb-6 mb-6 border-b border-slate-100">
+            <div className="flex justify-between items-center px-1 pb-4 mb-4 border-b border-slate-100">
               <span className="text-slate-800 font-black">الجمعة</span>
               <span dir="ltr" className="text-[#EF4444] font-black">مغلق (للطوارئ فقط)</span>
             </div>
@@ -305,23 +306,23 @@ export default function HospitalDetailView({ hospital, onBack, onShowMap, onShow
       {/* ── Footer Section ── */}
       <div className="w-full px-1 flex justify-center mt-6 mb-2">
         <Card className="w-full h-auto xl:h-[100px] rounded-[24px] xl:rounded-[40px] border-2 border-slate-100 shadow-md bg-white p-0 overflow-hidden">
-          <div className="flex flex-col xl:flex-row items-center justify-between h-full py-5 xl:py-0 px-6 sm:px-8 gap-6">
+          <div className="flex flex-col xl:flex-row items-center justify-between h-full py-5 xl:py-0 px-4 sm:px-8 gap-5 xl:gap-6">
             {/* Right Content */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full xl:w-auto justify-center xl:justify-start">
-              <div className="relative w-[100px] h-[100px] flex-shrink-0">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full xl:w-auto justify-center xl:justify-start">
+              <div className="relative w-[90px] h-[90px] sm:w-[100px] sm:h-[100px] flex-shrink-0">
                 <Image src="/assets/logo1.png" alt="Health Logo" fill className="object-contain" />
               </div>
-              <div className="flex flex-col text-right">
-                <h4 className="text-[18px] sm:text-[21px] font-[900] text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>منصة نجاة للخدمات الإنسانية والطوارئ</h4>
-                <p className="text-slate-500 text-[15px] sm:text-[16px] font-[800] mt-0.5" style={{ fontFamily: "'Cairo', sans-serif" }}>دليلك الصحي في قطاع غزة</p>
+              <div className="flex flex-col text-center sm:text-right">
+                <h4 className="text-[16px] sm:text-[18px] xl:text-[21px] font-[900] text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>منصة نجاة للخدمات الإنسانية والطوارئ</h4>
+                <p className="text-slate-500 text-[13px] sm:text-[15px] xl:text-[16px] font-[800] mt-1" style={{ fontFamily: "'Cairo', sans-serif" }}>دليلك الصحي في قطاع غزة</p>
               </div>
             </div>
             {/* Left Content (Buttons) */}
-            <div className="flex items-center justify-center gap-3 w-full xl:w-auto">
-              <Button onClick={onBack} className="bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-[900] px-8 py-7 rounded-full text-[15px] sm:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full xl:w-auto mt-2 xl:mt-0">
+              <Button onClick={onBack} className="w-full sm:w-auto bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-[900] px-6 xl:px-8 py-6 xl:py-7 rounded-full text-[14px] xl:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
                 رجوع للخدمات الصحية
               </Button>
-              <Button className="bg-[#EF4444] hover:bg-[#DC2626] text-white font-[900] px-10 py-7 rounded-full text-[15px] sm:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
+              <Button className="w-full sm:w-auto bg-[#EF4444] hover:bg-[#DC2626] text-white font-[900] px-6 xl:px-10 py-6 xl:py-7 rounded-full text-[14px] xl:text-[17px] shadow-none" style={{ fontFamily: "'Cairo', sans-serif" }}>
                 اتصال بالطوارئ
               </Button>
             </div>
