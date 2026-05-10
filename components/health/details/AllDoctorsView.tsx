@@ -29,85 +29,108 @@ const DOCTORS = [
 export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDoctorsViewProps) {
   return (
     <div
-      className="flex flex-col h-full overflow-y-auto no-scrollbar pb-10"
+      className="adv-root flex flex-col h-full overflow-y-auto no-scrollbar pb-10"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff', gap: 0 }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-      {/* ── نفس هيدر صفحة التفاصيل ── */}
-      <div className="relative w-full h-[480px] rounded-[32px] overflow-hidden shadow-2xl flex-shrink-0">
-        <Image
-          src="/assets/health1.jpg"
-          alt="Hospital Header"
-          fill
-          className="object-cover"
-          priority
-        />
-        {/* Gradient overlay */}
+        /* Hero */
+        .adv-hero { height: 480px; border-radius: 32px; }
+        @media (max-width: 768px) { .adv-hero { height: 320px; border-radius: 20px; } }
+
+        .adv-title { font-size: 3.75rem; }
+        @media (max-width: 768px) { .adv-title { font-size: 1.5rem; } }
+
+        .adv-address { font-size: 1.25rem; }
+        @media (max-width: 768px) { .adv-address { font-size: 0.8rem; } }
+
+        .adv-hero-content { bottom: 2.5rem; right: 2.5rem; gap: 1rem; }
+        @media (max-width: 768px) { .adv-hero-content { bottom: 4.5rem; right: 1rem; gap: 0.5rem; } }
+
+        .adv-hero-btns { bottom: 2.5rem; left: 2.5rem; gap: 1rem; }
+        @media (max-width: 768px) { .adv-hero-btns { bottom: 1rem; right: 1rem; left: 1rem; gap: 0.5rem; justify-content: flex-start; flex-wrap: wrap; } }
+
+        .adv-badge { padding: 8px 20px; font-size: 13px; }
+        @media (max-width: 768px) { .adv-badge { padding: 4px 10px; font-size: 10px; } }
+
+        .adv-btn { padding: 10px 24px; font-size: 13px; height: 44px; }
+        @media (max-width: 768px) { .adv-btn { padding: 6px 12px; font-size: 11px; height: 34px; } }
+
+        /* Doctors card wrapper */
+        .adv-card-wrap { margin: 32px 0 0; padding: 32px; border-radius: 32px; }
+        @media (max-width: 768px) { .adv-card-wrap { margin: 16px 0 0; padding: 16px; border-radius: 20px; } }
+
+        /* Doctors grid */
+        .adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; width: 100%; }
+        @media (max-width: 900px) { .adv-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .adv-grid { grid-template-columns: repeat(1, 1fr); } }
+      `}} />
+
+      {/* ── Hero (same as HospitalDetailView) ── */}
+      <div className="adv-hero relative w-full overflow-hidden shadow-2xl flex-shrink-0">
+        <Image src="/assets/health1.jpg" alt="Hospital Header" fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 
-        {/* Hospital name + address – bottom right */}
-        <div
-          className="absolute bottom-10 right-10 flex flex-col items-start gap-4 text-white text-right"
-          style={{ minWidth: 'fit-content' }}
-        >
-          <div className="flex items-center gap-3 mb-1">
-            <div className="bg-amber-500 text-white px-5 py-2 rounded-full text-[13px] font-black flex items-center gap-2 shadow-lg">
-              <TriangleAlert size={16} />
+        {/* Bottom-right: name + badges */}
+        <div className="adv-hero-content absolute flex flex-col items-start text-white text-right">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="adv-badge bg-amber-500 text-white rounded-full font-black flex items-center gap-2 shadow-lg">
+              <TriangleAlert size={14} />
               قدرة استيعابية محدودة
             </div>
-            <div className="bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2 rounded-full text-[13px] font-black shadow-lg">
+            <div className="adv-badge bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full font-black shadow-lg">
               آخر تحديث منذ 15 دقيقة
             </div>
           </div>
-          <h1 className="text-6xl font-black mb-2 drop-shadow-lg leading-tight">مستشفى شهداء الأقصى</h1>
-          <div className="flex items-center gap-3 text-xl font-bold drop-shadow-md">
-            <MapPin size={26} className="text-white" />
+          <h1 className="adv-title font-black mb-1 drop-shadow-lg leading-tight">مستشفى شهداء الأقصى</h1>
+          <div className="adv-address flex items-center gap-2 font-bold drop-shadow-md">
+            <MapPin size={20} className="text-white flex-shrink-0" />
             <span>غزة - الرمال - شارع الشهداء</span>
           </div>
         </div>
 
-        {/* Buttons – bottom left: اتصال + عرض الخريطة */}
-        <div className="absolute bottom-10 left-10 flex items-center gap-4">
-          <Button className="bg-white text-slate-800 hover:bg-slate-100 font-black px-10 py-5 rounded-2xl text-sm flex items-center gap-2 shadow-xl h-12">
-            <Phone size={20} className="text-blue-500" />
+        {/* Bottom-left: اتصال + عرض الخريطة */}
+        <div className="adv-hero-btns absolute flex items-center">
+          <Button className="adv-btn bg-white text-slate-800 hover:bg-slate-100 font-black rounded-2xl flex items-center gap-2 shadow-xl">
+            <Phone size={16} className="text-blue-500" />
             اتصال
           </Button>
           <Button
             onClick={onShowMap}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-black px-10 py-5 rounded-2xl text-sm flex items-center gap-2 shadow-lg shadow-blue-500/30 h-12"
+            className="adv-btn bg-blue-500 hover:bg-blue-600 text-white font-black rounded-2xl flex items-center gap-2 shadow-lg shadow-blue-500/30"
           >
-            <MapPin size={20} />
+            <MapPin size={16} />
             عرض الخريطة
           </Button>
         </div>
       </div>
 
-      {/* ── Doctors Card (with border, matching style) ── */}
-      <div style={{
-        margin: '32px 0 0 0',
-        padding: '32px',
-        border: '2px solid #f1f5f9',
-        borderRadius: '32px',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-        background: '#fff',
-        boxSizing: 'border-box',
-      }}>
-
-        {/* Section header row: title right, back-arrow far left */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-          {/* Title */}
+      {/* ── Doctors Card ── */}
+      <div
+        className="adv-card-wrap"
+        style={{
+          border: '2px solid #f1f5f9',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+          background: '#fff',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Header row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img
               src="https://api.iconify.design/healthicons:doctor-male.svg?color=%232196f3"
               alt="doctor"
-              style={{ width: '28px', height: '28px' }}
+              style={{ width: '26px', height: '26px' }}
             />
-            <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#1e293b', margin: 0, fontFamily: "'Cairo', sans-serif" }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b', margin: 0, fontFamily: "'Cairo', sans-serif" }}>
               الأطباء المناوبون الآن
             </h2>
           </div>
 
-          {/* Back button – text only, no border / no background */}
+          {/* Back – text + chevron, no border */}
           <button
             onClick={onBack}
             style={{
@@ -126,27 +149,19 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
             }}
           >
             رجوع
-            <span style={{ fontSize: '25px', lineHeight: 1 }}>›</span>
+            <span style={{ fontSize: '20px', lineHeight: 1 }}>›</span>
           </button>
         </div>
 
-        {/* 4-column grid */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '16px',
-            width: '100%',
-          }}
-          className="all-doctors-grid"
-        >
+        {/* Doctors grid */}
+        <div className="adv-grid">
           {DOCTORS.map((doctor, i) => (
             <div
               key={i}
               style={{
                 background: '#EAF6FD',
                 borderRadius: '16px',
-                padding: '20px',
+                padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 textAlign: 'right',
@@ -154,28 +169,20 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
               }}
             >
               {/* Avatar + Info */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
                 <div style={{
-                  width: '52px',
-                  height: '52px',
-                  minWidth: '52px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  background: '#fff',
-                  border: '2px solid #fff',
+                  width: '48px', height: '48px', minWidth: '48px',
+                  borderRadius: '50%', overflow: 'hidden',
+                  background: '#fff', border: '2px solid #fff',
                   boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                 }}>
-                  <img
-                    src={doctor.photo}
-                    alt={doctor.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
+                  <img src={doctor.photo} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontWeight: 900, fontSize: '15px', color: '#1e293b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.4 }}>
+                  <p style={{ margin: 0, fontWeight: 900, fontSize: '14px', color: '#1e293b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.4 }}>
                     {doctor.name}
                   </p>
-                  <p style={{ margin: '4px 0 0', fontSize: '13px', fontWeight: 600, color: '#64748b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.4 }}>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', fontWeight: 600, color: '#64748b', fontFamily: "'Cairo', sans-serif", lineHeight: 1.3 }}>
                     {doctor.specialty}
                   </p>
                 </div>
@@ -183,17 +190,13 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
 
               {/* Schedule */}
               <div>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: 700, color: '#94a3b8', fontFamily: "'Cairo', sans-serif" }}>
+                <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', fontFamily: "'Cairo', sans-serif" }}>
                   مواعيد العمل اسبوعيا
                 </p>
                 {doctor.days.map((day, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#334155', fontFamily: "'Cairo', sans-serif" }}>
-                      {day}
-                    </span>
-                    <span dir="ltr" style={{ fontSize: '12px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>
-                      {doctor.time}
-                    </span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 900, color: '#334155', fontFamily: "'Cairo', sans-serif" }}>{day}</span>
+                    <span dir="ltr" style={{ fontSize: '11px', fontWeight: 700, color: '#475569', fontFamily: "'Cairo', sans-serif" }}>{doctor.time}</span>
                   </div>
                 ))}
               </div>
@@ -201,12 +204,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
           ))}
         </div>
       </div>
-
-      {/* Responsive breakpoints */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 900px)  { .all-doctors-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 560px)  { .all-doctors-grid { grid-template-columns: repeat(1, 1fr) !important; } }
-      `}} />
     </div>
   )
 }

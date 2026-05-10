@@ -110,6 +110,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       <style
         dangerouslySetInnerHTML={{
           __html: `
+            /* ── Facility cards grid ── */
             .health-grid {
               display: grid;
               grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -119,42 +120,61 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
               .health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             }
             @media (max-width: 640px) {
-              .health-grid { grid-template-columns: minmax(0, 1fr); }
+              .health-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
             }
-            .no-scrollbar::-webkit-scrollbar {
-              display: none;
-            }
-            .no-scrollbar {
-              -ms-overflow-style: none;  /* IE and Edge */
-              scrollbar-width: none;  /* Firefox */
-            }
+
+            /* ── Scrollbar ── */
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+            /* ── Filter dropdown animation ── */
             @keyframes slideDown {
               from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
+              to   { opacity: 1; transform: translateY(0)    scale(1);    }
             }
             .filter-dropdown {
               animation: slideDown 0.2s ease-out forwards;
               transform-origin: top right;
             }
+
+            /* ── Header row ── */
             @media (max-width: 768px) {
               .header-row {
                 flex-direction: column !important;
                 align-items: flex-start !important;
-                gap: 16px !important;
+                gap: 12px !important;
               }
+              /* Page title smaller on mobile */
+              .hsp-page-title { font-size: 22px !important; }
+              /* Subtitle text smaller */
+              .hsp-subtitle { font-size: 13px !important; }
+            }
+
+            /* ── Map button ── */
+            @media (max-width: 768px) {
               .map-btn {
                 width: 100% !important;
                 justify-content: center !important;
+                padding: 10px 20px !important;
+                font-size: 13px !important;
               }
-              .search-filter-row {
-                flex-direction: column !important;
-              }
-              .filter-dropdown-container {
-                width: 100% !important;
-              }
-              .filter-btn {
-                width: 100% !important;
-              }
+            }
+
+            /* ── Search + Filter row ── */
+            @media (max-width: 640px) {
+              .search-filter-row { flex-direction: column !important; gap: 10px !important; }
+              .filter-dropdown-container { width: 100% !important; }
+              .filter-btn { width: 100% !important; justify-content: center !important; }
+            }
+
+            /* ── Category tabs: smaller padding on mobile ── */
+            @media (max-width: 480px) {
+              .hsp-tab { padding: 6px 12px 10px !important; font-size: 12px !important; }
+            }
+
+            /* ── Filter container padding ── */
+            @media (max-width: 640px) {
+              .hsp-filter-box { padding: 12px 14px !important; }
             }
           `,
         }}
@@ -203,10 +223,11 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
         }}
       >
         <h2
+          className="hsp-page-title"
           style={{
             fontFamily: "'Cairo', sans-serif",
             fontWeight: 700,
-            fontSize: 'clamp(28px, 3vw, 42px)',
+            fontSize: 'clamp(22px, 3vw, 42px)',
             color: '#1a2d4a',
             margin: '0',
             lineHeight: '1.15',
@@ -227,10 +248,11 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
           }}
         >
           <p
+            className="hsp-subtitle"
             style={{
               fontFamily: "'Cairo', sans-serif",
               fontWeight: 500,
-              fontSize: '16px',
+              fontSize: '15px',
               color: '#000',
               margin: 0,
               textAlign: 'right',
@@ -272,7 +294,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       </div>
 
       {/* ── Filter Container ── */}
-      <div style={{
+      <div className="hsp-filter-box" style={{
         background: '#fff',
         borderRadius: '12px',
         padding: '16px 24px',
@@ -298,9 +320,10 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
             return (
               <button
                 key={key}
+                className="hsp-tab"
                 onClick={() => setActiveCategory(key)}
                 style={{
-                  padding: '6px 24px 10px',
+                  padding: '6px 20px 10px',
                   background: 'transparent',
                   border: 'none',
                   borderBottom: isActive
@@ -309,7 +332,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
                   cursor: 'pointer',
                   fontFamily: "'Cairo', sans-serif",
                   fontWeight: isActive ? 700 : 500,
-                  fontSize: '15px',
+                  fontSize: '14px',
                   color: isActive ? '#F59E0B' : '#7E7D7D',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.2s ease',
