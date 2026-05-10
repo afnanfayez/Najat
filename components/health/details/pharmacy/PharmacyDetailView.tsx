@@ -6,6 +6,7 @@ import PharmacyHeader from './sections/PharmacyHeader'
 import PharmacyMedicineTypes from './sections/PharmacyMedicineTypes'
 import PharmacyMedicalSupplies from './sections/PharmacyMedicalSupplies'
 import PharmacySidebar from './sections/PharmacySidebar'
+import LocationContactCard from './sections/LocationContactCard'
 
 import '../../health.css'
 
@@ -24,6 +25,12 @@ export default function PharmacyDetailView({ pharmacy, onBack, onShowMap }: Phar
           
           <div className="lg:col-span-8 flex flex-col gap-6">
             <PharmacyHeader pharmacy={pharmacy} onShowMap={onShowMap} />
+            
+            {/* Location & Contact shown only on mobile/tablet here */}
+            <div className="lg:hidden">
+              <LocationContactCard facility={pharmacy} />
+            </div>
+
             <PharmacyMedicineTypes />
             <PharmacyMedicalSupplies />
           </div>

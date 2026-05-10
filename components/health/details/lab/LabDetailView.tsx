@@ -5,6 +5,7 @@ import HospitalDetailFooter from '../sections/HospitalDetailFooter'
 import LabHeader from './sections/LabHeader'
 import LabTestsSection from './sections/LabTestsSection'
 import LabSidebar from './sections/LabSidebar'
+import LocationContactCard from '../pharmacy/sections/LocationContactCard'
 
 import '../../health.css'
 
@@ -23,6 +24,12 @@ export default function LabDetailView({ lab, onBack, onShowMap }: LabDetailViewP
           
           <div className="lg:col-span-8 flex flex-col gap-6">
             <LabHeader lab={lab} onShowMap={onShowMap} />
+            
+            {/* Location & Contact shown only on mobile/tablet here */}
+            <div className="lg:hidden">
+              <LocationContactCard facility={lab} />
+            </div>
+
             <LabTestsSection />
             
             {/* Last Update Badge at bottom of content */}

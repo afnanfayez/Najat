@@ -59,9 +59,9 @@ export default function LabTestsSection() {
             key={i}
             className="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-50 bg-white hover:border-blue-50 transition-all cursor-default"
           >
-            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <img src={test.icon} alt={test.name} className="w-7 h-7" />
-            </div>
+            {/* Icon without background or container div as requested */}
+            <img src={test.icon} alt={test.name} className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0" />
+            
             <div className="flex flex-col gap-1 overflow-hidden">
               <span className="text-[14px] sm:text-[15px] font-black text-slate-800 truncate">{test.name}</span>
               <div className="flex items-center gap-2 text-slate-400 text-[11px] font-bold">
