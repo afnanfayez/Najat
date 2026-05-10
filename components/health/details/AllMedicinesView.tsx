@@ -1,8 +1,10 @@
+'use client'
+
 import React from 'react'
-import Image from 'next/image'
-import { MapPin, TriangleAlert, ChevronRight, Phone } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ChevronRight } from 'lucide-react'
 import SharedHeroHeader from './SharedHeroHeader'
+
+import '../health.css'
 
 interface AllMedicinesViewProps {
   hospital: any
@@ -10,34 +12,27 @@ interface AllMedicinesViewProps {
   onShowMap: () => void
 }
 
-export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMedicinesViewProps) {
-  const medicines = [
-    { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
-    { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
-    { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-    { name: 'أيبوبروفين (Ibuprofen)', category: 'مسكن آلام', status: 'غير متوفر', color: '#EF4444' },
-    { name: 'أزيثرومايسين (Azithromycin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-    { name: 'سالبوتامول (Salbutamol)', category: 'تنفسي وربو', status: 'متوفر', color: '#22c55e' },
-    { name: 'بيسوبرولول (Bisoprolol)', category: 'أمراض القلب', status: 'كمية محدودة', color: '#F2A122' },
-    { name: 'ديكساميثازون (Dexamethasone)', category: 'كورتيزون', status: 'متوفر', color: '#22c55e' },
-    { name: 'فيتامين سي (Vitamin C)', category: 'مكملات', status: 'متوفر', color: '#22c55e' },
-    { name: 'أوميبرازول (Omeprazole)', category: 'الجهاز الهضمي', status: 'كمية محدودة', color: '#F2A122' },
-  ];
+const MEDICINES = [
+  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
+  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
+  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
+  { name: 'أيبوبروفين (Ibuprofen)', category: 'مسكن آلام', status: 'غير متوفر', color: '#EF4444' },
+  { name: 'أزيثرومايسين (Azithromycin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
+  { name: 'سالبوتامول (Salbutamol)', category: 'تنفسي وربو', status: 'متوفر', color: '#22c55e' },
+  { name: 'بيسوبرولول (Bisoprolol)', category: 'أمراض القلب', status: 'كمية محدودة', color: '#F2A122' },
+  { name: 'ديكساميثازون (Dexamethasone)', category: 'كورتيزون', status: 'متوفر', color: '#22c55e' },
+  { name: 'فيتامين سي (Vitamin C)', category: 'مكملات', status: 'متوفر', color: '#22c55e' },
+  { name: 'أوميبرازول (Omeprazole)', category: 'الجهاز الهضمي', status: 'كمية محدودة', color: '#F2A122' },
+]
 
+export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMedicinesViewProps) {
   return (
     <div
       className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-10"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        /* ── Card Wrap ── */
-        .amv-card-wrap { margin: 32px 0 0; padding: 32px; border-radius: 32px; }
-        @media (max-width: 768px) { .amv-card-wrap { margin: 16px 0 0; padding: 16px; border-radius: 20px; } }
-      `}} />
-
       <SharedHeroHeader hospital={hospital} onShowMap={onShowMap} />
 
-      {/* ── Medicines Card ── */}
       <div
         className="amv-card-wrap"
         style={{
@@ -47,7 +42,6 @@ export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMed
           boxSizing: 'border-box',
         }}
       >
-        {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="https://api.iconify.design/healthicons:medicines.svg?color=%232196f3" alt="medicines" style={{ width: '26px', height: '26px' }} />
@@ -56,7 +50,6 @@ export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMed
             </h2>
           </div>
 
-          {/* Back button */}
           <button
             onClick={onBack}
             style={{
@@ -76,7 +69,6 @@ export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMed
           </button>
         </div>
 
-        {/* Medicines Table */}
         <div className="w-full overflow-x-auto no-scrollbar">
           <table className="w-full text-right" style={{ borderCollapse: 'collapse' }}>
             <thead>
@@ -87,7 +79,7 @@ export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMed
               </tr>
             </thead>
             <tbody>
-              {medicines.map((med, i) => (
+              {MEDICINES.map((med, i) => (
                 <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
                   <td className="py-5 pr-5 font-black text-slate-800 text-[16px]">{med.name}</td>
                   <td className="py-5 font-bold text-slate-600 text-[16px] text-center">{med.category}</td>

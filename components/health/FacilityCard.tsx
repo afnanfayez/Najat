@@ -12,19 +12,7 @@ type Props = {
 
 export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
   return (
-    <div
-      style={{
-        position: 'relative',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        minHeight: '380px',
-        direction: 'rtl',
-      }}
-    >
-      {/* ── Background Image & Gradient ── */}
+    <div className="facility-card">
       {facility.imageUrl ? (
         <Image
           src={facility.imageUrl}
@@ -37,31 +25,9 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
         <div style={{ position: 'absolute', inset: 0, background: '#D9D9D9', zIndex: 0 }} />
       )}
       
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%)',
-          zIndex: 1,
-        }}
-      />
+      <div className="facility-card-overlay" />
 
-      {/* ── Status badge — top-left ── */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          left: '12px',
-          background: '#fff',
-          borderRadius: '20px',
-          padding: '4px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0px 2px 8px rgba(0,0,0,0.15)',
-          zIndex: 2,
-        }}
-      >
+      <div className="facility-status-badge">
         <span
           style={{
             width: '8px',
@@ -83,18 +49,7 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
         </span>
       </div>
 
-      {/* ── Info area ── */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
-        {/* Name + address */}
+      <div className="facility-info-area">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h3
             style={{
@@ -129,16 +84,8 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
           </div>
         </div>
 
-        {/* Medicine availability bar */}
         {facility.medicineAvailability !== undefined && (
-          <div
-            style={{
-              background: 'rgba(150,150,150,0.7)',
-              borderRadius: '6px',
-              padding: '10px 12px',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
+          <div className="medicine-availability-bar">
             <div
               style={{
                 display: 'flex',
@@ -181,10 +128,10 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
                 style={{
                   background:
                     facility.medicineAvailability < 30
-                      ? '#F44336' // Red
+                      ? '#F44336'
                       : facility.medicineAvailability < 70
-                      ? '#FF9800' // Orange
-                      : '#FFC107', // Yellow
+                      ? '#FF9800'
+                      : '#FFC107',
                   borderRadius: '4px',
                   height: '100%',
                   width: `${facility.medicineAvailability}%`,
@@ -197,7 +144,6 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
           </div>
         )}
 
-        {/* Action buttons */}
         <div
           style={{
             display: 'flex',
@@ -207,7 +153,6 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
             direction: 'rtl',
           }}
         >
-          {/* Details button (Wide Blue) */}
           <button
             onClick={() => onNavigate?.(facility)}
             style={{
@@ -233,7 +178,6 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
             التفاصيل
           </button>
           
-          {/* Phone button (Green) */}
           <button
             onClick={() => onCall?.(facility)}
             style={{

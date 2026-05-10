@@ -1,10 +1,9 @@
 'use client'
 
 import React from 'react'
-import { Phone, MapPin, ChevronLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
 import SharedHeroHeader from './SharedHeroHeader'
+
+import '../health.css'
 
 interface AllDoctorsViewProps {
   hospital: any
@@ -13,18 +12,18 @@ interface AllDoctorsViewProps {
 }
 
 const DOCTORS = [
-  { name: 'د. ناصر رأفت أبو شعبان',    specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس']   },
-  { name: 'د. محمد صلاح اللولو',        specialty: 'أخصائي عيون',                            photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. سلامة سعيد التتر',         specialty: 'استشاري أمراض السكري والغدد',            photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. شادي عبد الحكيم الحداد',   specialty: 'أخصائي طب وجراحة الفم والأسنان',       photo: '/assets/Photo2.jpg',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء']  },
-  { name: 'د. ناصر رأفت أبو شعبان',    specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس']   },
-  { name: 'د. محمد صلاح اللولو',        specialty: 'أخصائي عيون',                            photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. سلامة سعيد التتر',         specialty: 'استشاري أمراض السكري والغدد',            photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. شادي عبد الحكيم الحداد',   specialty: 'أخصائي طب وجراحة الفم والأسنان',       photo: '/assets/Photo2.jpg',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء']  },
-  { name: 'د. ناصر رأفت أبو شعبان',    specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس']   },
-  { name: 'د. محمد صلاح اللولو',        specialty: 'أخصائي عيون',                            photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. سلامة سعيد التتر',         specialty: 'استشاري أمراض السكري والغدد',            photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م',  days: ['السبت', 'الخميس']   },
-  { name: 'د. شادي عبد الحكيم الحداد',   specialty: 'أخصائي طب وجراحة الفم والأسنان',       photo: '/assets/Photo2.jpg',  time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء']  },
+  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
+  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
+  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
+  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
+  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
+  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
 ]
 
 export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDoctorsViewProps) {
@@ -33,23 +32,8 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
       className="adv-root flex flex-col h-full overflow-y-auto no-scrollbar pb-10"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff', gap: 0 }}
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Doctors card wrapper */
-        .adv-card-wrap { margin: 32px 0 0; padding: 32px; border-radius: 32px; }
-        @media (max-width: 768px) { .adv-card-wrap { margin: 16px 0 0; padding: 16px; border-radius: 20px; } }
-
-        /* Doctors grid */
-        .adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; width: 100%; }
-        @media (max-width: 900px) { .adv-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .adv-grid { grid-template-columns: repeat(1, 1fr); } }
-      `}} />
-
       <SharedHeroHeader hospital={hospital} onShowMap={onShowMap} />
 
-      {/* ── Doctors Card ── */}
       <div
         className="adv-card-wrap"
         style={{
@@ -59,7 +43,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
           boxSizing: 'border-box',
         }}
       >
-        {/* Header row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img
@@ -72,7 +55,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
             </h2>
           </div>
 
-          {/* Back – text + chevron, no border */}
           <button
             onClick={onBack}
             style={{
@@ -95,7 +77,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
           </button>
         </div>
 
-        {/* Doctors grid */}
         <div className="adv-grid">
           {DOCTORS.map((doctor, i) => (
             <div
@@ -110,7 +91,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
                 boxSizing: 'border-box',
               }}
             >
-              {/* Avatar + Info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
                 <div style={{
                   width: '48px', height: '48px', minWidth: '48px',
@@ -130,7 +110,6 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
                 </div>
               </div>
 
-              {/* Schedule */}
               <div style={{ marginTop: 'auto' }}>
                 <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 800, color: '#64748b', fontFamily: "'Cairo', sans-serif" }}>
                   مواعيد العمل أسبوعياً
