@@ -14,10 +14,13 @@ import HospitalDetailView from './details/HospitalDetailView'
 import PharmacyDetailView from './details/pharmacy/PharmacyDetailView'
 import LabDetailView from './details/lab/LabDetailView'
 import DentalDetailView from './details/dental/DentalDetailView'
+import ClinicDetailView from './details/clinic/ClinicDetailView'
+import ClinicAllMedicinesView from './details/clinic/ClinicAllMedicinesView'
 import HospitalMapView from './details/HospitalMapView'
 import PharmacyMapView from './details/pharmacy/PharmacyMapView'
 import LabMapView from './details/lab/LabMapView'
 import DentalMapView from './details/dental/DentalMapView'
+import ClinicMapView from './details/clinic/ClinicMapView'
 import AllDoctorsView from './details/AllDoctorsView'
 import AllMedicinesView from './details/AllMedicinesView'
 
@@ -118,6 +121,17 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       )
     }
 
+    if (activeCategory === 'clinics') {
+      return (
+        <ClinicDetailView 
+          clinic={selectedFacility} 
+          onBack={() => setView('list')} 
+          onShowMap={() => { setPrevView('detail'); setView('map'); }}
+          onShowAllMedicines={() => setView('medicines')}
+        />
+      )
+    }
+
     return (
       <div className="p-10 text-center font-bold">
         جاري العمل على تفاصيل هذا القسم...
@@ -152,6 +166,15 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       )
     }
 
+    if (activeCategory === 'clinics') {
+      return (
+        <ClinicMapView 
+          clinic={selectedFacility} 
+          onBack={() => setView(prevView)} 
+        />
+      )
+    }
+
     return (
       <HospitalMapView 
         hospital={selectedFacility} 
@@ -171,6 +194,15 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   }
 
   if (view === 'medicines' && selectedFacility) {
+    if (activeCategory === 'clinics') {
+      return (
+        <ClinicAllMedicinesView 
+          clinic={selectedFacility} 
+          onBack={() => setView('detail')}
+          onShowMap={() => { setPrevView('medicines'); setView('map'); }}
+        />
+      )
+    }
     return (
       <AllMedicinesView 
         hospital={selectedFacility} 
