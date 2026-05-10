@@ -11,7 +11,9 @@ import {
 } from '@/schemas/healthFacility'
 
 import HospitalDetailView from './details/HospitalDetailView'
+import PharmacyDetailView from './details/pharmacy/PharmacyDetailView'
 import HospitalMapView from './details/HospitalMapView'
+import PharmacyMapView from './details/pharmacy/PharmacyMapView'
 import AllDoctorsView from './details/AllDoctorsView'
 import AllMedicinesView from './details/AllMedicinesView'
 
@@ -61,10 +63,8 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   }, [])
 
   const handleNavigate = (facility: HealthFacility) => {
-    if (activeCategory === 'hospitals') {
-      setSelectedFacility(facility)
-      setView('detail')
-    }
+    setSelectedFacility(facility)
+    setView('detail')
   }
 
   const handleCall = (_facility: HealthFacility) => {
@@ -72,18 +72,45 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   }
 
   if (view === 'detail' && selectedFacility) {
+    if (activeCategory === 'hospitals') {
+      return (
+        <HospitalDetailView 
+          hospital={selectedFacility} 
+          onBack={() => setView('list')} 
+          onShowMap={() => { setPrevView('detail'); setView('map'); }}
+          onShowAllDoctors={() => setView('doctors')}
+          onShowAllMedicines={() => setView('medicines')}
+        />
+      )
+    }
+    
+    if (activeCategory === 'pharmacies') {
+      return (
+        <PharmacyDetailView 
+          pharmacy={selectedFacility} 
+          onBack={() => setView('list')} 
+          onShowMap={() => { setPrevView('detail'); setView('map'); }}
+        />
+      )
+    }
+
     return (
-      <HospitalDetailView 
-        hospital={selectedFacility} 
-        onBack={() => setView('list')} 
-        onShowMap={() => { setPrevView('detail'); setView('map'); }}
-        onShowAllDoctors={() => setView('doctors')}
-        onShowAllMedicines={() => setView('medicines')}
-      />
+      <div className="p-10 text-center font-bold">
+        جاري العمل على تفاصيل هذا القسم...
+        <button onClick={() => setView('list')} className="block mx-auto mt-4 text-blue-500 underline">رجوع</button>
+      </div>
     )
   }
 
   if (view === 'map' && selectedFacility) {
+    if (activeCategory === 'pharmacies') {
+      return (
+        <PharmacyMapView 
+          pharmacy={selectedFacility} 
+          onBack={() => setView(prevView)} 
+        />
+      )
+    }
     return (
       <HospitalMapView 
         hospital={selectedFacility} 

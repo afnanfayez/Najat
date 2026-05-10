@@ -65,7 +65,8 @@ export default function HealthHeader({ onShowMap }: HealthHeaderProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            padding: '12px 44px',
+            gap: '8px',
+            padding: '12px 32px',
             background: '#2196F3',
             border: 'none',
             borderRadius: '6px',
@@ -84,6 +85,7 @@ export default function HealthHeader({ onShowMap }: HealthHeaderProps) {
             ((e.currentTarget as HTMLButtonElement).style.background = '#2196F3')
           }
         >
+          <img src="https://api.iconify.design/proicons:location.svg?color=white" alt="Map" className="w-5 h-5" />
           عرض الخريطة
         </button>
       </div>
