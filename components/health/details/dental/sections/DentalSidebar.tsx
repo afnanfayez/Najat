@@ -2,20 +2,34 @@
 
 import React from 'react'
 import { Card } from '@/components/ui/card'
+import type { HealthFacility } from '@/schemas/healthFacility'
 import LocationContactCard from '../../pharmacy/sections/LocationContactCard'
+import type { LabeledIcon } from '@/schemas/healthFacilityDetail'
 
-interface DentalSidebarProps {
-  clinic: any
-}
-
-const SUPPLIES = [
+const FALLBACK_SUPPLIES: LabeledIcon[] = [
   { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
   { label: 'مضاد حيوي', icon: 'https://api.iconify.design/solar:pill-bold.svg?color=%23F2A122' },
   { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
   { label: 'مسكن الام', icon: 'https://api.iconify.design/solar:medical-kit-bold.svg?color=%23F2A122' },
 ]
 
+const FALLBACK_HOURS = {
+  rows: [
+    { label: 'السبت-الخميس', time: '8:00ص-4:00م' },
+    { label: 'الجمعة', time: 'مغلق', danger: true },
+  ],
+}
+
+interface DentalSidebarProps {
+  clinic: HealthFacility
+}
+
 export default function DentalSidebar({ clinic }: DentalSidebarProps) {
+  const hours = clinic.detail?.dentalHours ?? FALLBACK_HOURS
+  const supplies = clinic.detail?.dentalSupplies?.length
+    ? clinic.detail.dentalSupplies
+    : FALLBACK_SUPPLIES
+
   return (
     <div className="flex flex-col gap-6">
       
@@ -29,14 +43,17 @@ export default function DentalSidebar({ clinic }: DentalSidebarProps) {
           <h3 className="text-md sm:text-lg font-black text-slate-800">ساعات العمل</h3>
         </div>
         <div className="flex flex-col gap-4 sm:gap-5">
-          <div className="flex justify-between items-center text-[13px] sm:text-[14px]">
-            <span className="text-slate-800 font-black">السبت-الخميس</span>
-            <span dir="ltr" className="text-slate-600 font-bold">8:00ص-4:00م</span>
-          </div>
-          <div className="flex justify-between items-center text-[13px] sm:text-[14px]">
-            <span className="text-slate-800 font-black">الجمعة</span>
-            <span className="text-[#EF4444] font-bold">مغلق</span>
-          </div>
+          {hours.rows.map((row, i) => (
+            <div key={`${row.label}-${i}`} className="flex justify-between items-center text-[13px] sm:text-[14px]">
+              <span className="text-slate-800 font-black">{row.label}</span>
+              <span
+                dir="ltr"
+                className={row.danger ? 'text-[#EF4444] font-bold' : 'text-slate-600 font-bold'}
+              >
+                {row.time}
+              </span>
+            </div>
+          ))}
         </div>
       </Card>
 
@@ -46,8 +63,8 @@ export default function DentalSidebar({ clinic }: DentalSidebarProps) {
           <h3 className="text-md sm:text-lg font-black text-slate-800">المستلزمات الطبية</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {SUPPLIES.map((item, i) => (
-            <div key={i} className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-slate-50 bg-white gap-2 text-center shadow-sm">
+          {supplies.map((item, i) => (
+            <div key={`${item.label}-${i}`} className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-slate-50 bg-white gap-2 text-center shadow-sm">
               <img src={item.icon} alt={item.label} className="w-8 h-8" />
               <span className="text-[11px] sm:text-[12px] font-black text-slate-700 leading-tight">{item.label}</span>
             </div>

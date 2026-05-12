@@ -1,32 +1,43 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
+import type { HealthDoctor } from '@/schemas/healthFacilityDetail'
 import SharedHeroHeader from './SharedHeroHeader'
+import type { HealthFacility } from '@/schemas/healthFacility'
 
 import '../health.css'
 
 interface AllDoctorsViewProps {
-  hospital: any
+  hospital: HealthFacility
   onBack: () => void
   onShowMap: () => void
 }
 
-const DOCTORS = [
+const FALLBACK: HealthDoctor[] = [
   { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
-  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
-  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
-  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
-  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
-  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 م - 5:00 م', days: ['السبت', 'الخميس'] },
+  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 م - 5:00 م', days: ['السبت', 'الخميس'] },
   { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
 ]
 
+function expandDoctors(base: HealthDoctor[]): HealthDoctor[] {
+  if (base.length >= 8) return base
+  const out: HealthDoctor[] = []
+  let i = 0
+  while (out.length < 12) {
+    out.push(base[i % base.length])
+    i += 1
+  }
+  return out
+}
+
 export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDoctorsViewProps) {
+  const doctors = useMemo(() => {
+    const base =
+      hospital.detail?.doctors?.length ? hospital.detail.doctors : FALLBACK
+    return expandDoctors(base)
+  }, [hospital.detail?.doctors, hospital.id])
+
   return (
     <div
       className="adv-root flex flex-col h-full overflow-y-auto no-scrollbar pb-10"
@@ -78,9 +89,9 @@ export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDocto
         </div>
 
         <div className="adv-grid">
-          {DOCTORS.map((doctor, i) => (
+          {doctors.map((doctor, i) => (
             <div
-              key={i}
+              key={`${doctor.name}-${i}`}
               style={{
                 background: '#EAF6FD',
                 borderRadius: '16px',

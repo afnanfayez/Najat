@@ -3,8 +3,9 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft } from 'lucide-react'
+import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
 
-const MEDICINES = [
+const FALLBACK: HealthMedicineRow[] = [
   { name: 'انسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', statusColor: '#F59E0B' },
   { name: 'باراسيتامول (Paracetamol)', category: 'مسكن الالم', status: 'متوفر', statusColor: '#22C55E' },
   { name: 'اموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', statusColor: '#22C55E' },
@@ -12,9 +13,15 @@ const MEDICINES = [
 
 interface ClinicMedicinesSectionProps {
   onShowAll: () => void
+  medicines?: HealthMedicineRow[]
 }
 
-export default function ClinicMedicinesSection({ onShowAll }: ClinicMedicinesSectionProps) {
+export default function ClinicMedicinesSection({
+  onShowAll,
+  medicines,
+}: ClinicMedicinesSectionProps) {
+  const list = medicines?.length ? medicines : FALLBACK
+
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">
       <div className="flex items-center justify-between mb-5 sm:mb-6">
@@ -41,8 +48,8 @@ export default function ClinicMedicinesSection({ onShowAll }: ClinicMedicinesSec
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {MEDICINES.map((med, i) => (
-              <tr key={i} className="group hover:bg-slate-50 transition-colors">
+            {list.map((med, i) => (
+              <tr key={`${med.name}-${i}`} className="group hover:bg-slate-50 transition-colors">
                 <td className="py-4 px-4">
                   <span className="text-[13px] sm:text-[14px] font-black text-slate-800">{med.name}</span>
                 </td>
@@ -52,7 +59,7 @@ export default function ClinicMedicinesSection({ onShowAll }: ClinicMedicinesSec
                 <td className="py-4 px-4 text-left">
                   <span 
                     className="text-[11px] sm:text-[12px] font-black px-2 py-1 rounded-md"
-                    style={{ color: med.statusColor }}
+                    style={{ color: med.statusColor ?? med.color ?? '#64748b' }}
                   >
                     {med.status}
                   </span>

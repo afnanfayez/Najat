@@ -1,14 +1,33 @@
+import { getToken } from '@/lib/api/auth'
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
+
+function buildHeaders(options: RequestInit): HeadersInit {
+  const merged = new Headers(options.headers as HeadersInit)
+  const body = options.body
+  const isFormData =
+    typeof FormData !== 'undefined' && body instanceof FormData
+
+  if (isFormData) {
+    merged.delete('Content-Type')
+  } else if (!merged.has('Content-Type')) {
+    merged.set('Content-Type', 'application/json')
+  }
+
+  const token = getToken()
+  if (token && !merged.has('Authorization')) {
+    merged.set('Authorization', `Bearer ${token}`)
+  }
+
+  return merged
+}
 
 export async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${BASE_URL}${endpoint}`
 
   const config: RequestInit = {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers: buildHeaders(options),
   }
 
   try {

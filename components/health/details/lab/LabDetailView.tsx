@@ -6,16 +6,19 @@ import LabHeader from './sections/LabHeader'
 import LabTestsSection from './sections/LabTestsSection'
 import LabSidebar from './sections/LabSidebar'
 import LocationContactCard from '../pharmacy/sections/LocationContactCard'
+import type { HealthFacility } from '@/schemas/healthFacility'
 
 import '../../health.css'
 
 interface LabDetailViewProps {
-  lab: any
+  lab: HealthFacility
   onBack: () => void
   onShowMap: () => void
 }
 
 export default function LabDetailView({ lab, onBack, onShowMap }: LabDetailViewProps) {
+  const updated = lab.detail?.lastUpdatedAt ?? '29/3/2026'
+
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar relative" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#f8fafc' }}>
       
@@ -25,20 +28,21 @@ export default function LabDetailView({ lab, onBack, onShowMap }: LabDetailViewP
           <div className="lg:col-span-8 flex flex-col gap-6">
             <LabHeader lab={lab} onShowMap={onShowMap} />
             
-            {/* Location & Contact shown only on mobile/tablet here */}
             <div className="lg:hidden">
               <LocationContactCard facility={lab} />
             </div>
 
-            <LabTestsSection />
+            <LabTestsSection
+              tests={lab.detail?.labTests}
+              tabLabels={lab.detail?.labTestTabLabels}
+            />
             
-            {/* Last Update Badge at bottom of content */}
             <div className="bg-[#FFCD2912] border border-[#FFCD2912] p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
               <div className="flex items-center gap-2">
                 <img src="https://api.iconify.design/solar:bell-bold.svg?color=%23FFCD29" alt="bell" className="w-5 h-5" />
                 <span className="text-[#FFCD29] font-black text-[14px]">آخر تحديث للبيانات منذ</span>
               </div>
-              <span className="text-[#FFCD29] font-black text-[14px]">29/3/2026</span>
+              <span className="text-[#FFCD29] font-black text-[14px]">{updated}</span>
             </div>
           </div>
 

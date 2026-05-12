@@ -43,7 +43,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
   const [isMobile, setIsMobile] = useState(false)
-  
+
   const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors' | 'medicines'>('list')
   const [prevView, setPrevView] = useState<'list' | 'detail' | 'doctors' | 'medicines'>('detail')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
@@ -55,10 +55,19 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const { data, isLoading } = useHealthFacilities({
+  const { data, isLoading, isError, error, refetch } = useHealthFacilities({
     category: activeCategory,
     search: debouncedSearch,
+    region: selectedRegion,
   })
+
+  const handleHealthHeaderMap = useCallback(() => {
+    const first = data?.facilities?.[0]
+    if (!first) return
+    setSelectedFacility(first)
+    setPrevView('list')
+    setView('map')
+  }, [data?.facilities])
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value)
@@ -74,8 +83,9 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     setView('detail')
   }
 
-  const handleCall = (_facility: HealthFacility) => {
-    // TODO: initiate call
+  const handleCall = (facility: HealthFacility) => {
+    const n = facility.phone?.replace(/\s/g, '')
+    if (n) window.location.href = `tel:${n}`
   }
 
   if (view === 'detail' && selectedFacility) {
@@ -87,6 +97,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
           onShowAllDoctors={() => setView('doctors')}
           onShowAllMedicines={() => setView('medicines')}
+          onCall={() => handleCall(selectedFacility)}
         />
       )
     }
@@ -244,7 +255,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
         </div>
       )}
 
-      <HealthHeader onShowMap={() => setView('map')} />
+      <HealthHeader onShowMap={handleHealthHeaderMap} />
 
       <HealthFilter 
         categories={CATEGORIES}
@@ -261,6 +272,8 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       <FacilityGrid 
         isLoading={isLoading}
         facilities={data?.facilities}
+        queryError={isError ? error : undefined}
+        onRetry={() => refetch()}
         onNavigate={handleNavigate}
         onCall={handleCall}
       />

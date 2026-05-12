@@ -1,14 +1,35 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import FacilityCard from '@/components/health/FacilityCard'
 import { HealthFacility } from '@/schemas/healthFacility'
+
+function facilityQueryErrorInfo(err: unknown): {
+  status?: number
+  message: string
+} {
+  if (err && typeof err === 'object' && 'message' in err) {
+    const o = err as { status?: number; message?: unknown }
+    const raw = o.message
+    const message =
+      typeof raw === 'string'
+        ? raw
+        : raw != null && typeof raw !== 'object'
+          ? String(raw)
+          : 'حدث خطأ غير متوقع'
+    return { status: o.status, message }
+  }
+  return { message: 'حدث خطأ غير متوقع' }
+}
 
 interface FacilityGridProps {
   isLoading: boolean
   facilities: HealthFacility[] | undefined
   onNavigate: (facility: HealthFacility) => void
   onCall: (facility: HealthFacility) => void
+  queryError?: unknown
+  onRetry?: () => void
 }
 
 export default function FacilityGrid({
@@ -16,6 +37,8 @@ export default function FacilityGrid({
   facilities,
   onNavigate,
   onCall,
+  queryError,
+  onRetry,
 }: FacilityGridProps) {
   if (isLoading) {
     return (
@@ -32,6 +55,62 @@ export default function FacilityGrid({
         }}
       >
         جارٍ التحميل...
+      </div>
+    )
+  }
+
+  if (queryError) {
+    const { status, message } = facilityQueryErrorInfo(queryError)
+    const isUnauthorized = status === 401
+    return (
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          padding: '24px 16px',
+          color: '#424242',
+          fontFamily: "'Cairo', sans-serif",
+          fontWeight: 600,
+          fontSize: '15px',
+          textAlign: 'center',
+        }}
+      >
+        {isUnauthorized ? (
+          <>
+            <span>يجب تسجيل الدخول لعرض المستشفيات والموقع القريب منك.</span>
+            <Link
+              href="/login"
+              style={{ color: '#2196F3', textDecoration: 'underline' }}
+            >
+              الانتقال إلى تسجيل الدخول
+            </Link>
+          </>
+        ) : (
+          <span>تعذر تحميل البيانات.{message ? ` ${message}` : ''}</span>
+        )}
+        {onRetry && (
+          <button
+            type="button"
+            onClick={() => onRetry()}
+            style={{
+              marginTop: 4,
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#2196F3',
+              color: '#fff',
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            إعادة المحاولة
+          </button>
+        )}
       </div>
     )
   }

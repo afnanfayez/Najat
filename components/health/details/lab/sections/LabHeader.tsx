@@ -2,23 +2,31 @@
 
 import React from 'react'
 import { Card } from '@/components/ui/card'
+import type { HealthFacility } from '@/schemas/healthFacility'
 
 interface LabHeaderProps {
-  lab: any
+  lab: HealthFacility
   onShowMap: () => void
 }
 
 export default function LabHeader({ lab, onShowMap }: LabHeaderProps) {
+  const kind = lab.detail?.facilityKindLabel ?? 'مختبر مركزي'
+  const open = lab.isOpen
+
   return (
     <Card className="p-5 sm:p-6 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col items-start text-right relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4 mb-2 sm:mb-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="bg-[#E7F7EF] text-[#22C55E] px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-[13px] font-bold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#22C55E] rounded-full" />
-            مفتوح الآن
+          <div
+            className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-[13px] font-bold flex items-center gap-2 ${
+              open ? 'bg-[#E7F7EF] text-[#22C55E]' : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${open ? 'bg-[#22C55E]' : 'bg-slate-400'}`} />
+            {open ? 'مفتوح الآن' : 'مغلق حالياً'}
           </div>
           <div className="text-slate-400 text-[11px] sm:text-[13px] font-bold">
-            مختبر مركزي
+            {kind}
           </div>
         </div>
         
@@ -32,12 +40,12 @@ export default function LabHeader({ lab, onShowMap }: LabHeaderProps) {
       </div>
 
       <h1 className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-black text-slate-800 mb-1 sm:mb-2">
-        {lab?.name || 'مختبر ابن الهيثم للتحاليل الطبية'}
+        {lab.name}
       </h1>
 
       <div className="flex items-center gap-2 text-slate-500 font-bold text-[13px] sm:text-[14px] xl:text-[16px]">
         <img src="https://api.iconify.design/solar:map-point-bold.svg?color=%23f59e0b" alt="Location" className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-        <span>{lab?.address || 'مقابل مستشفى الشفاء'}</span>
+        <span>{lab.address}</span>
       </div>
     </Card>
   )

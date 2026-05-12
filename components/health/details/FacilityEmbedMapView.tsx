@@ -1,42 +1,30 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { AlertCircle, ChevronLeft, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
-import { CAPACITY_STATUS_LABEL } from '@/lib/mappers/hospital'
+import {
+  DEFAULT_HEALTH_MAP_LAT,
+  DEFAULT_HEALTH_MAP_LON,
+  googleMapsSearchUrl,
+  openStreetMapEmbedUrl,
+} from '@/lib/health/mapEmbed'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
-const DEFAULT_LAT = 31.5
-const DEFAULT_LON = 34.47
-
-function osmEmbedSrc(lat: number, lon: number): string {
-  const d = 0.04
-  const left = lon - d
-  const bottom = lat - d
-  const right = lon + d
-  const top = lat + d
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
-    `${left},${bottom},${right},${top}`,
-  )}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lon}`)}`
-}
-
-function googleMapsUrl(lat: number, lon: number): string {
-  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
-}
-
-export default function HospitalMapView({
-  hospital,
+export default function FacilityEmbedMapView({
+  facility,
   onBack,
 }: {
-  hospital: HealthFacility
+  facility: HealthFacility
   onBack: () => void
 }) {
-  const lat = hospital.latitude ?? DEFAULT_LAT
-  const lon = hospital.longitude ?? DEFAULT_LON
-  const src = useMemo(() => osmEmbedSrc(lat, lon), [lat, lon])
-  const mapsHref = useMemo(() => googleMapsUrl(lat, lon), [lat, lon])
-  const cap = hospital.capacityStatus
-  const heroSrc = hospital.imageUrl || '/assets/health5.jpg'
+  const lat = facility.latitude ?? DEFAULT_HEALTH_MAP_LAT
+  const lon = facility.longitude ?? DEFAULT_HEALTH_MAP_LON
+  const src = useMemo(() => openStreetMapEmbedUrl(lat, lon), [lat, lon])
+  const mapsHref = useMemo(() => googleMapsSearchUrl(lat, lon), [lat, lon])
+  const heroSrc = facility.imageUrl ?? '/assets/health5.jpg'
+  const open = facility.isOpen
+  const kind = facility.detail?.facilityKindLabel ?? 'منشأة صحية'
 
   return (
     <div
@@ -45,7 +33,7 @@ export default function HospitalMapView({
     >
       <div className="relative min-h-[45%] flex-1 bg-[#e5e7eb]">
         <iframe
-          title={`خريطة — ${hospital.name}`}
+          title={`خريطة — ${facility.name}`}
           src={src}
           className="absolute inset-0 h-full w-full border-0 grayscale-[0.15]"
         />
@@ -82,20 +70,21 @@ export default function HospitalMapView({
 
           <div className="absolute bottom-4 right-4 flex max-w-[calc(100%-2rem)] flex-col items-start gap-2 text-right text-white sm:bottom-6 sm:right-6">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              {cap ? (
-                <div className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black shadow-lg sm:px-3 sm:py-1 sm:text-[13px]">
-                  <AlertCircle size={12} className="sm:h-[14px] sm:w-[14px]" />
-                  {CAPACITY_STATUS_LABEL[cap].short}
-                </div>
-              ) : null}
+              <div
+                className={`rounded-full px-2 py-0.5 text-[10px] font-black shadow-lg sm:px-3 sm:py-1 sm:text-[13px] ${
+                  open ? 'bg-emerald-500 text-white' : 'bg-slate-600 text-white'
+                }`}
+              >
+                {open ? 'مفتوح' : 'مغلق'}
+              </div>
               <div className="rounded-full border border-white/30 bg-white/20 px-2 py-0.5 text-[10px] font-black text-white shadow-lg backdrop-blur-md sm:px-3 sm:py-1 sm:text-[13px]">
-                الخريطة التفاعلية
+                {kind}
               </div>
             </div>
 
             <div className="flex flex-col gap-1 drop-shadow-md">
               <h1 className="font-black text-[18px] leading-tight tracking-wide sm:text-[26px] xl:text-[32px]">
-                {hospital.name}
+                {facility.name}
               </h1>
               <div className="flex items-center justify-start gap-1.5 text-[12px] font-bold text-slate-200 sm:text-[14px] xl:text-[16px]">
                 <img
@@ -103,11 +92,11 @@ export default function HospitalMapView({
                   alt=""
                   className="h-4 w-4 sm:h-5 sm:w-5"
                 />
-                <span>{hospital.address}</span>
+                <span>{facility.address}</span>
               </div>
-              {hospital.distance ? (
+              {facility.distance ? (
                 <span className="text-[12px] font-bold text-blue-200">
-                  على بُعد {hospital.distance}
+                  على بُعد {facility.distance}
                 </span>
               ) : null}
             </div>

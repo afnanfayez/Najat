@@ -4,28 +4,50 @@ import React from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
 
-interface HospitalMedicinesTableProps {
-  onShowAll: () => void
-}
-
-const MEDICINES = [
+const FALLBACK: HealthMedicineRow[] = [
   { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
   { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
   { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
 ]
 
-export default function HospitalMedicinesTable({ onShowAll }: HospitalMedicinesTableProps) {
+interface HospitalMedicinesTableProps {
+  onShowAll: () => void
+  medicines?: HealthMedicineRow[]
+  /** إن وُجدت، تُستخدم لمعرفة وجود قائمة أطول في شاشة «عرض المزيد» */
+  medicinesAll?: HealthMedicineRow[]
+}
+
+const PREVIEW_MEDICINE_COUNT = 3
+
+export default function HospitalMedicinesTable({
+  onShowAll,
+  medicines,
+  medicinesAll,
+}: HospitalMedicinesTableProps) {
+  const list =
+    medicines?.length ? medicines
+    : medicinesAll?.length ? medicinesAll
+    : FALLBACK
+  const preview = list.slice(0, PREVIEW_MEDICINE_COUNT)
+  const fullCount = Math.max(list.length, medicinesAll?.length ?? 0)
+  const usingFallback = !medicines?.length && !medicinesAll?.length
+  const hasMore =
+    fullCount > PREVIEW_MEDICINE_COUNT || usingFallback
+
   return (
     <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">
-      <div className="flex items-center justify-between mb-4">
+      <div className={`flex items-center mb-4 ${hasMore ? 'justify-between' : 'justify-start'}`}>
         <div className="flex items-center gap-2">
           <img src="https://api.iconify.design/healthicons:medicines.svg?color=%232196f3" alt="medicines" className="w-6 h-6" />
           <h3 className="text-xl font-black text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>الأدوية الأساسية المتوفرة</h3>
         </div>
-        <Button onClick={onShowAll} variant="ghost" className="text-[#2196F3] font-bold flex items-center gap-1 hover:bg-blue-50 text-[15px]">
-          عرض الكل <ChevronLeft size={18} />
-        </Button>
+        {hasMore ? (
+          <Button onClick={onShowAll} variant="ghost" className="text-[#2196F3] font-bold flex items-center gap-1 hover:bg-blue-50 text-[15px]">
+            عرض المزيد <ChevronLeft size={18} />
+          </Button>
+        ) : null}
       </div>
       <div className="w-full overflow-x-auto no-scrollbar">
         <table className="w-full text-right" style={{ borderCollapse: 'collapse' }}>
@@ -37,12 +59,12 @@ export default function HospitalMedicinesTable({ onShowAll }: HospitalMedicinesT
             </tr>
           </thead>
           <tbody>
-            {MEDICINES.map((med, i) => (
-              <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+            {preview.map((med, i) => (
+              <tr key={`${med.name}-${i}`} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
                 <td className="py-3.5 pr-4 font-black text-slate-800 text-[14px]">{med.name}</td>
                 <td className="py-3.5 font-bold text-slate-600 text-[14px] text-center">{med.category}</td>
                 <td className="py-3.5 text-center">
-                  <span className="font-black text-[13px]" style={{ color: med.color }}>{med.status}</span>
+                  <span className="font-black text-[13px]" style={{ color: med.color ?? '#64748b' }}>{med.status}</span>
                 </td>
               </tr>
             ))}

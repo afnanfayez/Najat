@@ -3,7 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 
-const TYPES = [
+const FALLBACK = [
   'أدوية الضغط المزمن',
   'أدوية مرضى السكر',
   'مسكنات',
@@ -17,7 +17,15 @@ const TYPES = [
   'أدوية السموم',
 ]
 
-export default function PharmacyMedicineTypes() {
+interface PharmacyMedicineTypesProps {
+  types?: string[]
+}
+
+export default function PharmacyMedicineTypes({
+  types,
+}: PharmacyMedicineTypesProps) {
+  const list = types?.length ? types : FALLBACK
+
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">
       <div className="flex items-center gap-3 mb-3 sm:mb-4">
@@ -26,9 +34,9 @@ export default function PharmacyMedicineTypes() {
       </div>
 
       <div className="flex flex-wrap gap-2 sm:gap-3">
-        {TYPES.map((type, i) => (
+        {list.map((type, i) => (
           <div
-            key={i}
+            key={`${type}-${i}`}
             className="bg-[#e0f2fe] text-[#0369a1] px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[12px] sm:text-[14px] font-black hover:bg-[#bae6fd] transition-colors cursor-default"
           >
             {type}

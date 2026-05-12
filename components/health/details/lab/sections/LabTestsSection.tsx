@@ -3,20 +3,52 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Search, Clock } from 'lucide-react'
+import type { LabTestItem } from '@/schemas/healthFacilityDetail'
 
-const TABS = ['الكل', 'فحوصات الدم', 'الهرمونات', 'وظائف الكبد', 'الفيروسات']
+const FALLBACK_TABS = ['الكل', 'فحوصات الدم', 'الهرمونات', 'وظائف الكبد', 'الفيروسات']
 
-const TESTS = [
-  { name: 'تعداد الدم الكامل (CBC)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:drop-bold.svg?color=%23F2A122' },
-  { name: 'السكر التراكمي (HbA1c)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/healthicons:hiv-self-test.svg?color=%23F2A122' },
-  { name: 'فحص زمرة الدم', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:box-bold.svg?color=%23F2A122' },
-  { name: 'وظائف الكبد', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:health-bold.svg?color=%23F2A122' },
-  { name: 'فحص التلاسيميا', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:graph-new-bold.svg?color=%23F2A122' },
-  { name: 'فحص السرطان', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:ribbon-bold.svg?color=%23F2A122' },
+const FALLBACK_TESTS: LabTestItem[] = [
+  { name: 'تعداد الدم الكامل (CBC)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:drop-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
+  { name: 'السكر التراكمي (HbA1c)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/healthicons:hiv-self-test.svg?color=%23F2A122', group: 'فحوصات الدم' },
+  { name: 'فحص زمرة الدم', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:box-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
+  { name: 'وظائف الكبد', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:health-bold.svg?color=%23F2A122', group: 'وظائف الكبد' },
+  { name: 'فحص التلاسيميا', time: 'النتيجة خلال أسبوع', icon: 'https://api.iconify.design/solar:graph-new-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
+  { name: 'فحص السرطان', time: 'النتيجة خلال 3 أيام', icon: 'https://api.iconify.design/solar:ribbon-bold.svg?color=%23F2A122', group: 'الفيروسات' },
 ]
 
-export default function LabTestsSection() {
-  const [activeTab, setActiveTab] = React.useState('الكل')
+function normalize(s: string) {
+  return s.trim().toLowerCase()
+}
+
+interface LabTestsSectionProps {
+  tests?: LabTestItem[]
+  tabLabels?: string[]
+}
+
+export default function LabTestsSection({
+  tests,
+  tabLabels,
+}: LabTestsSectionProps) {
+  const tabs = tabLabels?.length ? tabLabels : FALLBACK_TABS
+  const allTests = tests?.length ? tests : FALLBACK_TESTS
+  const [activeTab, setActiveTab] = React.useState(tabs[0] ?? 'الكل')
+  const [searchRaw, setSearchRaw] = React.useState('')
+
+  React.useEffect(() => {
+    if (!tabs.includes(activeTab)) {
+      setActiveTab(tabs[0] ?? 'الكل')
+    }
+  }, [tabs, activeTab])
+
+  const filtered = allTests.filter((test) => {
+    const q = normalize(searchRaw)
+    if (q) {
+      const hay = normalize(`${test.name} ${test.time} ${test.group ?? ''}`)
+      if (!hay.includes(q)) return false
+    }
+    if (activeTab === 'الكل' || !activeTab) return true
+    return test.group === activeTab
+  })
 
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">
@@ -25,21 +57,22 @@ export default function LabTestsSection() {
         <h3 className="text-lg sm:text-xl font-black text-slate-800">الفحوصات المتوفرة</h3>
       </div>
 
-      {/* Search Bar */}
       <div className="relative mb-4 sm:mb-5">
         <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input
           type="text"
+          value={searchRaw}
+          onChange={(e) => setSearchRaw(e.target.value)}
           placeholder="ابحث عن الفحص..."
           className="w-full bg-slate-50 border border-slate-100 rounded-xl py-3 pr-11 pl-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
         />
       </div>
 
-      {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-6 sm:mb-7">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
+            type="button"
             onClick={() => setActiveTab(tab)}
             className={`px-5 py-2 rounded-lg text-[13px] font-black transition-all ${
               activeTab === tab
@@ -52,14 +85,12 @@ export default function LabTestsSection() {
         ))}
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {TESTS.map((test, i) => (
+        {filtered.map((test, i) => (
           <div
-            key={i}
+            key={`${test.name}-${i}`}
             className="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-50 bg-white hover:border-blue-50 transition-all cursor-default"
           >
-            {/* Icon without background or container div as requested */}
             <img src={test.icon} alt={test.name} className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0" />
             
             <div className="flex flex-col gap-1 overflow-hidden">
@@ -72,6 +103,10 @@ export default function LabTestsSection() {
           </div>
         ))}
       </div>
+
+      {!filtered.length ? (
+        <p className="text-center text-slate-500 font-bold py-6">لا توجد نتائج مطابقة</p>
+      ) : null}
     </Card>
   )
 }

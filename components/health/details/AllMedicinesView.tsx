@@ -1,31 +1,33 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ChevronRight } from 'lucide-react'
+import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
 import SharedHeroHeader from './SharedHeroHeader'
+import type { HealthFacility } from '@/schemas/healthFacility'
 
 import '../health.css'
 
 interface AllMedicinesViewProps {
-  hospital: any
+  hospital: HealthFacility
   onBack: () => void
   onShowMap: () => void
 }
 
-const MEDICINES = [
+const FALLBACK: HealthMedicineRow[] = [
   { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
   { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
   { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-  { name: 'أيبوبروفين (Ibuprofen)', category: 'مسكن آلام', status: 'غير متوفر', color: '#EF4444' },
-  { name: 'أزيثرومايسين (Azithromycin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-  { name: 'سالبوتامول (Salbutamol)', category: 'تنفسي وربو', status: 'متوفر', color: '#22c55e' },
-  { name: 'بيسوبرولول (Bisoprolol)', category: 'أمراض القلب', status: 'كمية محدودة', color: '#F2A122' },
-  { name: 'ديكساميثازون (Dexamethasone)', category: 'كورتيزون', status: 'متوفر', color: '#22c55e' },
-  { name: 'فيتامين سي (Vitamin C)', category: 'مكملات', status: 'متوفر', color: '#22c55e' },
-  { name: 'أوميبرازول (Omeprazole)', category: 'الجهاز الهضمي', status: 'كمية محدودة', color: '#F2A122' },
 ]
 
 export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMedicinesViewProps) {
+  const medicines = useMemo(() => {
+    const d = hospital.detail
+    if (d?.medicinesAll?.length) return d.medicinesAll
+    if (d?.medicines?.length) return d.medicines
+    return FALLBACK
+  }, [hospital.detail, hospital.id])
+
   return (
     <div
       className="flex flex-col gap-4 h-full overflow-y-auto no-scrollbar pb-10"
@@ -79,12 +81,12 @@ export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMed
               </tr>
             </thead>
             <tbody>
-              {MEDICINES.map((med, i) => (
-                <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+              {medicines.map((med, i) => (
+                <tr key={`${med.name}-${i}`} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
                   <td className="py-5 pr-5 font-black text-slate-800 text-[16px]">{med.name}</td>
                   <td className="py-5 font-bold text-slate-600 text-[16px] text-center">{med.category}</td>
                   <td className="py-5 text-center">
-                    <span className="font-black text-[15px]" style={{ color: med.color }}>{med.status}</span>
+                    <span className="font-black text-[15px]" style={{ color: med.color ?? med.statusColor ?? '#64748b' }}>{med.status}</span>
                   </td>
                 </tr>
               ))}

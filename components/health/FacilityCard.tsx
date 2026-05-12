@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { MapPin, Phone } from 'lucide-react'
+import { CAPACITY_STATUS_LABEL } from '@/lib/mappers/hospital'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
 type Props = {
@@ -10,21 +11,61 @@ type Props = {
   onCall?: (facility: HealthFacility) => void
 }
 
+function capacityDotColor(
+  status: NonNullable<HealthFacility['capacityStatus']>,
+): string {
+  switch (status) {
+    case 'available':
+      return '#4CAF50'
+    case 'full':
+      return '#FF9800'
+    case 'critical':
+      return '#F44336'
+    default:
+      return '#9E9E9E'
+  }
+}
+
 export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
+  const cap = facility.capacityStatus
+  const showCapacity = Boolean(cap)
+  const statusLabel = cap ? CAPACITY_STATUS_LABEL[cap].short : ''
+  const showMedicineBar =
+    facility.medicineAvailability !== undefined && !facility.fromHospitalApi
+
+  const hero = facility.imageUrl ? (
+    facility.imageUrl.startsWith('http://') ||
+    facility.imageUrl.startsWith('https://') ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={facility.imageUrl}
+        alt={facility.name}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+        }}
+      />
+    ) : (
+      <Image
+        src={facility.imageUrl}
+        alt={facility.name}
+        fill
+        sizes="(max-width: 768px) 100vw, 33vw"
+        style={{ objectFit: 'cover', zIndex: 0 }}
+      />
+    )
+  ) : (
+    <div style={{ position: 'absolute', inset: 0, background: '#D9D9D9', zIndex: 0 }} />
+  )
+
   return (
     <div className="facility-card">
-      {facility.imageUrl ? (
-        <Image
-          src={facility.imageUrl}
-          alt={facility.name}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          style={{ objectFit: 'cover', zIndex: 0 }}
-        />
-      ) : (
-        <div style={{ position: 'absolute', inset: 0, background: '#D9D9D9', zIndex: 0 }} />
-      )}
-      
+      {hero}
+
       <div className="facility-card-overlay" />
 
       <div className="facility-status-badge">
@@ -33,7 +74,11 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            background: facility.isOpen ? '#4CAF50' : '#9E9E9E',
+            background: showCapacity
+              ? capacityDotColor(cap!)
+              : facility.isOpen
+                ? '#4CAF50'
+                : '#9E9E9E',
             flexShrink: 0,
           }}
         />
@@ -42,10 +87,14 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
             fontFamily: "'Cairo', sans-serif",
             fontWeight: 700,
             fontSize: '13px',
-            color: facility.isOpen ? '#4CAF50' : '#9E9E9E',
+            color: showCapacity
+              ? capacityDotColor(cap!)
+              : facility.isOpen
+                ? '#4CAF50'
+                : '#9E9E9E',
           }}
         >
-          {facility.isOpen ? 'مفتوح الان' : 'مغلق'}
+          {showCapacity ? statusLabel : facility.isOpen ? 'مفتوح الان' : 'مغلق'}
         </span>
       </div>
 
@@ -82,9 +131,22 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
               {facility.address}
             </span>
           </div>
+          {facility.distance ? (
+            <span
+              style={{
+                fontFamily: "'Cairo', sans-serif",
+                fontWeight: 600,
+                fontSize: '12px',
+                color: '#B3E5FC',
+                marginTop: '-2px',
+              }}
+            >
+              على بُعد {facility.distance}
+            </span>
+          ) : null}
         </div>
 
-        {facility.medicineAvailability !== undefined && (
+        {showMedicineBar ? (
           <div className="medicine-availability-bar">
             <div
               style={{
@@ -127,11 +189,11 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
               <div
                 style={{
                   background:
-                    facility.medicineAvailability < 30
+                    (facility.medicineAvailability ?? 0) < 30
                       ? '#F44336'
-                      : facility.medicineAvailability < 70
-                      ? '#FF9800'
-                      : '#FFC107',
+                      : (facility.medicineAvailability ?? 0) < 70
+                        ? '#FF9800'
+                        : '#FFC107',
                   borderRadius: '4px',
                   height: '100%',
                   width: `${facility.medicineAvailability}%`,
@@ -142,7 +204,7 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
               />
             </div>
           </div>
-        )}
+        ) : null}
 
         <div
           style={{

@@ -1,40 +1,44 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ChevronRight } from 'lucide-react'
+import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
 import ClinicHeader from './sections/ClinicHeader'
+import type { HealthFacility } from '@/schemas/healthFacility'
 
 import '../../health.css'
 
 interface ClinicAllMedicinesViewProps {
-  clinic: any
+  clinic: HealthFacility
   onBack: () => void
   onShowMap: () => void
 }
 
-const MEDICINES = [
+const FALLBACK: HealthMedicineRow[] = [
   { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F59E0B' },
   { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
   { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-  { name: 'أيبوبروفين (Ibuprofen)', category: 'مسكن آلام', status: 'غير متوفر', color: '#EF4444' },
-  { name: 'أزيثرومايسين (Azithromycin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-  { name: 'سالبوتامول (Salbutamol)', category: 'تنفسي وربو', status: 'متوفر', color: '#22c55e' },
-  { name: 'بيسوبرولول (Bisoprolol)', category: 'أمراض القلب', status: 'كمية محدودة', color: '#F59E0B' },
-  { name: 'ديكساميثازون (Dexamethasone)', category: 'كورتيزون', status: 'متوفر', color: '#22c55e' },
-  { name: 'فيتامين سي (Vitamin C)', category: 'مكملات', status: 'متوفر', color: '#22c55e' },
-  { name: 'أوميبرازول (Omeprazole)', category: 'الجهاز الهضمي', status: 'كمية محدودة', color: '#F59E0B' },
 ]
 
-export default function ClinicAllMedicinesView({ clinic, onBack, onShowMap }: ClinicAllMedicinesViewProps) {
+export default function ClinicAllMedicinesView({
+  clinic,
+  onBack,
+  onShowMap,
+}: ClinicAllMedicinesViewProps) {
+  const medicines = useMemo(() => {
+    const d = clinic.detail
+    if (d?.clinicMedicinesAll?.length) return d.clinicMedicinesAll
+    if (d?.clinicMedicines?.length) return d.clinicMedicines
+    return FALLBACK
+  }, [clinic.detail, clinic.id])
+
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-10" style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#fff' }}>
       
-      {/* Header Section - Matches table width */}
       <div className="w-full px-4 sm:px-10 mt-6 mb-8">
         <ClinicHeader clinic={clinic} onShowMap={onShowMap} />
       </div>
 
-      {/* Main Table Card */}
       <div className="px-4 sm:px-10">
         <div 
           className="rounded-[40px] border-2 border-slate-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] bg-white p-6 sm:p-10"
@@ -63,12 +67,12 @@ export default function ClinicAllMedicinesView({ clinic, onBack, onShowMap }: Cl
                 </tr>
               </thead>
               <tbody>
-                {MEDICINES.map((med, i) => (
-                  <tr key={i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                {medicines.map((med, i) => (
+                  <tr key={`${med.name}-${i}`} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
                     <td className="py-6 pr-8 font-black text-[#1e293b] text-[15px] sm:text-[17px]">{med.name}</td>
                     <td className="py-6 font-bold text-slate-600 text-[15px] sm:text-[17px] text-center">{med.category}</td>
                     <td className="py-5 text-center">
-                      <span className="font-black text-[14px] sm:text-[16px]" style={{ color: med.color }}>{med.status}</span>
+                      <span className="font-black text-[14px] sm:text-[16px]" style={{ color: med.statusColor ?? med.color ?? '#64748b' }}>{med.status}</span>
                     </td>
                   </tr>
                 ))}

@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authAPI } from '@/lib/api/api'
+import { extractAuthPayload } from '@/lib/api/extractAuth'
 import { saveToken } from '@/lib/api/auth'
+import { saveUserRole } from '@/lib/auth/sessionRole'
 import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -127,8 +129,13 @@ export const useLoginStore = create<LoginState>()(
         })
         try {
           const res = await authAPI.login({ email, password })
-          if (res.token) {
-            saveToken(res.token)
+          const { token, role } = extractAuthPayload(res)
+          if (!token) {
+            throw new Error('لم يتم استلام رمز الدخول من الخادم')
+          }
+          saveToken(token)
+          if (typeof role === 'string') {
+            saveUserRole(role)
           }
           set({
             isSuccess: true,

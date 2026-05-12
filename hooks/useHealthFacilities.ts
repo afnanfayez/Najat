@@ -1,163 +1,91 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { healthAPI } from '@/lib/api/health'
+import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
+import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
+import {
+  facilityMatchesHealthSearch,
+  getMockHealthFacilitiesResult,
+  USE_MOCK_HEALTH_FACILITIES,
+} from '@/lib/mocks/healthFacilitiesMockData'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
 
-const MOCK_FACILITIES: HealthFacility[] = [
-  {
-    id: '1',
-    name: 'مستشفى شهداء الأقصى',
-    address: 'دير البلح - وسط قطاع غزة',
-    category: 'hospitals',
-    isOpen: true,
-    medicineAvailability: 40,
-    distance: '1.2 كم',
-    imageUrl: '/assets/health1.jpg',
-    phone: '+970599000001',
-  },
-  {
-    id: '2',
-    name: 'مستشفى أصدقاء المريض الخيري',
-    address: 'بيت لاهيا - شمال غزة',
-    category: 'hospitals',
-    isOpen: true,
-    medicineAvailability: 35,
-    distance: '2.4 كم',
-    imageUrl: '/assets/health2.jpg',
-    phone: '+970599000002',
-  },
-  {
-    id: '3',
-    name: 'مستشفى الشفاء',
-    address: 'حي الرمال - غزة',
-    category: 'hospitals',
-    isOpen: true,
-    medicineAvailability: 95,
-    distance: '3.1 كم',
-    imageUrl: '/assets/health3.jpg',
-    phone: '+970599000003',
-  },
-  {
-    id: '4',
-    name: 'مستشفى النجار',
-    address: 'رفح المدينة - جنوب غزة',
-    category: 'hospitals',
-    isOpen: true,
-    medicineAvailability: 55,
-    distance: '4.5 كم',
-    imageUrl: '/assets/health4.png',
-    phone: '+970599000004',
-  },
-  {
-    id: '5',
-    name: 'مستشفى الإندونيسي',
-    address: 'بيت لاهيا - شمال غزة',
-    category: 'hospitals',
-    isOpen: false,
-    medicineAvailability: 40,
-    distance: '6.2 كم',
-    imageUrl: '/assets/health5.jpg',
-    phone: '+970599000005',
-  },
-  {
-    id: '6',
-    name: 'مجمع ناصر الطبي',
-    address: 'خان يونس - جنوب غزة',
-    category: 'hospitals',
-    isOpen: true,
-    medicineAvailability: 60,
-    distance: '5.1 كم',
-    imageUrl: '/assets/health6.jpg',
-    phone: '+970599000006',
-  },
-  {
-    id: '7',
-    name: 'صيدلية النجاة المركزية',
-    address: 'شارع الوحدة - غزة',
-    category: 'pharmacies',
-    isOpen: true,
-    medicineAvailability: 5,
-    distance: '0.5 كم',
-    imageUrl: '/assets/health7.jpg',
-    phone: '+970599000007',
-  },
-  {
-    id: '8',
-    name: 'مستوصف الأمل الصحي',
-    address: 'حي الزيتون - غزة',
-    category: 'clinics',
-    isOpen: true,
-    medicineAvailability: 70,
-    distance: '1.8 كم',
-    imageUrl: '/assets/health8.jpg',
-    phone: '+970599000008',
-  },
-  {
-    id: '9',
-    name: 'مختبر ابن الهيثم للتحاليل الطبية',
-    address: 'مقابل مستشفى الشفاء - غزة',
-    category: 'labs',
-    isOpen: true,
-    medicineAvailability: 90,
-    distance: '2.2 كم',
-    imageUrl: '/assets/health9.jpg',
-    phone: '0592201453',
-  },
-  {
-    id: '10',
-    name: 'مركز النور لطب الاسنان',
-    address: 'غزة - حي الرمال - بالقرب من المجلس التشريعي',
-    category: 'dental',
-    isOpen: true,
-    medicineAvailability: 85,
-    distance: '0.8 كم',
-    imageUrl: '/assets/Photo2.jpg',
-    phone: '0592201453',
-  },
-  {
-    id: '11',
-    name: 'عيادة سما للأسنان',
-    address: 'خان يونس - شارع الجلاء',
-    category: 'dental',
-    isOpen: true,
-    medicineAvailability: 70,
-    distance: '1.5 كم',
-    imageUrl: '/assets/health6.jpg',
-    phone: '0590000011',
-  },
-]
+const HEALTH_MOCK_FALLBACK =
+  process.env.NEXT_PUBLIC_HEALTH_MOCK === '1'
 
-type Params = {
+export type HealthFacilitiesQueryParams = {
   category?: FacilityCategory
   search?: string
-  nearMe?: boolean
+  region?: 'north' | 'south' | null
 }
 
-export function useHealthFacilities(params?: Params) {
-  return useQuery({
+function filterBySearch(list: HealthFacility[], search?: string) {
+  if (!search?.trim()) return list
+  return list.filter((f) => facilityMatchesHealthSearch(f, search))
+}
+
+function applyRegionFilter(
+  list: HealthFacility[],
+  region: 'north' | 'south' | null | undefined,
+): HealthFacility[] {
+  if (!region) return list
+  const hasAny = list.some((f) => f.region != null)
+  if (!hasAny) return list
+  return list.filter((f) => f.region === region)
+}
+
+export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
+  const query = useQuery({
     queryKey: ['health-facilities', params],
-    queryFn: async () => {
-      try {
-        const response = await healthAPI.getFacilities(params)
-        // Inject mock progress for testing
-        response.facilities = response.facilities.map(f => ({
-          ...f,
-          medicineAvailability: f.medicineAvailability ?? 5
-        }))
-        return response
-      } catch {
-        const filtered = MOCK_FACILITIES.filter((f) => {
-          if (params?.category && f.category !== params.category) return false
-          if (params?.search) {
-            const q = params.search.toLowerCase()
-            if (!f.name.includes(q) && !f.address.includes(q)) return false
-          }
-          return true
+    queryFn: async (): Promise<{ facilities: HealthFacility[]; total: number }> => {
+      if (USE_MOCK_HEALTH_FACILITIES) {
+        return getMockHealthFacilitiesResult({
+          category: params?.category,
+          search: params?.search,
+          region: params?.region ?? null,
         })
-        return { facilities: filtered, total: filtered.length }
+      }
+
+      if (params?.category === 'hospitals') {
+        try {
+          let facilities = await fetchAllHospitalPages()
+          facilities = applyRegionFilter(facilities, params.region)
+          facilities = filterBySearch(facilities, params.search)
+          return { facilities, total: facilities.length }
+        } catch (e) {
+          if (HEALTH_MOCK_FALLBACK) {
+            return getMockHealthFacilitiesResult({
+              category: 'hospitals',
+              search: params?.search,
+              region: params?.region ?? null,
+            })
+          }
+          throw e
+        }
+      }
+
+      try {
+        const response = await fetchLiveNonHospitalFacilities({
+          category: params?.category,
+          search: params?.search,
+        })
+        let facilities = response.facilities
+        facilities = applyRegionFilter(facilities, params?.region)
+        facilities = filterBySearch(facilities, params?.search)
+        return { facilities, total: facilities.length }
+      } catch (e) {
+        if (HEALTH_MOCK_FALLBACK) {
+          return getMockHealthFacilitiesResult({
+            category: params?.category,
+            search: params?.search,
+            region: params?.region ?? null,
+          })
+        }
+        throw e
       }
     },
     staleTime: 1000 * 60 * 2,
   })
+
+  return query
 }

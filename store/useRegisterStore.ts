@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { authAPI } from '@/lib/api/api'
+import { extractAuthPayload } from '@/lib/api/extractAuth'
 import { saveToken } from '@/lib/api/auth'
+import { saveUserRole } from '@/lib/auth/sessionRole'
 import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -331,9 +333,12 @@ export const useRegisterStore = create<RegisterState>()(
           }
 
           const res = await authAPI.register(payload)
-          if (res.token) {
-            saveToken(res.token)
+          const { token, role: authRole } = extractAuthPayload(res)
+          if (token) {
+            saveToken(token)
           }
+          const role = authRole ?? (res as { role?: string })?.role
+          saveUserRole(typeof role === 'string' ? role : 'resident')
           set({ isSubmitting: false })
           return true
         } catch (err: any) {
@@ -362,8 +367,16 @@ export const useRegisterStore = create<RegisterState>()(
             code: code,
           }
           const res = await authAPI.verify(payload)
-          if (res.token) {
-            saveToken(res.token)
+          const { token, role: authRole } = extractAuthPayload(res)
+          if (token) {
+            saveToken(token)
+          }
+          const role =
+            authRole ??
+            (res as { role?: string })?.role ??
+            (res as { user?: { role?: string } })?.user?.role
+          if (typeof role === 'string') {
+            saveUserRole(role)
           }
           set({ isSubmitting: false })
           return true

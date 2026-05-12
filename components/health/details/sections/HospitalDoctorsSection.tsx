@@ -1,21 +1,89 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { HealthDoctor } from '@/schemas/healthFacilityDetail'
+
+const FALLBACK: HealthDoctor[] = [
+  {
+    name: 'د. ناصر رأفت أبو شعبان',
+    specialty: 'استشاري الجراحة العامة وجراحة المناظير',
+    photo: '/assets/doctor.png',
+    time: 'من 10:00 ص - 2:00 م',
+    days: ['الأحد', 'الخميس'],
+  },
+  {
+    name: 'د. محمد صلاح اللولو',
+    specialty: 'أخصائي عيون',
+    photo: '/assets/health6.jpg',
+    time: 'من 1:30 م - 5:00 م',
+    days: ['السبت', 'الخميس'],
+  },
+  {
+    name: 'د. سلامة سعيد التتر',
+    specialty: 'استشاري أمراض السكري والغدد',
+    photo: '/assets/health2.jpg',
+    time: 'من 1:30 م - 5:00 م',
+    days: ['السبت', 'الخميس'],
+  },
+  {
+    name: 'د. شادي عبد الحكيم الحداد',
+    specialty: 'أخصائي طب وجراحة الفم والأسنان',
+    photo: '/assets/Photo2.jpg',
+    time: 'من 10:00 ص - 2:00 م',
+    days: ['الأحد', 'الأربعاء'],
+  },
+]
+
+function buildPreviewDoctors(
+  doctors: HealthDoctor[] | undefined,
+  fallback: HealthDoctor[],
+  target: number,
+): HealthDoctor[] {
+  const seen = new Set<string>()
+  const out: HealthDoctor[] = []
+
+  const primary = doctors?.length ? doctors : []
+  for (const d of primary) {
+    if (out.length >= target) return out
+    if (seen.has(d.name)) continue
+    seen.add(d.name)
+    out.push(d)
+  }
+  for (const d of fallback) {
+    if (out.length >= target) return out
+    if (seen.has(d.name)) continue
+    seen.add(d.name)
+    out.push(d)
+  }
+
+  const pool = primary.length ? primary : fallback
+  let i = 0
+  while (out.length < target) {
+    out.push(pool[i % pool.length])
+    i += 1
+  }
+  return out.slice(0, target)
+}
 
 interface HospitalDoctorsSectionProps {
   onShowAll: () => void
+  doctors?: HealthDoctor[]
 }
 
-const DOCTORS = [
-  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
-  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 ص - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
-]
+const PREVIEW_DOCTOR_COUNT = 4
 
-export default function HospitalDoctorsSection({ onShowAll }: HospitalDoctorsSectionProps) {
+export default function HospitalDoctorsSection({
+  onShowAll,
+  doctors,
+}: HospitalDoctorsSectionProps) {
+  const preview = useMemo(
+    () => buildPreviewDoctors(doctors, FALLBACK, PREVIEW_DOCTOR_COUNT),
+    [doctors],
+  )
+  const hasMore = true
+
   return (
     <div
       className="hdv-doctors-wrap"
@@ -28,20 +96,29 @@ export default function HospitalDoctorsSection({ onShowAll }: HospitalDoctorsSec
         overflow: 'visible',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: hasMore ? 'space-between' : 'flex-start',
+          marginBottom: '20px',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="https://api.iconify.design/healthicons:doctor-male.svg?color=%232196f3" alt="doctor" style={{ width: '26px', height: '26px' }} />
           <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#1e293b', margin: 0, fontFamily: "'Cairo', sans-serif" }}>الأطباء المناوبون الآن</h3>
         </div>
-        <Button variant="ghost" className="text-[#2196F3] font-black flex items-center gap-1 hover:bg-blue-50 px-3 text-sm" onClick={onShowAll}>
-          عرض الكل
-          <ChevronLeft size={18} />
-        </Button>
+        {hasMore ? (
+          <Button variant="ghost" className="text-[#2196F3] font-black flex items-center gap-1 hover:bg-blue-50 px-3 text-sm" onClick={onShowAll}>
+            عرض المزيد
+            <ChevronLeft size={18} />
+          </Button>
+        ) : null}
       </div>
 
       <div className="hdv-doctors-grid">
-        {DOCTORS.map((doctor, i) => (
-          <div key={i} style={{ background: '#EAF6FD', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', textAlign: 'right', boxSizing: 'border-box' }}>
+        {preview.map((doctor, i) => (
+          <div key={`${doctor.name}-${i}`} style={{ background: '#EAF6FD', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', textAlign: 'right', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '48px', height: '48px', minWidth: '48px', borderRadius: '50%', overflow: 'hidden', background: '#fff', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}>
                 <img src={doctor.photo} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />

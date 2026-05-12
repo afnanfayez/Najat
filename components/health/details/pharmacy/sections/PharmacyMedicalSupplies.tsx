@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { Card } from '@/components/ui/card'
+import type { LabeledIcon } from '@/schemas/healthFacilityDetail'
 
-const SUPPLIES = [
+const FALLBACK: LabeledIcon[] = [
   { label: 'كمامات جراحية', icon: 'https://api.iconify.design/healthicons:mask.svg?color=%23f59e0b' },
   { label: 'اسطوانات اكسجين', icon: 'https://api.iconify.design/healthicons:oxygen-tank.svg?color=%23f59e0b' },
   { label: 'موازين حرارة', icon: 'https://api.iconify.design/healthicons:thermometer.svg?color=%23f59e0b' },
@@ -12,7 +13,15 @@ const SUPPLIES = [
   { label: 'اجهزة قياس الضغط', icon: 'https://api.iconify.design/healthicons:blood-pressure.svg?color=%23f59e0b' },
 ]
 
-export default function PharmacyMedicalSupplies() {
+interface PharmacyMedicalSuppliesProps {
+  supplies?: LabeledIcon[]
+}
+
+export default function PharmacyMedicalSupplies({
+  supplies,
+}: PharmacyMedicalSuppliesProps) {
+  const list = supplies?.length ? supplies : FALLBACK
+
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">
       <div className="flex items-center gap-3 mb-4 sm:mb-5">
@@ -21,9 +30,9 @@ export default function PharmacyMedicalSupplies() {
       </div>
 
       <div className="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4">
-        {SUPPLIES.map((supply, i) => (
+        {list.map((supply, i) => (
           <div
-            key={i}
+            key={`${supply.label}-${i}`}
             className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-[18px] border-2 border-slate-50 bg-white hover:border-blue-100 transition-all cursor-default text-center gap-2 shadow-sm"
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center mb-1">

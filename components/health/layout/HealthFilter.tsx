@@ -103,7 +103,7 @@ export default function HealthFilter({
           <Search size={18} color="#2196F3" style={{ flexShrink: 0 }} />
           <Input
             value={searchValue}
-            placeholder="ابحث عن الخدمات, المستشفيات, أو مراكز الإيواء..."
+            placeholder="ابحث باسم المنشأة، الدواء، الطبيب، التخصص، أو نوع الخدمة..."
             onChange={(e) => onSearchChange(e.target.value)}
             style={{
               flex: 1,
@@ -152,7 +152,11 @@ export default function HealthFilter({
             }
           >
             <Filter size={16} color="#fff" />
-            {selectedRegion === 'north' ? 'في الشمال' : selectedRegion === 'south' ? 'في الجنوب' : 'فلترة'}
+            {selectedRegion === 'north'
+              ? 'في الشمال'
+              : selectedRegion === 'south'
+                ? 'في الجنوب'
+                : 'فلترة المنطقة'}
           </button>
 
           {showFilterDropdown && (
@@ -174,6 +178,27 @@ export default function HealthFilter({
                 flexDirection: 'column',
               }}
             >
+              <button
+                onClick={() => {
+                  setSelectedRegion(null)
+                  setShowFilterDropdown(false)
+                }}
+                style={{
+                  padding: '12px 16px',
+                  background: selectedRegion === null ? '#e3f2fd' : 'transparent',
+                  border: 'none',
+                  textAlign: 'right',
+                  fontFamily: "'Cairo', sans-serif",
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: selectedRegion === null ? '#2196F3' : '#333',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                كل المناطق
+              </button>
+              <div style={{ height: '1px', background: '#e5e7eb', margin: '0 12px' }} />
               <button
                 onClick={() => {
                   setSelectedRegion('north')
