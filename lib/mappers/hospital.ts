@@ -4,6 +4,7 @@ import type {
   HospitalDto,
   NearbyHospitalDto,
 } from '@/schemas/hospitalApi'
+import { pickLocalImage } from '@/lib/utils/localImage'
 
 export function metersToKmLabel(meters: number): string {
   if (meters < 1000) {
@@ -28,6 +29,12 @@ export function formatUpdatedRelative(iso?: string): string {
   if (d < 7) return `منذ ${d} يوماً`
   return `منذ ${Math.floor(d / 7)} أسبوع`
 }
+
+export function deriveRegion(lat: number): 'north' | 'south' {
+  return lat >= 31.42 ? 'north' : 'south'
+}
+
+export const DOCTOR_PHOTO = '/assets/doctor.png'
 
 /** Arabic labels for list / badges */
 export const CAPACITY_STATUS_LABEL: Record<
@@ -65,7 +72,7 @@ function dtoBase(
     category: 'hospitals',
     isOpen,
     phone: dto.contactNumber ?? undefined,
-    imageUrl: dto.image ?? undefined,
+    imageUrl: pickLocalImage('hospitals', dto.id),
     latitude: dto.latitude,
     longitude: dto.longitude,
     capacityStatus: dto.status,

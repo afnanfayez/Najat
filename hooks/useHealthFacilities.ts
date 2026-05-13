@@ -67,7 +67,6 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
       try {
         const response = await fetchLiveNonHospitalFacilities({
           category: params?.category,
-          search: params?.search,
         })
         let facilities = response.facilities
         facilities = applyRegionFilter(facilities, params?.region)

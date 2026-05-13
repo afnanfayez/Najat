@@ -14,6 +14,7 @@ import {
 import Image from 'next/image'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
+import { useAid } from '@/hooks/useAid'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 
 const CATEGORIES = [
@@ -23,63 +24,6 @@ const CATEGORIES = [
   { id: 'health', label: 'صحة' },
   { id: 'shelter', label: 'مأوى' },
   { id: 'clothes', label: 'ملابس وأغطية' },
-]
-
-const MOCK_AID: HumanitarianAid[] = [
-  {
-    id: '1',
-    name: 'الاونروا (UNRWA)',
-    provider: 'وكالة الأمم المتحدة لإغاثة وتشغيل اللاجئين',
-    description: 'تقدم خدمات الطوارئ، الرعاية الصحية الأولية، وتوزيع المواد الغذائية الأساسية في كافة مناطق القطاع',
-    status: 'active',
-    tags: ['غذاء', 'تعليم', 'صحة'],
-    category: 'all',
-  },
-  {
-    id: '2',
-    name: 'اطباء بلا حدود',
-    provider: 'Medecins Sans Frontieres',
-    description: 'تعمل في المستشفيات الرئيسية وتقدم الرعاية الجراحية الطارئة، النشاط يتركز حاليا في مناطق الجنوب',
-    status: 'limited',
-    tags: ['جراحة', 'ادوية'],
-    category: 'health',
-  },
-  {
-    id: '3',
-    name: 'برنامج الأغذية العالمية',
-    provider: 'World Food Programme',
-    description: 'توزيع الطرود الغذائية الطارئة والقسائم الشرائية للأسر المتضررة والنازحين',
-    status: 'active',
-    tags: ['طعام', 'دعم مادي'],
-    category: 'food',
-  },
-  {
-    id: '4',
-    name: 'مؤسسة واش (WASH)',
-    provider: 'مبادرة المياه والصرف الصحي العالمي',
-    description: 'تعليق مؤقت للعمليات الميدانية بسبب نقص الوقود وتضرر البنية التحتية الرئيسية للمياه',
-    status: 'stopped',
-    tags: ['مياه', 'تعقيم'],
-    category: 'water',
-  },
-  {
-    id: '5',
-    name: 'المجلس النرويجي للاجئين',
-    provider: 'Norwegian Refugee Council',
-    description: 'توفير مواد الايواء الطارئة والبطانيات والمستلزمات المنزلية الاساسية للنازحين',
-    status: 'active',
-    tags: ['خيم', 'اغطية', 'ملابس'],
-    category: 'shelter',
-  },
-  {
-    id: '6',
-    name: 'اليونيسيف (UNICEF)',
-    provider: 'منظمة الأمم المتحدة للطفولة',
-    description: 'حماية الطفل والدعم النفسي وتوفير اللقاحات والمياه الصالحة للشرب للاطفال والاسر',
-    status: 'limited',
-    tags: ['تعليم', 'مياه', 'طرود'],
-    category: 'health',
-  },
 ]
 
 interface HumanitarianAidPageProps {
@@ -107,11 +51,10 @@ export default function HumanitarianAidPage({ setIsMobileMenuOpen }: Humanitaria
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const filteredAid = MOCK_AID.filter(aid => {
-    const matchesCategory = activeCategory === 'all' || aid.category === activeCategory
-    const matchesSearch = aid.name.toLowerCase().includes(searchValue.toLowerCase()) || 
-                         aid.description.toLowerCase().includes(searchValue.toLowerCase())
-    return matchesCategory && matchesSearch
+  const { data: filteredAid = [], isLoading: isAidLoading, isError: isAidError } = useAid({
+    category: activeCategory,
+    search: searchValue,
+    region: selectedRegion ?? undefined,
   })
 
   if (selectedAid) {
@@ -349,9 +292,53 @@ export default function HumanitarianAidPage({ setIsMobileMenuOpen }: Humanitaria
           paddingRight: '4px',
         }}
       >
-        {filteredAid.map((aid) => (
-          <AidCard key={aid.id} aid={aid} onClick={() => setSelectedAid(aid)} />
-        ))}
+        {isAidError ? (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '48px 0',
+              color: '#f44336',
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 600,
+              fontSize: '16px',
+            }}
+          >
+            حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مجدداً
+          </div>
+        ) : isAidLoading ? (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '48px 0',
+              color: '#9e9e9e',
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 600,
+              fontSize: '16px',
+            }}
+          >
+            جارٍ التحميل...
+          </div>
+        ) : filteredAid.length === 0 ? (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: '48px 0',
+              color: '#9e9e9e',
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 600,
+              fontSize: '16px',
+            }}
+          >
+            لا توجد مساعدات مطابقة للبحث
+          </div>
+        ) : (
+          filteredAid.map((aid) => (
+            <AidCard key={aid.id} aid={aid} onClick={() => setSelectedAid(aid)} />
+          ))
+        )}
       </div>
     </div>
   )

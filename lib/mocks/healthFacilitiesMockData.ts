@@ -2,7 +2,8 @@ import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
 import type { HealthFacilityDetail } from '@/schemas/healthFacilityDetail'
 import { MOCK_HOSPITAL_FACILITIES } from './hospitalFacilitiesMockData'
 
-export const USE_MOCK_HEALTH_FACILITIES = true
+export const USE_MOCK_HEALTH_FACILITIES =
+  process.env.NEXT_PUBLIC_USE_MOCK === '1'
 
 function normalizeSearchQuery(raw: string): string {
   return raw.trim().toLowerCase()
