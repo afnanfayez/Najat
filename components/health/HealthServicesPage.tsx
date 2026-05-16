@@ -1,7 +1,16 @@
 'use client'
 
 import { Menu } from 'lucide-react'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  HEALTH_ROUTE,
+  healthFacilityOrdinalPath,
+  parseOrdinalRouteParam,
+  resolveFacilityByOrdinal,
+  sortHealthFacilitiesStable,
+} from '@/lib/health/healthFacilityRoutes'
+import { useDashboardShell } from '@/components/dashboard/DashboardShellContext'
 import Image from 'next/image'
 import { useHealthFacilities } from '@/hooks/useHealthFacilities'
 import {
@@ -33,20 +42,32 @@ import './health.css'
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
 interface HealthServicesPageProps {
+  category: FacilityCategory
+  /** رقم ترتيبي 1…n في المسار (مثل `/hospitals/3`)، وليس UUID */
+  facilityId?: string
   setIsMobileMenuOpen?: (open: boolean) => void
 }
 
-export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServicesPageProps) {
-  const [activeCategory, setActiveCategory] = useState<FacilityCategory>('hospitals')
+export default function HealthServicesPage({
+  category,
+  facilityId,
+  setIsMobileMenuOpen,
+}: HealthServicesPageProps) {
+  const router = useRouter()
+  const shell = useDashboardShell()
+  const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
   const [searchValue, setSearchValue] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
   const [isMobile, setIsMobile] = useState(false)
 
-  const [view, setView] = useState<'list' | 'detail' | 'map' | 'doctors' | 'medicines'>('list')
+  const [view, setView] = useState<
+    'list' | 'detail' | 'map' | 'doctors' | 'medicines'
+  >(() => (facilityId ? 'detail' : 'list'))
   const [prevView, setPrevView] = useState<'list' | 'detail' | 'doctors' | 'medicines'>('detail')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)
@@ -55,11 +76,45 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const { data, isLoading, isError, error, refetch } = useHealthFacilities({
-    category: activeCategory,
-    search: debouncedSearch,
-    region: selectedRegion,
+  const listQueryParams = useMemo(
+    () => ({
+      category,
+      search: facilityId ? '' : debouncedSearch,
+      region: facilityId ? null : selectedRegion,
+    }),
+    [category, facilityId, debouncedSearch, selectedRegion],
+  )
+
+  const handleCategoryChange = useCallback(
+    (next: FacilityCategory) => {
+      if (next === category) return
+      openMobileMenu?.(false)
+      router.push(HEALTH_ROUTE[next])
+    },
+    [router, category, openMobileMenu],
+  )
+
+  const { data, isLoading, isError, error, refetch } =
+    useHealthFacilities(listQueryParams)
+
+  const { data: indexData, isLoading: indexLoading } = useHealthFacilities({
+    category,
+    search: '',
+    region: null,
   })
+
+  const routeOrdinal = facilityId ? parseOrdinalRouteParam(facilityId) : null
+
+  const routeFacility = useMemo(() => {
+    if (routeOrdinal == null || !data?.facilities?.length) return null
+    return resolveFacilityByOrdinal(data.facilities, routeOrdinal)
+  }, [routeOrdinal, data])
+
+  const effectiveFacility = routeFacility ?? selectedFacility
+
+  const goToFacilityList = useCallback(() => {
+    router.push(HEALTH_ROUTE[category])
+  }, [router, category])
 
   const handleHealthHeaderMap = useCallback(() => {
     const first = data?.facilities?.[0]
@@ -71,16 +126,20 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value)
-    clearTimeout((handleSearchChange as any)._t)
-    ;(handleSearchChange as any)._t = setTimeout(
-      () => setDebouncedSearch(value),
-      350,
-    )
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      searchDebounceRef.current = null
+      setDebouncedSearch(value)
+    }, 350)
   }, [])
 
   const handleNavigate = (facility: HealthFacility) => {
-    setSelectedFacility(facility)
-    setView('detail')
+    const base = indexData?.facilities?.length
+      ? sortHealthFacilitiesStable(indexData.facilities)
+      : []
+    const idx = base.findIndex((f) => f.id === facility.id)
+    if (idx < 0) return
+    router.push(healthFacilityOrdinalPath(category, idx + 1))
   }
 
   const handleCall = (facility: HealthFacility) => {
@@ -88,55 +147,124 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     if (n) window.location.href = `tel:${n}`
   }
 
-  if (view === 'detail' && selectedFacility) {
-    if (activeCategory === 'hospitals') {
+  if (facilityId && routeOrdinal === null) {
+    return (
+      <div className="health-page-container p-10 text-center" dir="rtl">
+        <p style={{ fontWeight: 700, marginBottom: 16 }}>
+          رقم المنشأة في الرابط غير صالح (استخدم أرقام فقط: 1، 2، 3…)
+        </p>
+        <button
+          type="button"
+          onClick={goToFacilityList}
+          className="text-blue-600 underline"
+        >
+          رجوع للقائمة
+        </button>
+      </div>
+    )
+  }
+
+  if (facilityId && isError) {
+    return (
+      <div className="health-page-container p-10 text-center" dir="rtl">
+        <p style={{ color: '#f44336', marginBottom: 16, fontWeight: 600 }}>
+          تعذر تحميل البيانات
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="text-blue-600 underline"
+        >
+          إعادة المحاولة
+        </button>
+        <button
+          type="button"
+          onClick={goToFacilityList}
+          className="block mx-auto mt-4 text-blue-600 underline"
+        >
+          رجوع للقائمة
+        </button>
+      </div>
+    )
+  }
+
+  if (facilityId && (isLoading || data === undefined)) {
+    return (
+      <div
+        className="health-page-container p-10 text-center text-gray-500"
+        dir="rtl"
+      >
+        جارٍ التحميل...
+      </div>
+    )
+  }
+
+  if (facilityId && data && !routeFacility) {
+    return (
+      <div className="health-page-container p-10 text-center" dir="rtl">
+        <p style={{ fontWeight: 700, marginBottom: 16 }}>
+          المنشأة غير موجودة أو الرقم خارج النطاق
+        </p>
+        <button
+          type="button"
+          onClick={goToFacilityList}
+          className="text-blue-600 underline"
+        >
+          رجوع للقائمة
+        </button>
+      </div>
+    )
+  }
+
+  if (view === 'detail' && effectiveFacility) {
+    if (category === 'hospitals') {
       return (
         <HospitalDetailView 
-          hospital={selectedFacility} 
-          onBack={() => setView('list')} 
+          hospital={effectiveFacility} 
+          onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
           onShowAllDoctors={() => setView('doctors')}
           onShowAllMedicines={() => setView('medicines')}
-          onCall={() => handleCall(selectedFacility)}
+          onCall={() => handleCall(effectiveFacility)}
         />
       )
     }
     
-    if (activeCategory === 'pharmacies') {
+    if (category === 'pharmacies') {
       return (
         <PharmacyDetailView 
-          pharmacy={selectedFacility} 
-          onBack={() => setView('list')} 
+          pharmacy={effectiveFacility} 
+          onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
       )
     }
 
-    if (activeCategory === 'labs') {
+    if (category === 'labs') {
       return (
         <LabDetailView 
-          lab={selectedFacility} 
-          onBack={() => setView('list')} 
+          lab={effectiveFacility} 
+          onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
       )
     }
 
-    if (activeCategory === 'dental') {
+    if (category === 'dental') {
       return (
         <DentalDetailView 
-          clinic={selectedFacility} 
-          onBack={() => setView('list')} 
+          clinic={effectiveFacility} 
+          onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
       )
     }
 
-    if (activeCategory === 'clinics') {
+    if (category === 'clinics') {
       return (
         <ClinicDetailView 
-          clinic={selectedFacility} 
-          onBack={() => setView('list')} 
+          clinic={effectiveFacility} 
+          onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
           onShowAllMedicines={() => setView('medicines')}
         />
@@ -146,41 +274,41 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     return (
       <div className="p-10 text-center font-bold">
         جاري العمل على تفاصيل هذا القسم...
-        <button onClick={() => setView('list')} className="block mx-auto mt-4 text-blue-500 underline">رجوع</button>
+        <button onClick={goToFacilityList} className="block mx-auto mt-4 text-blue-500 underline">رجوع</button>
       </div>
     )
   }
 
-  if (view === 'map' && selectedFacility) {
-    if (activeCategory === 'pharmacies') {
+  if (view === 'map' && effectiveFacility) {
+    if (category === 'pharmacies') {
       return (
         <PharmacyMapView 
-          pharmacy={selectedFacility} 
+          pharmacy={effectiveFacility} 
           onBack={() => setView(prevView)} 
         />
       )
     }
-    if (activeCategory === 'labs') {
+    if (category === 'labs') {
       return (
         <LabMapView 
-          lab={selectedFacility} 
+          lab={effectiveFacility} 
           onBack={() => setView(prevView)} 
         />
       )
     }
-    if (activeCategory === 'dental') {
+    if (category === 'dental') {
       return (
         <DentalMapView 
-          clinic={selectedFacility} 
+          clinic={effectiveFacility} 
           onBack={() => setView(prevView)} 
         />
       )
     }
 
-    if (activeCategory === 'clinics') {
+    if (category === 'clinics') {
       return (
         <ClinicMapView 
-          clinic={selectedFacility} 
+          clinic={effectiveFacility} 
           onBack={() => setView(prevView)} 
         />
       )
@@ -188,27 +316,27 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
 
     return (
       <HospitalMapView 
-        hospital={selectedFacility} 
+        hospital={effectiveFacility} 
         onBack={() => setView(prevView)} 
       />
     )
   }
 
-  if (view === 'doctors' && selectedFacility) {
+  if (view === 'doctors' && effectiveFacility) {
     return (
       <AllDoctorsView 
-        hospital={selectedFacility} 
+        hospital={effectiveFacility} 
         onBack={() => setView('detail')}
         onShowMap={() => { setPrevView('doctors'); setView('map'); }}
       />
     )
   }
 
-  if (view === 'medicines' && selectedFacility) {
-    if (activeCategory === 'clinics') {
+  if (view === 'medicines' && effectiveFacility) {
+    if (category === 'clinics') {
       return (
         <ClinicAllMedicinesView 
-          clinic={selectedFacility} 
+          clinic={effectiveFacility} 
           onBack={() => setView('detail')}
           onShowMap={() => { setPrevView('medicines'); setView('map'); }}
         />
@@ -216,7 +344,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
     }
     return (
       <AllMedicinesView 
-        hospital={selectedFacility} 
+        hospital={effectiveFacility} 
         onBack={() => setView('detail')}
         onShowMap={() => { setPrevView('medicines'); setView('map'); }}
       />
@@ -239,7 +367,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
         >
           <div 
             style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => setIsMobileMenuOpen?.(true)}
+            onClick={() => openMobileMenu?.(true)}
           >
             <Menu size={32} />
           </div>
@@ -259,8 +387,8 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
 
       <HealthFilter 
         categories={CATEGORIES}
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
+        activeCategory={category}
+        setActiveCategory={handleCategoryChange}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         showFilterDropdown={showFilterDropdown}
@@ -270,7 +398,7 @@ export default function HealthServicesPage({ setIsMobileMenuOpen }: HealthServic
       />
 
       <FacilityGrid 
-        isLoading={isLoading}
+        isLoading={isLoading || indexLoading}
         facilities={data?.facilities}
         queryError={isError ? error : undefined}
         onRetry={() => refetch()}

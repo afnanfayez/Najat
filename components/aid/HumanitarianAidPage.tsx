@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Search, Filter, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +11,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
 import { useAid } from '@/hooks/useAid'
-import type { HumanitarianAid } from '@/schemas/humanitarianAid'
+import { useDashboardShell } from '@/components/dashboard/DashboardShellContext'
+import {
+  HUMANITARIAN_AID_LIST_PATH,
+  humanitarianAidOrdinalPath,
+  parseOrdinalRouteParam,
+  resolveAidByOrdinal,
+  sortAidByStableId,
+} from '@/lib/health/healthFacilityRoutes'
 
 const CATEGORIES = [
   { id: 'all', label: 'الكل' },
@@ -28,14 +35,33 @@ const CATEGORIES = [
 
 interface HumanitarianAidPageProps {
   setIsMobileMenuOpen?: (open: boolean) => void
+  /** رقم ترتيبي 1…n في المسار */
+  aidId?: string
 }
 
-export default function HumanitarianAidPage({ setIsMobileMenuOpen }: HumanitarianAidPageProps) {
+export default function HumanitarianAidPage({
+  setIsMobileMenuOpen,
+  aidId,
+}: HumanitarianAidPageProps) {
+  const router = useRouter()
+  const shell = useDashboardShell()
+  const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
   const [activeCategory, setActiveCategory] = useState('all')
   const [isMobile, setIsMobile] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
-  const [selectedAid, setSelectedAid] = useState<HumanitarianAid | null>(null)
+
+  const aidQueryParams = useMemo(
+    () =>
+      aidId
+        ? { category: 'all' as const, search: '', region: undefined }
+        : {
+            category: activeCategory,
+            search: searchValue,
+            region: selectedRegion ?? undefined,
+          },
+    [aidId, activeCategory, searchValue, selectedRegion],
+  )
 
   const REGIONS = [
     'محافظة الشمال',
@@ -51,14 +77,90 @@ export default function HumanitarianAidPage({ setIsMobileMenuOpen }: Humanitaria
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  const { data: filteredAid = [], isLoading: isAidLoading, isError: isAidError } = useAid({
-    category: activeCategory,
-    search: searchValue,
-    region: selectedRegion ?? undefined,
+  const {
+    data: filteredAid = [],
+    isLoading: isAidLoading,
+    isError: isAidError,
+  } = useAid(aidQueryParams)
+
+  const { data: aidOrdinalList = [] } = useAid({
+    category: 'all',
+    search: '',
+    region: undefined,
   })
 
-  if (selectedAid) {
-    return <AidDetailView aid={selectedAid} onBack={() => setSelectedAid(null)} />
+  const routeOrdinal = aidId ? parseOrdinalRouteParam(aidId) : null
+
+  const resolvedDetailAid = useMemo(() => {
+    if (routeOrdinal == null) return null
+    return resolveAidByOrdinal(filteredAid, routeOrdinal)
+  }, [routeOrdinal, filteredAid])
+
+  if (aidId) {
+    if (routeOrdinal === null) {
+      return (
+        <div dir="rtl" style={{ padding: 40, textAlign: 'center' }}>
+          <p style={{ fontWeight: 700, marginBottom: 16 }}>
+            رقم المساعدة في الرابط غير صالح (استخدم أرقام فقط: 1، 2، 3…)
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(HUMANITARIAN_AID_LIST_PATH)}
+            className="text-blue-600 underline"
+          >
+            رجوع للقائمة
+          </button>
+        </div>
+      )
+    }
+    if (isAidError) {
+      return (
+        <div dir="rtl" style={{ padding: 40, textAlign: 'center' }}>
+          <p style={{ color: '#f44336', marginBottom: 16, fontWeight: 600 }}>
+            حدث خطأ أثناء تحميل البيانات
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(HUMANITARIAN_AID_LIST_PATH)}
+            className="text-blue-600 underline"
+          >
+            رجوع للقائمة
+          </button>
+        </div>
+      )
+    }
+    if (isAidLoading) {
+      return (
+        <div
+          dir="rtl"
+          style={{ padding: 40, textAlign: 'center', color: '#9e9e9e' }}
+        >
+          جارٍ التحميل...
+        </div>
+      )
+    }
+    if (!resolvedDetailAid) {
+      return (
+        <div dir="rtl" style={{ padding: 40, textAlign: 'center' }}>
+          <p style={{ fontWeight: 700, marginBottom: 16 }}>
+            هذه المساعدة غير موجودة
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(HUMANITARIAN_AID_LIST_PATH)}
+            className="text-blue-600 underline"
+          >
+            رجوع للقائمة
+          </button>
+        </div>
+      )
+    }
+    return (
+      <AidDetailView
+        aid={resolvedDetailAid}
+        onBack={() => router.push(HUMANITARIAN_AID_LIST_PATH)}
+      />
+    )
   }
 
   return (
@@ -106,7 +208,7 @@ export default function HumanitarianAidPage({ setIsMobileMenuOpen }: Humanitaria
         >
           <div 
             style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => setIsMobileMenuOpen?.(true)}
+            onClick={() => openMobileMenu?.(true)}
           >
             <Menu size={32} />
           </div>
@@ -336,7 +438,16 @@ export default function HumanitarianAidPage({ setIsMobileMenuOpen }: Humanitaria
           </div>
         ) : (
           filteredAid.map((aid) => (
-            <AidCard key={aid.id} aid={aid} onClick={() => setSelectedAid(aid)} />
+            <AidCard
+              key={aid.id}
+              aid={aid}
+              onClick={() => {
+                const sorted = sortAidByStableId(aidOrdinalList)
+                const idx = sorted.findIndex((a) => a.id === aid.id)
+                if (idx < 0) return
+                router.push(humanitarianAidOrdinalPath(idx + 1))
+              }}
+            />
           ))
         )}
       </div>
