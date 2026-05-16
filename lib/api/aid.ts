@@ -2,9 +2,11 @@ import { request, unwrapPaginated } from '@/lib/api/api'
 import {
   aidsPaginatedResponseSchema,
   aidByIdResponseSchema,
-  aidDtoSchema,
+  aidNearbyEnvelopeSchema,
+  nearbyAidPointDtoSchema,
   type AidsPaginatedResponse,
   type AidDto,
+  type NearbyAidPointDto,
 } from '@/schemas/aidApi'
 
 const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
@@ -35,14 +37,32 @@ export const aidAPI = {
     )
   },
 
-  nearby(params: { lat: number; lng: number; radius?: number }): Promise<AidDto[]> {
+  nearby(params: {
+    lat: number
+    lng: number
+    radius?: number
+  }): Promise<NearbyAidPointDto[]> {
     const qs = new URLSearchParams()
     qs.set('lat', String(params.lat))
     qs.set('lng', String(params.lng))
-    if (params.radius != null) qs.set('radius', String(params.radius))
+    qs.set('radius', String(params.radius ?? 5000))
     return request(`${V1_ROOT}/aid/nearby?${qs}`).then((raw) => {
-      const asArray = Array.isArray(raw) ? raw : (raw as any)?.data ?? []
-      return asArray.map((item: unknown) => aidDtoSchema.parse(item))
+      const envelope = aidNearbyEnvelopeSchema.safeParse(raw)
+      if (envelope.success) {
+        return envelope.data.data
+      }
+      if (Array.isArray(raw)) {
+        return raw.map((item: unknown) =>
+          nearbyAidPointDtoSchema.parse(item),
+        ) as NearbyAidPointDto[]
+      }
+      const data = (raw as { data?: unknown })?.data
+      if (Array.isArray(data)) {
+        return data.map((item: unknown) =>
+          nearbyAidPointDtoSchema.parse(item),
+        ) as NearbyAidPointDto[]
+      }
+      return []
     })
   },
 

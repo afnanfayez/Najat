@@ -1,6 +1,45 @@
 import { z } from 'zod'
 import { bilingualMessageSchema } from '@/schemas/shared'
 
+/** Matches AidPointResponseDto / NearbyAidPointResponseDto in Najat OpenAPI */
+export const aidPointStatusSchema = z.enum(['active', 'suspended', 'limited'])
+
+export const aidPointTypeSchema = z.enum([
+  'all',
+  'food',
+  'water',
+  'health',
+  'shelter',
+  'clothing_blankets',
+  'organizations',
+])
+
+export const nearbyAidPointDtoSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    label: z.string().optional().nullable(),
+    status: z.union([aidPointStatusSchema, z.string()]),
+    availableSupplies: z.array(z.string()).optional().default([]),
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
+    type: z.union([aidPointTypeSchema, z.string()]).optional().nullable(),
+    distance: z.coerce.number(),
+  })
+  .passthrough()
+
+export const aidNearbyEnvelopeSchema = z
+  .object({
+    success: z.boolean(),
+    statusCode: z.number().optional(),
+    message: bilingualMessageSchema.optional(),
+    data: z.array(nearbyAidPointDtoSchema),
+    timestamp: z.string().optional(),
+  })
+  .passthrough()
+
+export type NearbyAidPointDto = z.infer<typeof nearbyAidPointDtoSchema>
+
 export const aidDtoSchema = z.object({
   id: z.string(),
   name: z.string(),

@@ -23,12 +23,15 @@ const TYPE_TO_CATEGORY: Record<string, HumanitarianAid['category']> = {
   health: 'health',
   shelter: 'shelter',
   clothes: 'clothes',
+  clothing_blankets: 'clothes',
+  organizations: 'all',
   all: 'all',
 }
 
 function inferCategory(type?: string | null, supplies?: string[]): HumanitarianAid['category'] {
   if (type) {
-    const mapped = TYPE_TO_CATEGORY[type.toLowerCase()]
+    const key = type.toLowerCase().replace(/-/g, '_')
+    const mapped = TYPE_TO_CATEGORY[key]
     if (mapped) return mapped
   }
   const haystack = (supplies ?? []).join(' ').toLowerCase()
