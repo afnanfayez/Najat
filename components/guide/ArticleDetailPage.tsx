@@ -67,11 +67,9 @@ ${article.content.tip ? `<div class="tip"><div class="label">💡 نصيحة</di
       const updated = saved.filter(id => id !== article.id)
       localStorage.setItem('saved-articles', JSON.stringify(updated))
       setIsSaved(false)
-      toast.info('تم إلغاء حفظ المقال')
     } else {
       localStorage.setItem('saved-articles', JSON.stringify([...saved, article.id]))
       setIsSaved(true)
-      toast.success('تم حفظ المقال ✅')
     }
   }
 
