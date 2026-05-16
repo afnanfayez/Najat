@@ -1,6 +1,17 @@
 import { getToken } from '@/lib/api/auth'
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
+const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
+
+function extractMessage(msg: unknown): string | undefined {
+  if (!msg) return undefined
+  if (typeof msg === 'string') return msg
+  if (typeof msg === 'object' && msg !== null) {
+    const m = msg as Record<string, string>
+    return m.ar ?? m.en
+  }
+  return String(msg)
+}
 
 function buildHeaders(options: RequestInit): HeadersInit {
   const merged = new Headers(options.headers as HeadersInit)
@@ -20,6 +31,26 @@ function buildHeaders(options: RequestInit): HeadersInit {
   }
 
   return merged
+}
+
+/**
+ * Backend wraps paginated results as { data: { data: [], meta: {} } }.
+ * This flattens it to { data: [], meta: {} } so schemas and callers stay clean.
+ */
+export function unwrapPaginated(raw: unknown): unknown {
+  if (
+    raw != null &&
+    typeof raw === 'object' &&
+    'data' in raw &&
+    raw.data != null &&
+    typeof raw.data === 'object' &&
+    !Array.isArray(raw.data) &&
+    'data' in (raw.data as object)
+  ) {
+    const inner = raw.data as Record<string, unknown>
+    return { ...(raw as object), data: inner.data, meta: inner.meta }
+  }
+  return raw
 }
 
 export async function request(endpoint: string, options: RequestInit = {}) {
@@ -46,7 +77,7 @@ export async function request(endpoint: string, options: RequestInit = {}) {
       const rawMsg = data?.message ?? data?.error ?? data?.detail
       throw {
         status: res.status,
-        message: rawMsg ?? 'Something went wrong',
+        message: extractMessage(rawMsg) ?? 'Something went wrong',
         errors: data?.errors ?? null,
         detail: data?.detail ?? null,
         fullData: data,
@@ -55,16 +86,12 @@ export async function request(endpoint: string, options: RequestInit = {}) {
 
     return data
   } catch (err: any) {
-    const safeMsg =
-      err?.message != null && typeof err.message === 'object'
-        ? JSON.stringify(err.message)
-        : err?.message
     // If it's already our custom error object, re-throw it
     if (err.status) throw err
     // Otherwise, it's a network error (like CORS or connection reset)
     throw {
       status: 0,
-      message: err.message || 'Network error / CORS issue',
+      message: extractMessage(err?.message) ?? 'Network error / CORS issue',
       errors: null,
     }
   }
@@ -72,26 +99,28 @@ export async function request(endpoint: string, options: RequestInit = {}) {
 
 export const authAPI = {
   register: (body: any) =>
-    request('/v1/auth/register', {
+    request(`${V1_ROOT}/auth/register`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
   login: (body: any) =>
-    request('/v1/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+    request(`${V1_ROOT}/auth/login`, { method: 'POST', body: JSON.stringify(body) }),
 
   verify: (body: any) =>
-    request('/v1/auth/verify', { method: 'POST', body: JSON.stringify(body) }),
+    request(`${V1_ROOT}/auth/verify`, { method: 'POST', body: JSON.stringify(body) }),
 
   forgotPassword: (body: { email: string }) =>
-    request('/v1/auth/forgot-password', {
+    request(`${V1_ROOT}/auth/forgot-password`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
   resetPassword: (body: { email: string; code: string; newPassword: string }) =>
-    request('/v1/auth/reset-password', {
+    request(`${V1_ROOT}/auth/reset-password`, {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+
+  me: () => request(`${V1_ROOT}/auth/me`),
 }

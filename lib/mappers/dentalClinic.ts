@@ -3,6 +3,7 @@ import type { DentalDto } from '@/schemas/dentalApi'
 import type { DentalServiceItem, HealthDoctor } from '@/schemas/healthFacilityDetail'
 import { pickLocalImage } from '@/lib/utils/localImage'
 import { metersToKmLabel, formatUpdatedRelative, deriveRegion, DOCTOR_PHOTO } from '@/lib/mappers/hospital'
+import { medicationAvailabilityPercent } from '@/lib/mappers/medicationAvailability'
 
 const DENTAL_ICON =
   'https://api.iconify.design/healthicons:odontology.svg?color=%23F2A122'
@@ -35,12 +36,20 @@ export function mapDentalDtoToFacility(dto: DentalDto): HealthFacility {
   const distanceLabel =
     distanceMeters != null ? metersToKmLabel(distanceMeters) : undefined
 
+  const medicines = (dto.currentMedications ?? []).map((m) => ({
+    name: m.name,
+    category: m.type,
+    status: m.status === 'available' ? 'متوفر' : 'غير متوفر',
+    statusColor: m.status === 'available' ? '#4CAF50' : '#F44336',
+  }))
+
   return {
     id: dto.id,
     name: dto.name,
     address: dto.address,
     category: 'dental',
     isOpen: true,
+    medicineAvailability: medicationAvailabilityPercent(dto.currentMedications),
     phone: dto.contactNumber ?? undefined,
     imageUrl: pickLocalImage('dental', dto.id),
     latitude: dto.latitude,
@@ -61,6 +70,7 @@ export function mapDentalDtoToFacility(dto: DentalDto): HealthFacility {
       dentalServices: services,
       dentalTabLabels: ['الكل', 'جراحة', 'تقويم'],
       dentalSupplies: [],
+      medicines: medicines.length > 0 ? medicines : undefined,
     },
   }
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { paginationMetaSchema } from '@/schemas/hospitalApi'
+import { bilingualMessageSchema } from '@/schemas/shared'
 
 export const dentalDoctorSchema = z.object({
   name: z.string(),
@@ -41,10 +42,21 @@ export const dentalDtoSchema = z.object({
 
 export type DentalDto = z.infer<typeof dentalDtoSchema>
 
+export const dentalClinicsPaginatedResponseSchema = z.object({
+  success: z.boolean(),
+  statusCode: z.number().optional(),
+  message: bilingualMessageSchema.optional(),
+  data: z.array(dentalDtoSchema),
+  meta: paginationMetaSchema,
+  timestamp: z.string().optional(),
+})
+
+export type DentalClinicsPaginatedResponse = z.infer<typeof dentalClinicsPaginatedResponseSchema>
+
 export const dentalClinicsNearbyResponseSchema = z.object({
   success: z.boolean(),
   statusCode: z.number().optional(),
-  message: z.string().optional(),
+  message: bilingualMessageSchema.optional(),
   data: z.array(dentalDtoSchema),
   meta: paginationMetaSchema.optional(),
   timestamp: z.string().optional(),

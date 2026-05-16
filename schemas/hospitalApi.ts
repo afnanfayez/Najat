@@ -1,10 +1,19 @@
 import { z } from 'zod'
+import { bilingualMessageSchema } from '@/schemas/shared'
+
+export const hospitalDoctorSchema = z.object({
+  name: z.string(),
+  specialty: z.string(),
+  workingDays: z.array(z.string()).optional(),
+  workingHours: z.string().optional(),
+})
 
 /** Backend hospital capacity enum */
 export const hospitalCapacityStatusSchema = z.enum([
   'full',
   'available',
   'critical',
+  'closed',
 ])
 
 export type HospitalCapacityStatus = z.infer<
@@ -20,6 +29,15 @@ export const hospitalDtoSchema = z.object({
   address: z.string(),
   contactNumber: z.string().optional().nullable(),
   image: z.string().optional().nullable(),
+  icuCapacity: z.number().optional().nullable(),
+  totalBeds: z.number().optional().nullable(),
+  emergencyLevel: z.enum(['level_1', 'level_2', 'level_3']).optional().nullable(),
+  workingDoctors: z.array(hospitalDoctorSchema).optional(),
+  workingHours: z.string().optional().nullable(),
+  workingDays: z.array(z.string()).optional(),
+  currentMedications: z.array(z.unknown()).optional(),
+  medicalSupplies: z.array(z.string()).optional(),
+  healthcareCategories: z.array(z.string()).optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 })
@@ -60,7 +78,7 @@ export const paginationMetaSchema = z.object({
 export const hospitalsPaginatedResponseSchema = z.object({
   success: z.boolean(),
   statusCode: z.number(),
-  message: z.string().optional(),
+  message: bilingualMessageSchema.optional(),
   data: z.array(hospitalDtoSchema),
   meta: paginationMetaSchema,
   timestamp: z.string().optional(),
@@ -73,7 +91,7 @@ export type HospitalsPaginatedResponse = z.infer<
 export const hospitalsNearbyPaginatedResponseSchema = z.object({
   success: z.boolean(),
   statusCode: z.number(),
-  message: z.string().optional(),
+  message: bilingualMessageSchema.optional(),
   data: z.array(nearbyHospitalDtoSchema),
   meta: paginationMetaSchema,
   timestamp: z.string().optional(),

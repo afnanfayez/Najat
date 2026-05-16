@@ -1,4 +1,4 @@
-import { request } from '@/lib/api/api'
+import { request, unwrapPaginated } from '@/lib/api/api'
 import {
   hospitalDtoSchema,
   hospitalEntitySchema,
@@ -62,7 +62,7 @@ export const hospitalsAPI = {
   list(params?: ListHospitalsParams): Promise<HospitalsPaginatedResponse> {
     const suffix = `${V1_ROOT}/hospitals${buildHospitalListQuery(params)}`
     return request(suffix).then((raw) =>
-      parseOrThrow(hospitalsPaginatedResponseSchema, raw),
+      parseOrThrow(hospitalsPaginatedResponseSchema, unwrapPaginated(raw)),
     )
   },
 
@@ -71,7 +71,7 @@ export const hospitalsAPI = {
   ): Promise<HospitalsNearbyPaginatedResponse> {
     const suffix = `${V1_ROOT}/hospitals/nearby${buildNearbyQuery(params)}`
     return request(suffix).then((raw) =>
-      parseOrThrow(hospitalsNearbyPaginatedResponseSchema, raw),
+      parseOrThrow(hospitalsNearbyPaginatedResponseSchema, unwrapPaginated(raw)),
     )
   },
 

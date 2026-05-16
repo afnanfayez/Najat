@@ -47,14 +47,18 @@ export async function fetchLiveNonHospitalFacilities(params?: {
   }
 
   if (category === 'clinics') {
-    const res = await clinicsAPI.nearby()
-    const facilities = res.data.map(mapClinicDtoToFacility)
+    const dtos = await fetchAllPages((p) =>
+      clinicsAPI.list({ page: p, limit: PAGE_SIZE }),
+    )
+    const facilities = dtos.map(mapClinicDtoToFacility)
     return { facilities, total: facilities.length }
   }
 
   if (category === 'dental') {
-    const res = await dentalClinicsAPI.nearby()
-    const facilities = res.data.map(mapDentalDtoToFacility)
+    const dtos = await fetchAllPages((p) =>
+      dentalClinicsAPI.list({ page: p, limit: PAGE_SIZE }),
+    )
+    const facilities = dtos.map(mapDentalDtoToFacility)
     return { facilities, total: facilities.length }
   }
 
@@ -66,8 +70,12 @@ export async function fetchLiveNonHospitalFacilities(params?: {
     fetchAllPages((p) => labsAPI.list({ page: p, limit: PAGE_SIZE })).then(
       (dtos) => dtos.map(mapLabDtoToFacility),
     ),
-    clinicsAPI.nearby().then((r) => r.data.map(mapClinicDtoToFacility)),
-    dentalClinicsAPI.nearby().then((r) => r.data.map(mapDentalDtoToFacility)),
+    fetchAllPages((p) => clinicsAPI.list({ page: p, limit: PAGE_SIZE })).then(
+      (dtos) => dtos.map(mapClinicDtoToFacility),
+    ),
+    fetchAllPages((p) => dentalClinicsAPI.list({ page: p, limit: PAGE_SIZE })).then(
+      (dtos) => dtos.map(mapDentalDtoToFacility),
+    ),
   ])
 
   const facilities = [...pharmacies, ...labs, ...clinics, ...dental]

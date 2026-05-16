@@ -3,6 +3,7 @@ import type { ClinicDto } from '@/schemas/clinicApi'
 import type { ClinicServiceItem, HealthDoctor } from '@/schemas/healthFacilityDetail'
 import { pickLocalImage } from '@/lib/utils/localImage'
 import { metersToKmLabel, formatUpdatedRelative, deriveRegion, DOCTOR_PHOTO } from '@/lib/mappers/hospital'
+import { medicationAvailabilityPercent } from '@/lib/mappers/medicationAvailability'
 
 const CLINIC_ICON =
   'https://api.iconify.design/solar:stethoscope-bold.svg?color=%23F2A122'
@@ -39,6 +40,7 @@ export function mapClinicDtoToFacility(dto: ClinicDto): HealthFacility {
     address: dto.address,
     category: 'clinics',
     isOpen: true,
+    medicineAvailability: medicationAvailabilityPercent(dto.currentMedications),
     phone: dto.contactNumber ?? undefined,
     imageUrl: pickLocalImage('clinics', dto.id),
     latitude: dto.latitude,

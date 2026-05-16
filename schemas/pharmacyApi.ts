@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { paginationMetaSchema } from '@/schemas/hospitalApi'
+import { bilingualMessageSchema } from '@/schemas/shared'
 
 export const pharmacyMedicationSchema = z.object({
   name: z.string(),
@@ -29,10 +30,16 @@ export const pharmacyDtoSchema = z.object({
 
 export type PharmacyDto = z.infer<typeof pharmacyDtoSchema>
 
+export const nearbyPharmacyDtoSchema = pharmacyDtoSchema.extend({
+  distance: z.coerce.number(),
+})
+
+export type NearbyPharmacyDto = z.infer<typeof nearbyPharmacyDtoSchema>
+
 export const pharmaciesPaginatedResponseSchema = z.object({
   success: z.boolean(),
   statusCode: z.number().optional(),
-  message: z.string().optional(),
+  message: bilingualMessageSchema.optional(),
   data: z.array(pharmacyDtoSchema),
   meta: paginationMetaSchema,
   timestamp: z.string().optional(),
@@ -40,4 +47,17 @@ export const pharmaciesPaginatedResponseSchema = z.object({
 
 export type PharmaciesPaginatedResponse = z.infer<
   typeof pharmaciesPaginatedResponseSchema
+>
+
+export const pharmaciesNearbyPaginatedResponseSchema = z.object({
+  success: z.boolean(),
+  statusCode: z.number().optional(),
+  message: bilingualMessageSchema.optional(),
+  data: z.array(nearbyPharmacyDtoSchema),
+  meta: paginationMetaSchema,
+  timestamp: z.string().optional(),
+})
+
+export type PharmaciesNearbyPaginatedResponse = z.infer<
+  typeof pharmaciesNearbyPaginatedResponseSchema
 >

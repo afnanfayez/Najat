@@ -2,16 +2,7 @@ import type { HealthFacility } from '@/schemas/healthFacility'
 import type { PharmacyDto } from '@/schemas/pharmacyApi'
 import { pickLocalImage } from '@/lib/utils/localImage'
 import { formatUpdatedRelative, deriveRegion } from '@/lib/mappers/hospital'
-
-function deriveMedicineAvailability(
-  meds?: Array<{ status: string }>,
-): number {
-  if (!meds || meds.length === 0) return 50
-  const available = meds.filter(
-    (m) => !m.status.toLowerCase().includes('out') && m.status !== 'unavailable',
-  ).length
-  return Math.round((available / meds.length) * 100)
-}
+import { medicationAvailabilityPercent } from '@/lib/mappers/medicationAvailability'
 
 export function mapPharmacyDtoToFacility(dto: PharmacyDto): HealthFacility {
   const types = dto.currentMedications
@@ -41,7 +32,8 @@ export function mapPharmacyDtoToFacility(dto: PharmacyDto): HealthFacility {
     latitude: dto.latitude,
     longitude: dto.longitude,
     region: deriveRegion(dto.latitude),
-    medicineAvailability: deriveMedicineAvailability(dto.currentMedications),
+    medicineAvailability:
+      medicationAvailabilityPercent(dto.currentMedications) ?? 50,
     updatedAt: dto.updatedAt,
     detail: {
       mapPreviewImageUrl: pickLocalImage('pharmacies', dto.id),

@@ -41,30 +41,17 @@ function buildPreviewDoctors(
   fallback: HealthDoctor[],
   target: number,
 ): HealthDoctor[] {
+  // Use real doctors if available, otherwise fall back to placeholder
+  const pool = doctors?.length ? doctors : fallback
   const seen = new Set<string>()
   const out: HealthDoctor[] = []
-
-  const primary = doctors?.length ? doctors : []
-  for (const d of primary) {
-    if (out.length >= target) return out
+  for (const d of pool) {
+    if (out.length >= target) break
     if (seen.has(d.name)) continue
     seen.add(d.name)
     out.push(d)
   }
-  for (const d of fallback) {
-    if (out.length >= target) return out
-    if (seen.has(d.name)) continue
-    seen.add(d.name)
-    out.push(d)
-  }
-
-  const pool = primary.length ? primary : fallback
-  let i = 0
-  while (out.length < target) {
-    out.push(pool[i % pool.length])
-    i += 1
-  }
-  return out.slice(0, target)
+  return out
 }
 
 interface HospitalDoctorsSectionProps {
@@ -82,7 +69,7 @@ export default function HospitalDoctorsSection({
     () => buildPreviewDoctors(doctors, FALLBACK, PREVIEW_DOCTOR_COUNT),
     [doctors],
   )
-  const hasMore = true
+  const hasMore = (doctors?.length ?? 0) > PREVIEW_DOCTOR_COUNT
 
   return (
     <div

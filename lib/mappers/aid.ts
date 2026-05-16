@@ -1,24 +1,37 @@
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import type { AidDto } from '@/schemas/aidApi'
 
-function mapStockStatus(raw?: string | null): HumanitarianAid['status'] {
+function mapStatus(raw?: string | null): HumanitarianAid['status'] {
   if (!raw) return 'active'
   const s = raw.toLowerCase()
-  if (s.includes('low') || s === 'limited') return 'limited'
-  if (s.includes('empty') || s.includes('out') || s === 'stopped') return 'stopped'
+  if (s === 'limited' || s.includes('low')) return 'limited'
+  if (s === 'suspended' || s === 'stopped' || s.includes('out') || s.includes('empty')) return 'stopped'
   return 'active'
 }
 
 const CATEGORY_KEYWORDS: Array<{ category: HumanitarianAid['category']; keywords: string[] }> = [
-  { category: 'water',   keywords: ['مياه', 'ماء', 'water', 'wash', 'تعقيم', 'صرف'] },
-  { category: 'food',    keywords: ['غذاء', 'طعام', 'food', 'وجبة', 'دقيق', 'زيت', 'سكر', 'معلبات', 'طرود'] },
+  { category: 'water',   keywords: ['مياه', 'ماء', 'water', 'wash', 'تعقيم', 'صرف', 'jerrycan'] },
+  { category: 'food',    keywords: ['غذاء', 'طعام', 'food', 'وجبة', 'دقيق', 'زيت', 'سكر', 'معلبات', 'طرود', 'meal', 'kitchen', 'cooking'] },
   { category: 'health',  keywords: ['دواء', 'صحة', 'medicine', 'health', 'medical', 'جراحة', 'لقاح', 'مستلزمات طبية'] },
-  { category: 'shelter', keywords: ['خيام', 'خيمة', 'shelter', 'مأوى', 'إيواء', 'بطانيات', 'مراتب'] },
+  { category: 'shelter', keywords: ['خيام', 'خيمة', 'shelter', 'مأوى', 'إيواء', 'بطانيات', 'مراتب', 'tent'] },
   { category: 'clothes', keywords: ['ملابس', 'أغطية', 'clothes', 'clothing', 'أحذية', 'كسوة'] },
 ]
 
-function inferCategory(supplies: string[]): HumanitarianAid['category'] {
-  const haystack = supplies.join(' ').toLowerCase()
+const TYPE_TO_CATEGORY: Record<string, HumanitarianAid['category']> = {
+  food: 'food',
+  water: 'water',
+  health: 'health',
+  shelter: 'shelter',
+  clothes: 'clothes',
+  all: 'all',
+}
+
+function inferCategory(type?: string | null, supplies?: string[]): HumanitarianAid['category'] {
+  if (type) {
+    const mapped = TYPE_TO_CATEGORY[type.toLowerCase()]
+    if (mapped) return mapped
+  }
+  const haystack = (supplies ?? []).join(' ').toLowerCase()
   for (const { category, keywords } of CATEGORY_KEYWORDS) {
     if (keywords.some((kw) => haystack.includes(kw))) return category
   }
@@ -34,11 +47,11 @@ export function mapAidDtoToHumanitarianAid(dto: AidDto): HumanitarianAid {
 
   return {
     id: dto.id,
-    name: dto.name,
-    provider: dto.address ?? dto.name,
+    name: dto.label ?? dto.name,
+    provider: dto.name,
     description,
-    status: mapStockStatus(dto.stockStatus),
+    status: mapStatus(dto.status),
     tags: supplies.slice(0, 4),
-    category: inferCategory(supplies),
+    category: inferCategory(dto.type, supplies),
   }
 }

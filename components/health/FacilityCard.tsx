@@ -3,12 +3,21 @@
 import Image from 'next/image'
 import { MapPin, Phone } from 'lucide-react'
 import { CAPACITY_STATUS_LABEL } from '@/lib/mappers/hospital'
+import { availabilityBarColor } from '@/lib/mappers/medicationAvailability'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
 type Props = {
   facility: HealthFacility
   onNavigate?: (facility: HealthFacility) => void
   onCall?: (facility: HealthFacility) => void
+}
+
+const AVAILABILITY_BAR_LABEL: Record<HealthFacility['category'], string> = {
+  hospitals: 'نسبة عمل المستشفى',
+  pharmacies: 'نسبة توفر الأدوية',
+  clinics: 'نسبة توفر المستلزمات',
+  labs: 'نسبة توفر المستلزمات',
+  dental: 'نسبة توفر المستلزمات',
 }
 
 function capacityDotColor(
@@ -30,8 +39,10 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
   const cap = facility.capacityStatus
   const showCapacity = Boolean(cap)
   const statusLabel = cap ? CAPACITY_STATUS_LABEL[cap].short : ''
-  const showMedicineBar =
-    facility.medicineAvailability !== undefined && !facility.fromHospitalApi
+  const showMedicineBar = facility.medicineAvailability !== undefined
+  const availabilityBarLabel = AVAILABILITY_BAR_LABEL[facility.category]
+  const availabilityPct = facility.medicineAvailability ?? 0
+  const availabilityFill = availabilityBarColor(availabilityPct)
 
   const hero = facility.imageUrl ? (
     facility.imageUrl.startsWith('http://') ||
@@ -164,7 +175,7 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
                   color: '#fff',
                 }}
               >
-                نسبة عمل المستشفى
+                {availabilityBarLabel}
               </span>
               <span
                 style={{
@@ -174,7 +185,7 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
                   color: '#fff',
                 }}
               >
-                {facility.medicineAvailability}%
+                {availabilityPct}%
               </span>
             </div>
             <div
@@ -188,18 +199,17 @@ export default function FacilityCard({ facility, onNavigate, onCall }: Props) {
             >
               <div
                 style={{
-                  background:
-                    (facility.medicineAvailability ?? 0) < 30
-                      ? '#F44336'
-                      : (facility.medicineAvailability ?? 0) < 70
-                        ? '#FF9800'
-                        : '#FFC107',
+                  background: availabilityFill,
                   borderRadius: '4px',
                   height: '100%',
-                  width: `${facility.medicineAvailability}%`,
+                  width: `${availabilityPct}%`,
                   transition: 'width 0.4s ease',
                   position: 'absolute',
                   right: 0,
+                  boxShadow:
+                    availabilityPct > 66
+                      ? '0 0 6px rgba(255,235,59,0.55)'
+                      : undefined,
                 }}
               />
             </div>

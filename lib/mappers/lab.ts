@@ -3,6 +3,7 @@ import type { LabDto } from '@/schemas/labApi'
 import type { LabTestItem } from '@/schemas/healthFacilityDetail'
 import { pickLocalImage } from '@/lib/utils/localImage'
 import { formatUpdatedRelative, deriveRegion } from '@/lib/mappers/hospital'
+import { medicationAvailabilityPercent } from '@/lib/mappers/medicationAvailability'
 
 const LAB_ICON =
   'https://api.iconify.design/solar:test-tube-bold.svg?color=%23F2A122'
@@ -36,6 +37,7 @@ export function mapLabDtoToFacility(dto: LabDto): HealthFacility {
     address: dto.address,
     category: 'labs',
     isOpen: true,
+    medicineAvailability: medicationAvailabilityPercent(dto.currentMedications),
     phone: dto.contactNumber ?? undefined,
     imageUrl: pickLocalImage('labs', dto.id),
     latitude: dto.latitude,
