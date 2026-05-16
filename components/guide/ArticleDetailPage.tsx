@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Clock, Share2, Download, Bookmark, AlertTriangle, Lightbulb, CheckCircle } from 'lucide-react'
+import { ArrowRight, Clock, Share2, Download, Bookmark, AlertTriangle, Lightbulb, CheckCircle, Menu } from 'lucide-react'
+import Image from 'next/image'
+import { DashboardShellContext } from '@/components/dashboard/DashboardShellContext'
 import { toast } from 'sonner'
 import type { Article } from '@/data/healthGuideData'
 
@@ -12,6 +14,15 @@ interface Props {
 
 export default function ArticleDetailPage({ article }: Props) {
   const router = useRouter()
+  const shell = useContext(DashboardShellContext)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   /* ── Share ── */
   const handleShare = async () => {
@@ -78,6 +89,38 @@ ${article.content.tip ? `<div class="tip"><div class="label">💡 نصيحة</di
       className="h-screen w-full overflow-y-auto no-scrollbar"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif", background: '#F4F7FB' }}
     >
+      {isMobile && (
+        <div
+          className="px-4"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: '12px',
+            paddingBottom: '12px',
+            borderBottom: '1px solid #e8eef5',
+            backgroundColor: '#F4F7FB',
+            flexShrink: 0,
+          }}
+        >
+          <div 
+            style={{ color: '#2196F3', cursor: 'pointer' }}
+            onClick={() => shell?.setIsMobileMenuOpen(true)}
+          >
+            <Menu size={32} />
+          </div>
+          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+            <Image
+              src="/assets/Logo2.png"
+              alt="شعار نجاة"
+              fill
+              style={{ objectFit: 'contain' }}
+              priority
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Top Bar ── */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-4 sm:px-8 py-3 flex items-center justify-between">
         <button

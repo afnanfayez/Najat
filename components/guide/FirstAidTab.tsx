@@ -52,26 +52,26 @@ export default function FirstAidTab({ query }: Props) {
 
       {/* Mental Health Corner */}
       <div className="mb-8 sm:mb-10 w-full">
-        <div className="bg-white rounded-[40px] p-8 sm:p-10 border-2 border-slate-50 shadow-sm flex flex-col lg:flex-row items-center justify-between w-full gap-10" style={{ direction: 'rtl' }}>
+        <div className="bg-white rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 border-2 border-slate-50 shadow-sm flex flex-col lg:flex-row items-center justify-between w-full gap-6 lg:gap-10" style={{ direction: 'rtl' }}>
           <div className="flex flex-col items-start text-right w-full lg:flex-1">
             <div className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-2 mb-4 text-white w-fit" style={{ background: '#459F49' }}>
-              <span className="w-2 h-2 bg-white rounded-full" />
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
               مستشار متاح الآن
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-4">ركن الصحة النفسية</h2>
-            <p className="text-black text-[15px] sm:text-[19px] font-black leading-relaxed mb-8 w-full">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-3 sm:mb-4">ركن الصحة النفسية</h2>
+            <p className="text-black text-[14px] sm:text-[19px] font-black leading-relaxed mb-6 sm:mb-8 w-full">
               نحن هنا لدعمك في تجاوز الأزمات النفسية والتوتر الناتج عن الظروف الصعبة. لا تتردد في طلب المساعدة.
             </p>
-            <button className="bg-[#2196F3] text-white px-8 py-4 rounded-2xl font-black text-sm sm:text-[16px] flex items-center gap-3 shadow-lg hover:bg-blue-600 transition-all w-fit">
-              <Phone size={20} />
+            <button className="bg-[#2196F3] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-black text-[13px] sm:text-[16px] flex items-center gap-3 shadow-lg hover:bg-blue-600 transition-all w-fit">
+              <Phone size={18} className="sm:w-[20px] sm:h-[20px]" />
               اتصال هاتفي
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-shrink-0 w-full lg:w-auto">
             {MENTAL_TOOLS.map((tool, i) => (
-              <button key={i} className="w-[120px] h-[90px] sm:w-[150px] sm:h-[110px] bg-[#2196F3] rounded-[18px] flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105 shadow-md shadow-blue-100">
-                <img src={tool.icon} alt={tool.label} className="w-6 h-6 sm:w-8 sm:h-8" />
-                <span className="text-white text-[11px] font-black">{tool.label}</span>
+              <button key={i} className="w-full lg:w-[150px] h-[95px] sm:h-[110px] bg-[#2196F3] rounded-[18px] flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105 shadow-md shadow-blue-100 p-2">
+                <img src={tool.icon} alt={tool.label} className="w-7 h-7 sm:w-8 sm:h-8" />
+                <span className="text-white text-[11px] sm:text-[12px] font-black">{tool.label}</span>
               </button>
             ))}
           </div>
