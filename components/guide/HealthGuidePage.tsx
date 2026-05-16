@@ -14,13 +14,14 @@ const TABS = [
 
 export default function HealthGuidePage() {
   const [activeTab, setActiveTab] = useState('first-aid')
+  const [query, setQuery] = useState('')
 
   return (
     <div
       className="flex flex-col h-full overflow-y-auto no-scrollbar pb-10 px-2"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
-      {/* ── Page Header ── */}
+      {/* ── Header ── */}
       <div className="pt-0 text-right">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#1e293b] mb-2">
           دليلك الصحي في أوقات الحاجة
@@ -35,7 +36,7 @@ export default function HealthGuidePage() {
             <button
               key={tab.id}
               id={`tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { setActiveTab(tab.id); setQuery('') }}
               className={`pb-3 text-[13px] sm:text-[16px] font-black whitespace-nowrap transition-all relative ${
                 activeTab === tab.id ? 'text-[#F2A122]' : 'text-slate-400 hover:text-slate-600'
               }`}
@@ -54,6 +55,8 @@ export default function HealthGuidePage() {
           <input
             id="search-health-guide"
             type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="ابحث عن الأعراض، الخطوات الإسعافية أو الدعم النفسي..."
             className="w-full border border-transparent rounded-2xl py-3.5 pr-12 pl-4 text-[13px] sm:text-[15px] font-bold focus:outline-none focus:bg-white focus:border-[#2196F31A] transition-all"
             style={{ background: '#D9D9D961' }}
@@ -62,8 +65,8 @@ export default function HealthGuidePage() {
       </div>
 
       {/* ── Tab Content ── */}
-      {activeTab === 'first-aid' && <FirstAidTab />}
-      {activeTab === 'articles'  && <ArticlesTab />}
+      {activeTab === 'first-aid' && <FirstAidTab query={query} />}
+      {activeTab === 'articles'  && <ArticlesTab query={query} />}
       {activeTab === 'mental'    && <MentalHealthTab />}
     </div>
   )
