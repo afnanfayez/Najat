@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\components\\\\maps\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\app\\\\\\(app\\)\\\\maps\")"
+    ]
+  }
+}
