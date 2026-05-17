@@ -13,8 +13,10 @@ function activeNavFromRoute(pathname: string, tab: string | null): string {
   if (isHealthFacilityPath(pathname)) return 'health'
   if (pathname.startsWith('/humanitarian-aid')) return 'humanaid'
   if (pathname.startsWith('/health-guide')) return 'guide'
+  if (pathname.startsWith('/profile')) return 'profile'
+  if (pathname.startsWith('/emergency')) return 'emergency'
   if (pathname === '/dashboard') {
-    if (tab === 'maps' || tab === 'profile' || tab === 'emergency') return tab
+    if (tab === 'maps') return tab
     return 'home'
   }
   return 'home'
@@ -57,6 +59,14 @@ export default function DashboardLayoutClient({
       }
       if (id === 'guide') {
         router.push('/health-guide')
+        return
+      }
+      if (id === 'profile') {
+        router.push('/profile')
+        return
+      }
+      if (id === 'emergency') {
+        router.push('/emergency')
         return
       }
       router.replace(`/dashboard?tab=${encodeURIComponent(id)}`, {

@@ -1,0 +1,41 @@
+'use client'
+
+import React from 'react'
+import Image from 'next/image'
+import { LogOut } from 'lucide-react'
+
+export default function UserSummaryCard() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex items-start justify-between">
+      {/* User Info */}
+      <div className="flex gap-6">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-slate-50 shrink-0">
+          <Image 
+            src="/assets/profile_avatar.png" 
+            alt="Profile Avatar" 
+            width={96} 
+            height={96}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="flex flex-col pt-2">
+          <h2 className="text-2xl font-bold text-slate-800 mb-1">أحمد محمد علي</h2>
+          <p className="text-slate-500 text-sm mb-4">رقم الهوية: 1098725431</p>
+          <div className="flex gap-2">
+            <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold">
+              آخر نشاط : الثلاثاء 5/5/2023
+            </span>
+            <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold">
+              مستفيد
+            </span>
+          </div>
+        </div>
+      </div>
+      {/* Logout Button */}
+      <button className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-500 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors">
+        تسجيل خروج
+        <LogOut size={16} />
+      </button>
+    </div>
+  )
+}

@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useState, useContext, useEffect } from 'react'
-import { Search, Menu } from 'lucide-react'
-import Image from 'next/image'
-import { DashboardShellContext } from '@/components/dashboard/DashboardShellContext'
+import React, { useState } from 'react'
+import { Search } from 'lucide-react'
 import FirstAidTab from './FirstAidTab'
 import ArticlesTab from './ArticlesTab'
 import MentalHealthTab from './MentalHealthTab'
+import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
 
 const TABS = [
   { id: 'first-aid', label: 'الإسعافات الأولية' },
@@ -18,51 +17,13 @@ export default function HealthGuidePage() {
   const [activeTab, setActiveTab] = useState('first-aid')
   const [query, setQuery] = useState('')
 
-  const shell = useContext(DashboardShellContext)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
   return (
     <div
       className="flex flex-col h-full overflow-y-auto no-scrollbar pb-10 px-2"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
-      {isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 0',
-            borderBottom: '1px solid #e8eef5',
-            marginBottom: '20px',
-            flexShrink: 0,
-          }}
-        >
-          <div 
-            style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => shell?.setIsMobileMenuOpen(true)}
-          >
-            <Menu size={32} />
-          </div>
-          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-            <Image
-              src="/assets/Logo2.png"
-              alt="شعار نجاة"
-              fill
-              style={{ objectFit: 'contain' }}
-              priority
-            />
-          </div>
-        </div>
-      )}
-
+      <MobileSimpleHeader />
+      
       {/* ── Header ── */}
       <div className="pt-0 text-right">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#1e293b] mb-2">
