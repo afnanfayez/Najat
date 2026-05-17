@@ -6,13 +6,16 @@ import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
 
 export default function EmergencyContent() {
   return (
-    <div className="w-full flex flex-col items-center gap-10 pb-12">
-      <MobileSimpleHeader />
+    <>
+      <div className="w-full">
+        <MobileSimpleHeader />
+      </div>
+      <div className="w-full flex flex-col gap-10 pb-12">
       
       {/* Header and SOS Section */}
-      <div className="w-full text-center mt-6">
-        <h1 className="text-3xl font-extrabold text-slate-800 mb-2">مركز طوارئ المواطن</h1>
-        <p className="text-slate-600 text-sm font-semibold">نحن هنا لمساعدتك في أوقات الأزمات. الرجاء اختيار الخدمة المطلوبة أو الضغط على زر الاستغاثة الفوري.</p>
+      <div className="w-full flex flex-col items-center text-center mt-2 sm:mt-6">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">مركز طوارئ المواطن</h1>
+        <p className="text-slate-600 text-xs sm:text-sm font-semibold max-w-sm">نحن هنا لمساعدتك في أوقات الأزمات. الرجاء اختيار الخدمة المطلوبة أو الضغط على زر الاستغاثة الفوري.</p>
         
         <div className="mt-8">
           <SOSButton />
@@ -26,5 +29,6 @@ export default function EmergencyContent() {
       <EmergencyProcedures />
       
     </div>
+    </>
   )
 }

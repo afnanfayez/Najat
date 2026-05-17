@@ -4,8 +4,8 @@ import React from 'react'
 
 export default function RequestsTable() {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-      <table className="w-full text-sm text-right">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-x-auto">
+      <table className="w-full text-sm text-right whitespace-nowrap md:whitespace-normal">
         <thead className="bg-white text-blue-500 border-b border-slate-100">
           <tr>
             <th className="px-6 py-4 font-semibold w-1/4">النوع</th>

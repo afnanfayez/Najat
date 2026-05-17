@@ -8,13 +8,13 @@ export default function SettingsSupportRow() {
   const router = useRouter()
 
   return (
-    <div className="bg-blue-100/50 rounded-xl p-6 flex flex-wrap items-center justify-between border border-blue-100">
-      <div className="flex flex-col">
+    <div className="bg-blue-100/50 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between border border-blue-100 gap-4 md:gap-0">
+      <div className="flex flex-col text-center md:text-right">
         <h3 className="text-lg font-bold text-slate-800 mb-1">الاعدادات والمساعدة</h3>
         <p className="text-slate-500 text-sm">متطوعونا والمتخصصون متاحون 24/7 للاستماع إليك.</p>
       </div>
       
-      <div className="flex gap-6 items-center my-4 md:my-0">
+      <div className="flex gap-6 items-center w-full md:w-auto justify-center md:justify-start my-2 md:my-0">
         <div className="flex flex-col items-center">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-500 mb-2 shadow-sm">
             <PhoneCall size={20} />
@@ -31,7 +31,7 @@ export default function SettingsSupportRow() {
 
       <button 
         onClick={() => router.push('/profile/edit')}
-        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold transition-colors shadow-sm"
+        className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold transition-colors shadow-sm w-full md:w-auto"
       >
         <Edit2 size={16} />
         تعديل الملف

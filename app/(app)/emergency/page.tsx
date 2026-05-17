@@ -11,7 +11,7 @@ export default function EmergencyPage() {
       className="content-body custom-scrollbar relative"
       style={{
         flex: 1,
-        padding: '15px 35px',
+        padding: '15px clamp(15px, 5vw, 35px)',
         overflowY: 'auto',
         overflowX: 'hidden',
         display: 'flex',

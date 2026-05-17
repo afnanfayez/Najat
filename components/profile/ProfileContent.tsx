@@ -11,10 +11,11 @@ import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
 
 export default function ProfileContent() {
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6" dir="rtl">
-      <div className="lg:hidden col-span-full">
+    <>
+      <div className="w-full lg:hidden mb-4">
         <MobileSimpleHeader />
       </div>
+      <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6" dir="rtl">
       
       {/* Right Column (Main Content) */}
       <div className="flex flex-col gap-6">
@@ -32,5 +33,6 @@ export default function ProfileContent() {
         <SettingsSupportRow />
       </div>
     </div>
+    </>
   )
 }

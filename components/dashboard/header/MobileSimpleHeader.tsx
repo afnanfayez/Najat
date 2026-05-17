@@ -28,7 +28,7 @@ export default function MobileSimpleHeader() {
         borderBottom: '1px solid #e8eef5',
         marginBottom: '20px',
         width: '100%',
-        backgroundColor: '#fff',
+        backgroundColor: 'transparent',
       }}
     >
       <div 
