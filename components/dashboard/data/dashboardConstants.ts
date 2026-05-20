@@ -7,6 +7,7 @@ import {
   User,
   Siren,
   Send,
+  Settings2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -42,6 +43,13 @@ export const navItems: NavItem[] = [
   { id: 'emergency', label: 'الطوارئ',             icon: Siren,      active: false, sos: true },
   { id: 'profile',   label: 'الملف الشخصي',        icon: User,       active: false },
 ]
+
+export const adminNavItem: NavItem = {
+  id: 'admin',
+  label: 'إدارة النظام',
+  icon: Settings2,
+  active: false,
+}
 
 export const serviceCards: ServiceCardData[] = [
   {

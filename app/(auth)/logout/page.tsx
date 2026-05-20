@@ -7,23 +7,15 @@ import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
-import { getUserRole } from '@/lib/auth/sessionRole'
 
-const LoginSuccess = () => {
+export default function LogoutPage() {
   const router = useRouter()
   const resetLogin = useLoginStore((s) => s.resetLogin)
 
   useEffect(() => {
+    resetLogin()
     const timer = setTimeout(() => {
-      const role = getUserRole()
-      resetLogin()
-      if (role === 'admin') {
-        router.push('/admin')
-      } else if (role === 'volunteer') {
-        router.push('/volunteer')
-      } else {
-        router.push('/dashboard')
-      }
+      router.push('/login')
     }, 3000)
     return () => clearTimeout(timer)
   }, [router, resetLogin])
@@ -58,10 +50,10 @@ const LoginSuccess = () => {
                 className="text-[26px] font-extrabold text-white sm:text-[32px]"
                 style={{ lineHeight: '100%' }}
               >
-                تم تسجيل دخولك بنجاح
+                تم تسجيل خروجك بنجاح
               </h2>
               <p className="text-[16px] font-bold text-white/90 sm:text-[18px]">
-                مرحباً بك في منصة نجاة جاري تحويلك إلى لوحة التحكم...
+                جاري تحويلك إلى صفحة تسجيل الدخول...
               </p>
             </div>
 
@@ -110,5 +102,3 @@ const LoginSuccess = () => {
     </div>
   )
 }
-
-export default LoginSuccess

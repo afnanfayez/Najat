@@ -9,10 +9,10 @@ export default function EditHeader() {
   const [idNumber, setIdNumber] = useState('1098725431')
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative mt-8">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative">
       <div className="flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
         {/* Avatar with Edit Badge */}
-        <div className="relative -mt-16 shrink-0 z-10">
+        <div className="relative shrink-0 z-10">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md">
             <Image 
               src="/assets/profile_avatar.png" 

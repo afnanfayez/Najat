@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { removeToken } from '@/lib/api/auth'
-import { useLoginStore } from '@/store/useLoginStore'
-import { useRegisterStore } from '@/store/useRegisterStore'
+import { getToken } from '@/lib/api/auth'
+import { useAuth } from '@/context/AuthContext'
 import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import { DashboardShellContext } from './DashboardShellContext'
@@ -16,9 +15,9 @@ function activeNavFromRoute(pathname: string, tab: string | null): string {
   if (pathname.startsWith('/profile')) return 'profile'
   if (pathname.startsWith('/emergency')) return 'emergency'
   if (pathname.startsWith('/maps')) return 'maps'
-  if (pathname === '/dashboard') {
-    return 'home'
-  }
+  if (pathname.startsWith('/admin')) return 'admin'
+  if (pathname.startsWith('/volunteer')) return 'home'
+  if (pathname === '/dashboard') return 'home'
   return 'home'
 }
 
@@ -39,8 +38,14 @@ export default function DashboardLayoutClient({
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const { resetLogin } = useLoginStore()
-  const { resetRegister } = useRegisterStore()
+  const { user, role, isLoading, logout } = useAuth()
+
+  // Auth guard — redirect to /login if no token and not still loading
+  useEffect(() => {
+    if (!isLoading && !getToken()) {
+      router.replace('/login')
+    }
+  }, [isLoading, router])
 
   const setNav = useCallback(
     (id: string) => {
@@ -73,6 +78,10 @@ export default function DashboardLayoutClient({
         router.push('/maps')
         return
       }
+      if (id === 'admin') {
+        router.push('/dashboard?tab=admin')
+        return
+      }
       router.replace(`/dashboard?tab=${encodeURIComponent(id)}`, {
         scroll: false,
       })
@@ -81,11 +90,8 @@ export default function DashboardLayoutClient({
   )
 
   const handleLogout = useCallback(() => {
-    removeToken()
-    resetLogin()
-    resetRegister()
-    router.push('/login')
-  }, [router, resetLogin, resetRegister])
+    logout()
+  }, [logout])
 
   const shellValue = useMemo(
     () => ({ setIsMobileMenuOpen }),
@@ -173,6 +179,8 @@ export default function DashboardLayoutClient({
           handleLogout={handleLogout}
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
+          user={user}
+          role={role}
         />
 
         <main

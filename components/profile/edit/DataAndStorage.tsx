@@ -6,7 +6,7 @@ import { Cloud } from 'lucide-react'
 export default function DataAndStorage() {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-       <div className="flex justify-end items-center gap-2 mb-6">
+       <div className="flex justify-start items-center gap-2 mb-6">
           <h3 className="text-lg font-bold text-slate-800">البيانات والتخزين</h3>
           <Cloud className="text-blue-500" size={20} />
        </div>

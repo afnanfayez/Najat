@@ -1,8 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import { LogOut } from 'lucide-react'
-import { navItems } from '../data/dashboardConstants'
+import { LogOut, User } from 'lucide-react'
+import { navItems, adminNavItem } from '../data/dashboardConstants'
+import { roleLabel, roleBadgeStyle, isAdmin } from '@/lib/auth/roleUtils'
+import type { AuthUser } from '@/context/AuthContext'
+import type { UserRole } from '@/lib/auth/roleUtils'
 
 export interface SidebarContentProps {
   activeNav: string
@@ -10,6 +13,8 @@ export interface SidebarContentProps {
   hoveredNav: string | null
   setHoveredNav: (id: string | null) => void
   handleLogout: () => void
+  user?: AuthUser | null
+  role?: UserRole | null
 }
 
 export default function SidebarContent({
@@ -18,7 +23,15 @@ export default function SidebarContent({
   hoveredNav,
   setHoveredNav,
   handleLogout,
+  user,
+  role,
 }: SidebarContentProps) {
+  const visibleNavItems = isAdmin(role)
+    ? [...navItems, adminNavItem]
+    : navItems
+
+  const badge = roleBadgeStyle(role)
+
   return (
     <>
       {/* Logo */}
@@ -44,10 +57,10 @@ export default function SidebarContent({
           gap: '16px',
         }}
       >
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = activeNav === item.id
           const isHovered = hoveredNav === item.id
-          
+
           return (
             <button
               key={item.id}
@@ -95,41 +108,11 @@ export default function SidebarContent({
                 }}
               >
                 {item.sos ? (
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M7 12H9C9.55228 12 10 11.5523 10 11C10 10.4477 9.55228 10 9 10H8C7.44772 10 7 10.4477 7 11C7 11.5523 7.44772 12 8 12H9C9.55228 12 10 12.4477 10 13C10 13.5523 9.55228 14 9 14H7"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M12 10C11.4477 10 11 10.4477 11 11V13C11 13.5523 11.4477 14 12 14C12.5523 14 13 13.5523 13 13V11C13 10.4477 12.5523 10 12 10Z"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M15 12H17C17.5523 12 18 11.5523 18 11C18 10.4477 17.5523 10 17 10H16C15.4477 10 15 10.4477 15 11C15 11.5523 15.4477 12 16 12H17C17.5523 12 18 12.4477 18 13C18 13.5523 17.5523 14 17 14H15"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M7 12H9C9.55228 12 10 11.5523 10 11C10 10.4477 9.55228 10 9 10H8C7.44772 10 7 10.4477 7 11C7 11.5523 7.44772 12 8 12H9C9.55228 12 10 12.4477 10 13C10 13.5523 9.55228 14 9 14H7" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 10C11.4477 10 11 10.4477 11 11V13C11 13.5523 11.4477 14 12 14C12.5523 14 13 13.5523 13 13V11C13 10.4477 12.5523 10 12 10Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M15 12H17C17.5523 12 18 11.5523 18 11C18 10.4477 17.5523 10 17 10H16C15.4477 10 15 10.4477 15 11C15 11.5523 15.4477 12 16 12H17C17.5523 12 18 12.4477 18 13C18 13.5523 17.5523 14 17 14H15" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : typeof item.icon === 'string' ? (
                   <img src={item.icon} alt="icon" style={{ width: '24px', height: '24px' }} />
@@ -142,6 +125,56 @@ export default function SidebarContent({
           )
         })}
       </nav>
+
+      {/* User Info Block */}
+      <div
+        style={{
+          width: '260px',
+          background: 'rgba(255,255,255,0.12)',
+          borderRadius: '12px',
+          padding: '12px 14px',
+          marginBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}
+      >
+        <div
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <User size={20} color="#fff" />
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p
+            style={{
+              margin: 0,
+              color: '#fff',
+              fontSize: '14px',
+              fontWeight: 700,
+              fontFamily: "'Cairo', sans-serif",
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {user?.fullName ?? '...'}
+          </p>
+          <span
+            className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full mt-1 ${badge.bg} ${badge.text}`}
+          >
+            {roleLabel(role)}
+          </span>
+        </div>
+      </div>
 
       {/* Logout */}
       <div
@@ -156,7 +189,7 @@ export default function SidebarContent({
           id="logout-btn"
           onClick={handleLogout}
           style={{
-            marginTop: '12px',
+            marginTop: '4px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

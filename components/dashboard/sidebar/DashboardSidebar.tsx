@@ -3,15 +3,21 @@
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SidebarContent, { type SidebarContentProps } from './SidebarContent'
+import type { AuthUser } from '@/context/AuthContext'
+import type { UserRole } from '@/lib/auth/roleUtils'
 
 interface DashboardSidebarProps extends SidebarContentProps {
   isMobileMenuOpen: boolean
   setIsMobileMenuOpen: (open: boolean) => void
+  user?: AuthUser | null
+  role?: UserRole | null
 }
 
 export default function DashboardSidebar({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
+  user,
+  role,
   ...sidebarContentProps
 }: DashboardSidebarProps) {
   return (
@@ -41,7 +47,7 @@ export default function DashboardSidebar({
             <X size={24} />
           </Button>
         </div>
-        <SidebarContent {...sidebarContentProps} />
+        <SidebarContent {...sidebarContentProps} user={user} role={role} />
       </div>
 
       {/* Desktop sidebar */}
@@ -62,7 +68,7 @@ export default function DashboardSidebar({
           boxSizing: 'border-box',
         }}
       >
-        <SidebarContent {...sidebarContentProps} />
+        <SidebarContent {...sidebarContentProps} user={user} role={role} />
       </aside>
     </>
   )
