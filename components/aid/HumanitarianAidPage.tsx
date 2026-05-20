@@ -35,7 +35,6 @@ const CATEGORIES = [
 
 interface HumanitarianAidPageProps {
   setIsMobileMenuOpen?: (open: boolean) => void
-  /** رقم ترتيبي 1…n في المسار */
   aidId?: string
 }
 
@@ -64,10 +63,9 @@ export default function HumanitarianAidPage({
   )
 
   const REGIONS = [
-    'محافظة الشمال',
-    'محافظة غزة',
-    'المحافظة الوسطى',
-    'محافظات الجنوب',
+    'الكل',
+    'الشمال',
+    'الجنوب',
   ]
 
   useEffect(() => {
@@ -193,7 +191,7 @@ export default function HumanitarianAidPage({
         }}
       />
 
-      {/* Mobile Navbar */}
+
       {isMobile && (
         <div
           style={{
@@ -224,7 +222,7 @@ export default function HumanitarianAidPage({
         </div>
       )}
 
-      {/* Header */}
+
       <div
         style={{
           display: 'flex',
@@ -265,7 +263,7 @@ export default function HumanitarianAidPage({
         </p>
       </div>
 
-      {/* Filter Container */}
+
       <div
         style={{
           background: '#fff',
@@ -277,7 +275,7 @@ export default function HumanitarianAidPage({
           flexShrink: 0,
         }}
       >
-        {/* Category tabs matching HealthServicesPage exactly */}
+
         <div
           className="no-scrollbar"
           style={{
@@ -319,7 +317,7 @@ export default function HumanitarianAidPage({
           })}
         </div>
 
-        {/* Search + Filter */}
+
         <div
           style={{
             display: 'flex',
@@ -361,7 +359,7 @@ export default function HumanitarianAidPage({
                 style={{ fontFamily: "'Cairo', sans-serif" }}
               >
                 <Filter size={18} />
-                {selectedRegion || 'فلترة'}
+                {selectedRegion && selectedRegion !== 'الكل' ? selectedRegion : 'فلترة'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
@@ -384,7 +382,7 @@ export default function HumanitarianAidPage({
         </div>
       </div>
 
-      {/* Cards Grid */}
+
       <div
         className="aid-grid custom-scrollbar"
         style={{

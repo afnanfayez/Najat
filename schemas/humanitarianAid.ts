@@ -8,6 +8,7 @@ export const humanitarianAidSchema = z.object({
   status: z.enum(['active', 'limited', 'stopped']),
   tags: z.array(z.string()),
   category: z.string(),
+  regions: z.array(z.string()).optional(),
 })
 
 export type HumanitarianAid = z.infer<typeof humanitarianAidSchema>

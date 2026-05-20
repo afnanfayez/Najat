@@ -18,12 +18,11 @@ export default function ProfileEditContent() {
       <EditHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* Right Column (Main Settings) */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           <GeneralSettings />
           <AssistancePreferences />
-          <HelpAndSupport />
         </div>
 
         {/* Left Column (Secondary Settings) */}
@@ -32,6 +31,9 @@ export default function ProfileEditContent() {
           <EmergencySettings />
         </div>
       </div>
+
+      {/* Full-width footer */}
+      <HelpAndSupport />
     </div>
   )
 }

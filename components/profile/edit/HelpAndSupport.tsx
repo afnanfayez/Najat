@@ -10,7 +10,7 @@ export default function HelpAndSupport() {
        <p className="text-slate-500 text-sm mb-6">نحن هنا لمساعدتك في أي وقت، تواصل معنا عبر القنوات التالية</p>
        
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="flex items-center justify-end gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
+          <button className="flex items-center justify-start gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
              <div className="flex flex-col text-right">
                <span className="font-bold text-slate-800 text-sm group-hover:text-blue-500 transition-colors">الأسئلة الشائعة</span>
                <span className="text-slate-500 text-xs">إجابات سريعة لاستفساراتك</span>
@@ -19,7 +19,7 @@ export default function HelpAndSupport() {
                 <HelpCircle size={18} />
              </div>
           </button>
-          <button className="flex items-center justify-end gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
+          <button className="flex items-center justify-start gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
              <div className="flex flex-col text-right">
                <span className="font-bold text-slate-800 text-sm group-hover:text-blue-500 transition-colors">الدعم الفني</span>
                <span className="text-slate-500 text-xs">تحدث مع أحد ممثلينا</span>
@@ -28,7 +28,7 @@ export default function HelpAndSupport() {
                 <HeadphonesIcon size={18} />
              </div>
           </button>
-          <button className="flex items-center justify-end gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
+          <button className="flex items-center justify-start gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-4 transition-colors group">
              <div className="flex flex-col text-right">
                <span className="font-bold text-slate-800 text-sm group-hover:text-blue-500 transition-colors">سياسة الخصوصية</span>
                <span className="text-slate-500 text-xs">كيف نحمي بياناتك</span>
@@ -37,7 +37,7 @@ export default function HelpAndSupport() {
                 <ShieldAlert size={18} />
              </div>
           </button>
-          <button className="flex items-center justify-end gap-3 bg-blue-500 hover:bg-blue-600 rounded-xl p-4 transition-colors shadow-sm text-white">
+          <button className="flex items-center justify-start gap-3 bg-blue-500 hover:bg-blue-600 rounded-xl p-4 transition-colors shadow-sm text-white">
              <div className="flex flex-col text-right">
                <span className="font-bold text-white text-sm">مركز بلاغات نجاة</span>
                <span className="text-blue-100 text-xs">متاح على مدار الساعة</span>

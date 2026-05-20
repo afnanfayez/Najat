@@ -41,12 +41,35 @@ function inferCategory(type?: string | null, supplies?: string[]): HumanitarianA
   return 'all'
 }
 
+function inferRegions(name: string): string[] {
+  const regions: string[] = []
+  if (!name) return ['الشمال', 'الجنوب']
+  
+  const n = name.toLowerCase()
+
+  if (n.includes('شمال') || n.includes('غزة') || n.includes('جباليا') || n.includes('حانون') || n.includes('رمال') || n.includes('شجاعية')) {
+    regions.push('الشمال')
+  }
+
+  if (n.includes('جنوب') || n.includes('وسطى') || n.includes('نصيرات') || n.includes('دير البلح') || n.includes('خانيونس') || n.includes('رفح') || n.includes('مغازي') || n.includes('بريج') || n.includes('مواصي')) {
+    regions.push('الجنوب')
+  }
+
+  if (regions.length === 0) {
+
+    return ['الشمال', 'الجنوب']
+  }
+  return regions
+}
+
 export function mapAidDtoToHumanitarianAid(dto: AidDto): HumanitarianAid {
   const supplies = dto.availableSupplies ?? []
   const description =
     supplies.length > 0
       ? `يوفر: ${supplies.join('، ')}`
       : 'نقطة توزيع مساعدات إنسانية'
+      
+  const combinedName = `${dto.name} ${dto.label ?? ''}`
 
   return {
     id: dto.id,
@@ -56,5 +79,6 @@ export function mapAidDtoToHumanitarianAid(dto: AidDto): HumanitarianAid {
     status: mapStatus(dto.status),
     tags: supplies.slice(0, 4),
     category: inferCategory(dto.type, supplies),
+    regions: inferRegions(combinedName),
   }
 }

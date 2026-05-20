@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\components\\\\maps\")",
-      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\app\\\\\\(app\\)\\\\maps\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\app\\\\\\(app\\)\\\\maps\")",
+      "Bash(ls -la d:\\\\\\\\Najat\\\\\\\\app\\\\\\\\\\\\\\(app\\\\\\\\\\\\\\)\\\\\\\\humanitarian-aid)",
+      "WebFetch(domain:najat-api.up.railway.app)",
+      "Bash(npx tsc *)"
     ]
   }
 }

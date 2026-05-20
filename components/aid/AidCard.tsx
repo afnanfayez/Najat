@@ -54,7 +54,7 @@ export default function AidCard({ aid, onClick }: AidCardProps) {
             {aid.name}
           </CardTitle>
 
-          {/* Status Badge */}
+
           <Badge
             variant="secondary"
             style={{
@@ -114,7 +114,7 @@ export default function AidCard({ aid, onClick }: AidCardProps) {
           {aid.description}
         </p>
 
-        {/* Tags */}
+
         <div
           style={{
             display: 'flex',

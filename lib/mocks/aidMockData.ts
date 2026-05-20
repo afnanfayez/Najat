@@ -12,6 +12,7 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'active',
     tags: ['غذاء', 'تعليم', 'صحة'],
     category: 'all',
+    regions: ['الشمال', 'الجنوب'],
   },
   {
     id: '2',
@@ -22,6 +23,7 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'limited',
     tags: ['جراحة', 'ادوية'],
     category: 'health',
+    regions: ['الجنوب'],
   },
   {
     id: '3',
@@ -32,6 +34,7 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'active',
     tags: ['طعام', 'دعم مادي'],
     category: 'food',
+    regions: ['الشمال', 'الجنوب'],
   },
   {
     id: '4',
@@ -42,6 +45,7 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'stopped',
     tags: ['مياه', 'تعقيم'],
     category: 'water',
+    regions: ['الشمال'],
   },
   {
     id: '5',
@@ -52,6 +56,7 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'active',
     tags: ['خيم', 'اغطية', 'ملابس'],
     category: 'shelter',
+    regions: ['الجنوب'],
   },
   {
     id: '6',
@@ -62,5 +67,6 @@ export const MOCK_AID: HumanitarianAid[] = [
     status: 'limited',
     tags: ['تعليم', 'مياه', 'طرود'],
     category: 'health',
+    regions: ['الشمال', 'الجنوب'],
   },
 ]

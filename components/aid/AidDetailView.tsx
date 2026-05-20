@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { ArrowRight, ExternalLink, MapPin, Send } from 'lucide-react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,24 +73,27 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  useEffect(() => {
-    if (!isClient || !isGeolocationSupportedOnNavigator()) return
+  const requestGeo = useCallback(() => {
+    if (!isGeolocationSupportedOnNavigator()) return
+    setGeoMessage(null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setGeo({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        })
+        setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude })
         setGeoMessage(null)
       },
       () => {
         setGeoMessage(
-          'لم يتم منح إذن الموقع. فعّل تحديد الموقع لعرض نقاط التوزيع القريبة.',
+          'لم يتم منح إذن الموقع. فعّل تحديد الموقع ثم اضغط "تحديث" أو أعِد تحميل الصفحة.',
         )
       },
       { enableHighAccuracy: true, maximumAge: 60_000, timeout: 20_000 },
     )
-  }, [isClient])
+  }, [])
+
+  useEffect(() => {
+    if (!isClient) return
+    requestGeo()
+  }, [isClient, requestGeo])
 
   const nearbyQuery = useQuery({
     queryKey: ['aid', 'nearby', geo?.lat, geo?.lng],
@@ -118,7 +121,6 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
       sonsCount: 0,
       phone: '',
       currentLocation: '',
-      notes: '',
     },
   })
 
@@ -141,7 +143,6 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
           sonsCount: 0,
           phone: '',
           currentLocation: '',
-          notes: '',
         })
       } else {
         toast.error(result.message)
@@ -435,25 +436,6 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
                   </span>
                 ) : null}
               </div>
-              <div
-                style={{
-                  gridColumn: isMobile ? 'span 1' : 'span 2',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}
-              >
-                <Label style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>
-                  ملاحظات إضافية
-                </Label>
-                <textarea
-                  {...register('notes')}
-                  placeholder="اكتب ملاحظاتك هنا"
-                  rows={3}
-                  className="flex w-full rounded-md bg-[#f8fafc] px-3 py-2 text-base text-right outline-none placeholder:text-muted-foreground md:text-sm"
-                  style={{ border: 'none', resize: 'vertical' }}
-                />
-              </div>
             </div>
 
             <Button
@@ -497,7 +479,10 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
             </h3>
             <button
               type="button"
-              onClick={() => nearbyQuery.refetch()}
+              onClick={() => {
+                requestGeo()
+                if (geo) nearbyQuery.refetch()
+              }}
               style={{
                 fontSize: '12px',
                 color: '#2196F3',
@@ -517,21 +502,38 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
               المتصفح لا يدعم تحديد الموقع
             </p>
           ) : geoMessage ? (
-            <p style={{ fontSize: '13px', color: '#f44336', margin: 0 }}>{geoMessage}</p>
-          ) : null}
-          {geoApiAvailable && !geoMessage && geo && nearbyQuery.isLoading ? (
-            <p style={{ fontSize: '14px', color: '#9e9e9e' }}>جاري تحميل النقاط القريبة...</p>
-          ) : null}
-          {nearbyQuery.isError ? (
-            <p style={{ fontSize: '13px', color: '#f44336' }}>
-              تعذر تحميل النقاط. تحقق من تسجيل الدخول والاتصال.
+            <div>
+              <p style={{ fontSize: '13px', color: '#f44336', margin: '0 0 8px' }}>{geoMessage}</p>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                style={{
+                  fontSize: '12px',
+                  color: '#fff',
+                  background: '#2196F3',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                إعادة تحميل الصفحة
+              </button>
+            </div>
+          ) : !geo ? (
+            <p style={{ fontSize: '14px', color: '#9e9e9e', margin: 0 }}>
+              جارٍ تحديد موقعك...
             </p>
-          ) : null}
-          {geoApiAvailable &&
-          !nearbyQuery.isLoading &&
-          !nearbyQuery.isError &&
-          geo &&
-          sortedNearby.length === 0 ? (
+          ) : nearbyQuery.isLoading ? (
+            <p style={{ fontSize: '14px', color: '#9e9e9e' }}>جاري تحميل النقاط القريبة...</p>
+          ) : nearbyQuery.isError ? (
+            <p style={{ fontSize: '13px', color: '#f44336' }}>
+              {(nearbyQuery.error as any)?.status === 401
+                ? 'يرجى تسجيل الدخول أولاً لعرض نقاط التوزيع القريبة.'
+                : 'تعذر تحميل النقاط. تحقق من الاتصال وحاول مرة أخرى.'}
+            </p>
+          ) : sortedNearby.length === 0 ? (
             <p style={{ fontSize: '14px', color: '#9e9e9e' }}>
               لا توجد نقاط توزيع ضمن نطاق 5 كم من موقعك.
             </p>

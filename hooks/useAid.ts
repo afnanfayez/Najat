@@ -34,13 +34,16 @@ export function useAid(params?: AidQueryParams) {
       let result = base
 
       if (params?.category && params.category !== 'all') {
-        result = result.filter((a) => a.category === params.category)
+        result = result.filter(
+          (a) => a.category === params.category || a.category === 'all'
+        )
       }
 
-      if (params?.region) {
+      if (params?.region && params.region !== 'الكل' && params.region !== 'فلترة') {
         const regionQ = params.region.toLowerCase()
         result = result.filter(
           (a) =>
+            (a.regions && a.regions.some((r) => r.toLowerCase().includes(regionQ))) ||
             a.provider.toLowerCase().includes(regionQ) ||
             a.name.toLowerCase().includes(regionQ)
         )

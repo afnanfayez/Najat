@@ -16,9 +16,11 @@ export const aidHelpRequestFormSchema = z.object({
   wifeNationalId: z.string().min(6, 'رقم الهوية مطلوب'),
   daughtersCount: familyCountField,
   sonsCount: familyCountField,
-  phone: z.string().min(8, 'رقم هاتف صالح مطلوب'),
+  phone: z
+    .string()
+    .min(8, 'رقم هاتف صالح مطلوب')
+    .regex(/^(\+?970|0)?[5][0-9]{7,8}$/, 'أدخل رقم هاتف فلسطيني صالح (مثال: 0591234567)'),
   currentLocation: z.string().min(2, 'الموقع مطلوب'),
-  notes: z.string().optional(),
 })
 
 export type AidHelpRequestForm = z.infer<typeof aidHelpRequestFormSchema>
