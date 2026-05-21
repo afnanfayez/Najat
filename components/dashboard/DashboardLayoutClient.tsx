@@ -79,7 +79,7 @@ export default function DashboardLayoutClient({
         return
       }
       if (id === 'admin') {
-        router.push('/dashboard?tab=admin')
+        router.push('/admin')
         return
       }
       router.replace(`/dashboard?tab=${encodeURIComponent(id)}`, {
@@ -97,6 +97,8 @@ export default function DashboardLayoutClient({
     () => ({ setIsMobileMenuOpen }),
     [setIsMobileMenuOpen],
   )
+
+  const isAdminRoute = pathname.startsWith('/admin')
 
   return (
     <DashboardShellContext.Provider value={shellValue}>
@@ -171,17 +173,19 @@ export default function DashboardLayoutClient({
           }}
         />
 
-        <DashboardSidebar
-          activeNav={activeNav}
-          setActiveNav={setNav}
-          hoveredNav={hoveredNav}
-          setHoveredNav={setHoveredNav}
-          handleLogout={handleLogout}
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-          user={user}
-          role={role}
-        />
+        {!isAdminRoute && (
+          <DashboardSidebar
+            activeNav={activeNav}
+            setActiveNav={setNav}
+            hoveredNav={hoveredNav}
+            setHoveredNav={setHoveredNav}
+            handleLogout={handleLogout}
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+            user={user}
+            role={role}
+          />
+        )}
 
         <main
           className="main-container"
