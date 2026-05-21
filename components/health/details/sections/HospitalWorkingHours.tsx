@@ -3,15 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import type { WorkingHoursBlock } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: WorkingHoursBlock = {
-  bannerText: 'قسم الطوارئ يعمل على مدار 24 ساعة',
-  rows: [
-    { label: 'السبت - الخميس (العيادات)', time: 'من 8:00 ص - 2:00 م' },
-    { label: 'الجمعة', time: 'مغلق (للطوارئ فقط)', danger: true },
-    { label: 'الصيدلية الخارجية', time: 'من 8:00 ص - 8:00 م' },
-  ],
-}
+import { MOCK_HOSPITAL_WORKING_HOURS } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface HospitalWorkingHoursProps {
   workingHours?: WorkingHoursBlock
@@ -20,7 +12,7 @@ interface HospitalWorkingHoursProps {
 export default function HospitalWorkingHours({
   workingHours,
 }: HospitalWorkingHoursProps) {
-  const block = workingHours?.rows?.length ? workingHours : FALLBACK
+  const block = workingHours?.rows?.length ? workingHours : MOCK_HOSPITAL_WORKING_HOURS
 
   return (
     <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">

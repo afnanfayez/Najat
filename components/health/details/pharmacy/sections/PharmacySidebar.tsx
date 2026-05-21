@@ -4,20 +4,14 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import type { HealthFacility } from '@/schemas/healthFacility'
 import LocationContactCard from './LocationContactCard'
-
-const FALLBACK_HOURS = {
-  rows: [
-    { label: 'السبت-الخميس', time: '8:00ص-10:00م' },
-    { label: 'الجمعة', time: '4:00م-11:00م' },
-  ],
-}
+import { MOCK_PHARMACY_HOURS } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface PharmacySidebarProps {
   pharmacy: HealthFacility
 }
 
 export default function PharmacySidebar({ pharmacy }: PharmacySidebarProps) {
-  const hours = pharmacy.detail?.pharmacyHours ?? FALLBACK_HOURS
+  const hours = pharmacy.detail?.pharmacyHours ?? MOCK_PHARMACY_HOURS
   const updated = pharmacy.detail?.lastUpdatedAt ?? '29/3/2026'
 
   return (

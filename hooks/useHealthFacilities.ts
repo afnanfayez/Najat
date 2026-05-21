@@ -8,10 +8,8 @@ import {
   getMockHealthFacilitiesResult,
   USE_MOCK_HEALTH_FACILITIES,
 } from '@/lib/mocks/healthFacilitiesMockData'
+import { USE_MOCK_HEALTH_API_FALLBACK } from '@/lib/mocks/mockConfig'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
-
-const HEALTH_MOCK_FALLBACK =
-  process.env.NEXT_PUBLIC_HEALTH_MOCK === '1'
 
 export type HealthFacilitiesQueryParams = {
   category?: FacilityCategory
@@ -53,7 +51,7 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
           facilities = filterBySearch(facilities, params.search)
           return { facilities, total: facilities.length }
         } catch (e) {
-          if (HEALTH_MOCK_FALLBACK) {
+          if (USE_MOCK_HEALTH_API_FALLBACK) {
             return getMockHealthFacilitiesResult({
               category: 'hospitals',
               search: params?.search,
@@ -73,7 +71,7 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
         facilities = filterBySearch(facilities, params?.search)
         return { facilities, total: facilities.length }
       } catch (e) {
-        if (HEALTH_MOCK_FALLBACK) {
+        if (USE_MOCK_HEALTH_API_FALLBACK) {
           return getMockHealthFacilitiesResult({
             category: params?.category,
             search: params?.search,

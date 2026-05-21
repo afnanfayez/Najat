@@ -4,17 +4,7 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Search, Info } from 'lucide-react'
 import type { DentalServiceItem } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK_TABS = ['الكل', 'حشوات', 'جراحة', 'تجميل', 'تقويم']
-
-const FALLBACK_SERVICES: DentalServiceItem[] = [
-  { name: 'حشوة كومبوزيت (تجميلية)', desc: 'حشوة تجميلية بلون السن', icon: 'https://api.iconify.design/healthicons:odontology.svg?color=%23F2A122', group: 'حشوات' },
-  { name: 'زراعة الاسنان', desc: 'تعويض الاسنان المفقودة', icon: 'https://api.iconify.design/healthicons:odontology-implant.svg?color=%23F2A122', group: 'جراحة' },
-  { name: 'تبييض اسنان', desc: 'تبييض كيميائي وليزر', icon: 'https://api.iconify.design/healthicons:tooth.svg?color=%23F2A122', group: 'تجميل' },
-  { name: 'خلع ضرس', desc: 'اجراء جراحي لخلع بسيط', icon: 'https://api.iconify.design/healthicons:tooth.svg?color=%23F2A122', group: 'جراحة' },
-  { name: 'تنظيف وتجريف اللثة', desc: 'ازالة الرواسب الكلسية', icon: 'https://api.iconify.design/healthicons:clean-hands.svg?color=%23F2A122', group: 'تجميل' },
-  { name: 'سحب عصب', desc: 'علاج القنوات الجزرية', icon: 'https://api.iconify.design/healthicons:spine.svg?color=%23F2A122', group: 'جراحة' },
-]
+import { MOCK_DENTAL_SERVICES, MOCK_DENTAL_TABS } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 function norm(s: string) {
   return s.trim().toLowerCase()
@@ -29,8 +19,8 @@ export default function DentalServicesSection({
   services,
   tabLabels,
 }: DentalServicesSectionProps) {
-  const tabs = tabLabels?.length ? tabLabels : FALLBACK_TABS
-  const all = services?.length ? services : FALLBACK_SERVICES
+  const tabs = tabLabels?.length ? tabLabels : MOCK_DENTAL_TABS
+  const all = services?.length ? services : MOCK_DENTAL_SERVICES
   const [activeTab, setActiveTab] = React.useState(tabs[0] ?? 'الكل')
   const [q, setQ] = React.useState('')
 

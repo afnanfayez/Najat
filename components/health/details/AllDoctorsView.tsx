@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react'
 import type { HealthDoctor } from '@/schemas/healthFacilityDetail'
+import { MOCK_HOSPITAL_DOCTORS } from '@/lib/mocks/healthFacilityDetailsMockData'
 import SharedHeroHeader from './SharedHeroHeader'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
@@ -12,13 +13,6 @@ interface AllDoctorsViewProps {
   onBack: () => void
   onShowMap: () => void
 }
-
-const FALLBACK: HealthDoctor[] = [
-  { name: 'د. ناصر رأفت أبو شعبان', specialty: 'استشاري الجراحة العامة وجراحة المناظير', photo: '/assets/doctor.png', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الخميس'] },
-  { name: 'د. محمد صلاح اللولو', specialty: 'أخصائي عيون', photo: '/assets/health6.jpg', time: 'من 1:30 م - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. سلامة سعيد التتر', specialty: 'استشاري أمراض السكري والغدد', photo: '/assets/health2.jpg', time: 'من 1:30 م - 5:00 م', days: ['السبت', 'الخميس'] },
-  { name: 'د. شادي عبد الحكيم الحداد', specialty: 'أخصائي طب وجراحة الفم والأسنان', photo: '/assets/Photo2.jpg', time: 'من 10:00 ص - 2:00 م', days: ['الأحد', 'الأربعاء'] },
-]
 
 function expandDoctors(base: HealthDoctor[]): HealthDoctor[] {
   if (base.length >= 8) return base
@@ -34,7 +28,7 @@ function expandDoctors(base: HealthDoctor[]): HealthDoctor[] {
 export default function AllDoctorsView({ hospital, onBack, onShowMap }: AllDoctorsViewProps) {
   const doctors = useMemo(() => {
     const base =
-      hospital.detail?.doctors?.length ? hospital.detail.doctors : FALLBACK
+      hospital.detail?.doctors?.length ? hospital.detail.doctors : MOCK_HOSPITAL_DOCTORS
     return expandDoctors(base)
   }, [hospital.detail?.doctors, hospital.id])
 

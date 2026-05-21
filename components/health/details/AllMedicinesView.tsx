@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
+import { MOCK_HOSPITAL_MEDICINES } from '@/lib/mocks/healthFacilityDetailsMockData'
 import SharedHeroHeader from './SharedHeroHeader'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
@@ -14,18 +15,12 @@ interface AllMedicinesViewProps {
   onShowMap: () => void
 }
 
-const FALLBACK: HealthMedicineRow[] = [
-  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
-  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
-  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-]
-
 export default function AllMedicinesView({ hospital, onBack, onShowMap }: AllMedicinesViewProps) {
   const medicines = useMemo(() => {
     const d = hospital.detail
     if (d?.medicinesAll?.length) return d.medicinesAll
     if (d?.medicines?.length) return d.medicines
-    return FALLBACK
+    return MOCK_HOSPITAL_MEDICINES
   }, [hospital.detail, hospital.id])
 
   return (

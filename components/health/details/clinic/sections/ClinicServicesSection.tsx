@@ -4,15 +4,7 @@ import React from 'react'
 import { Search } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import type { ClinicServiceItem } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: ClinicServiceItem[] = [
-  { name: 'فحص عام', desc: 'كشف باطني عام', icon: 'https://api.iconify.design/solar:stethoscope-bold.svg?color=%23F2A122' },
-  { name: 'التطعيمات', desc: 'اللقاحات الروتينية للاطفال', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
-  { name: 'متابعة الحمل', desc: 'متابعة الامومة والجنين', icon: 'https://api.iconify.design/healthicons:pregnant.svg?color=%23F2A122' },
-  { name: 'تغيير الجروح', desc: 'تغيير وتنظيف وتعقيم الجروح', icon: 'https://api.iconify.design/solar:bandage-bold.svg?color=%23F2A122' },
-  { name: 'متابعة امراض مزمنة', desc: 'السكري والضغط والقلب', icon: 'https://api.iconify.design/solar:heart-pulse-bold.svg?color=%23F2A122' },
-  { name: 'متابعة الامراض التنفسية', desc: 'كشف ومتابعة لامراض الجهاز التنفسي', icon: 'https://api.iconify.design/solar:lungs-bold.svg?color=%23F2A122' },
-]
+import { MOCK_CLINIC_SERVICES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 function norm(s: string) {
   return s.trim().toLowerCase()
@@ -26,7 +18,7 @@ export default function ClinicServicesSection({ services }: ClinicServicesSectio
   const [q, setQ] = React.useState('')
 
   const filtered = React.useMemo(() => {
-    const list = services?.length ? services : FALLBACK
+    const list = services?.length ? services : MOCK_CLINIC_SERVICES
     const query = norm(q)
     if (!query) return list
     return list.filter((s) =>

@@ -5,6 +5,14 @@ import L from 'leaflet'
 import { useEffect } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
 
+import {
+  MAP_CENTER,
+  MAP_DANGER_ORANGE,
+  MAP_DANGER_RED,
+  MAP_RESOURCE_MARKERS,
+  MAP_SAFE_ROUTE,
+} from '@/lib/mocks/mapsMockData'
+
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -87,7 +95,7 @@ export default function LeafletMapInner({
 }: LeafletMapInnerProps) {
   return (
     <MapContainer
-      center={CENTER}
+      center={MAP_CENTER}
       zoom={14}
       maxZoom={19}
       style={{ width: '100%', height: '100%' }}
@@ -115,7 +123,7 @@ export default function LeafletMapInner({
 
       {showSafeRoutes && (
         <Polyline
-          positions={SAFE_ROUTE}
+          positions={MAP_SAFE_ROUTE}
           pathOptions={{ color: '#4CAF50', weight: 5, opacity: 0.9 }}
         />
       )}
@@ -123,18 +131,18 @@ export default function LeafletMapInner({
       {showDangerZones && (
         <>
           <Polyline
-            positions={DANGER_RED}
+            positions={MAP_DANGER_RED}
             pathOptions={{ color: '#F44336', weight: 5, opacity: 0.9 }}
           />
           <Polyline
-            positions={DANGER_ORANGE}
+            positions={MAP_DANGER_ORANGE}
             pathOptions={{ color: '#FF9800', weight: 4, opacity: 0.85, dashArray: '8 4' }}
           />
         </>
       )}
 
       {showResourceActivity &&
-        RESOURCE_MARKERS.map((m) => (
+        MAP_RESOURCE_MARKERS.map((m) => (
           <Marker key={m.name} position={[m.lat, m.lng]} icon={orangeIcon}>
             <Popup>
               <span style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700, fontSize: 14 }}>

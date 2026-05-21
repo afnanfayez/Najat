@@ -14,19 +14,7 @@ import {
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import type { HealthServiceChip } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: HealthServiceChip[] = [
-  { label: 'النساء والولادة' },
-  { label: 'الأسنان' },
-  { label: 'العيون' },
-  { label: 'العظام' },
-  { label: 'التصوير التلفزيوني' },
-  { label: 'الجراحة العامة' },
-  { label: 'المسالك البولية' },
-  { label: 'السكر والغدد' },
-  { label: 'جراحة التجميل' },
-  { label: 'الجلدية والعناية بالبشرة' },
-]
+import { MOCK_HOSPITAL_SERVICES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 const SERVICE_ICONS = [
   Baby,
@@ -46,7 +34,7 @@ interface HospitalServicesProps {
 }
 
 export default function HospitalServices({ services }: HospitalServicesProps) {
-  const list = services?.length ? services : FALLBACK
+  const list = services?.length ? services : MOCK_HOSPITAL_SERVICES
 
   return (
     <Card className="hdv-services-card p-5 rounded-[28px] border-2 border-slate-100 shadow-md bg-white flex flex-col">

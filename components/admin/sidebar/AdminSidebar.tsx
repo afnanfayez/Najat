@@ -30,9 +30,12 @@ export default function AdminSidebar({
       >
         <div
           style={{
+            width: '100%',
             padding: '25px 25px 10px',
             display: 'flex',
             justifyContent: 'flex-start',
+            direction: 'rtl',
+            boxSizing: 'border-box',
           }}
         >
           <Button

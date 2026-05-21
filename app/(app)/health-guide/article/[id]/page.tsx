@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { ARTICLES } from '@/data/healthGuideData'
+import { ARTICLES } from '@/lib/mocks/healthGuideMockData'
 import ArticleDetailPage from '@/components/guide/ArticleDetailPage'
 
 interface Props {

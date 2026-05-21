@@ -5,30 +5,17 @@ import { Card } from '@/components/ui/card'
 import type { HealthFacility } from '@/schemas/healthFacility'
 import LocationContactCard from '../../pharmacy/sections/LocationContactCard'
 import type { LabeledIcon } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK_SUPPLIES: LabeledIcon[] = [
-  { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
-  { label: 'مضاد حيوي', icon: 'https://api.iconify.design/solar:pill-bold.svg?color=%23F2A122' },
-  { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
-  { label: 'مسكن الام', icon: 'https://api.iconify.design/solar:medical-kit-bold.svg?color=%23F2A122' },
-]
-
-const FALLBACK_HOURS = {
-  rows: [
-    { label: 'السبت-الخميس', time: '8:00ص-4:00م' },
-    { label: 'الجمعة', time: 'مغلق', danger: true },
-  ],
-}
+import { MOCK_CLINIC_HOURS, MOCK_CLINIC_SUPPLIES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface ClinicSidebarProps {
   clinic: HealthFacility
 }
 
 export default function ClinicSidebar({ clinic }: ClinicSidebarProps) {
-  const hours = clinic.detail?.clinicHours ?? FALLBACK_HOURS
+  const hours = clinic.detail?.clinicHours ?? MOCK_CLINIC_HOURS
   const supplies = clinic.detail?.clinicSupplies?.length
     ? clinic.detail.clinicSupplies
-    : FALLBACK_SUPPLIES
+    : MOCK_CLINIC_SUPPLIES
 
   return (
     <div className="flex flex-col gap-6">

@@ -3,15 +3,7 @@
 import React from 'react'
 import { Card } from '@/components/ui/card'
 import type { LabeledIcon } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: LabeledIcon[] = [
-  { label: 'كمامات جراحية', icon: 'https://api.iconify.design/healthicons:mask.svg?color=%23f59e0b' },
-  { label: 'اسطوانات اكسجين', icon: 'https://api.iconify.design/healthicons:oxygen-tank.svg?color=%23f59e0b' },
-  { label: 'موازين حرارة', icon: 'https://api.iconify.design/healthicons:thermometer.svg?color=%23f59e0b' },
-  { label: 'ميزان', icon: 'https://api.iconify.design/solar:scale-bold.svg?color=%23f59e0b' },
-  { label: 'قفازات طبية', icon: 'https://api.iconify.design/healthicons:ppe-gloves.svg?color=%23f59e0b' },
-  { label: 'اجهزة قياس الضغط', icon: 'https://api.iconify.design/healthicons:blood-pressure.svg?color=%23f59e0b' },
-]
+import { MOCK_PHARMACY_MEDICAL_SUPPLIES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface PharmacyMedicalSuppliesProps {
   supplies?: LabeledIcon[]
@@ -20,7 +12,7 @@ interface PharmacyMedicalSuppliesProps {
 export default function PharmacyMedicalSupplies({
   supplies,
 }: PharmacyMedicalSuppliesProps) {
-  const list = supplies?.length ? supplies : FALLBACK
+  const list = supplies?.length ? supplies : MOCK_PHARMACY_MEDICAL_SUPPLIES
 
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">

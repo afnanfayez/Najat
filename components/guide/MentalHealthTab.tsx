@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { ChevronDown, ChevronUp, Phone, MessageCircle, Play, HeartHandshake } from 'lucide-react'
-import { EMOTIONS, MENTAL_TIPS } from '@/data/healthGuideData'
+import { EMOTIONS, MENTAL_TIPS } from '@/lib/mocks/healthGuideMockData'
 
 export default function MentalHealthTab() {
   const [openTip, setOpenTip] = useState<number | null>(0)

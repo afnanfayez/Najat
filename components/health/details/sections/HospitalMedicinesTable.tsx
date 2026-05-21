@@ -5,12 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: HealthMedicineRow[] = [
-  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F2A122' },
-  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
-  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-]
+import { MOCK_HOSPITAL_MEDICINES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface HospitalMedicinesTableProps {
   onShowAll: () => void
@@ -29,7 +24,7 @@ export default function HospitalMedicinesTable({
   const list =
     medicines?.length ? medicines
     : medicinesAll?.length ? medicinesAll
-    : FALLBACK
+    : MOCK_HOSPITAL_MEDICINES
   const preview = list.slice(0, PREVIEW_MEDICINE_COUNT)
   const fullCount = Math.max(list.length, medicinesAll?.length ?? 0)
   const usingFallback = !medicines?.length && !medicinesAll?.length

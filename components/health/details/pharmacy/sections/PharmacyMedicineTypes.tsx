@@ -2,20 +2,7 @@
 
 import React from 'react'
 import { Card } from '@/components/ui/card'
-
-const FALLBACK = [
-  'أدوية الضغط المزمن',
-  'أدوية مرضى السكر',
-  'مسكنات',
-  'المضادات الحيوية',
-  'أدوية الأمراض النفسية',
-  'مراهم الحروق',
-  'فيتامينات',
-  'منتجات تخص الأطفال',
-  'منتجات العناية بالبشرة',
-  'منتجات النظافة',
-  'أدوية السموم',
-]
+import { MOCK_PHARMACY_MEDICINE_TYPES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface PharmacyMedicineTypesProps {
   types?: string[]
@@ -24,7 +11,7 @@ interface PharmacyMedicineTypesProps {
 export default function PharmacyMedicineTypes({
   types,
 }: PharmacyMedicineTypesProps) {
-  const list = types?.length ? types : FALLBACK
+  const list = types?.length ? types : MOCK_PHARMACY_MEDICINE_TYPES
 
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">

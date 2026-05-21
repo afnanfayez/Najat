@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react'
 import { ChevronRight } from 'lucide-react'
 import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
+import { MOCK_CLINIC_MEDICINES_ALL } from '@/lib/mocks/healthFacilityDetailsMockData'
 import ClinicHeader from './sections/ClinicHeader'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
@@ -14,12 +15,6 @@ interface ClinicAllMedicinesViewProps {
   onShowMap: () => void
 }
 
-const FALLBACK: HealthMedicineRow[] = [
-  { name: 'إنسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', color: '#F59E0B' },
-  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن آلام', status: 'متوفر', color: '#22c55e' },
-  { name: 'أموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', color: '#22c55e' },
-]
-
 export default function ClinicAllMedicinesView({
   clinic,
   onBack,
@@ -29,7 +24,7 @@ export default function ClinicAllMedicinesView({
     const d = clinic.detail
     if (d?.clinicMedicinesAll?.length) return d.clinicMedicinesAll
     if (d?.clinicMedicines?.length) return d.clinicMedicines
-    return FALLBACK
+    return MOCK_CLINIC_MEDICINES_ALL
   }, [clinic.detail, clinic.id])
 
   return (

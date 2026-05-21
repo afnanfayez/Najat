@@ -4,7 +4,7 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Phone, ChevronLeft, Eye, Clock } from 'lucide-react'
 import Image from 'next/image'
-import { ARTICLES, MENTAL_TOOLS } from '@/data/healthGuideData'
+import { ARTICLES, MENTAL_TOOLS } from '@/lib/mocks/healthGuideMockData'
 
 const AWARENESS_ARTICLES = [
   { title: 'دليل النظافة والتعقيم في ظل نقص الموارد', time: '5 دقائق قراءة', views: '1.2k مشاهدة', image: '/assets/artical.png', id: 'water-diseases' },

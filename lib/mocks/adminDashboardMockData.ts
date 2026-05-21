@@ -37,7 +37,6 @@ export type AdminUrgentAlertMock = {
   description: string
   time: string
   severity: AdminAlertSeverity
-  accentColor: string
 }
 
 export type AdminDashboardMockData = {
@@ -134,7 +133,6 @@ export const ADMIN_DASHBOARD_MOCK: AdminDashboardMockData = {
       description: 'مطلوب تنسيق فوري مع بنك الدم المركزي',
       time: 'منذ 5 دقائق',
       severity: 'critical',
-      accentColor: ADMIN_ALERT_COLORS.critical,
     },
     {
       id: '2',
@@ -142,7 +140,6 @@ export const ADMIN_DASHBOARD_MOCK: AdminDashboardMockData = {
       description: 'تحديث مسارات الإخلاء والوصول للفرق الميدانية',
       time: 'منذ 15 دقيقة',
       severity: 'critical',
-      accentColor: ADMIN_ALERT_COLORS.critical,
     },
     {
       id: '3',
@@ -150,7 +147,6 @@ export const ADMIN_DASHBOARD_MOCK: AdminDashboardMockData = {
       description: 'تم تسجيل نداء استغاثة يحتاج متابعة عاجلة',
       time: 'منذ 22 دقيقة',
       severity: 'critical',
-      accentColor: ADMIN_ALERT_COLORS.critical,
     },
   ],
 }

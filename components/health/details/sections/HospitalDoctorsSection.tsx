@@ -4,37 +4,7 @@ import React, { useMemo } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { HealthDoctor } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: HealthDoctor[] = [
-  {
-    name: 'د. ناصر رأفت أبو شعبان',
-    specialty: 'استشاري الجراحة العامة وجراحة المناظير',
-    photo: '/assets/doctor.png',
-    time: 'من 10:00 ص - 2:00 م',
-    days: ['الأحد', 'الخميس'],
-  },
-  {
-    name: 'د. محمد صلاح اللولو',
-    specialty: 'أخصائي عيون',
-    photo: '/assets/health6.jpg',
-    time: 'من 1:30 م - 5:00 م',
-    days: ['السبت', 'الخميس'],
-  },
-  {
-    name: 'د. سلامة سعيد التتر',
-    specialty: 'استشاري أمراض السكري والغدد',
-    photo: '/assets/health2.jpg',
-    time: 'من 1:30 م - 5:00 م',
-    days: ['السبت', 'الخميس'],
-  },
-  {
-    name: 'د. شادي عبد الحكيم الحداد',
-    specialty: 'أخصائي طب وجراحة الفم والأسنان',
-    photo: '/assets/Photo2.jpg',
-    time: 'من 10:00 ص - 2:00 م',
-    days: ['الأحد', 'الأربعاء'],
-  },
-]
+import { MOCK_HOSPITAL_DOCTORS } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 function buildPreviewDoctors(
   doctors: HealthDoctor[] | undefined,
@@ -66,7 +36,7 @@ export default function HospitalDoctorsSection({
   doctors,
 }: HospitalDoctorsSectionProps) {
   const preview = useMemo(
-    () => buildPreviewDoctors(doctors, FALLBACK, PREVIEW_DOCTOR_COUNT),
+    () => buildPreviewDoctors(doctors, MOCK_HOSPITAL_DOCTORS, PREVIEW_DOCTOR_COUNT),
     [doctors],
   )
   const hasMore = (doctors?.length ?? 0) > PREVIEW_DOCTOR_COUNT

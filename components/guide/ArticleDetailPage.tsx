@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Clock, Share2, Download, Bookmark, AlertTriangle, Lightbulb, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Article } from '@/data/healthGuideData'
+import type { Article } from '@/schemas/healthGuide'
 
 interface Props {
   article: Article

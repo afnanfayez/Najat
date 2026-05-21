@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import type { AdminUrgentAlert } from '../data/adminDashboardService'
 import UrgentAlertItem from './UrgentAlertItem'
 
@@ -8,6 +9,8 @@ interface UrgentAlertsProps {
 }
 
 export default function UrgentAlerts({ alerts }: UrgentAlertsProps) {
+  const router = useRouter()
+
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -19,6 +22,7 @@ export default function UrgentAlerts({ alerts }: UrgentAlertsProps) {
         </h2>
         <button
           type="button"
+          onClick={() => router.push('/admin/alerts')}
           className="shrink-0 text-sm font-semibold text-[#2196F3] transition-colors hover:text-[#1976D2]"
           style={{ fontFamily: "'Cairo', sans-serif" }}
         >

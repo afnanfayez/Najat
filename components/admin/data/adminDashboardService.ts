@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react'
 import {
+  ADMIN_ALERT_COLORS,
   ADMIN_DASHBOARD_MOCK,
   type AdminActivityMock,
   type AdminDashboardMockData,
@@ -42,7 +43,9 @@ export type AdminQuickAction = Omit<AdminQuickActionMock, 'icon'> & {
   icon: LucideIcon
 }
 
-export type AdminUrgentAlert = AdminUrgentAlertMock
+export type AdminUrgentAlert = AdminUrgentAlertMock & {
+  accentColor: string
+}
 
 export type AdminDashboardData = {
   stats: AdminStat[]
@@ -65,6 +68,13 @@ function mapQuickAction(action: AdminQuickActionMock): AdminQuickAction {
   return { ...action, icon: ADMIN_ICONS[action.icon] }
 }
 
+function mapUrgentAlert(alert: AdminUrgentAlertMock): AdminUrgentAlert {
+  return {
+    ...alert,
+    accentColor: ADMIN_ALERT_COLORS[alert.severity],
+  }
+}
+
 export function mapAdminDashboardMock(raw: AdminDashboardMockData = ADMIN_DASHBOARD_MOCK): AdminDashboardData {
   return {
     stats: raw.stats.map(mapStat),
@@ -72,7 +82,7 @@ export function mapAdminDashboardMock(raw: AdminDashboardMockData = ADMIN_DASHBO
     informationAccuracy: raw.informationAccuracy,
     recentActivities: raw.recentActivities.map(mapActivity),
     quickActions: raw.quickActions.map(mapQuickAction),
-    urgentAlerts: raw.urgentAlerts,
+    urgentAlerts: raw.urgentAlerts.map(mapUrgentAlert),
   }
 }
 

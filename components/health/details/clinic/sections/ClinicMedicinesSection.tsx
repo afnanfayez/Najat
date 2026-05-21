@@ -4,12 +4,7 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft } from 'lucide-react'
 import type { HealthMedicineRow } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK: HealthMedicineRow[] = [
-  { name: 'انسولين (Insulin)', category: 'السكري', status: 'كمية محدودة', statusColor: '#F59E0B' },
-  { name: 'باراسيتامول (Paracetamol)', category: 'مسكن الالم', status: 'متوفر', statusColor: '#22C55E' },
-  { name: 'اموكسيسيلين (Amoxicillin)', category: 'مضاد حيوي', status: 'متوفر', statusColor: '#22C55E' },
-]
+import { MOCK_CLINIC_MEDICINES } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 interface ClinicMedicinesSectionProps {
   onShowAll: () => void
@@ -20,7 +15,7 @@ export default function ClinicMedicinesSection({
   onShowAll,
   medicines,
 }: ClinicMedicinesSectionProps) {
-  const list = medicines?.length ? medicines : FALLBACK
+  const list = medicines?.length ? medicines : MOCK_CLINIC_MEDICINES
 
   return (
     <Card className="p-5 sm:p-7 xl:p-8 rounded-[24px] border border-slate-100 shadow-sm bg-white flex flex-col">

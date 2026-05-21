@@ -4,17 +4,7 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Search, Clock } from 'lucide-react'
 import type { LabTestItem } from '@/schemas/healthFacilityDetail'
-
-const FALLBACK_TABS = ['الكل', 'فحوصات الدم', 'الهرمونات', 'وظائف الكبد', 'الفيروسات']
-
-const FALLBACK_TESTS: LabTestItem[] = [
-  { name: 'تعداد الدم الكامل (CBC)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:drop-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
-  { name: 'السكر التراكمي (HbA1c)', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/healthicons:hiv-self-test.svg?color=%23F2A122', group: 'فحوصات الدم' },
-  { name: 'فحص زمرة الدم', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:box-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
-  { name: 'وظائف الكبد', time: 'النتيجة خلال 24 ساعة', icon: 'https://api.iconify.design/solar:health-bold.svg?color=%23F2A122', group: 'وظائف الكبد' },
-  { name: 'فحص التلاسيميا', time: 'النتيجة خلال أسبوع', icon: 'https://api.iconify.design/solar:graph-new-bold.svg?color=%23F2A122', group: 'فحوصات الدم' },
-  { name: 'فحص السرطان', time: 'النتيجة خلال 3 أيام', icon: 'https://api.iconify.design/solar:ribbon-bold.svg?color=%23F2A122', group: 'الفيروسات' },
-]
+import { MOCK_LAB_TABS, MOCK_LAB_TESTS } from '@/lib/mocks/healthFacilityDetailsMockData'
 
 function normalize(s: string) {
   return s.trim().toLowerCase()
@@ -29,8 +19,8 @@ export default function LabTestsSection({
   tests,
   tabLabels,
 }: LabTestsSectionProps) {
-  const tabs = tabLabels?.length ? tabLabels : FALLBACK_TABS
-  const allTests = tests?.length ? tests : FALLBACK_TESTS
+  const tabs = tabLabels?.length ? tabLabels : MOCK_LAB_TABS
+  const allTests = tests?.length ? tests : MOCK_LAB_TESTS
   const [activeTab, setActiveTab] = React.useState(tabs[0] ?? 'الكل')
   const [searchRaw, setSearchRaw] = React.useState('')
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Share2, Download, Bookmark } from 'lucide-react'
 import { toast } from 'sonner'
-import { ARTICLES } from '@/data/healthGuideData'
+import { ARTICLES } from '@/lib/mocks/healthGuideMockData'
 
 interface Props { query: string }
 

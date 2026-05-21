@@ -1,6 +1,7 @@
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
+import { USE_MOCK_AID } from '@/lib/mocks/mockConfig'
 
-export const USE_MOCK_AID = process.env.NEXT_PUBLIC_USE_MOCK === '1'
+export { USE_MOCK_AID }
 
 export const MOCK_AID: HumanitarianAid[] = [
   {
