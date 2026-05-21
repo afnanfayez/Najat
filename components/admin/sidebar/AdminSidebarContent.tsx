@@ -39,7 +39,7 @@ export default function AdminSidebarContent({
           alt="شعار نجاة"
           width={100}
           height={100}
-          style={{ objectFit: 'contain' }}
+          style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxWidth: 100, maxHeight: 100 }}
           priority
         />
       </div>
@@ -150,6 +150,7 @@ export default function AdminSidebarContent({
             src="/assets/profile_avatar.png"
             alt={user?.fullName ?? 'مدير النظام'}
             fill
+            sizes="32px"
             style={{ objectFit: 'cover' }}
           />
         </div>

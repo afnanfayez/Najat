@@ -38,8 +38,15 @@ export default function AdminShell({ activeNav = 'dashboard', children }: AdminS
   const handleNavChange = (id: string) => {
     setNav(id)
     setIsMobileOpen(false)
-    if (id === 'dashboard') {
-      router.push('/admin')
+
+    const routes: Record<string, string> = {
+      dashboard: '/admin',
+      users: '/admin/users',
+    }
+
+    const path = routes[id]
+    if (path) {
+      router.push(path)
     }
   }
 
