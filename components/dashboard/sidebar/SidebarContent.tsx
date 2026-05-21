@@ -166,7 +166,7 @@ export default function SidebarContent({
               textOverflow: 'ellipsis',
             }}
           >
-            {user?.fullName ?? '...'}
+            {user?.fullName || '...'}
           </p>
           <span
             className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full mt-1 ${badge.bg} ${badge.text}`}

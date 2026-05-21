@@ -3,57 +3,21 @@
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 
-import {
-  MAP_CENTER,
-  MAP_DANGER_ORANGE,
-  MAP_DANGER_RED,
-  MAP_RESOURCE_MARKERS,
-  MAP_SAFE_ROUTE,
-} from '@/lib/mocks/mapsMockData'
+import { MAP_CENTER } from '@/lib/mocks/mapsMockData'
+import SafetyMapLayersOverlay from './SafetyMapLayersOverlay'
+import type {
+  MapDangerZone,
+  MapResourcePoint,
+  MapSafeRoad,
+} from '@/lib/maps/safetyMapTransforms'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
-
-const CENTER: [number, number] = [31.40, 34.47]
-
-const SAFE_ROUTE: [number, number][] = [
-  [31.410, 34.465],
-  [31.415, 34.470],
-  [31.420, 34.465],
-  [31.418, 34.458],
-]
-
-const DANGER_RED: [number, number][] = [
-  [31.408, 34.455],
-  [31.412, 34.462],
-  [31.416, 34.456],
-]
-
-const DANGER_ORANGE: [number, number][] = [
-  [31.415, 34.458],
-  [31.418, 34.463],
-  [31.422, 34.458],
-  [31.424, 34.465],
-]
-
-const RESOURCE_MARKERS = [
-  { lat: 31.418, lng: 34.462, name: 'باركس عبد العالل' },
-  { lat: 31.406, lng: 34.468, name: 'مركز شباب الأمل' },
-]
-
-const orangeIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
 })
 
 const blueIcon = new L.Icon({
@@ -75,6 +39,9 @@ export interface LeafletMapInnerProps {
   showDangerZones: boolean
   showResourceActivity: boolean
   flyTo: SearchResult | null
+  safeRoads: MapSafeRoad[]
+  dangerZones: MapDangerZone[]
+  resourcePoints: MapResourcePoint[]
 }
 
 function FlyController({ flyTo }: { flyTo: SearchResult | null }) {
@@ -87,12 +54,26 @@ function FlyController({ flyTo }: { flyTo: SearchResult | null }) {
   return null
 }
 
+function MapResizeController() {
+  const map = useMap()
+  useEffect(() => {
+    const timer = window.setTimeout(() => map.invalidateSize(), 100)
+    return () => window.clearTimeout(timer)
+  }, [map])
+  return null
+}
+
 export default function LeafletMapInner({
   showSafeRoutes,
   showDangerZones,
   showResourceActivity,
   flyTo,
+  safeRoads,
+  dangerZones,
+  resourcePoints,
 }: LeafletMapInnerProps) {
+  const anyLayerActive = showSafeRoutes || showDangerZones || showResourceActivity
+
   return (
     <MapContainer
       center={MAP_CENTER}
@@ -109,7 +90,18 @@ export default function LeafletMapInner({
         maxNativeZoom={19}
       />
 
+      <MapResizeController />
       <FlyController flyTo={flyTo} />
+
+      <SafetyMapLayersOverlay
+        showSafeRoutes={showSafeRoutes}
+        showDangerZones={showDangerZones}
+        showResourceActivity={showResourceActivity}
+        safeRoads={safeRoads}
+        dangerZones={dangerZones}
+        resourcePoints={resourcePoints}
+        fitToLayers={anyLayerActive && !flyTo}
+      />
 
       {flyTo && (
         <Marker position={flyTo.coords} icon={blueIcon}>
@@ -120,37 +112,6 @@ export default function LeafletMapInner({
           </Popup>
         </Marker>
       )}
-
-      {showSafeRoutes && (
-        <Polyline
-          positions={MAP_SAFE_ROUTE}
-          pathOptions={{ color: '#4CAF50', weight: 5, opacity: 0.9 }}
-        />
-      )}
-
-      {showDangerZones && (
-        <>
-          <Polyline
-            positions={MAP_DANGER_RED}
-            pathOptions={{ color: '#F44336', weight: 5, opacity: 0.9 }}
-          />
-          <Polyline
-            positions={MAP_DANGER_ORANGE}
-            pathOptions={{ color: '#FF9800', weight: 4, opacity: 0.85, dashArray: '8 4' }}
-          />
-        </>
-      )}
-
-      {showResourceActivity &&
-        MAP_RESOURCE_MARKERS.map((m) => (
-          <Marker key={m.name} position={[m.lat, m.lng]} icon={orangeIcon}>
-            <Popup>
-              <span style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700, fontSize: 14 }}>
-                {m.name}
-              </span>
-            </Popup>
-          </Marker>
-        ))}
     </MapContainer>
   )
 }

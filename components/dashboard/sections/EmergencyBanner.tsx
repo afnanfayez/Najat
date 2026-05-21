@@ -2,12 +2,22 @@
 
 interface EmergencyBannerProps {
   isMobile: boolean
+  onClick?: () => void
 }
 
-export default function EmergencyBanner({ isMobile }: EmergencyBannerProps) {
+export default function EmergencyBanner({ isMobile, onClick }: EmergencyBannerProps) {
   return (
     <div
       className="emergency-banner"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick?.()
+        }
+      }}
       style={{
         background: 'linear-gradient(135deg, #F44336, #D32F2F)',
         borderRadius: '20px',

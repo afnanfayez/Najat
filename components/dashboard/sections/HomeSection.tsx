@@ -9,6 +9,7 @@ interface HomeSectionProps {
   hoveredServiceCard: string | null
   setHoveredServiceCard: (id: string | null) => void
   onCardClick?: (cardId: string) => void
+  onEmergencyBannerClick?: () => void
 }
 
 export default function HomeSection({
@@ -16,10 +17,11 @@ export default function HomeSection({
   hoveredServiceCard,
   setHoveredServiceCard,
   onCardClick,
+  onEmergencyBannerClick,
 }: HomeSectionProps) {
   return (
     <>
-      <EmergencyBanner isMobile={isMobile} />
+      <EmergencyBanner isMobile={isMobile} onClick={onEmergencyBannerClick} />
 
       <div
         className="section-header"

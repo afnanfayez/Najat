@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, FormEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, FormEvent, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { Lock, MapPin, Search, Loader2, Navigation, X } from 'lucide-react'
 import MobileSimpleHeader from '@/components/dashboard/header/MobileSimpleHeader'
+import { useSafetyCheck, useSafetyMapData } from '@/hooks/useSafetyMapData'
 import type { LeafletMapInnerProps, SearchResult } from './LeafletMapInner'
 
 const LeafletMap = dynamic<LeafletMapInnerProps>(
@@ -186,6 +187,18 @@ export default function MapsContent() {
   const [flyTo, setFlyTo] = useState<SearchResult | null>(null)
   const [isLocating, setIsLocating] = useState(false)
 
+  const [isMounted, setIsMounted] = useState(false)
+
+  const mapDataQuery = useSafetyMapData()
+  const safetyCheckQuery = useSafetyCheck(
+    flyTo?.coords[0] ?? null,
+    flyTo?.coords[1] ?? null,
+  )
+
+  const safeRoads = mapDataQuery.data?.safeRoads ?? []
+  const dangerZones = mapDataQuery.data?.dangerZones ?? []
+  const resourcePoints = mapDataQuery.data?.resourcePoints ?? []
+
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -194,6 +207,69 @@ export default function MapsContent() {
     setLayers((prev) => ({ ...prev, [key]: !prev[key] }))
 
   const anyLayerActive = layers.safeRoutes || layers.dangerZones || layers.resourceActivity
+
+  const bannerMessage = useMemo(() => {
+    if (!isMounted) {
+      return 'جاري تحميل بيانات الخريطة...'
+    }
+    if (flyTo && safetyCheckQuery.data && !safetyCheckQuery.data.safe) {
+      const zone = safetyCheckQuery.data.zones[0]
+      return zone?.description
+        ? `تحذير: ${zone.description}`
+        : 'تحذير: أنت في منطقة خطر — يرجى مغادرة المنطقة فوراً'
+    }
+    if (anyLayerActive) {
+      if (mapDataQuery.isLoading) {
+        return 'جاري تحميل بيانات الطبقة...'
+      }
+      if (mapDataQuery.isError) {
+        return 'تعذّر تحميل بيانات الخريطة — تأكد من تسجيل الدخول'
+      }
+      if (layers.safeRoutes && safeRoads.length === 0) {
+        return 'لا توجد طرق آمنة مسجلة حالياً على الخريطة'
+      }
+      if (layers.dangerZones && dangerZones.length === 0) {
+        return 'لا توجد مناطق خطر مسجلة حالياً'
+      }
+      if (layers.resourceActivity && resourcePoints.length === 0) {
+        return 'لا توجد نقاط موارد مسجلة حالياً'
+      }
+      return 'يرجى تتبع خط السير من أجل سلامتكم'
+    }
+    if (mapDataQuery.isLoading) {
+      return 'جاري تحميل بيانات الخريطة...'
+    }
+    if (mapDataQuery.isError) {
+      return 'تعذّر تحميل بيانات الطرق — حاول تحديث الصفحة'
+    }
+    if (safeRoads.length > 0) {
+      return `${safeRoads.length} طرق آمنة و${resourcePoints.length} نقاط موارد متاحة على الخريطة`
+    }
+    return 'فعّل طبقات الخريطة لعرض الطرق الآمنة ومناطق الخطر ونقاط الموارد'
+  }, [
+    isMounted,
+    flyTo,
+    safetyCheckQuery.data,
+    anyLayerActive,
+    mapDataQuery.isLoading,
+    mapDataQuery.isError,
+    layers.safeRoutes,
+    layers.dangerZones,
+    layers.resourceActivity,
+    safeRoads.length,
+    dangerZones.length,
+    resourcePoints.length,
+  ])
+
+  const bannerColor = useMemo(() => {
+    if (!isMounted) return '#FF9800'
+    if (flyTo && safetyCheckQuery.data && !safetyCheckQuery.data.safe) return '#F44336'
+    return '#FF9800'
+  }, [isMounted, flyTo, safetyCheckQuery.data])
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -383,6 +459,9 @@ export default function MapsContent() {
             showDangerZones={layers.dangerZones}
             showResourceActivity={layers.resourceActivity}
             flyTo={flyTo}
+            safeRoads={safeRoads}
+            dangerZones={dangerZones}
+            resourcePoints={resourcePoints}
           />
         </div>
 
@@ -614,23 +693,20 @@ export default function MapsContent() {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 900,
-            background: '#FF9800',
+            background: bannerColor,
             color: '#fff',
             borderRadius: 24,
             padding: '10px 24px',
             fontFamily: "'Cairo', sans-serif",
             fontSize: 13,
             fontWeight: 700,
-            boxShadow: '0 4px 16px rgba(255,152,0,0.4)',
+            boxShadow: `0 4px 16px ${bannerColor}66`,
             whiteSpace: 'nowrap',
             textAlign: 'center',
             direction: 'rtl',
           }}
         >
-          {anyLayerActive
-            ? 'يرجى تتبع خط السير من أجل سلامتكم'
-            : 'شيبه تم إغلاق طرق صالح الدين مؤقتاً لدواعي أمنية'
-          }
+          {bannerMessage}
         </div>
 
         {/* ── Legend ── */}

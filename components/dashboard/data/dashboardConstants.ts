@@ -6,7 +6,6 @@ import {
   FilePlus,
   User,
   Siren,
-  Send,
   Settings2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -99,11 +98,11 @@ export const serviceCards: ServiceCardData[] = [
     sos: true,
   },
   {
-    id: 'conversations',
-    title: 'المحادثات',
+    id: 'profile',
+    title: 'الملف الشخصي',
     description:
-      'التواصل المباشر مع غرفة العمليات، المتطوعين، المتطوعين، مجموعات الدعم المجتمعي في منطقتك.',
-    icon: Send,
+      'عرض بياناتك الشخصية، تعديل معلومات الحساب، وإدارة تفضيلات الإشعارات والمساعدة.',
+    icon: User,
     color: '#e3f4ff',
     iconColor: '#2196f3',
   },

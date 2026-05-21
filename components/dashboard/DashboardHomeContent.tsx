@@ -32,7 +32,21 @@ export default function DashboardHomeContent() {
     } else if (cardId === 'health-guide') {
       router.push('/health-guide')
       shell?.setIsMobileMenuOpen(false)
+    } else if (cardId === 'interactive-maps') {
+      router.push('/maps')
+      shell?.setIsMobileMenuOpen(false)
+    } else if (cardId === 'emergency-cases') {
+      router.push('/emergency')
+      shell?.setIsMobileMenuOpen(false)
+    } else if (cardId === 'profile') {
+      router.push('/profile')
+      shell?.setIsMobileMenuOpen(false)
     }
+  }
+
+  const handleEmergencyBannerClick = () => {
+    router.push('/emergency')
+    shell?.setIsMobileMenuOpen(false)
   }
 
   return (
@@ -63,6 +77,7 @@ export default function DashboardHomeContent() {
           hoveredServiceCard={hoveredServiceCard}
           setHoveredServiceCard={setHoveredServiceCard}
           onCardClick={handleCardClick}
+          onEmergencyBannerClick={handleEmergencyBannerClick}
         />
       </div>
     </>
