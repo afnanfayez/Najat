@@ -9,7 +9,7 @@ import type { AdminManagedUser } from '@/schemas/adminUser'
 interface AdminUsersTableProps {
   users: AdminManagedUser[]
   enabledOverrides: Record<string, boolean>
-  onToggleUser: (userId: string, enabled: boolean) => void
+  onToggleUser: (userId: string, enabled: boolean, userName: string) => void
   onEditUser: (user: AdminManagedUser) => void
   pagination?: ReactNode
 }
@@ -52,6 +52,8 @@ export default function AdminUsersTable({
             <tbody>
               {users.map((user) => {
                 const enabled = enabledOverrides[user.id] ?? user.enabled
+                const displayStatus = enabled ? user.statusLabel : 'معطل'
+                const displayColor  = enabled ? user.statusColor  : '#F44336'
                 return (
                   <tr
                     key={user.id}
@@ -88,12 +90,9 @@ export default function AdminUsersTable({
                     <td className={`${tdClass} text-center`}>
                       <span
                         className="text-[14px] font-bold"
-                        style={{
-                          color: user.statusColor,
-                          fontFamily: ADMIN_USERS_FONT,
-                        }}
+                        style={{ color: displayColor, fontFamily: ADMIN_USERS_FONT }}
                       >
-                        {user.statusLabel}
+                        {displayStatus}
                       </span>
                     </td>
                     <td
@@ -106,7 +105,7 @@ export default function AdminUsersTable({
                       <div className="flex items-center justify-center gap-3">
                         <AdminUsersToggle
                           checked={enabled}
-                          onChange={(next) => onToggleUser(user.id, next)}
+                          onChange={(next) => onToggleUser(user.id, next, user.name)}
                         />
                         <button
                           type="button"
@@ -131,6 +130,8 @@ export default function AdminUsersTable({
       <div className="flex flex-col gap-4 md:hidden">
         {users.map((user) => {
           const enabled = enabledOverrides[user.id] ?? user.enabled
+          const displayStatus = enabled ? user.statusLabel : 'معطل'
+          const displayColor  = enabled ? user.statusColor  : '#F44336'
           return (
             <div
               key={user.id}
@@ -154,7 +155,7 @@ export default function AdminUsersTable({
                 <div className="flex shrink-0 items-center gap-2">
                   <AdminUsersToggle
                     checked={enabled}
-                    onChange={(next) => onToggleUser(user.id, next)}
+                    onChange={(next) => onToggleUser(user.id, next, user.name)}
                   />
                   <button
                     type="button"
@@ -191,12 +192,9 @@ export default function AdminUsersTable({
                   <p className="text-xs text-[#94A3B8]">الحالة</p>
                   <p
                     className="mt-1 text-sm font-bold"
-                    style={{
-                      color: user.statusColor,
-                      fontFamily: ADMIN_USERS_FONT,
-                    }}
+                    style={{ color: displayColor, fontFamily: ADMIN_USERS_FONT }}
                   >
-                    {user.statusLabel}
+                    {displayStatus}
                   </p>
                 </div>
                 <div>

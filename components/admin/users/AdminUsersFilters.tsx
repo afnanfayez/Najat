@@ -63,6 +63,8 @@ export default function AdminUsersFilters({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="البحث بالاسم أو البريد الإلكتروني..."
+              autoComplete="off"
+              name="user-table-search"
               className="h-11 border-none pr-10 text-right text-sm shadow-none focus-visible:ring-0"
               style={{
                 fontFamily: ADMIN_USERS_FONT,

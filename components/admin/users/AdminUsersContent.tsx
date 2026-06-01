@@ -8,6 +8,7 @@ import AdminUsersFilters from './AdminUsersFilters'
 import AdminUsersTable from './AdminUsersTable'
 import AdminUsersPagination from './AdminUsersPagination'
 import AdminUserEditModal from './AdminUserEditModal'
+import AdminDisableUserModal from './AdminDisableUserModal'
 import { useAdminUsers } from '@/hooks/useAdminUsers'
 import type { AdminManagedUser, AdminUserRegionFilter, AdminUserRoleFilter } from '@/schemas/adminUser'
 
@@ -20,8 +21,12 @@ export default function AdminUsersContent() {
   const [region, setRegion] = useState<AdminUserRegionFilter>('all')
   const [page, setPage] = useState(1)
   const [enabledOverrides, setEnabledOverrides] = useState<Record<string, boolean>>({})
+
   const [editingUser, setEditingUser] = useState<AdminManagedUser | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
+
+  // Disable confirmation modal
+  const [disableTarget, setDisableTarget] = useState<{ userId: string; userName: string } | null>(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
@@ -38,8 +43,23 @@ export default function AdminUsersContent() {
     pageSize: PAGE_SIZE,
   })
 
-  function handleToggleUser(userId: string, enabled: boolean) {
-    setEnabledOverrides((prev) => ({ ...prev, [userId]: enabled }))
+  function handleToggleUser(userId: string, enabled: boolean, userName: string) {
+    if (!enabled) {
+      // Disabling → show confirmation modal, do NOT update yet
+      setDisableTarget({ userId, userName })
+    } else {
+      // Re-enabling → apply immediately without confirmation
+      setEnabledOverrides((prev) => ({ ...prev, [userId]: true }))
+    }
+  }
+
+  function handleDisableConfirmed(userId: string) {
+    setEnabledOverrides((prev) => ({ ...prev, [userId]: false }))
+    setDisableTarget(null)
+  }
+
+  function handleDisableClose() {
+    setDisableTarget(null)
   }
 
   function handleEditUser(user: AdminManagedUser) {
@@ -106,6 +126,16 @@ export default function AdminUsersContent() {
         open={editModalOpen}
         onClose={handleEditClose}
       />
+
+      {disableTarget && (
+        <AdminDisableUserModal
+          userId={disableTarget.userId}
+          userName={disableTarget.userName}
+          open={!!disableTarget}
+          onClose={handleDisableClose}
+          onConfirmed={handleDisableConfirmed}
+        />
+      )}
     </AdminShell>
   )
 }
