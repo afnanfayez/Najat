@@ -5,7 +5,7 @@ export type VolunteerFormData = {
   birthDate: string
   currentAddress: string
   detailedAddress: string
-  volunteerType: string
+  volunteerTypes: string[]
   primaryPhone: string
   backupPhone: string
   email: string
@@ -16,7 +16,7 @@ export type VolunteerFormData = {
   graduationYear: string
   previousVolunteering: string
   workExperience: string
-  specialSkills: string
+  specialSkills: string[]
   trainingCourses: string
   agreedToTerms: boolean
 }
@@ -33,7 +33,7 @@ export const INITIAL_FORM_DATA: VolunteerFormData = {
   birthDate: '',
   currentAddress: '',
   detailedAddress: '',
-  volunteerType: '',
+  volunteerTypes: [],
   primaryPhone: '',
   backupPhone: '',
   email: '',
@@ -44,7 +44,7 @@ export const INITIAL_FORM_DATA: VolunteerFormData = {
   graduationYear: '',
   previousVolunteering: '',
   workExperience: '',
-  specialSkills: '',
+  specialSkills: [],
   trainingCourses: '',
   agreedToTerms: false,
 }
@@ -58,13 +58,21 @@ export const STEP_NAMES = [
 
 export const TOTAL_STEPS = 4
 
-export const VOLUNTEER_TYPE_OPTIONS = [
-  'طبي',
-  'إغاثي',
-  'تعليمي',
-  'نفسي واجتماعي',
-  'لوجستي',
-  'إداري',
+export const ADDRESS_OPTIONS = [
+  { value: 'شمال غزة',       label: 'شمال غزة' },
+  { value: 'مدينة غزة',      label: 'مدينة غزة' },
+  { value: 'المنطقة الوسطى', label: 'المنطقة الوسطى' },
+  { value: 'خانيونس',        label: 'خانيونس' },
+  { value: 'رفح',            label: 'رفح' },
+]
+
+export const VOLUNTEER_TYPE_OPTIONS: { value: string; label: string; description: string }[] = [
+  { value: 'ميداني',       label: 'متطوع ميداني',  description: 'العمل المباشر في المواقع الميدانية' },
+  { value: 'إغاثي',        label: 'متطوع إغاثي',   description: 'توزيع المساعدات والدعم اللوجستي' },
+  { value: 'تقني',         label: 'متطوع تقني',    description: 'الدعم الفني، البرمجة، والتحليل' },
+  { value: 'طبي',          label: 'متطوع طبي',     description: 'الأطباء، الممرضون، والمسعفون' },
+  { value: 'تعليمي',       label: 'متطوع تعليمي',  description: 'التدريس والتوعية والإرشاد' },
+  { value: 'نفسي اجتماعي', label: 'متطوع نفسي اجتماعي', description: 'الدعم النفسي والاجتماعي للمتضررين' },
 ]
 
 export const QUALIFICATION_OPTIONS = [

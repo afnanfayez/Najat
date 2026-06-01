@@ -10,6 +10,8 @@ import {
   type UpdateField,
   type VolunteerFormData,
 } from '../types'
+import SkillTagInput from '../SkillTagInput'
+import SelectField from '../SelectField'
 
 interface Props {
   data: VolunteerFormData
@@ -35,20 +37,12 @@ export default function StepQualifications({ data, onChange }: Props) {
             <label style={FORM_LABEL_STYLE}>
               المؤهل العلمي <span style={{ color: '#F44336' }}>*</span>
             </label>
-            <div className="relative">
-              <select
-                value={data.academicQualification}
-                onChange={(e) => onChange('academicQualification', e.target.value)}
-                className={selectClass}
-                style={FORM_INPUT_STYLE}
-              >
-                <option value="">بكالوريوس</option>
-                {QUALIFICATION_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">▾</span>
-            </div>
+            <SelectField
+              value={data.academicQualification}
+              onChange={(v) => onChange('academicQualification', v)}
+              placeholder="بكالوريوس"
+              options={QUALIFICATION_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <label style={FORM_LABEL_STYLE}>التخصص العلمي</label>
@@ -99,19 +93,15 @@ export default function StepQualifications({ data, onChange }: Props) {
             <p className="text-xs" style={{ fontFamily: FORM_FONT, color: '#94A3B8' }}>
               هل سبق لك التطوع في مجالات مشابهة؟
             </p>
-            <div className="relative">
-              <select
-                value={data.previousVolunteering}
-                onChange={(e) => onChange('previousVolunteering', e.target.value)}
-                className={selectClass}
-                style={FORM_INPUT_STYLE}
-              >
-                <option value="">اختر</option>
-                <option value="نعم">نعم</option>
-                <option value="لا">لا</option>
-              </select>
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">▾</span>
-            </div>
+            <SelectField
+              value={data.previousVolunteering}
+              onChange={(v) => onChange('previousVolunteering', v)}
+              placeholder="نعم / لا"
+              options={[
+                { value: 'نعم', label: 'نعم' },
+                { value: 'لا', label: 'لا' },
+              ]}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <label style={FORM_LABEL_STYLE}>الخبرة المهنية</label>
@@ -133,12 +123,10 @@ export default function StepQualifications({ data, onChange }: Props) {
 
         <div className="flex flex-col gap-1.5">
           <label style={FORM_LABEL_STYLE}>المهارات الخاصة</label>
-          <input
-            value={data.specialSkills}
-            onChange={(e) => onChange('specialSkills', e.target.value)}
-            placeholder="مثال: الإسعافات الأولية، التمريض، إدارة الكوارث..."
-            className={inputClass}
-            style={FORM_INPUT_STYLE}
+          <SkillTagInput
+            tags={data.specialSkills}
+            onChange={(tags) => onChange('specialSkills', tags)}
+            placeholder="اكتب مهارة واضغط Enter أو فاصلة للإضافة..."
           />
         </div>
 

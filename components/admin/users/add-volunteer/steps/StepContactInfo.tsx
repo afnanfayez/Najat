@@ -5,10 +5,10 @@ import {
   FORM_INPUT_STYLE,
   FORM_LABEL_STYLE,
   SECTION_TITLE_STYLE,
-  VOLUNTEER_TYPE_OPTIONS,
   type UpdateField,
   type VolunteerFormData,
 } from '../types'
+import VolunteerTypeSelect from '../VolunteerTypeSelect'
 
 interface Props {
   data: VolunteerFormData
@@ -25,21 +25,16 @@ export default function StepContactInfo({ data, onChange }: Props) {
     <div className="flex flex-col gap-6">
       {/* Volunteer type */}
       <section className="flex flex-col gap-3 text-right">
-        <h3 style={SECTION_TITLE_STYLE}>نوع التطوع</h3>
-        <div className="relative">
-          <select
-            value={data.volunteerType}
-            onChange={(e) => onChange('volunteerType', e.target.value)}
-            className={selectClass}
-            style={FORM_INPUT_STYLE}
-          >
-            <option value="">نوع التطوع</option>
-            {VOLUNTEER_TYPE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">▾</span>
+        <div>
+          <h3 style={SECTION_TITLE_STYLE}>نوع التطوع</h3>
+          <p className="mt-1 text-xs" style={{ fontFamily: FORM_FONT, color: '#94A3B8' }}>
+            بمكنك اختيار أكثر من نوع بناءً على خبرتك
+          </p>
         </div>
+        <VolunteerTypeSelect
+          selected={data.volunteerTypes}
+          onChange={(values) => onChange('volunteerTypes', values)}
+        />
       </section>
 
       {/* Contact info */}

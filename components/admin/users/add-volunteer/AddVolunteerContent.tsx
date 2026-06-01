@@ -27,7 +27,7 @@ import {
 
 const REQUIRED: Record<number, (keyof VolunteerFormData)[]> = {
   1: ['fullName', 'idNumber', 'birthDate', 'currentAddress', 'detailedAddress'],
-  2: ['volunteerType', 'primaryPhone', 'email'],
+  2: ['primaryPhone', 'email'],
   3: ['academicQualification'],
   4: ['agreedToTerms'],
 }
@@ -40,6 +40,7 @@ export default function AddVolunteerContent() {
   const [validationError, setValidationError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   // Restore draft on mount
   useEffect(() => {
@@ -99,8 +100,7 @@ export default function AddVolunteerContent() {
       // await request('/v1/admin/volunteers', { method: 'POST', body: JSON.stringify(formData) })
       await new Promise((res) => setTimeout(res, 800))
       clearDraft()
-      toast.success('تم إرسال الطلب بنجاح')
-      router.push('/admin/users')
+      setSubmitted(true)
     } catch {
       toast.error('تعذّر إرسال الطلب')
     } finally {
@@ -160,7 +160,7 @@ export default function AddVolunteerContent() {
         {step === 1 && <StepPersonalInfo data={formData} onChange={updateField} />}
         {step === 2 && <StepContactInfo data={formData} onChange={updateField} />}
         {step === 3 && <StepQualifications data={formData} onChange={updateField} />}
-        {step === 4 && <StepReview data={formData} onChange={updateField} />}
+        {step === 4 && <StepReview data={formData} onChange={updateField} submitted={submitted} />}
 
         {validationError && (
           <p className="mt-4 text-right text-sm text-[#F44336]" style={{ fontFamily: FORM_FONT }}>
@@ -168,11 +168,20 @@ export default function AddVolunteerContent() {
           </p>
         )}
 
-        {/* Navigation — PRIMARY on RIGHT, SECONDARY on LEFT (RTL: first child = right) */}
+        {/* Navigation */}
         <div className="mt-8 flex items-center justify-between">
 
           {/* RIGHT side — primary action */}
-          {step < TOTAL_STEPS ? (
+          {submitted ? (
+            <button
+              type="button"
+              onClick={() => router.push('/admin/users')}
+              className={primaryBtnClass}
+              style={{ background: FORM_BLUE, fontFamily: FORM_FONT }}
+            >
+              الرجوع للوحة التحكم
+            </button>
+          ) : step < TOTAL_STEPS ? (
             <button
               type="button"
               onClick={handleNext}
@@ -193,8 +202,8 @@ export default function AddVolunteerContent() {
             </button>
           )}
 
-          {/* LEFT side — secondary action */}
-          {step === 1 ? (
+          {/* LEFT side — secondary action (hidden after submit) */}
+          {!submitted && step === 1 ? (
             <button
               type="button"
               onClick={handleSaveDraft}
@@ -204,7 +213,7 @@ export default function AddVolunteerContent() {
             >
               {savingDraft ? 'جاري الحفظ...' : 'حفظ كمسودة'}
             </button>
-          ) : (
+          ) : !submitted ? (
             <button
               type="button"
               onClick={handleBack}
@@ -213,6 +222,8 @@ export default function AddVolunteerContent() {
             >
               الخطوة السابقة
             </button>
+          ) : (
+            <span />
           )}
         </div>
       </div>

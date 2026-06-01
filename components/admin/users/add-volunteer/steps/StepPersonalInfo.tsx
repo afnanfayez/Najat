@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { Camera } from 'lucide-react'
 import { ADMIN_USER_REGION_OPTIONS } from '@/lib/mocks/adminUsersMockData'
 import {
+  ADDRESS_OPTIONS,
   FORM_BLUE,
   FORM_FONT,
   FORM_INPUT_BG,
@@ -12,6 +13,7 @@ import {
   type UpdateField,
   type VolunteerFormData,
 } from '../types'
+import SelectField from '../SelectField'
 
 interface Props {
   data: VolunteerFormData
@@ -115,20 +117,12 @@ export default function StepPersonalInfo({ data, onChange }: Props) {
         <label style={FORM_LABEL_STYLE}>
           عنوان السكن الحالي <span style={{ color: '#F44336' }}>*</span>
         </label>
-        <div className="relative">
-          <select
-            value={data.currentAddress}
-            onChange={(e) => onChange('currentAddress', e.target.value)}
-            className={selectClass}
-            style={{ ...FORM_INPUT_STYLE, background: FORM_INPUT_BG }}
-          >
-            <option value="">اختر المنطقة</option>
-            {ADMIN_USER_REGION_OPTIONS.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">▾</span>
-        </div>
+        <SelectField
+          value={data.currentAddress}
+          onChange={(v) => onChange('currentAddress', v)}
+          placeholder="الشارع والمحافظة"
+          options={ADDRESS_OPTIONS}
+        />
       </div>
 
       {/* Detailed address */}

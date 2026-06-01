@@ -1,12 +1,13 @@
 'use client'
 
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { FORM_BLUE, FORM_FONT, type UpdateField, type VolunteerFormData } from '../types'
+import { FORM_BLUE, FORM_FONT, VOLUNTEER_TYPE_OPTIONS, type UpdateField, type VolunteerFormData } from '../types'
 
 interface Props {
   data: VolunteerFormData
   onChange: UpdateField
+  submitted?: boolean
 }
 
 const CARD_TITLE = {
@@ -44,7 +45,7 @@ function SkillChip({ label }: { label: string }) {
   )
 }
 
-export default function StepReview({ data, onChange }: Props) {
+export default function StepReview({ data, onChange, submitted = false }: Props) {
   const { user } = useAuth()
   const today = new Date().toLocaleDateString('ar-EG', {
     year: 'numeric',
@@ -52,10 +53,7 @@ export default function StepReview({ data, onChange }: Props) {
     day: 'numeric',
   })
 
-  const skills = (data.specialSkills || 'الإسعافات الأولية،التمريض الطارئ،إدارة الكوارث')
-    .split(/[،,]/)
-    .map((s) => s.trim())
-    .filter(Boolean)
+  const skills = data.specialSkills
 
   const cardClass = 'rounded-xl border border-[#E8EEF5] bg-white p-5 shadow-sm'
 
@@ -95,9 +93,9 @@ export default function StepReview({ data, onChange }: Props) {
         </div>
 
         {/* LEFT — تفاصيل الإدارة */}
-        <div className={`${cardClass} shrink-0`} style={{ minWidth: '300px' }}>
-          <h4 className="mb-4 text-right" style={CARD_TITLE}>تفاصيل الإدارة</h4>
-          <div className="flex items-start gap-8">
+        <div className={`${cardClass} shrink-0`} style={{ minWidth: '340px' }}>
+          <h4 className="mb-5 text-right" style={CARD_TITLE}>تفاصيل الإدارة</h4>
+          <div className="flex items-start justify-around gap-6 px-2">
             <InfoCol label="المنطقة الجغرافية" value={data.currentAddress || '—'} />
             <InfoCol label="تاريخ الانضمام"    value={today} />
           </div>
@@ -109,7 +107,7 @@ export default function StepReview({ data, onChange }: Props) {
         <input
           type="checkbox"
           checked={data.agreedToTerms}
-          onChange={(e) => onChange('agreedToTerms', e.target.checked)}
+          onChange={(e) => !submitted && onChange('agreedToTerms', e.target.checked)}
           className="mt-0.5 h-4 w-4 shrink-0 accent-[#2196F3]"
         />
         <span className="flex-1 text-sm leading-relaxed text-[#334155]" style={{ fontFamily: FORM_FONT }}>
@@ -121,19 +119,34 @@ export default function StepReview({ data, onChange }: Props) {
         </span>
       </label>
 
-      {/* Warning */}
-      <div
-        className="flex items-start gap-3 rounded-xl p-4 text-right"
-        style={{ background: '#FEF2F2' }}
-      >
-        <AlertCircle size={22} className="mt-0.5 shrink-0" color="#DC2626" />
-        <p
-          className="flex-1 font-bold leading-relaxed"
-          style={{ fontFamily: FORM_FONT, color: '#DC2626', fontSize: '17px' }}
+      {/* Warning or Success */}
+      {submitted ? (
+        <div
+          className="flex items-center gap-3 rounded-xl p-4 text-right"
+          style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC' }}
         >
-          يرجى التأكد من دقة البيانات المدخلة قبل إرسال الطلب النهائي
-        </p>
-      </div>
+          <CheckCircle2 size={22} className="shrink-0" color="#16A34A" />
+          <p
+            className="flex-1 font-bold"
+            style={{ fontFamily: FORM_FONT, color: '#16A34A', fontSize: '16px' }}
+          >
+            تم إرسال طلبك بنجاح سيتم الرد بأسرع وقت
+          </p>
+        </div>
+      ) : (
+        <div
+          className="flex items-start gap-3 rounded-xl p-4 text-right"
+          style={{ background: '#FEF2F2' }}
+        >
+          <AlertCircle size={22} className="mt-0.5 shrink-0" color="#DC2626" />
+          <p
+            className="flex-1 font-bold leading-relaxed"
+            style={{ fontFamily: FORM_FONT, color: '#DC2626', fontSize: '17px' }}
+          >
+            يرجى التأكد من دقة البيانات المدخلة قبل إرسال الطلب النهائي
+          </p>
+        </div>
+      )}
     </div>
   )
 }
