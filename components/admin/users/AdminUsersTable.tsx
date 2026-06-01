@@ -10,6 +10,7 @@ interface AdminUsersTableProps {
   users: AdminManagedUser[]
   enabledOverrides: Record<string, boolean>
   onToggleUser: (userId: string, enabled: boolean) => void
+  onEditUser: (user: AdminManagedUser) => void
   pagination?: ReactNode
 }
 
@@ -22,6 +23,7 @@ export default function AdminUsersTable({
   users,
   enabledOverrides,
   onToggleUser,
+  onEditUser,
   pagination,
 }: AdminUsersTableProps) {
   return (
@@ -108,7 +110,8 @@ export default function AdminUsersTable({
                         />
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center transition-opacity hover:opacity-75"
+                          onClick={() => onEditUser(user)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
                           style={{ color: ADMIN_USERS_BLUE }}
                           aria-label={`تعديل ${user.name}`}
                         >
@@ -155,7 +158,8 @@ export default function AdminUsersTable({
                   />
                   <button
                     type="button"
-                    className="flex h-8 w-8 items-center justify-center"
+                    onClick={() => onEditUser(user)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
                     style={{ color: ADMIN_USERS_BLUE }}
                     aria-label={`تعديل ${user.name}`}
                   >

@@ -1,5 +1,10 @@
 import { request } from '@/lib/api/api'
-import type { AdminUsersListResponse } from '@/schemas/adminUser'
+import {
+  getMockAdminUsersList,
+  updateMockAdminUser,
+  USE_MOCK_ADMIN_USERS,
+} from '@/lib/mocks/adminUsersMockData'
+import type { AdminUserDto, AdminUsersListResponse } from '@/schemas/adminUser'
 
 function normalizeUsersResponse(raw: unknown): AdminUsersListResponse {
   if (raw && typeof raw === 'object') {
@@ -29,10 +34,6 @@ function normalizeUsersResponse(raw: unknown): AdminUsersListResponse {
   }
 }
 
-/**
- * جلب مستخدمي المدير من الباك اند.
- * فعّل عبر NEXT_PUBLIC_ADMIN_USERS_API=1 ثم عدّل المسار حسب عقد API الفعلي.
- */
 export async function fetchAdminUsersFromApi(
   params: Record<string, string | number | undefined> = {},
 ): Promise<AdminUsersListResponse> {
@@ -48,3 +49,27 @@ export async function fetchAdminUsersFromApi(
   const response = await request(path, { method: 'GET' })
   return normalizeUsersResponse(response)
 }
+
+export type UpdateAdminUserBody = Partial<
+  Pick<AdminUserDto, 'name' | 'email' | 'role' | 'region' | 'status' | 'enabled'>
+>
+
+export async function updateAdminUser(
+  id: string,
+  body: UpdateAdminUserBody,
+): Promise<AdminUserDto> {
+  if (USE_MOCK_ADMIN_USERS) {
+    const updated = updateMockAdminUser(id, body)
+    if (!updated) throw { status: 404, message: 'المستخدم غير موجود' }
+    return updated
+  }
+
+  const response = await request(`/v1/admin/users/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+  return response as AdminUserDto
+}
+
+// Re-export for convenience so callers don't need to import from mock directly
+export { getMockAdminUsersList }

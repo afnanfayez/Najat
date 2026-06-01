@@ -29,7 +29,8 @@ export const ADMIN_USERS_STATS_MOCK: AdminUsersStatsDto = {
   pendingApproval: 8,
 }
 
-export const ADMIN_USERS_MOCK: AdminUserDto[] = [
+// Mutable in-memory store — mimics a real database for mock mode
+let _mockUsers: AdminUserDto[] = [
   {
     id: '1',
     name: 'أحمد الشريف',
@@ -152,8 +153,16 @@ export const ADMIN_USERS_MOCK: AdminUserDto[] = [
   },
 ]
 
-export const ADMIN_USERS_TOTAL_MOCK = 1284
-
 export function getMockAdminUsersList(): AdminUserDto[] {
-  return ADMIN_USERS_MOCK
+  return _mockUsers
+}
+
+export function updateMockAdminUser(
+  id: string,
+  updates: Partial<AdminUserDto>,
+): AdminUserDto | null {
+  const idx = _mockUsers.findIndex((u) => u.id === id)
+  if (idx === -1) return null
+  _mockUsers[idx] = { ..._mockUsers[idx], ...updates, id: _mockUsers[idx].id }
+  return _mockUsers[idx]
 }

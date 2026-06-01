@@ -49,7 +49,7 @@ export default function AdminMobileHeader({ onMenuOpen }: AdminMobileHeaderProps
           alt="شعار نجاة"
           fill
           sizes="40px"
-          style={{ objectFit: 'contain', width: 'auto', height: 'auto' }}
+          style={{ objectFit: 'contain' }}
           priority
         />
       </div>

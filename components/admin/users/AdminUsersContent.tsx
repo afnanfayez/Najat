@@ -7,8 +7,9 @@ import AdminUsersStats from './AdminUsersStats'
 import AdminUsersFilters from './AdminUsersFilters'
 import AdminUsersTable from './AdminUsersTable'
 import AdminUsersPagination from './AdminUsersPagination'
+import AdminUserEditModal from './AdminUserEditModal'
 import { useAdminUsers } from '@/hooks/useAdminUsers'
-import type { AdminUserRegionFilter, AdminUserRoleFilter } from '@/schemas/adminUser'
+import type { AdminManagedUser, AdminUserRegionFilter, AdminUserRoleFilter } from '@/schemas/adminUser'
 
 const PAGE_SIZE = 4
 
@@ -19,15 +20,15 @@ export default function AdminUsersContent() {
   const [region, setRegion] = useState<AdminUserRegionFilter>('all')
   const [page, setPage] = useState(1)
   const [enabledOverrides, setEnabledOverrides] = useState<Record<string, boolean>>({})
+  const [editingUser, setEditingUser] = useState<AdminManagedUser | null>(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
     return () => window.clearTimeout(timer)
   }, [search])
 
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, role, region])
+  useEffect(() => { setPage(1) }, [debouncedSearch, role, region])
 
   const { users, stats, total, page: currentPage, isLoading, isError } = useAdminUsers({
     search: debouncedSearch,
@@ -37,8 +38,18 @@ export default function AdminUsersContent() {
     pageSize: PAGE_SIZE,
   })
 
-  const handleToggleUser = (userId: string, enabled: boolean) => {
+  function handleToggleUser(userId: string, enabled: boolean) {
     setEnabledOverrides((prev) => ({ ...prev, [userId]: enabled }))
+  }
+
+  function handleEditUser(user: AdminManagedUser) {
+    setEditingUser(user)
+    setEditModalOpen(true)
+  }
+
+  function handleEditClose() {
+    setEditModalOpen(false)
+    setEditingUser(null)
   }
 
   return (
@@ -51,8 +62,8 @@ export default function AdminUsersContent() {
         role={role}
         region={region}
         onSearchChange={setSearch}
-        onRoleChange={setRole}
-        onRegionChange={setRegion}
+        onRoleChange={(v) => { setRole(v); setPage(1) }}
+        onRegionChange={(v) => { setRegion(v); setPage(1) }}
       />
 
       {isLoading && (
@@ -78,6 +89,7 @@ export default function AdminUsersContent() {
           users={users}
           enabledOverrides={enabledOverrides}
           onToggleUser={handleToggleUser}
+          onEditUser={handleEditUser}
           pagination={
             <AdminUsersPagination
               page={currentPage}
@@ -88,6 +100,12 @@ export default function AdminUsersContent() {
           }
         />
       )}
+
+      <AdminUserEditModal
+        user={editingUser}
+        open={editModalOpen}
+        onClose={handleEditClose}
+      />
     </AdminShell>
   )
 }

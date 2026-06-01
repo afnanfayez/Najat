@@ -2,7 +2,6 @@ import { fetchAdminUsersFromApi } from '@/lib/api/adminUsers'
 import {
   ADMIN_USER_ROLE_OPTIONS,
   ADMIN_USERS_STATS_MOCK,
-  ADMIN_USERS_TOTAL_MOCK,
   getMockAdminUsersList,
   USE_MOCK_ADMIN_USERS,
 } from '@/lib/mocks/adminUsersMockData'
@@ -78,23 +77,9 @@ function paginateUsers(
   users: AdminUserDto[],
   page: number,
   pageSize: number,
-  total: number,
 ): AdminUserDto[] {
-  if (users.length === 0) return []
-
   const start = (page - 1) * pageSize
-  const result: AdminUserDto[] = []
-
-  for (let i = 0; i < pageSize && start + i < total; i += 1) {
-    const globalIndex = start + i
-    const source = users[globalIndex % users.length]
-    result.push({
-      ...source,
-      id: `${source.id}-${globalIndex}`,
-    })
-  }
-
-  return result
+  return users.slice(start, start + pageSize)
 }
 
 function getMockAdminUsersResult(params: AdminUsersQueryParams): AdminUsersListResponse {
@@ -103,9 +88,9 @@ function getMockAdminUsersResult(params: AdminUsersQueryParams): AdminUsersListR
   const filtered = filterMockUsers(getMockAdminUsersList(), params)
 
   return {
-    users: paginateUsers(filtered, page, pageSize, ADMIN_USERS_TOTAL_MOCK),
+    users: paginateUsers(filtered, page, pageSize),
     stats: ADMIN_USERS_STATS_MOCK,
-    total: ADMIN_USERS_TOTAL_MOCK,
+    total: filtered.length,
     page,
     pageSize,
   }

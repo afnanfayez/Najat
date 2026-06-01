@@ -5,7 +5,8 @@
       "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\Najat\\\\app\\\\\\(app\\)\\\\maps\")",
       "Bash(ls -la d:\\\\\\\\Najat\\\\\\\\app\\\\\\\\\\\\\\(app\\\\\\\\\\\\\\)\\\\\\\\humanitarian-aid)",
       "WebFetch(domain:najat-api.up.railway.app)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "PowerShell(cd d:\\\\Najat; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"AdminUser|adminUser|dialog|EditModal\" })"
     ]
   }
 }
