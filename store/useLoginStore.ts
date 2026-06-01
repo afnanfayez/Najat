@@ -142,6 +142,8 @@ export const useLoginStore = create<LoginState>()(
             isSubmitting: false,
           })
         } catch (err: any) {
+          const msg = err?.message ?? 'تعذّر الاتصال بالخادم، حاول مرة أخرى'
+          toast.error(msg)
           set({
             isError: true,
             emailError: true,

@@ -71,24 +71,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authAPI
       .me()
       .then((res: any) => {
-        const raw = res?.data ?? res
+        // Handle multiple response shapes: flat, { data: {...} }, { user: {...} }, { data: { user: {...} } }
+        const raw = res?.data?.user ?? res?.data ?? res?.user ?? res
         if (raw?.id) {
           setUser({
             id: raw.id,
             email: raw.email ?? '',
-            fullName: raw.fullName ?? raw.name ?? '',
+            fullName: raw.fullName ?? raw.full_name ?? raw.name ?? '',
             role: (raw.role as UserRole) ?? (getUserRole() as UserRole) ?? 'resident',
-            nationalId: raw.nationalId,
+            nationalId: raw.nationalId ?? raw.national_id,
             region: raw.region,
-            phoneNumber: raw.phoneNumber,
+            phoneNumber: raw.phoneNumber ?? raw.phone_number,
             gender: raw.gender,
           })
         } else {
+          // Response came back but no user id — token is likely invalid
           logout()
         }
       })
-      .catch(() => {
-        logout()
+      .catch((err: any) => {
+        // Only force logout on 401 (token rejected by server).
+        // Network errors or 5xx keep the token so the user can retry.
+        if (err?.status === 401) {
+          logout()
+        }
       })
       .finally(() => {
         setIsLoading(false)

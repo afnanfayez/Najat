@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { UserPlus } from 'lucide-react'
 import AdminMobileHeader from '../dashboard/AdminMobileHeader'
 import { useAdminShell } from '../AdminShellContext'
@@ -9,6 +10,7 @@ import {
 } from '../layout/adminLayoutStyles'
 
 export default function AdminUsersPageHeader() {
+  const router = useRouter()
   const shell = useAdminShell()
 
   return (
@@ -25,6 +27,7 @@ export default function AdminUsersPageHeader() {
 
         <button
           type="button"
+          onClick={() => router.push('/admin/users/new')}
           className="flex shrink-0 items-center justify-center gap-2 self-start rounded-xl px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:text-base"
           style={{ background: '#2196F3', fontFamily: "'Cairo', sans-serif" }}
         >
