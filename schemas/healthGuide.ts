@@ -1,16 +1,16 @@
+export type ArticleUiCategory = 'first-aid' | 'articles' | 'mental'
+
 export interface Article {
   id: string
   title: string
   desc: string
-  category: 'first-aid' | 'articles' | 'mental'
+  category: ArticleUiCategory
   readTime: string
+  readTimeMinutes?: number
   image?: string
-  content: {
-    intro: string
-    steps: { title: string; body: string }[]
-    warning?: string
-    tip?: string
-  }
+  content: string
+  viewsCount?: number
+  authorName?: string
 }
 
 export type HealthGuideEmotion = {

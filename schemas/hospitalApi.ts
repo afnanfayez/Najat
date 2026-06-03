@@ -66,12 +66,12 @@ export const nearbyHospitalDtoSchema = hospitalDtoSchema.extend({
 export type NearbyHospitalDto = z.infer<typeof nearbyHospitalDtoSchema>
 
 export const paginationMetaSchema = z.object({
-  page: z.coerce.number(),
-  limit: z.coerce.number(),
-  totalItems: z.coerce.number(),
-  totalPages: z.coerce.number(),
-  hasNextPage: z.boolean(),
-  hasPreviousPage: z.boolean(),
+  page: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
+  totalItems: z.coerce.number().optional(),
+  totalPages: z.coerce.number().optional(),
+  hasNextPage: z.coerce.boolean().optional(),
+  hasPreviousPage: z.coerce.boolean().optional(),
   syncTimestamp: z.string().optional(),
 })
 
