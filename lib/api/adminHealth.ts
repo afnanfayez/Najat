@@ -8,7 +8,9 @@ import type {
   AdminHealthMedicalContent,
   AdminHealthStatsDto,
   CreateAdminHealthFacilityBody,
+  CreateAdminHealthContentBody,
   UpdateAdminHealthFacilityBody,
+  UpdateAdminHealthContentBody,
 } from '@/schemas/adminHealth'
 
 const V1 = '/v1'
@@ -136,6 +138,45 @@ export async function updateAdminHealthFacilityFromApi(
 
 export async function deleteAdminHealthFacilityFromApi(id: string): Promise<void> {
   await request(`${V1}/admin/health/facilities/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+}
+
+function unwrapContent(raw: unknown): AdminHealthMedicalContent {
+  const obj = raw as Record<string, unknown>
+  return (obj.data ?? obj.item ?? obj.content ?? obj) as AdminHealthMedicalContent
+}
+
+export async function fetchAdminHealthContentByIdFromApi(
+  id: string,
+): Promise<AdminHealthMedicalContent> {
+  const raw = await request(`${V1}/admin/health/content/${encodeURIComponent(id)}`)
+  return unwrapContent(raw)
+}
+
+export async function createAdminHealthContentFromApi(
+  body: CreateAdminHealthContentBody,
+): Promise<AdminHealthMedicalContent> {
+  const raw = await request(`${V1}/admin/health/content`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return unwrapContent(raw)
+}
+
+export async function updateAdminHealthContentFromApi(
+  id: string,
+  body: UpdateAdminHealthContentBody,
+): Promise<AdminHealthMedicalContent> {
+  const raw = await request(`${V1}/admin/health/content/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+  return unwrapContent(raw)
+}
+
+export async function deleteAdminHealthContentFromApi(id: string): Promise<void> {
+  await request(`${V1}/admin/health/content/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
@@ -10,10 +10,13 @@ import AdminHealthStats from './AdminHealthStats'
 import AdminHealthToolbar from './AdminHealthToolbar'
 import AdminHealthFacilityGrid from './AdminHealthFacilityGrid'
 import AdminHealthLatestContent from './AdminHealthLatestContent'
-import AdminHealthMedicalContentPanel from './AdminHealthMedicalContentPanel'
+import AdminHealthActionButton from './AdminHealthActionButton'
+import AdminMedicalContentCategoryTabs from './AdminMedicalContentCategoryTabs'
+import AdminMedicalContentGrid from './AdminMedicalContentGrid'
 import DeleteFacilityDialog from './DeleteFacilityDialog'
 import {
   deleteAdminHealthFacility,
+  deleteAdminHealthContent,
   toContentQueryParams,
   toFacilitiesQueryParams,
 } from './data/adminHealthService'
@@ -23,7 +26,9 @@ import {
   useAdminHealthMedicalContent,
 } from '@/hooks/useAdminHealthMedicalContent'
 import type {
+  AdminHealthContentCategory,
   AdminHealthFacility,
+  AdminHealthMedicalContent,
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
   AdminHealthViewTab,
@@ -38,8 +43,11 @@ const DEFAULT_STATS = {
 
 export default function AdminHealthContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<AdminHealthViewTab>('facilities')
+  const [contentCategory, setContentCategory] =
+    useState<AdminHealthContentCategory>('first-aid')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [region, setRegion] = useState<AdminHealthRegionFilter>('all')
@@ -47,6 +55,12 @@ export default function AdminHealthContent() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [facilityToDelete, setFacilityToDelete] =
     useState<AdminHealthFacility | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('tab') === 'content') {
+      setActiveTab('content')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
@@ -87,16 +101,23 @@ export default function AdminHealthContent() {
     isError: contentError,
   } = useAdminHealthMedicalContent(contentQueryParams)
 
+  const filteredMedicalContent = useMemo(
+    () => allMedicalContent.filter((item) => item.category === contentCategory),
+    [allMedicalContent, contentCategory],
+  )
+
   function handleAddFacility() {
     router.push('/admin/health/new')
   }
 
   function handleAddContent() {
-    toast.info('سيتم ربط إضافة المقال بالـ API قريباً')
+    router.push(`/admin/health/content/new?category=${contentCategory}`)
   }
 
   function handleManageAllContent() {
     setActiveTab('content')
+    setContentCategory('first-aid')
+    router.replace('/admin/health?tab=content')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -110,6 +131,30 @@ export default function AdminHealthContent() {
 
   function handleDeleteFacility(facility: AdminHealthFacility) {
     setFacilityToDelete(facility)
+  }
+
+  function handleOpenContent(item: AdminHealthMedicalContent) {
+    router.push(`/admin/health/content/${item.id}`)
+  }
+
+  function handleEditContent(item: AdminHealthMedicalContent) {
+    router.push(`/admin/health/content/${item.id}`)
+  }
+
+  async function handleDeleteContent(item: AdminHealthMedicalContent) {
+    const confirmed = window.confirm(`هل أنت متأكد من حذف «${item.title}»؟`)
+    if (!confirmed) return
+
+    setDeletingId(item.id)
+    try {
+      await deleteAdminHealthContent(item.id)
+      await queryClient.invalidateQueries({ queryKey: ['admin-health-content'] })
+      toast.success('تم حذف المحتوى بنجاح', { position: 'top-center' })
+    } catch {
+      toast.error('تعذّر حذف المحتوى', { position: 'top-center' })
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   async function confirmDeleteFacility() {
@@ -128,6 +173,8 @@ export default function AdminHealthContent() {
     }
   }
 
+  const isContentView = activeTab === 'content'
+
   return (
     <AdminShell activeNav="health">
       <DeleteFacilityDialog
@@ -141,10 +188,23 @@ export default function AdminHealthContent() {
         onConfirm={confirmDeleteFacility}
       />
 
-      <AdminHealthPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
-      <AdminHealthStats stats={stats ?? DEFAULT_STATS} />
+      <AdminHealthPageHeader
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab)
+          router.replace(tab === 'content' ? '/admin/health?tab=content' : '/admin/health')
+        }}
+        title={isContentView ? 'إدارة المحتوى الطبي' : 'إدارة المعلومات الصحية'}
+        subtitle={
+          isContentView
+            ? 'مرحباً بك في لوحة نجاة، راجع وانشر المحتوى التعليمي'
+            : 'مركز التحكم الموحد للمنشآت الطبية والمحتوى التوعوي'
+        }
+      />
 
-      {activeTab === 'facilities' ? (
+      {!isContentView && <AdminHealthStats stats={stats ?? DEFAULT_STATS} />}
+
+      {!isContentView ? (
         <>
           <AdminHealthToolbar
             mode="facilities"
@@ -209,23 +269,24 @@ export default function AdminHealthContent() {
             <AdminHealthLatestContent
               items={latestContent}
               onManageAll={handleManageAllContent}
-              onItemClick={() => toast.info('عرض المقال قريباً')}
+              onItemClick={handleOpenContent}
             />
           )}
         </>
       ) : (
-        <>
-          <AdminHealthToolbar
-            mode="content"
-            search={search}
-            region={region}
-            status={status}
-            actionLabel="إضافة مقال جديد"
-            onSearchChange={setSearch}
-            onRegionChange={setRegion}
-            onStatusChange={setStatus}
-            onAction={handleAddContent}
-          />
+        <div dir="rtl" className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
+            <AdminMedicalContentCategoryTabs
+              active={contentCategory}
+              onChange={setContentCategory}
+            />
+            <div className="flex justify-end">
+              <AdminHealthActionButton
+                label="إضافة محتوى جديد"
+                onClick={handleAddContent}
+              />
+            </div>
+          </div>
 
           {contentLoading && (
             <p
@@ -246,12 +307,14 @@ export default function AdminHealthContent() {
           )}
 
           {!contentLoading && !contentError && (
-            <AdminHealthMedicalContentPanel
-              items={allMedicalContent}
-              onItemClick={() => toast.info('عرض المقال قريباً')}
+            <AdminMedicalContentGrid
+              items={filteredMedicalContent}
+              onOpen={handleOpenContent}
+              onEdit={handleEditContent}
+              onDelete={handleDeleteContent}
             />
           )}
-        </>
+        </div>
       )}
     </AdminShell>
   )

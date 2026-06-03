@@ -12,11 +12,15 @@ import type { AdminHealthViewTab } from '@/schemas/adminHealth'
 interface AdminHealthPageHeaderProps {
   activeTab: AdminHealthViewTab
   onTabChange: (tab: AdminHealthViewTab) => void
+  title?: string
+  subtitle?: string
 }
 
 export default function AdminHealthPageHeader({
   activeTab,
   onTabChange,
+  title = 'إدارة المعلومات الصحية',
+  subtitle = 'مركز التحكم الموحد للمنشآت الطبية والمحتوى التوعوي',
 }: AdminHealthPageHeaderProps) {
   const shell = useAdminShell()
 
@@ -26,9 +30,9 @@ export default function AdminHealthPageHeader({
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-right">
-          <h1 style={ADMIN_PAGE_TITLE_STYLE}>إدارة المعلومات الصحية</h1>
+          <h1 style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
           <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>
-            مركز التحكم الموحد للمنشآت الطبية والمحتوى التوعوي
+            {subtitle}
           </p>
         </div>
 

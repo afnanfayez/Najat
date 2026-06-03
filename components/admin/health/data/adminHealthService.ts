@@ -1,10 +1,14 @@
 import {
   createAdminHealthFacilityFromApi,
+  createAdminHealthContentFromApi,
   deleteAdminHealthFacilityFromApi,
+  deleteAdminHealthContentFromApi,
   fetchAdminHealthContentFromApi,
+  fetchAdminHealthContentByIdFromApi,
   fetchAdminHealthFacilitiesFromApi,
   fetchAdminHealthFacilityByIdFromApi,
   updateAdminHealthFacilityFromApi,
+  updateAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
 import { USE_MOCK_ADMIN_HEALTH } from '@/lib/mocks/mockConfig'
 import {
@@ -22,13 +26,19 @@ import type {
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
   CreateAdminHealthFacilityBody,
+  CreateAdminHealthContentBody,
 } from '@/schemas/adminHealth'
 import {
   buildFacilityFormData,
   mapFacilityFormToCreateBody,
   mapFacilityToSetupForm,
 } from './facilitySetupMapper'
+import {
+  mapContentFormToBody,
+  mapContentToForm,
+} from './medicalContentMapper'
 import type { FacilitySetupForm } from '../setup/types'
+import type { MedicalContentForm } from '../content/types'
 
 export type {
   AdminHealthFacilitiesQueryParams,
@@ -39,6 +49,14 @@ export type {
 
 let mockFacilitiesStore: AdminHealthFacility[] | null = null
 let mockFacilityFormsStore: Record<string, FacilitySetupForm> = {}
+let mockContentStore: AdminHealthMedicalContent[] | null = null
+
+function getMockContent(): AdminHealthMedicalContent[] {
+  if (!mockContentStore) {
+    mockContentStore = [...ADMIN_HEALTH_MEDICAL_CONTENT]
+  }
+  return mockContentStore
+}
 
 function getMockFacilities(): AdminHealthFacility[] {
   if (!mockFacilitiesStore) {
@@ -152,7 +170,7 @@ function filterMockContent(
   params: AdminHealthContentQueryParams,
 ): AdminHealthContentListResponse {
   const q = normalizeSearch(params.search)
-  let items: AdminHealthMedicalContent[] = ADMIN_HEALTH_MEDICAL_CONTENT
+  let items = getMockContent()
 
   if (q) {
     items = items.filter(
@@ -167,6 +185,52 @@ function filterMockContent(
   }
 
   return { items }
+}
+
+function fetchMockContentById(id: string): AdminHealthMedicalContent | null {
+  return getMockContent().find((item) => item.id === id) ?? null
+}
+
+function createMockContent(body: CreateAdminHealthContentBody): AdminHealthMedicalContent {
+  const item: AdminHealthMedicalContent = {
+    id: `content-${Date.now()}`,
+    author: body.author ?? 'مسؤول نجاة',
+    date: new Date().toLocaleDateString('ar-EG', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }),
+    title: body.title,
+    category: body.category,
+    body: body.body,
+    references: body.references ?? '',
+    description: body.description,
+    status: body.status ?? 'draft',
+    thumbnailUrl: body.thumbnailUrl ?? '/assets/artical.png',
+  }
+  mockContentStore = [item, ...getMockContent()]
+  return item
+}
+
+function updateMockContent(
+  id: string,
+  body: CreateAdminHealthContentBody,
+): AdminHealthMedicalContent {
+  const items = getMockContent()
+  const index = items.findIndex((item) => item.id === id)
+  if (index === -1) throw new Error('Content not found')
+
+  const updated: AdminHealthMedicalContent = {
+    ...items[index],
+    ...body,
+    references: body.references ?? items[index].references,
+  }
+  mockContentStore = items.map((item, i) => (i === index ? updated : item))
+  return updated
+}
+
+function deleteMockContent(id: string): void {
+  mockContentStore = getMockContent().filter((item) => item.id !== id)
 }
 
 export async function fetchAdminHealthFacilities(
@@ -306,5 +370,79 @@ export async function deleteAdminHealthFacility(id: string): Promise<void> {
   } catch {
     await new Promise((r) => setTimeout(r, 300))
     deleteMockFacility(id)
+  }
+}
+
+export async function fetchAdminHealthContentById(
+  id: string,
+): Promise<MedicalContentForm> {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 300))
+    const item = fetchMockContentById(id)
+    if (!item) throw new Error('Content not found')
+    return mapContentToForm(item)
+  }
+
+  try {
+    const item = await fetchAdminHealthContentByIdFromApi(id)
+    return mapContentToForm(item)
+  } catch {
+    const item = fetchMockContentById(id)
+    if (!item) throw new Error('Content not found')
+    return mapContentToForm(item)
+  }
+}
+
+export async function createAdminHealthContent(
+  form: MedicalContentForm,
+): Promise<AdminHealthMedicalContent> {
+  const body = mapContentFormToBody(form)
+
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 500))
+    return createMockContent(body)
+  }
+
+  try {
+    return await createAdminHealthContentFromApi(body)
+  } catch {
+    await new Promise((r) => setTimeout(r, 400))
+    return createMockContent(body)
+  }
+}
+
+export async function updateAdminHealthContent(
+  id: string,
+  form: MedicalContentForm,
+): Promise<AdminHealthMedicalContent> {
+  const body = mapContentFormToBody(form)
+
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 500))
+    return updateMockContent(id, body)
+  }
+
+  try {
+    return await updateAdminHealthContentFromApi(id, body)
+  } catch {
+    await new Promise((r) => setTimeout(r, 400))
+    return updateMockContent(id, body)
+  }
+}
+
+export async function deleteAdminHealthContent(id: string): Promise<void> {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 400))
+    const exists = getMockContent().some((item) => item.id === id)
+    if (!exists) throw new Error('Content not found')
+    deleteMockContent(id)
+    return
+  }
+
+  try {
+    await deleteAdminHealthContentFromApi(id)
+  } catch {
+    await new Promise((r) => setTimeout(r, 300))
+    deleteMockContent(id)
   }
 }

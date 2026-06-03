@@ -10,6 +10,11 @@ export type AdminHealthFacilityStatus = 'open' | 'closed' | 'maintenance'
 
 export type AdminHealthContentStatus = 'published' | 'review' | 'draft'
 
+export type AdminHealthContentCategory =
+  | 'first-aid'
+  | 'awareness'
+  | 'mental-health'
+
 export type AdminHealthStatsDto = {
   totalFacilities: number
   activeNow: number
@@ -35,7 +40,20 @@ export type AdminHealthMedicalContent = {
   date: string
   thumbnailUrl: string
   status: AdminHealthContentStatus
+  category: AdminHealthContentCategory
+  description: string
+  body: string
+  references: string
 }
+
+export type CreateAdminHealthContentBody = Omit<
+  AdminHealthMedicalContent,
+  'id' | 'date' | 'author'
+> & {
+  author?: string
+}
+
+export type UpdateAdminHealthContentBody = Partial<CreateAdminHealthContentBody>
 
 export type AdminHealthFacilitiesQueryParams = {
   search?: string
