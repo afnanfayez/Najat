@@ -1,0 +1,250 @@
+import type {
+  AdminAidAreaCoverage,
+  AdminAidDistributionPoint,
+  AdminAidDistributionStats,
+  AdminAidDonationRecord,
+  AdminAidDonor,
+  AdminAidDonorStats,
+  AdminAidResponsePoint,
+} from '@/schemas/adminAid'
+
+export const ADMIN_AID_DISTRIBUTION_STATS: AdminAidDistributionStats = {
+  totalBeneficiaries: 12840,
+  distributedQuantities: 8420,
+  availableInventory: 3180,
+  avgDailyDelivery: 420,
+}
+
+export const ADMIN_AID_AREA_COVERAGE: AdminAidAreaCoverage[] = [
+  { id: '1', label: 'المنطقة الوسطى', value: 4200, color: '#2196F3' },
+  { id: '2', label: 'قطاع الشمال', value: 2150, color: '#FF9800' },
+  { id: '3', label: 'المناطق الشرقية', value: 1840, color: '#EF4444' },
+  { id: '4', label: 'المخيمات الخارجية', value: 2650, color: '#991B1B' },
+]
+
+export const ADMIN_AID_RESPONSE_DATA: AdminAidResponsePoint[] = [
+  { day: 'السبت', value: 12 },
+  { day: 'الأحد', value: 18 },
+  { day: 'الاثنين', value: 15 },
+  { day: 'الثلاثاء', value: 22 },
+  { day: 'الأربعاء', value: 19 },
+  { day: 'الخميس', value: 25 },
+  { day: 'الجمعة', value: 20 },
+]
+
+export const ADMIN_AID_DISTRIBUTION_POINTS: AdminAidDistributionPoint[] = [
+  {
+    id: '1',
+    name: 'مركز الشفاء الطبي - ب',
+    region: 'gaza',
+    address: 'غزة، حي الرمال، شارع النصر',
+    manager: 'أ. خالد محمود',
+    phone: '+970 59 123 4567',
+    status: 'crowded',
+    category: 'لوازم طبية',
+    remaining: 45,
+    total: 200,
+    lastUpdated: 'منذ 15 دقيقة',
+    aidTypes: ['مواد غذائية', 'أدوية ومستلزمات', 'أدوية', 'مياه صالحة للشرب'],
+    inventory: [
+      {
+        id: '1',
+        name: 'سلة غذائية متكاملة',
+        quantity: 1240,
+        unit: 'وحدة',
+        expiryDate: '2024/12/20',
+        status: 'available',
+        active: true,
+      },
+      {
+        id: '2',
+        name: 'أدوية مضادات حيوية',
+        quantity: 320,
+        unit: 'علبة',
+        expiryDate: '2025/03/15',
+        status: 'limited',
+        active: true,
+      },
+      {
+        id: '3',
+        name: 'مياه صالحة للشرب',
+        quantity: 0,
+        unit: 'صندوق',
+        expiryDate: '2024/11/30',
+        status: 'out',
+        active: false,
+      },
+    ],
+    workingDays: [0, 1, 2, 3, 4],
+    startTime: '03:00',
+    endTime: '16:00',
+    targetGroups: ['كبار السن', 'الحوامل والمرضعات', 'النازحين واللاجئين', 'الأطفال والأيتام'],
+    latitude: 31.5218,
+    longitude: 34.4467,
+  },
+  {
+    id: '2',
+    name: 'جمعية البر - حي التفاح',
+    region: 'north',
+    address: 'شمال قطاع غزة، حي التفاح',
+    manager: 'د. سارة المنصور',
+    phone: '+970 59 987 6543',
+    status: 'open',
+    category: 'طرود غذائية',
+    remaining: 200,
+    total: 250,
+    lastUpdated: 'منذ 30 دقيقة',
+    aidTypes: ['مواد غذائية', 'مياه صالحة للشرب'],
+    inventory: [],
+    workingDays: [0, 1, 2, 3, 4],
+    startTime: '08:00',
+    endTime: '14:00',
+    targetGroups: ['النازحين واللاجئين', 'الأطفال والأيتام'],
+    latitude: 31.54,
+    longitude: 34.48,
+  },
+  {
+    id: '3',
+    name: 'مركز الإغاثة - خان يونس',
+    region: 'south',
+    address: 'خان يونس، شارع السلام',
+    manager: 'أ. أحمد يوسف',
+    phone: '+970 59 555 1234',
+    status: 'open',
+    category: 'مياه ومواد تنظيف',
+    remaining: 120,
+    total: 180,
+    lastUpdated: 'منذ ساعة',
+    aidTypes: ['مياه صالحة للشرب'],
+    inventory: [],
+    workingDays: [0, 1, 2, 3, 4],
+    startTime: '09:00',
+    endTime: '15:00',
+    targetGroups: ['كبار السن', 'الحوامل والمرضعات'],
+    latitude: 31.34,
+    longitude: 34.3,
+  },
+  {
+    id: '4',
+    name: 'نقطة توزيع - مخيم النور',
+    region: 'central',
+    address: 'وسط قطاع غزة، مخيم النور',
+    manager: 'أ. ليلى حسن',
+    phone: '+970 59 444 5678',
+    status: 'closed',
+    category: 'ملابس وأغطية',
+    remaining: 0,
+    total: 150,
+    lastUpdated: 'منذ 3 ساعات',
+    aidTypes: ['مواد غذائية'],
+    inventory: [],
+    workingDays: [0, 1, 2, 3, 4],
+    startTime: '10:00',
+    endTime: '16:00',
+    targetGroups: ['النازحين واللاجئين'],
+    latitude: 31.5,
+    longitude: 34.45,
+  },
+]
+
+export const ADMIN_AID_DONOR_STATS: AdminAidDonorStats = {
+  totalDonations: 2450000,
+  totalDonationsLabel: '$ 2,450,000',
+  lastContribution: 'منذ 3 ساعات',
+  partnersCount: 42,
+  renewalsCount: 5,
+  distribution: [
+    { label: 'منظمات دولية', percent: 65, color: '#2196F3' },
+    { label: 'مؤسسات محلية', percent: 20, color: '#FF9800' },
+    { label: 'تبرعات فردية', percent: 15, color: '#EF4444' },
+  ],
+}
+
+export const ADMIN_AID_DONORS: AdminAidDonor[] = [
+  {
+    id: '1',
+    name: 'الهلال الأحمر القطري',
+    subtitle: 'شريك استراتيجي - قطاع الصحة',
+    totalAmount: 850000,
+    lastDonation: '12 أكتوبر 2023',
+  },
+  {
+    id: '2',
+    name: 'مؤسسة نماء الخيرية',
+    subtitle: 'مانح محلي - دعم المعدات',
+    totalAmount: 320000,
+    lastDonation: '05 نوفمبر 2023',
+  },
+  {
+    id: '3',
+    name: 'منظمة الصحة العالمية',
+    subtitle: 'شريك برامج الوقاية',
+    totalAmount: 1120000,
+    lastDonation: '28 سبتمبر 2023',
+  },
+  {
+    id: '4',
+    name: 'مؤسسة نماء الخيرية',
+    subtitle: 'مانح محلي - دعم المعدات',
+    totalAmount: 320000,
+    lastDonation: '05 نوفمبر 2023',
+  },
+]
+
+export const ADMIN_AID_DONATIONS: AdminAidDonationRecord[] = [
+  {
+    id: '1',
+    donorName: 'الهلال الأحمر القطري',
+    date: '12 أكتوبر 2023',
+    amount: 50000,
+    status: 'completed',
+    active: false,
+  },
+  {
+    id: '2',
+    donorName: 'متبرع مجهول',
+    date: '12 أكتوبر 2023',
+    amount: 50000,
+    status: 'completed',
+    active: true,
+  },
+  {
+    id: '3',
+    donorName: 'مؤسسة نماء الخيرية',
+    date: '12 أكتوبر 2023',
+    amount: 50000,
+    status: 'processing',
+    active: true,
+  },
+]
+
+export const ADMIN_AID_REGION_OPTIONS = [
+  { value: 'gaza', label: 'غزة' },
+  { value: 'north', label: 'شمال قطاع غزة' },
+  { value: 'central', label: 'وسط قطاع غزة' },
+  { value: 'south', label: 'جنوب قطاع غزة' },
+]
+
+export const ADMIN_AID_TYPE_OPTIONS = [
+  'مواد غذائية',
+  'أدوية ومستلزمات',
+  'أدوية',
+  'مياه صالحة للشرب',
+]
+
+export const ADMIN_AID_TARGET_GROUPS = [
+  'كبار السن',
+  'الحوامل والمرضعات',
+  'النازحين واللاجئين',
+  'الأطفال والأيتام',
+]
+
+export const ADMIN_AID_WEEKDAYS = [
+  { id: 0, label: 'أ' },
+  { id: 1, label: 'إ' },
+  { id: 2, label: 'ث' },
+  { id: 3, label: 'أ' },
+  { id: 4, label: 'خ' },
+  { id: 5, label: 'ج' },
+  { id: 6, label: 'س' },
+]
