@@ -205,6 +205,23 @@
   }
 }
 
+@keyframes delete-facility-dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+.delete-facility-dialog {
+  animation: delete-facility-dialog-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .toaster {
   direction: rtl;
 }

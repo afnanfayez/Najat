@@ -1,7 +1,10 @@
 import {
   createAdminHealthFacilityFromApi,
+  deleteAdminHealthFacilityFromApi,
   fetchAdminHealthContentFromApi,
   fetchAdminHealthFacilitiesFromApi,
+  fetchAdminHealthFacilityByIdFromApi,
+  updateAdminHealthFacilityFromApi,
 } from '@/lib/api/adminHealth'
 import { USE_MOCK_ADMIN_HEALTH } from '@/lib/mocks/mockConfig'
 import {
@@ -23,6 +26,7 @@ import type {
 import {
   buildFacilityFormData,
   mapFacilityFormToCreateBody,
+  mapFacilityToSetupForm,
 } from './facilitySetupMapper'
 import type { FacilitySetupForm } from '../setup/types'
 
@@ -34,23 +38,39 @@ export type {
 }
 
 let mockFacilitiesStore: AdminHealthFacility[] | null = null
+let mockFacilityFormsStore: Record<string, FacilitySetupForm> = {}
 
 function getMockFacilities(): AdminHealthFacility[] {
   if (!mockFacilitiesStore) {
     mockFacilitiesStore = [...ADMIN_HEALTH_FACILITIES]
+    mockFacilitiesStore.forEach((facility) => {
+      if (!mockFacilityFormsStore[facility.id]) {
+        mockFacilityFormsStore[facility.id] = mapFacilityToSetupForm(facility)
+      }
+    })
   }
   return mockFacilitiesStore
 }
 
-function createMockFacility(body: CreateAdminHealthFacilityBody): AdminHealthFacility {
-  const facilities = getMockFacilities()
-  const facility: AdminHealthFacility = {
-    id: `mock-${Date.now()}`,
+function computeMockStats(facilities: AdminHealthFacility[]): typeof ADMIN_HEALTH_STATS {
+  return {
+    totalFacilities: facilities.length,
+    activeNow: facilities.filter((f) => f.status === 'open' && f.isOpen).length,
+    underMaintenance: facilities.filter((f) => f.status === 'maintenance').length,
+  }
+}
+
+function bodyToFacilityFields(
+  body: CreateAdminHealthFacilityBody,
+): Pick<
+  AdminHealthFacility,
+  'name' | 'address' | 'imageUrl' | 'isOpen' | 'phone' | 'region' | 'status'
+> {
+  return {
     name: body.name,
     address: body.address,
     imageUrl: body.imageUrl ?? '/assets/health1.jpg',
     isOpen: body.isOpen ?? body.status === 'open',
-    workloadPercent: body.workloadPercent ?? 0,
     phone: body.phone,
     region:
       body.region === 'north' || body.region === 'central' || body.region === 'south'
@@ -58,8 +78,50 @@ function createMockFacility(body: CreateAdminHealthFacilityBody): AdminHealthFac
         : 'central',
     status: body.status,
   }
+}
+
+function createMockFacility(
+  body: CreateAdminHealthFacilityBody,
+  form: FacilitySetupForm,
+): AdminHealthFacility {
+  const facilities = getMockFacilities()
+  const facility: AdminHealthFacility = {
+    id: `mock-${Date.now()}`,
+    workloadPercent: body.workloadPercent ?? 0,
+    ...bodyToFacilityFields(body),
+  }
   mockFacilitiesStore = [facility, ...facilities]
+  mockFacilityFormsStore[facility.id] = form
   return facility
+}
+
+function updateMockFacility(
+  id: string,
+  body: CreateAdminHealthFacilityBody,
+  form: FacilitySetupForm,
+): AdminHealthFacility {
+  const facilities = getMockFacilities()
+  const index = facilities.findIndex((f) => f.id === id)
+  if (index === -1) throw new Error('Facility not found')
+
+  const updated: AdminHealthFacility = {
+    ...facilities[index],
+    ...bodyToFacilityFields(body),
+  }
+  mockFacilitiesStore = facilities.map((f, i) => (i === index ? updated : f))
+  mockFacilityFormsStore[id] = form
+  return updated
+}
+
+function deleteMockFacility(id: string): void {
+  mockFacilitiesStore = getMockFacilities().filter((f) => f.id !== id)
+  delete mockFacilityFormsStore[id]
+}
+
+function fetchMockFacilityById(id: string): FacilitySetupForm | null {
+  const facility = getMockFacilities().find((f) => f.id === id)
+  if (!facility) return null
+  return mapFacilityToSetupForm(facility, mockFacilityFormsStore[id])
 }
 
 function normalizeSearch(value?: string) {
@@ -83,7 +145,7 @@ function filterMockFacilities(
     )
   })
 
-  return { facilities, stats: ADMIN_HEALTH_STATS }
+  return { facilities, stats: computeMockStats(facilities) }
 }
 
 function filterMockContent(
@@ -172,14 +234,77 @@ export async function createAdminHealthFacility(
 
   if (USE_MOCK_ADMIN_HEALTH) {
     await new Promise((r) => setTimeout(r, 500))
-    return createMockFacility(body)
+    return createMockFacility(body, form)
   }
 
   try {
     const payload = hasImages ? buildFacilityFormData(form) : body
-    return await createAdminHealthFacilityFromApi(payload)
+    const facility = await createAdminHealthFacilityFromApi(payload)
+    mockFacilityFormsStore[facility.id] = form
+    return facility
   } catch {
     await new Promise((r) => setTimeout(r, 400))
-    return createMockFacility(body)
+    return createMockFacility(body, form)
+  }
+}
+
+export async function fetchAdminHealthFacilityById(
+  id: string,
+): Promise<FacilitySetupForm> {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 300))
+    const form = fetchMockFacilityById(id)
+    if (!form) throw new Error('Facility not found')
+    return form
+  }
+
+  try {
+    const facility = await fetchAdminHealthFacilityByIdFromApi(id)
+    return mapFacilityToSetupForm(facility, mockFacilityFormsStore[id])
+  } catch {
+    const form = fetchMockFacilityById(id)
+    if (!form) throw new Error('Facility not found')
+    return form
+  }
+}
+
+export async function updateAdminHealthFacility(
+  id: string,
+  form: FacilitySetupForm,
+): Promise<AdminHealthFacility> {
+  const hasImages = form.images.some((img) => img.file)
+  const body = mapFacilityFormToCreateBody(form)
+
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 500))
+    return updateMockFacility(id, body, form)
+  }
+
+  try {
+    const payload = hasImages ? buildFacilityFormData(form) : body
+    const facility = await updateAdminHealthFacilityFromApi(id, payload)
+    mockFacilityFormsStore[id] = form
+    return facility
+  } catch {
+    await new Promise((r) => setTimeout(r, 400))
+    return updateMockFacility(id, body, form)
+  }
+}
+
+export async function deleteAdminHealthFacility(id: string): Promise<void> {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 400))
+    const exists = getMockFacilities().some((f) => f.id === id)
+    if (!exists) throw new Error('Facility not found')
+    deleteMockFacility(id)
+    return
+  }
+
+  try {
+    await deleteAdminHealthFacilityFromApi(id)
+    delete mockFacilityFormsStore[id]
+  } catch {
+    await new Promise((r) => setTimeout(r, 300))
+    deleteMockFacility(id)
   }
 }

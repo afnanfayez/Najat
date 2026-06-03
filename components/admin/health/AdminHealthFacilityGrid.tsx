@@ -6,6 +6,7 @@ import { ADMIN_HEALTH_FONT } from './adminHealthStyles'
 
 interface AdminHealthFacilityGridProps {
   facilities: AdminHealthFacility[]
+  deletingId?: string | null
   onDetails?: (facility: AdminHealthFacility) => void
   onEdit?: (facility: AdminHealthFacility) => void
   onDelete?: (facility: AdminHealthFacility) => void
@@ -14,6 +15,7 @@ interface AdminHealthFacilityGridProps {
 
 export default function AdminHealthFacilityGrid({
   facilities,
+  deletingId = null,
   onDetails,
   onEdit,
   onDelete,
@@ -36,6 +38,7 @@ export default function AdminHealthFacilityGrid({
         <AdminHealthFacilityCard
           key={facility.id}
           facility={facility}
+          isDeleting={deletingId === facility.id}
           onDetails={onDetails}
           onEdit={onEdit}
           onDelete={onDelete}

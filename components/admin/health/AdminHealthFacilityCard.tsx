@@ -8,6 +8,7 @@ import { ADMIN_HEALTH_BLUE, ADMIN_HEALTH_FONT } from './adminHealthStyles'
 
 interface AdminHealthFacilityCardProps {
   facility: AdminHealthFacility
+  isDeleting?: boolean
   onDetails?: (facility: AdminHealthFacility) => void
   onEdit?: (facility: AdminHealthFacility) => void
   onDelete?: (facility: AdminHealthFacility) => void
@@ -35,6 +36,7 @@ function FacilityImage({ src, alt }: { src: string; alt: string }) {
 
 export default function AdminHealthFacilityCard({
   facility,
+  isDeleting = false,
   onDetails,
   onEdit,
   onDelete,
@@ -79,8 +81,9 @@ export default function AdminHealthFacilityCard({
           <button
             type="button"
             aria-label="حذف"
+            disabled={isDeleting}
             onClick={() => onDelete?.(facility)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F44336] text-white shadow-md transition-opacity hover:opacity-90"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F44336] text-white shadow-md transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 size={16} />
           </button>

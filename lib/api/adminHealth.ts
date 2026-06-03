@@ -35,6 +35,11 @@ function unwrapList<T>(raw: unknown, key: string): T[] {
   return []
 }
 
+function unwrapFacility(raw: unknown): AdminHealthFacility {
+  const obj = raw as Record<string, unknown>
+  return (obj.data ?? obj.facility ?? obj) as AdminHealthFacility
+}
+
 function normalizeFacilitiesResponse(raw: unknown): AdminHealthFacilitiesListResponse {
   if (raw && typeof raw === 'object') {
     const obj = raw as Record<string, unknown>
@@ -90,6 +95,13 @@ export async function fetchAdminHealthFacilitiesFromApi(
   return normalizeFacilitiesResponse(raw)
 }
 
+export async function fetchAdminHealthFacilityByIdFromApi(
+  id: string,
+): Promise<AdminHealthFacility> {
+  const raw = await request(`${V1}/admin/health/facilities/${encodeURIComponent(id)}`)
+  return unwrapFacility(raw)
+}
+
 export async function fetchAdminHealthContentFromApi(
   params: AdminHealthContentQueryParams = {},
 ): Promise<AdminHealthContentListResponse> {
@@ -108,21 +120,18 @@ export async function createAdminHealthFacilityFromApi(
     method: 'POST',
     body: body instanceof FormData ? body : JSON.stringify(body),
   })
-  const obj = raw as Record<string, unknown>
-  const facility = (obj.data ?? obj.facility ?? obj) as AdminHealthFacility
-  return facility
+  return unwrapFacility(raw)
 }
 
 export async function updateAdminHealthFacilityFromApi(
   id: string,
-  body: UpdateAdminHealthFacilityBody,
+  body: UpdateAdminHealthFacilityBody | FormData,
 ): Promise<AdminHealthFacility> {
   const raw = await request(`${V1}/admin/health/facilities/${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    body: JSON.stringify(body),
+    body: body instanceof FormData ? body : JSON.stringify(body),
   })
-  const obj = raw as Record<string, unknown>
-  return (obj.data ?? obj.facility ?? obj) as AdminHealthFacility
+  return unwrapFacility(raw)
 }
 
 export async function deleteAdminHealthFacilityFromApi(id: string): Promise<void> {

@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { createAdminHealthFacility } from '../data/adminHealthService'
+import {
+  createAdminHealthFacility,
+  fetchAdminHealthFacilityById,
+  updateAdminHealthFacility,
+} from '../data/adminHealthService'
 import AdminShell from '../../AdminShell'
 import AddFacilityHeader from './AddFacilityHeader'
 import BasicInfoSection from './BasicInfoSection'
@@ -22,6 +26,7 @@ import {
   type FacilityImage,
   type FacilitySetupForm,
 } from './types'
+import { SETUP_FONT } from './setupStyles'
 
 function SetupRow({
   children,
@@ -58,15 +63,49 @@ function SetupCol({
   return <div className={`h-full min-h-0 ${spanClass}`}>{children}</div>
 }
 
-export default function AddFacilityContent() {
+interface AddFacilityContentProps {
+  facilityId?: string
+}
+
+export default function AddFacilityContent({ facilityId }: AddFacilityContentProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const isEdit = Boolean(facilityId)
   const [form, setForm] = useState<FacilitySetupForm>(INITIAL_FACILITY_SETUP)
+  const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (!facilityId) return
+
+    let cancelled = false
+
+    async function loadFacility() {
+      setLoading(true)
+      try {
+        const data = await fetchAdminHealthFacilityById(facilityId!)
+        if (!cancelled) setForm(data)
+      } catch {
+        if (!cancelled) {
+          toast.error('تعذّر تحميل بيانات المنشأة')
+          router.push('/admin/health')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadFacility()
     return () => {
-      form.images.forEach((img) => URL.revokeObjectURL(img.url))
+      cancelled = true
+    }
+  }, [facilityId, router])
+
+  useEffect(() => {
+    return () => {
+      form.images.forEach((img) => {
+        if (img.url.startsWith('blob:')) URL.revokeObjectURL(img.url)
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -82,7 +121,9 @@ export default function AddFacilityContent() {
     setForm((prev) => {
       prev.images
         .filter((img) => !images.some((n) => n.id === img.id))
-        .forEach((img) => URL.revokeObjectURL(img.url))
+        .forEach((img) => {
+          if (img.url.startsWith('blob:')) URL.revokeObjectURL(img.url)
+        })
       return { ...prev, images }
     })
   }
@@ -124,10 +165,7 @@ export default function AddFacilityContent() {
   function addDrug(drug: Omit<FacilitySetupForm['drugs'][number], 'id'>) {
     setForm((prev) => ({
       ...prev,
-      drugs: [
-        ...prev.drugs,
-        { ...drug, id: `drug-${Date.now()}` },
-      ],
+      drugs: [...prev.drugs, { ...drug, id: `drug-${Date.now()}` }],
     }))
     toast.success('تمت إضافة الدواء')
   }
@@ -135,10 +173,7 @@ export default function AddFacilityContent() {
   function addStaff(member: Omit<FacilitySetupForm['staff'][number], 'id'>) {
     setForm((prev) => ({
       ...prev,
-      staff: [
-        ...prev.staff,
-        { ...member, id: `staff-${Date.now()}` },
-      ],
+      staff: [...prev.staff, { ...member, id: `staff-${Date.now()}` }],
     }))
     toast.success('تمت إضافة الطبيب')
   }
@@ -192,20 +227,44 @@ export default function AddFacilityContent() {
 
     setSaving(true)
     try {
-      await createAdminHealthFacility(form)
+      if (isEdit && facilityId) {
+        await updateAdminHealthFacility(facilityId, form)
+        toast.success('تم تحديث المنشأة بنجاح')
+      } else {
+        await createAdminHealthFacility(form)
+        toast.success('تم حفظ المنشأة بنجاح')
+      }
       await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
-      toast.success('تم حفظ المنشأة بنجاح')
       router.push('/admin/health')
     } catch {
-      toast.error('تعذّر حفظ المنشأة')
+      toast.error(isEdit ? 'تعذّر تحديث المنشأة' : 'تعذّر حفظ المنشأة')
     } finally {
       setSaving(false)
     }
   }
 
+  if (loading) {
+    return (
+      <AdminShell activeNav="health">
+        <p
+          className="py-20 text-center text-sm text-[#64748B]"
+          style={{ fontFamily: SETUP_FONT }}
+        >
+          جاري تحميل بيانات المنشأة...
+        </p>
+      </AdminShell>
+    )
+  }
+
   return (
     <AdminShell activeNav="health">
       <AddFacilityHeader
+        title={isEdit ? 'تعديل المنشأة الصحية' : 'إعداد المنشأة الصحية'}
+        subtitle={
+          isEdit
+            ? 'عدّل تفاصيل المركز الطبي واحفظ التغييرات'
+            : 'أدخل تفاصيل المركز الطبي وتحديث حالات التوفر والخدمات'
+        }
         onCancel={() => router.push('/admin/health')}
         onSave={handleSave}
         saving={saving}
@@ -243,10 +302,7 @@ export default function AddFacilityContent() {
 
         <SetupRow>
           <SetupCol span={8}>
-            <FacilityImageUpload
-              images={form.images}
-              onChange={updateImages}
-            />
+            <FacilityImageUpload images={form.images} onChange={updateImages} />
           </SetupCol>
           <SetupCol span={4}>
             <FacilityLocationMap

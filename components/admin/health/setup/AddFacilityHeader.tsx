@@ -13,12 +13,16 @@ interface AddFacilityHeaderProps {
   onCancel: () => void
   onSave: () => void
   saving?: boolean
+  title?: string
+  subtitle?: string
 }
 
 export default function AddFacilityHeader({
   onCancel,
   onSave,
   saving = false,
+  title = 'إعداد المنشأة الصحية',
+  subtitle = 'أدخل تفاصيل المركز الطبي وتحديث حالات التوفر والخدمات',
 }: AddFacilityHeaderProps) {
   const shell = useAdminShell()
 
@@ -28,9 +32,9 @@ export default function AddFacilityHeader({
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-right">
-          <h1 style={ADMIN_PAGE_TITLE_STYLE}>إعداد المنشأة الصحية</h1>
+          <h1 style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
           <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>
-            أدخل تفاصيل المركز الطبي وتحديث حالات التوفر والخدمات
+            {subtitle}
           </p>
         </div>
 

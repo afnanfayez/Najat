@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminHealthPageHeader from './AdminHealthPageHeader'
@@ -10,7 +11,9 @@ import AdminHealthToolbar from './AdminHealthToolbar'
 import AdminHealthFacilityGrid from './AdminHealthFacilityGrid'
 import AdminHealthLatestContent from './AdminHealthLatestContent'
 import AdminHealthMedicalContentPanel from './AdminHealthMedicalContentPanel'
+import DeleteFacilityDialog from './DeleteFacilityDialog'
 import {
+  deleteAdminHealthFacility,
   toContentQueryParams,
   toFacilitiesQueryParams,
 } from './data/adminHealthService'
@@ -20,6 +23,7 @@ import {
   useAdminHealthMedicalContent,
 } from '@/hooks/useAdminHealthMedicalContent'
 import type {
+  AdminHealthFacility,
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
   AdminHealthViewTab,
@@ -34,11 +38,15 @@ const DEFAULT_STATS = {
 
 export default function AdminHealthContent() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<AdminHealthViewTab>('facilities')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [region, setRegion] = useState<AdminHealthRegionFilter>('all')
   const [status, setStatus] = useState<AdminHealthStatusFilter>('all')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [facilityToDelete, setFacilityToDelete] =
+    useState<AdminHealthFacility | null>(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300)
@@ -96,8 +104,43 @@ export default function AdminHealthContent() {
     if (phone) window.open(`tel:${phone}`, '_self')
   }
 
+  function handleEditFacility(facility: AdminHealthFacility) {
+    router.push(`/admin/health/${facility.id}/edit`)
+  }
+
+  function handleDeleteFacility(facility: AdminHealthFacility) {
+    setFacilityToDelete(facility)
+  }
+
+  async function confirmDeleteFacility() {
+    if (!facilityToDelete) return
+
+    setDeletingId(facilityToDelete.id)
+    try {
+      await deleteAdminHealthFacility(facilityToDelete.id)
+      await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
+      setFacilityToDelete(null)
+      toast.success('تم حذف المنشأة بنجاح', { position: 'top-center' })
+    } catch {
+      toast.error('تعذّر حذف المنشأة', { position: 'top-center' })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <AdminShell activeNav="health">
+      <DeleteFacilityDialog
+        facility={facilityToDelete}
+        open={Boolean(facilityToDelete)}
+        loading={deletingId === facilityToDelete?.id}
+        onClose={() => {
+          if (deletingId) return
+          setFacilityToDelete(null)
+        }}
+        onConfirm={confirmDeleteFacility}
+      />
+
       <AdminHealthPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
       <AdminHealthStats stats={stats ?? DEFAULT_STATS} />
 
@@ -136,9 +179,10 @@ export default function AdminHealthContent() {
           {!facilitiesLoading && !facilitiesError && (
             <AdminHealthFacilityGrid
               facilities={facilities}
+              deletingId={deletingId}
               onDetails={() => toast.info('عرض التفاصيل قريباً')}
-              onEdit={() => toast.info('تعديل المنشأة قريباً')}
-              onDelete={() => toast.info('حذف المنشأة قريباً')}
+              onEdit={handleEditFacility}
+              onDelete={handleDeleteFacility}
               onCall={(f) => handleCall(f.phone)}
             />
           )}
