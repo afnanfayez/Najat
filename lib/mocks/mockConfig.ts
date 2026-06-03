@@ -17,3 +17,6 @@ export const USE_MOCK_ADMIN_DASHBOARD =
 
 export const USE_MOCK_ADMIN_USERS =
   process.env.NEXT_PUBLIC_ADMIN_USERS_API !== '1'
+
+export const USE_MOCK_ADMIN_HEALTH =
+  process.env.NEXT_PUBLIC_ADMIN_HEALTH_API !== '1'

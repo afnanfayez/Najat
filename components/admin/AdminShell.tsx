@@ -44,6 +44,7 @@ export default function AdminShell({ activeNav = 'dashboard', children }: AdminS
     const routes: Record<string, string> = {
       dashboard: '/admin',
       users: '/admin/users',
+      health: '/admin/health',
       alerts: '/admin/alerts',
     }
 
