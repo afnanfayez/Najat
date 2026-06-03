@@ -15,48 +15,68 @@ interface AdminAidDonorCardProps {
 export default function AdminAidDonorCard({ donor, onDetails }: AdminAidDonorCardProps) {
   return (
     <article
-      className="flex h-full flex-col rounded-2xl border border-[#E8EEF5] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
+      className="flex h-full min-h-[180px] flex-col rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:p-5"
       dir="rtl"
     >
-      <div className="flex-1 text-right">
+      <div className="text-right">
         <h3
-          className="text-base font-bold text-[#1E293B] sm:text-lg"
-          style={{ fontFamily: ADMIN_AID_FONT }}
+          className="text-base font-bold sm:text-lg"
+          style={{ color: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
         >
           {donor.name}
         </h3>
         <p
-          className="mt-1 text-sm font-medium text-[#64748B]"
+          className="mt-0.5 text-sm font-medium text-[#64748B]"
           style={{ fontFamily: ADMIN_AID_FONT }}
         >
           {donor.subtitle}
         </p>
-
-        <div className="mt-4 space-y-1">
-          <p className="text-sm text-[#64748B]" style={{ fontFamily: ADMIN_AID_FONT }}>
-            الإجمالي:{' '}
-            <span className="font-bold" style={{ color: ADMIN_AID_BLUE }}>
-              {formatAmount(donor.totalAmount)}
-            </span>
-          </p>
-          <p className="text-xs text-[#94A3B8]" style={{ fontFamily: ADMIN_AID_FONT }}>
-            آخر تبرع: {donor.lastDonation}
-          </p>
-        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onDetails?.(donor)}
-        className="mt-4 self-start rounded-xl border-2 px-4 py-2 text-sm font-bold transition-opacity hover:opacity-80"
-        style={{
-          fontFamily: ADMIN_AID_FONT,
-          color: ADMIN_AID_BLUE,
-          borderColor: ADMIN_AID_BLUE,
-        }}
-      >
-        عرض التفاصيل
-      </button>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
+        <div className="flex flex-wrap items-start gap-5">
+          <div className="text-right">
+            <p
+              className="text-xs font-bold text-[#0F172A]"
+              style={{ fontFamily: ADMIN_AID_FONT }}
+            >
+              إجمالي التبرعات
+            </p>
+            <p
+              className="mt-0.5 text-sm font-bold"
+              style={{ color: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
+            >
+              {formatAmount(donor.totalAmount)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p
+              className="text-xs font-bold text-[#0F172A]"
+              style={{ fontFamily: ADMIN_AID_FONT }}
+            >
+              آخر تبرع
+            </p>
+            <p
+              className="mt-0.5 text-sm font-bold"
+              style={{ color: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
+            >
+              {donor.lastDonation}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onDetails?.(donor)}
+          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
+          style={{
+            fontFamily: ADMIN_AID_FONT,
+            background: ADMIN_AID_BLUE,
+          }}
+        >
+          عرض التفاصيل
+        </button>
+      </div>
     </article>
   )
 }

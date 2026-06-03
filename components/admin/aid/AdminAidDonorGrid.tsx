@@ -18,7 +18,7 @@ export default function AdminAidDonorGrid({ donors, onDetails }: AdminAidDonorGr
       >
         قائمة الجهات المانحة
       </h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2">
         {donors.map((donor, index) => (
           <AdminAidDonorCard
             key={`${donor.id}-${index}`}

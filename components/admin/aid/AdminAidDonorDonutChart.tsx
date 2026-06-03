@@ -37,7 +37,7 @@ export default function AdminAidDonorDonutChart({
 
   return (
     <div
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-5"
+      className="flex h-full min-h-[200px] flex-col rounded-2xl border border-[#E8EEF5] bg-white p-5"
       style={{ boxShadow: ADMIN_AID_CARD_SHADOW }}
       dir="rtl"
     >
@@ -48,24 +48,7 @@ export default function AdminAidDonorDonutChart({
         توزيع التبرعات حسب النوع
       </h3>
 
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <ul className="space-y-2">
-          {distribution.map((item) => (
-            <li key={item.label} className="flex items-center gap-2">
-              <span
-                className="h-3 w-3 shrink-0 rounded-full"
-                style={{ background: item.color }}
-              />
-              <span
-                className="text-xs font-medium text-[#64748B]"
-                style={{ fontFamily: ADMIN_AID_FONT }}
-              >
-                {item.label} ({item.percent}%)
-              </span>
-            </li>
-          ))}
-        </ul>
-
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex h-32 w-32 shrink-0 items-center justify-center">
           <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
             <circle
@@ -98,6 +81,23 @@ export default function AdminAidDonorDonutChart({
             100
           </span>
         </div>
+
+        <ul className="space-y-2">
+          {distribution.map((item) => (
+            <li key={item.label} className="flex items-center justify-end gap-2">
+              <span
+                className="text-xs font-medium text-[#64748B]"
+                style={{ fontFamily: ADMIN_AID_FONT }}
+              >
+                {item.label} ({item.percent}%)
+              </span>
+              <span
+                className="h-3 w-3 shrink-0 rounded-full"
+                style={{ background: item.color }}
+              />
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )

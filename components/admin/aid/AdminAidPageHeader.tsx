@@ -15,6 +15,7 @@ interface AdminAidPageHeaderProps {
   title?: string
   subtitle?: string
   action?: React.ReactNode
+  hideTabs?: boolean
 }
 
 export default function AdminAidPageHeader({
@@ -23,6 +24,7 @@ export default function AdminAidPageHeader({
   title,
   subtitle,
   action,
+  hideTabs = false,
 }: AdminAidPageHeaderProps) {
   const shell = useAdminShell()
 
@@ -50,9 +52,11 @@ export default function AdminAidPageHeader({
           </p>
         </div>
 
-        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 items-center gap-3 self-start">
           {action}
-          <AdminAidViewTabs activeTab={activeTab} onTabChange={onTabChange} />
+          {!hideTabs && (
+            <AdminAidViewTabs activeTab={activeTab} onTabChange={onTabChange} />
+          )}
         </div>
       </div>
     </header>

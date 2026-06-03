@@ -122,6 +122,7 @@ export default function AdminAidContent() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
         action={addDonorButton}
+        hideTabs={activeTab === 'donors'}
       />
 
       {loading ? (
@@ -150,7 +151,10 @@ export default function AdminAidContent() {
         <>
           {donorStats && <AdminAidDonorStatsPanel stats={donorStats} />}
           <AdminAidDonorGrid donors={donors} />
-          <AdminAidDonationsTable donations={donations} />
+          <AdminAidDonationsTable
+            donations={donations}
+            onChange={setDonations}
+          />
         </>
       )}
     </AdminShell>
