@@ -74,6 +74,26 @@ export type AdminAidDonor = {
   lastDonation: string
 }
 
+export type DonorType = 'international' | 'local' | 'individual' | 'strategic'
+
+export type DonorPartnershipStatus = 'active' | 'renewal' | 'ended'
+
+export type AdminAidDonorDetail = AdminAidDonor & {
+  donorType: DonorType
+  sector: string
+  contactPerson: string
+  email: string
+  phone: string
+  website: string
+  country: string
+  partnershipStatus: DonorPartnershipStatus
+  agreementStart: string
+  agreementEnd: string
+  focusAreas: string[]
+  notes: string
+  active: boolean
+}
+
 export type AdminAidDonationRecord = {
   id: string
   donorName: string

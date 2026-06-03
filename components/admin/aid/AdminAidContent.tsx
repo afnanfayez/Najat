@@ -109,6 +109,7 @@ export default function AdminAidContent() {
     activeTab === 'donors' ? (
       <button
         type="button"
+        onClick={() => router.push('/admin/aid/donors/new')}
         className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
         style={{ background: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
       >
@@ -150,7 +151,12 @@ export default function AdminAidContent() {
       ) : (
         <>
           {donorStats && <AdminAidDonorStatsPanel stats={donorStats} />}
-          <AdminAidDonorGrid donors={donors} />
+          <AdminAidDonorGrid
+            donors={donors}
+            onDetails={(donor) =>
+              router.push(`/admin/aid/donors/${donor.id}/edit`)
+            }
+          />
           <AdminAidDonationsTable
             donations={donations}
             onChange={setDonations}

@@ -5,10 +5,12 @@ import {
   ADMIN_AID_DISTRIBUTION_STATS,
   ADMIN_AID_DONATIONS,
   ADMIN_AID_DONORS,
+  ADMIN_AID_DONOR_DETAILS,
   ADMIN_AID_DONOR_STATS,
   ADMIN_AID_RESPONSE_DATA,
   ADMIN_AID_TYPE_OPTIONS,
   ADMIN_AID_TARGET_GROUPS,
+  ADMIN_AID_DONOR_FOCUS_AREAS,
 } from '@/lib/mocks/adminAidMockData'
 import type {
   AdminAidAreaCoverage,
@@ -16,11 +18,13 @@ import type {
   AdminAidDistributionStats,
   AdminAidDonationRecord,
   AdminAidDonor,
+  AdminAidDonorDetail,
   AdminAidDonorStats,
   AdminAidResponsePoint,
 } from '@/schemas/adminAid'
 
 let mockPointsStore: AdminAidDistributionPoint[] | null = null
+let mockDonorsStore: AdminAidDonorDetail[] | null = null
 
 function getMockPoints(): AdminAidDistributionPoint[] {
   if (!mockPointsStore) {
@@ -118,10 +122,98 @@ export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
 }
 
 export async function fetchAdminAidDonors(): Promise<AdminAidDonor[]> {
-  if (USE_MOCK_ADMIN_AID) {
-    return [...ADMIN_AID_DONORS]
+  return getMockDonors().map(donorToListItem)
+}
+
+function getMockDonors(): AdminAidDonorDetail[] {
+  if (!mockDonorsStore) {
+    mockDonorsStore = ADMIN_AID_DONOR_DETAILS.map((d) => ({
+      ...d,
+      focusAreas: [...d.focusAreas],
+    }))
   }
-  return [...ADMIN_AID_DONORS]
+  return mockDonorsStore
+}
+
+function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
+  return {
+    id: donor.id,
+    name: donor.name,
+    subtitle: donor.subtitle,
+    totalAmount: donor.totalAmount,
+    lastDonation: donor.lastDonation,
+  }
+}
+
+export async function fetchAdminAidDonorById(
+  id: string,
+): Promise<AdminAidDonorDetail | null> {
+  const found = getMockDonors().find((d) => d.id === id)
+  if (!found) return null
+  return { ...found, focusAreas: [...found.focusAreas] }
+}
+
+export async function saveAdminAidDonor(
+  donor: AdminAidDonorDetail,
+): Promise<AdminAidDonorDetail> {
+  const donors = getMockDonors()
+  const index = donors.findIndex((d) => d.id === donor.id)
+  const saved = {
+    ...donor,
+    focusAreas: [...donor.focusAreas],
+    subtitle: buildDonorSubtitle(donor),
+  }
+  if (index >= 0) {
+    donors[index] = saved
+  } else {
+    donors.push(saved)
+  }
+  return saved
+}
+
+export async function deleteAdminAidDonor(id: string): Promise<void> {
+  const donors = getMockDonors()
+  const index = donors.findIndex((d) => d.id === id)
+  if (index >= 0) donors.splice(index, 1)
+}
+
+function buildDonorSubtitle(donor: AdminAidDonorDetail): string {
+  const typeLabel =
+    donor.donorType === 'strategic'
+      ? 'شريك استراتيجي'
+      : donor.donorType === 'international'
+        ? 'منظمة دولية'
+        : donor.donorType === 'local'
+          ? 'مانح محلي'
+          : 'متبرع فردي'
+  return `${typeLabel} - ${donor.sector || 'عام'}`
+}
+
+export function createEmptyDonor(): AdminAidDonorDetail {
+  return {
+    id: `donor-${Date.now()}`,
+    name: '',
+    subtitle: '',
+    totalAmount: 0,
+    lastDonation: '',
+    donorType: 'local',
+    sector: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
+    website: '',
+    country: 'فلسطين',
+    partnershipStatus: 'active',
+    agreementStart: '',
+    agreementEnd: '',
+    focusAreas: [],
+    notes: '',
+    active: true,
+  }
+}
+
+export function mapDonorToForm(donor: AdminAidDonorDetail): AdminAidDonorDetail {
+  return { ...donor, focusAreas: [...donor.focusAreas] }
 }
 
 export async function fetchAdminAidDonations(): Promise<AdminAidDonationRecord[]> {
