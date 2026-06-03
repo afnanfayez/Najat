@@ -47,3 +47,48 @@ export interface AdminMapsDashboard {
   publishLogs: AdminMapsPublishLog[]
   insights: AdminMapsInsight[]
 }
+
+export type AdminMapsVerificationTagVariant = 'danger' | 'warning'
+
+export interface AdminMapsVerificationRequest {
+  id: string
+  tag: string
+  tagVariant: AdminMapsVerificationTagVariant
+  title: string
+  description: string
+}
+
+export interface AdminMapsFieldReport {
+  id: string
+  author: string
+  time: string
+  message: string
+}
+
+export type AdminMapsQuickActionType = 'update' | 'delete' | 'add'
+
+export interface AdminMapsQuickAction {
+  id: string
+  type: AdminMapsQuickActionType
+  message: string
+}
+
+export interface AdminMapsEditorLayer {
+  id: string
+  label: string
+  color: string
+  active: boolean
+}
+
+export interface AdminMapsEditorIntegrity {
+  fieldDataAccuracy: number
+  lastUpdateMinutes: number
+}
+
+export interface AdminMapsPackageEditorData {
+  verificationRequests: AdminMapsVerificationRequest[]
+  fieldReports: AdminMapsFieldReport[]
+  quickActions: AdminMapsQuickAction[]
+  layers: AdminMapsEditorLayer[]
+  integrity: AdminMapsEditorIntegrity
+}

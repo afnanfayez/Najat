@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminMapsPageHeader from './AdminMapsPageHeader'
@@ -13,6 +14,7 @@ import type { AdminMapsDashboard } from '@/schemas/adminMaps'
 import { ADMIN_MAPS_FONT } from './adminMapsStyles'
 
 export default function AdminMapsContent() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [dashboard, setDashboard] = useState<AdminMapsDashboard | null>(null)
 
@@ -40,7 +42,7 @@ export default function AdminMapsContent() {
   return (
     <AdminShell activeNav="maps">
       <AdminMapsPageHeader
-        onCreatePackage={() => toast.info('إنشاء حزمة خرائط — قريباً')}
+        onCreatePackage={() => router.push('/admin/maps/new')}
       />
 
       {loading ? (
@@ -54,7 +56,7 @@ export default function AdminMapsContent() {
         <>
           <section
             dir="rtl"
-            className="mb-6 grid grid-cols-1 items-stretch gap-3 sm:gap-4 lg:grid-cols-3"
+            className="mb-4 grid grid-cols-1 items-stretch gap-3 sm:mb-6 sm:gap-4 lg:grid-cols-3"
           >
             <div className="lg:col-span-2">
               <AdminMapsIntegrityCard integrity={dashboard.integrity} />

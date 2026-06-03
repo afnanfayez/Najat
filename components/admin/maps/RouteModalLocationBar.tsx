@@ -18,37 +18,39 @@ export default function RouteModalLocationBar({
 }: RouteModalLocationBarProps) {
   return (
     <div
-      className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-[#EBF5FF] px-4 py-4 sm:gap-4 sm:px-5 sm:py-5"
+      className="mb-5 flex flex-col gap-4 rounded-2xl bg-[#EBF5FF] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-5"
       dir="rtl"
     >
-      <div
-        className="h-12 w-12 shrink-0 rounded-full bg-[#CBD5E1] sm:h-14 sm:w-14"
-        aria-hidden
-      />
-
-      <div className="min-w-0 flex-1 text-right">
-        <input
-          type="text"
-          value={areaName}
-          onChange={(e) => onAreaNameChange(e.target.value)}
-          placeholder="اسم المنطقة"
-          aria-label="المنطقة"
-          className="w-full border-none bg-transparent p-0 text-right text-sm font-bold text-[#0F172A] outline-none placeholder:text-[#94A3B8] focus-visible:ring-0 sm:text-base"
-          style={{ fontFamily: ADMIN_MAPS_FONT }}
+      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+        <div
+          className="h-11 w-11 shrink-0 rounded-full bg-[#CBD5E1] sm:h-14 sm:w-14"
+          aria-hidden
         />
-        <div className="mt-1 flex items-center justify-start gap-1.5">
-          <MapPin size={16} className="shrink-0 text-[#2196F3]" strokeWidth={2.5} />
-          <p
-            className="text-xs font-medium text-[#2196F3] sm:text-sm"
+
+        <div className="min-w-0 flex-1 text-right">
+          <input
+            type="text"
+            value={areaName}
+            onChange={(e) => onAreaNameChange(e.target.value)}
+            placeholder="اسم المنطقة"
+            aria-label="المنطقة"
+            className="w-full border-none bg-transparent p-0 text-right text-sm font-bold text-[#0F172A] outline-none placeholder:text-[#94A3B8] focus-visible:ring-0 sm:text-base"
             style={{ fontFamily: ADMIN_MAPS_FONT }}
-            dir="ltr"
-          >
-            {coordinates}
-          </p>
+          />
+          <div className="mt-1 flex items-center justify-start gap-1.5">
+            <MapPin size={16} className="shrink-0 text-[#2196F3]" strokeWidth={2.5} />
+            <p
+              className="break-all text-xs font-medium text-[#2196F3] sm:break-normal sm:text-sm"
+              style={{ fontFamily: ADMIN_MAPS_FONT }}
+              dir="ltr"
+            >
+              {coordinates}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="shrink-0 text-right">
+      <div className="shrink-0 border-t border-[#CBD5E1]/40 pt-3 text-right sm:border-t-0 sm:pt-0">
         <p
           className="text-sm font-bold text-[#0F172A]"
           style={{ fontFamily: ADMIN_MAPS_FONT }}

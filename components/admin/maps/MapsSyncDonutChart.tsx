@@ -28,8 +28,8 @@ export default function MapsSyncDonutChart({
   const segments = buildDonutSegments(integrity.syncSegments)
   const boxClass =
     size === 'lg'
-      ? 'h-36 w-36 sm:h-40 sm:w-40'
-      : 'h-32 w-32 sm:h-36 sm:w-36'
+      ? 'h-28 w-28 sm:h-36 sm:w-36 lg:h-40 lg:w-40'
+      : 'h-28 w-28 sm:h-32 sm:w-32 lg:h-36 lg:w-36'
 
   return (
     <div className={`relative flex ${boxClass} items-center justify-center`}>

@@ -413,25 +413,35 @@ export default function MapsContent() {
             padding: 10px 12px !important;
             gap: 8px !important;
             bottom: 16px !important;
-            left: 10px !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
           }
           .maps-legend span { font-size: 12px !important; }
           .maps-right-panel {
-            right: 10px !important;
-            bottom: 16px !important;
+            right: 12px !important;
+            left: 12px !important;
+            bottom: auto !important;
+            top: 72px !important;
             min-width: 0 !important;
-            max-width: 160px !important;
+            max-width: none !important;
+            width: auto !important;
             padding: 10px !important;
             gap: 8px !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
           }
           .maps-right-panel > div {
             padding: 8px 10px !important;
             font-size: 12px !important;
+            width: auto !important;
+            flex: 1 1 calc(50% - 4px) !important;
+            min-width: 140px !important;
           }
           .maps-banner {
             font-size: 11px !important;
             padding: 8px 14px !important;
-            bottom: 140px !important;
+            bottom: 120px !important;
             max-width: calc(100vw - 30px) !important;
             white-space: normal !important;
             line-height: 1.4 !important;
@@ -439,8 +449,17 @@ export default function MapsContent() {
         }
 
         @media (max-width: 480px) {
-          .maps-legend { display: none !important; }
-          .maps-right-panel { display: none !important; }
+          .maps-legend {
+            flex-direction: column !important;
+            max-height: 38vh !important;
+            overflow-y: auto !important;
+          }
+          .maps-right-panel > div {
+            flex: 1 1 100% !important;
+          }
+          .maps-banner {
+            bottom: 150px !important;
+          }
         }
       `}</style>
 

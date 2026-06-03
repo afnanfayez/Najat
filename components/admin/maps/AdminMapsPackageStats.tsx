@@ -62,7 +62,7 @@ function SizeCard({
 
 export default function AdminMapsPackageStats({ sizes }: AdminMapsPackageStatsProps) {
   return (
-    <div className="flex h-full flex-col gap-3 sm:gap-4">
+    <div className="grid h-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:flex lg:flex-col">
       <SizeCard
         label="حجم الخريطة الأساسية"
         value={<MegabyteValue value={sizes.baseMapSizeMb} />}

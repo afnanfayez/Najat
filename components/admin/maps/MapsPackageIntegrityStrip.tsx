@@ -17,7 +17,7 @@ export default function MapsPackageIntegrityStrip({
 }: MapsPackageIntegrityStripProps) {
   return (
     <div
-      className={`flex flex-col items-center gap-4 rounded-2xl bg-[#E3F2FD]/60 p-4 sm:flex-row sm:items-center sm:gap-5 ${className}`}
+      className={`flex flex-col items-center gap-4 rounded-2xl bg-[#E3F2FD]/60 p-3 sm:flex-row sm:items-center sm:gap-5 sm:p-4 ${className}`}
       dir="rtl"
     >
       <div className="order-1 shrink-0 sm:order-1">
@@ -32,7 +32,7 @@ export default function MapsPackageIntegrityStrip({
           سلامة حزمة الخرائط
         </p>
         <p
-          className={`mt-1 font-bold text-[#0F172A] ${compact ? 'text-sm' : 'text-sm sm:text-base'}`}
+          className="mt-1 break-words text-sm font-bold text-[#0F172A] sm:text-base"
           style={{ fontFamily: ADMIN_MAPS_FONT }}
         >
           الحزمة الإقليمية النشطة: {integrity.activePackage}

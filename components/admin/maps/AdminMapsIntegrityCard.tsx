@@ -13,7 +13,7 @@ export default function AdminMapsIntegrityCard({
 }: AdminMapsIntegrityCardProps) {
   return (
     <div
-      className="flex h-full min-h-[220px] items-center rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:min-h-[240px] sm:p-6"
+      className="flex h-full min-h-0 items-center rounded-2xl border border-[#E8EEF5] bg-white p-3 sm:min-h-[240px] sm:p-6"
       style={{ boxShadow: ADMIN_MAPS_CARD_SHADOW }}
       dir="rtl"
     >

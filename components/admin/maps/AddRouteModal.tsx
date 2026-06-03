@@ -145,7 +145,7 @@ export default function AddRouteModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-route-title"
@@ -159,7 +159,7 @@ export default function AddRouteModal({
       />
 
       <div
-        className="relative flex max-h-[92vh] w-full max-w-[740px] flex-col overflow-hidden rounded-3xl bg-white shadow-[0_24px_64px_rgba(15,23,42,0.28)]"
+        className="relative flex max-h-[94vh] w-full max-w-[740px] flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_24px_64px_rgba(15,23,42,0.28)] sm:max-h-[92vh] sm:rounded-3xl"
         dir="rtl"
         style={{ fontFamily: ADMIN_MAPS_FONT, boxShadow: ADMIN_MAPS_CARD_SHADOW }}
       >
@@ -173,10 +173,10 @@ export default function AddRouteModal({
           <X size={20} />
         </button>
 
-        <div className="shrink-0 border-b border-[#E8EEF5] px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+        <div className="shrink-0 border-b border-[#E8EEF5] px-4 pb-4 pt-5 sm:px-6 sm:pt-6">
           <h2
             id="add-route-title"
-            className="text-right text-lg font-bold text-[#0F172A] sm:text-xl"
+            className="pl-10 text-right text-base font-bold text-[#0F172A] sm:pl-0 sm:text-xl"
           >
             إضافة / تعديل مسار
           </h2>
@@ -185,7 +185,7 @@ export default function AddRouteModal({
           </p>
         </div>
 
-        <div className="custom-scrollbar flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+        <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-4 sm:px-6">
           <RouteModalLocationBar
             areaName={areaName}
             onAreaNameChange={setAreaName}
@@ -275,12 +275,12 @@ export default function AddRouteModal({
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-[#E8EEF5] bg-[#FAFBFC] px-5 py-4 sm:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="shrink-0 border-t border-[#E8EEF5] bg-[#FAFBFC] px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-3">
             <p className="text-right text-[11px] font-medium text-[#94A3B8] sm:text-xs">
               يتم تدقيق هذه البيانات فورياً من قبل المركز الوطني اللوجستي
             </p>
-            <div className="flex shrink-0 flex-row items-stretch gap-2 self-start sm:self-auto">
+            <div className="flex w-full flex-row items-stretch gap-2">
               <button
                 type="button"
                 onClick={onClose}

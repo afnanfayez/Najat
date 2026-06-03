@@ -151,8 +151,8 @@ export default function AdminMapsPublishingTable({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-right">
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[720px] text-right">
               <thead>
                 <tr className="border-b border-[#E8EEF5] bg-[#F8FAFC]">
                   {[
@@ -250,6 +250,102 @@ export default function AdminMapsPublishingTable({
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="flex flex-col gap-3 p-4 md:hidden">
+            {rows.map((row) => {
+              const status = STATUS_LABELS[row.status]
+              return (
+                <article
+                  key={row.id}
+                  className="rounded-2xl border border-[#E8EEF5] bg-[#FAFBFC] p-4"
+                  dir="rtl"
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-bold"
+                      style={{
+                        fontFamily: ADMIN_MAPS_FONT,
+                        color: status.color,
+                        background: status.bg,
+                      }}
+                    >
+                      {status.label}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label="تعديل المسار"
+                        onClick={() => openEditModal(row)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#E3F2FD] hover:text-[#2196F3]"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="حذف المسار"
+                        onClick={() => handleDeleteRoute(row)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#FEE2E2] hover:text-[#EF4444]"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <p
+                    className="text-right text-base font-bold text-[#1E293B]"
+                    style={{ fontFamily: ADMIN_MAPS_FONT }}
+                  >
+                    {row.geographicScope || '—'}
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-right">
+                    <div>
+                      <p
+                        className="text-xs font-medium text-[#94A3B8]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        تاريخ النشر
+                      </p>
+                      <p
+                        className="mt-1 text-sm text-[#64748B]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        {row.publishedAt || '—'}
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="text-xs font-medium text-[#94A3B8]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        عدد الأجهزة
+                      </p>
+                      <p
+                        className="mt-1 text-sm font-bold text-[#1E293B]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        {formatDevices(row.deviceCount)}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p
+                        className="text-xs font-medium text-[#94A3B8]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        تأثير التغيير
+                      </p>
+                      <p
+                        className="mt-1 text-sm font-medium text-[#334155]"
+                        style={{ fontFamily: ADMIN_MAPS_FONT }}
+                      >
+                        {row.changeImpact || '—'}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         </div>
       </section>
