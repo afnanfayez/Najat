@@ -88,7 +88,7 @@ export default function DrugInventorySection({
         {drugs.map((drug) => (
           <li
             key={drug.id}
-            className="mt-3 flex items-center justify-between gap-3 rounded-full px-4 py-3 first:mt-0"
+            className="mt-3 flex flex-col gap-3 rounded-2xl px-4 py-3 first:mt-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-full sm:gap-3"
             style={{ background: '#E8F4FD' }}
             dir="rtl"
           >

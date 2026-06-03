@@ -16,7 +16,7 @@ export default function AdminHealthActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex shrink-0 items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-base font-bold text-white transition-opacity hover:opacity-90"
+      className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:shrink-0 sm:px-6 sm:py-3.5 sm:text-base"
       style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
     >
       <PlusSquare size={20} strokeWidth={2.5} />

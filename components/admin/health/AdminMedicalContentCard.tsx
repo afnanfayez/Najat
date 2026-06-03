@@ -85,11 +85,11 @@ export default function AdminMedicalContentCard({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <button
           type="button"
           onClick={() => onOpen?.(item)}
-          className="w-full rounded-xl py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="w-full rounded-xl py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:py-3 sm:text-sm"
           style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
         >
           انتقل الآن

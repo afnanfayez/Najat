@@ -15,7 +15,7 @@ export default function AdminMedicalContentCategoryTabs({
 }: AdminMedicalContentCategoryTabsProps) {
   return (
     <nav
-      className="flex flex-wrap items-center gap-6 border-b border-[#E8EEF5] pb-1"
+      className="-mx-1 flex items-center gap-4 overflow-x-auto border-b border-[#E8EEF5] pb-1 sm:mx-0 sm:flex-wrap sm:gap-6 sm:overflow-visible"
       dir="rtl"
       aria-label="تصنيفات المحتوى"
     >
@@ -26,7 +26,7 @@ export default function AdminMedicalContentCategoryTabs({
             key={category.id}
             type="button"
             onClick={() => onChange(category.id)}
-            className="relative pb-3 text-sm font-bold transition-colors sm:text-base"
+            className="relative shrink-0 pb-3 text-sm font-bold whitespace-nowrap transition-colors sm:text-base"
             style={{
               fontFamily: ADMIN_HEALTH_FONT,
               color: isActive ? '#1E293B' : '#94A3B8',

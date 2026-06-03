@@ -106,7 +106,7 @@ export default function ContentAttachmentUpload({
           if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
         }}
         onClick={() => inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 transition-colors ${
+        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-8 transition-colors sm:gap-3 sm:px-6 sm:py-10 ${
           dragging
             ? 'border-[#2196F3] bg-[#E3F2FD66]'
             : 'border-[#CBD5E1] bg-[#F8FAFC] hover:border-[#2196F3] hover:bg-[#E3F2FD33]'

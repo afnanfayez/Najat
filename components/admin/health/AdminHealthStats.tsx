@@ -18,7 +18,7 @@ interface StatItemProps {
 function StatItem({ title, value, icon: Icon }: StatItemProps) {
   return (
     <div
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-5"
+      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
       style={{ boxShadow: ADMIN_HEALTH_CARD_SHADOW }}
     >
       <div className="flex w-full items-center justify-start gap-3 text-right">
@@ -33,7 +33,7 @@ function StatItem({ title, value, icon: Icon }: StatItemProps) {
         </p>
       </div>
       <p
-        className="mt-3 w-full text-[28px] font-bold leading-none sm:text-[32px]"
+        className="mt-3 w-full text-2xl font-bold leading-none sm:text-[28px] lg:text-[32px]"
         style={{ color: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
       >
         {value}
@@ -52,7 +52,7 @@ interface AdminHealthStatsProps {
 
 export default function AdminHealthStats({ stats }: AdminHealthStatsProps) {
   return (
-    <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
       <StatItem
         title="إجمالي المنشآت"
         value={formatNumber(stats.totalFacilities)}

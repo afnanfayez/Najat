@@ -103,8 +103,8 @@ export default function AdminHealthFacilityCard({
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="mb-4">
+      <div className="p-3 sm:p-4">
+        <div className="mb-3 sm:mb-4">
           <div className="mb-2 flex items-center justify-between">
             <span
               className="text-xs font-semibold text-[#64748B]"
@@ -136,7 +136,7 @@ export default function AdminHealthFacilityCard({
           <button
             type="button"
             onClick={() => onDetails?.(facility)}
-            className="flex-1 rounded-lg py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+            className="min-w-0 flex-1 rounded-lg py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:text-sm"
             style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
           >
             التفاصيل
@@ -145,7 +145,7 @@ export default function AdminHealthFacilityCard({
             type="button"
             aria-label="اتصال"
             onClick={() => onCall?.(facility)}
-            className="flex w-12 shrink-0 items-center justify-center rounded-lg bg-[#4CAF50] text-white transition-opacity hover:opacity-90"
+            className="flex w-11 shrink-0 items-center justify-center rounded-lg bg-[#4CAF50] text-white transition-opacity hover:opacity-90 sm:w-12"
           >
             <Phone size={18} />
           </button>

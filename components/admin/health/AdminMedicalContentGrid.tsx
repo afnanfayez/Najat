@@ -31,7 +31,7 @@ export default function AdminMedicalContentGrid({
   }
 
   return (
-    <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
       {items.map((item) => (
         <AdminMedicalContentCard
           key={item.id}

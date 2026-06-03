@@ -101,12 +101,12 @@ export default function DeleteFacilityDialog({
           </div>
         </div>
 
-        <div className="flex gap-3 border-t border-[#EEF2F7] bg-[#FAFBFC] px-6 py-4">
+        <div className="flex flex-col gap-2 border-t border-[#EEF2F7] bg-[#FAFBFC] px-4 py-4 sm:flex-row sm:gap-3 sm:px-6">
           <button
             type="button"
             disabled={loading}
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[#CBD5E1] bg-white py-3 text-sm font-bold text-[#475569] transition-colors hover:bg-[#F8FAFC] disabled:opacity-60"
+            className="w-full rounded-xl border border-[#CBD5E1] bg-white py-3 text-sm font-bold text-[#475569] transition-colors hover:bg-[#F8FAFC] disabled:opacity-60 sm:flex-1"
           >
             إلغاء
           </button>
@@ -114,7 +114,7 @@ export default function DeleteFacilityDialog({
             type="button"
             disabled={loading}
             onClick={onConfirm}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EF4444] py-3 text-sm font-bold text-white transition-colors hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#EF4444] py-3 text-sm font-bold text-white transition-colors hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:opacity-70 sm:flex-1"
           >
             <Trash2 size={16} />
             {loading ? 'جاري الحذف...' : 'حذف المنشأة'}

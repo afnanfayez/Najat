@@ -28,7 +28,7 @@ export default function AdminHealthPageHeader({
     <header className="mb-6">
       <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
 
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex w-full min-w-0 flex-col gap-4 sm:gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-right">
           <h1 style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
           <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>

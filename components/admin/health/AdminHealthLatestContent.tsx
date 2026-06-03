@@ -21,9 +21,9 @@ export default function AdminHealthLatestContent({
       dir="rtl"
       className="rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:p-5"
     >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h2
-          className="text-xl font-bold text-[#1a2d4a] sm:text-2xl"
+          className="text-lg font-bold text-[#1a2d4a] sm:text-xl lg:text-2xl"
           style={{ fontFamily: ADMIN_HEALTH_FONT, lineHeight: 1.3 }}
         >
           أحدث المحتوى الطبي
@@ -31,7 +31,7 @@ export default function AdminHealthLatestContent({
         <button
           type="button"
           onClick={onManageAll}
-          className="flex items-center gap-2 text-base font-bold transition-opacity hover:opacity-80 sm:text-lg"
+          className="flex w-full items-center justify-center gap-2 text-sm font-bold transition-opacity hover:opacity-80 sm:w-auto sm:text-base lg:text-lg"
           style={{ color: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
         >
           <ExternalLink size={20} strokeWidth={2.5} />

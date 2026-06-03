@@ -42,7 +42,7 @@ export default function AdminHealthToolbar({
         onStatusChange={onStatusChange}
       />
 
-      <div className="flex justify-end">
+      <div className="flex w-full justify-stretch sm:justify-end">
         <AdminHealthActionButton label={actionLabel} onClick={onAction} />
       </div>
     </div>

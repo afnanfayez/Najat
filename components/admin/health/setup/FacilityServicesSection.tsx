@@ -16,7 +16,7 @@ export default function FacilityServicesSection({
 }: FacilityServicesSectionProps) {
   return (
     <SetupSectionCard title="خدمات المنشأة" className="w-full">
-      <div className="flex w-full flex-wrap justify-start gap-3">
+      <div className="flex w-full flex-wrap justify-start gap-2 sm:gap-3">
         {FACILITY_SERVICES.map((service) => {
           const active = selected.includes(service.id)
           return (
@@ -24,7 +24,7 @@ export default function FacilityServicesSection({
               key={service.id}
               type="button"
               onClick={() => onToggle(service.id)}
-              className="flex items-center gap-2 rounded-full px-5 py-3 text-base font-bold transition-all sm:text-lg"
+              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold transition-all sm:gap-2 sm:px-5 sm:py-3 sm:text-base lg:text-lg"
               style={{
                 fontFamily: SETUP_FONT,
                 background: active ? SETUP_BLUE : '#fff',

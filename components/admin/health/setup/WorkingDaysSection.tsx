@@ -62,11 +62,11 @@ function CalendarCard({
         </p>
       </div>
 
-      <div className="grid flex-1 grid-cols-7 content-start gap-y-2 text-center">
+      <div className="grid flex-1 grid-cols-7 content-start gap-x-0.5 gap-y-1 text-center sm:gap-x-1 sm:gap-y-2">
         {CALENDAR_WEEKDAYS.map((d, i) => (
           <span
             key={`${d}-${i}`}
-            className="py-1 text-xs font-bold text-[#94A3B8]"
+            className="py-1 text-[10px] font-bold text-[#94A3B8] sm:text-xs"
             style={{ fontFamily: SETUP_FONT }}
           >
             {d}
@@ -80,7 +80,7 @@ function CalendarCard({
               key={day}
               type="button"
               onClick={() => onToggleDate(day)}
-              className="mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all"
+              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all sm:h-9 sm:w-9 sm:text-sm"
               style={{
                 fontFamily: SETUP_FONT,
                 background: selectedDates.includes(day) ? '#E3F2FD' : 'transparent',

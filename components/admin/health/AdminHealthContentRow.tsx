@@ -33,51 +33,56 @@ export default function AdminHealthContentRow({
     <button
       type="button"
       onClick={() => onClick?.(item)}
-      className="flex w-full items-center gap-4 rounded-2xl border border-[#E8EEF5] bg-white p-4 text-right shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-colors hover:bg-[#FAFBFC]"
+      className="flex w-full min-w-0 flex-col gap-3 overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white p-3 text-right shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-colors hover:bg-[#FAFBFC] sm:flex-row sm:items-center sm:gap-4 sm:p-4"
       dir="rtl"
     >
-      {/* الصورة — أقصى اليمين */}
-      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-[#E8EEF5] sm:h-[72px] sm:w-28">
-        <Image
-          src={item.thumbnailUrl || ADMIN_HEALTH_CONTENT_THUMBNAIL}
-          alt={item.title}
-          fill
-          sizes="112px"
-          className="object-cover"
-        />
-      </div>
+      <div className="flex min-w-0 w-full items-center gap-3 sm:contents">
+        <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-[#E8EEF5] sm:h-[72px] sm:w-28">
+          <Image
+            src={item.thumbnailUrl || ADMIN_HEALTH_CONTENT_THUMBNAIL}
+            alt={item.title}
+            fill
+            sizes="(max-width: 640px) 80px, 112px"
+            className="object-cover"
+          />
+        </div>
 
-      {/* العنوان والبيانات — في الوسط */}
-      <div className="min-w-0 flex-1 text-right">
-        <p
-          className="truncate text-base font-bold text-[#1e293b] sm:text-lg"
-          style={{ fontFamily: ADMIN_HEALTH_FONT }}
-        >
-          {item.title}
-        </p>
-        <div className="mt-2 flex flex-wrap items-center justify-start gap-3 text-sm text-[#64748B]">
-          <span style={{ fontFamily: ADMIN_HEALTH_FONT }}>{item.date}</span>
-          <span className="flex items-center gap-1.5">
-            <User size={14} />
-            <span style={{ fontFamily: ADMIN_HEALTH_FONT }}>{item.author}</span>
-          </span>
+        <div className="min-w-0 flex-1 text-right">
+          <p
+            className="line-clamp-2 text-sm font-bold text-[#1e293b] sm:truncate sm:text-lg"
+            style={{ fontFamily: ADMIN_HEALTH_FONT }}
+          >
+            {item.title}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center justify-start gap-2 text-xs text-[#64748B] sm:mt-2 sm:gap-3 sm:text-sm">
+            <span style={{ fontFamily: ADMIN_HEALTH_FONT }}>{item.date}</span>
+            <span className="flex items-center gap-1.5">
+              <User size={14} className="shrink-0" />
+              <span
+                className="truncate"
+                style={{ fontFamily: ADMIN_HEALTH_FONT }}
+              >
+                {item.author}
+              </span>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* الحالة — يسار النص */}
-      <span
-        className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold sm:text-sm"
-        style={{
-          background: badge.bg,
-          color: badge.text,
-          fontFamily: ADMIN_HEALTH_FONT,
-        }}
-      >
-        {ADMIN_HEALTH_CONTENT_STATUS_LABELS[item.status]}
-      </span>
+      <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:shrink-0 sm:justify-start">
+        <span
+          className="rounded-full px-2.5 py-1 text-[11px] font-bold sm:px-3 sm:py-1.5 sm:text-sm"
+          style={{
+            background: badge.bg,
+            color: badge.text,
+            fontFamily: ADMIN_HEALTH_FONT,
+          }}
+        >
+          {ADMIN_HEALTH_CONTENT_STATUS_LABELS[item.status]}
+        </span>
 
-      {/* السهم — أقصى اليسار */}
-      <ChevronLeft size={20} className="shrink-0 text-[#94A3B8]" />
+        <ChevronLeft size={20} className="shrink-0 text-[#94A3B8]" />
+      </div>
     </button>
   )
 }

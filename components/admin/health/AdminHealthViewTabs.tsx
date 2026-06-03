@@ -18,7 +18,7 @@ export default function AdminHealthViewTabs({
   onTabChange,
 }: AdminHealthViewTabsProps) {
   return (
-    <div className="flex shrink-0 items-center gap-2 self-start">
+    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
       {TABS.map((tab) => {
         const isActive = activeTab === tab.id
         return (
@@ -26,7 +26,7 @@ export default function AdminHealthViewTabs({
             key={tab.id}
             type="button"
             onClick={() => onTabChange(tab.id)}
-            className="rounded-full px-5 py-2.5 text-sm font-bold transition-all"
+            className="min-w-0 flex-1 rounded-full px-3 py-2 text-xs font-bold transition-all sm:flex-none sm:px-5 sm:py-2.5 sm:text-sm"
             style={{
               fontFamily: ADMIN_HEALTH_FONT,
               background: isActive ? ADMIN_HEALTH_BLUE : `${ADMIN_HEALTH_BLUE}1A`,

@@ -1,4 +1,4 @@
-export const ADMIN_PAGE_PADDING = '15px 35px'
+export const ADMIN_PAGE_PADDING = 'clamp(12px, 3vw, 15px) clamp(15px, 4vw, 35px)'
 
 export const ADMIN_PAGE_TITLE_STYLE = {
   fontFamily: "'Cairo', sans-serif",
@@ -13,7 +13,7 @@ export const ADMIN_PAGE_TITLE_STYLE = {
 export const ADMIN_PAGE_SUBTITLE_STYLE = {
   fontFamily: "'Cairo', sans-serif",
   fontWeight: 500,
-  fontSize: '15px',
+  fontSize: 'clamp(13px, 2.5vw, 15px)',
   color: '#000',
   margin: 0,
   textAlign: 'right' as const,

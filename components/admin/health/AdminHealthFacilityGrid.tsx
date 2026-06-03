@@ -33,7 +33,7 @@ export default function AdminHealthFacilityGrid({
   }
 
   return (
-    <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
       {facilities.map((facility) => (
         <AdminHealthFacilityCard
           key={facility.id}

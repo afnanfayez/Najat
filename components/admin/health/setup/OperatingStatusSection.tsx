@@ -59,16 +59,17 @@ export default function OperatingStatusSection({
               key={opt.id}
               type="button"
               onClick={() => onChange(opt.id)}
-              className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border-2 px-4 py-5 transition-all"
+              className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border-2 px-3 py-4 transition-all sm:gap-3 sm:px-4 sm:py-5"
               style={{
                 fontFamily: SETUP_FONT,
                 background: selected ? opt.bg : '#fff',
                 borderColor: selected ? opt.color : opt.border,
               }}
             >
-              <Icon size={32} style={{ color: opt.color }} strokeWidth={2} />
+              <Icon size={28} className="sm:hidden" style={{ color: opt.color }} strokeWidth={2} />
+              <Icon size={32} className="hidden sm:block" style={{ color: opt.color }} strokeWidth={2} />
               <span
-                className="text-sm font-bold"
+                className="text-xs font-bold sm:text-sm"
                 style={{ color: selected ? opt.color : '#64748B' }}
               >
                 {opt.label}

@@ -62,10 +62,10 @@ export default function MedicalContentEditorForm({
   return (
     <section
       dir="rtl"
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:p-6"
+      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sm:p-5 lg:p-6"
     >
       <h2
-        className="mb-6 text-right text-lg font-bold text-[#1E293B]"
+        className="mb-5 text-right text-base font-bold text-[#1E293B] sm:mb-6 sm:text-lg"
         style={{ fontFamily: ADMIN_HEALTH_FONT }}
       >
         محرر المحتوى
@@ -163,12 +163,12 @@ export default function MedicalContentEditorForm({
         />
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-start gap-3" dir="ltr">
+      <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-3" dir="ltr">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto"
           style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
         >
           {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
@@ -177,7 +177,7 @@ export default function MedicalContentEditorForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="rounded-xl bg-[#F1F5F9] px-6 py-3 text-sm font-bold text-[#64748B] transition-opacity hover:opacity-80 disabled:opacity-60"
+          className="w-full rounded-xl bg-[#F1F5F9] px-6 py-3 text-sm font-bold text-[#64748B] transition-opacity hover:opacity-80 disabled:opacity-60 sm:w-auto"
           style={{ fontFamily: ADMIN_HEALTH_FONT }}
         >
           إلغاء

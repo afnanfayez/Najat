@@ -280,7 +280,7 @@ export default function AdminHealthContent() {
               active={contentCategory}
               onChange={setContentCategory}
             />
-            <div className="flex justify-end">
+            <div className="flex w-full justify-stretch sm:justify-end">
               <AdminHealthActionButton
                 label="إضافة محتوى جديد"
                 onClick={handleAddContent}
