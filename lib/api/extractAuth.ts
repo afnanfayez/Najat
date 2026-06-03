@@ -1,3 +1,5 @@
+import { normalizeUserRole } from '@/lib/auth/roleUtils'
+
 /** Normalize login/register-style responses: flat OpenAPI vs Nest-wrapped `{ data: ... }`. */
 
 type AuthShape = {
@@ -11,11 +13,15 @@ function readToken(obj: Record<string, unknown>): string | null {
 }
 
 function readRole(obj: Record<string, unknown>): string | undefined {
-  if (typeof obj.role === 'string') return obj.role
+  const direct = normalizeUserRole(obj.role)
+  if (direct) return direct
+
   const user = obj.user
   if (user && typeof user === 'object' && user !== null) {
-    const r = (user as Record<string, unknown>).role
-    if (typeof r === 'string') return r
+    const fromUser = normalizeUserRole(
+      (user as Record<string, unknown>).role,
+    )
+    if (fromUser) return fromUser
   }
   return undefined
 }

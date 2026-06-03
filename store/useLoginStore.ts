@@ -3,7 +3,11 @@ import { persist } from 'zustand/middleware'
 import { authAPI } from '@/lib/api/api'
 import { extractAuthPayload } from '@/lib/api/extractAuth'
 import { saveToken } from '@/lib/api/auth'
+import { notifyAuthSessionChanged } from '@/lib/auth/authEvents'
+import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import { saveUserRole } from '@/lib/auth/sessionRole'
+import { getRoleFromJwt, normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
+import { saveLoginRedirect, routeForRole } from '@/lib/auth/currentAuthRole'
 import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,6 +35,7 @@ interface LoginState {
 
   // Derived
   isValid: boolean
+  postLoginRole: UserRole | null
 
   // Actions
   setEmail: (email: string) => void
@@ -44,6 +49,7 @@ interface LoginState {
   setIsResetting: (v: boolean) => void
   setEmailError: (v: boolean) => void
   setPasswordError: (v: boolean) => void
+  setPostLoginRole: (role: UserRole | null) => void
 
   // Composite actions
   handleForgotClick: () => void
@@ -72,6 +78,7 @@ export const useLoginStore = create<LoginState>()(
       isResetting: false,
       emailError: false,
       passwordError: false,
+      postLoginRole: null,
 
       // Forgot password flow
       forgotEmail: '',
@@ -104,6 +111,7 @@ export const useLoginStore = create<LoginState>()(
       setIsResetting: (isResetting) => set({ isResetting }),
       setEmailError: (emailError) => set({ emailError }),
       setPasswordError: (passwordError) => set({ passwordError }),
+      setPostLoginRole: (postLoginRole) => set({ postLoginRole }),
 
       // Composite: navigate to forgot password
       handleForgotClick: () =>
@@ -133,13 +141,19 @@ export const useLoginStore = create<LoginState>()(
           if (!token) {
             throw new Error('لم يتم استلام رمز الدخول من الخادم')
           }
+          resetBrowserSession({ keepLoginEmail: true })
           saveToken(token)
-          if (typeof role === 'string') {
-            saveUserRole(role)
+          const resolvedRole =
+            normalizeUserRole(role) ?? getRoleFromJwt(token)
+          if (resolvedRole) {
+            saveUserRole(resolvedRole)
           }
+          notifyAuthSessionChanged()
+          saveLoginRedirect(routeForRole(resolvedRole))
           set({
             isSuccess: true,
             isSubmitting: false,
+            postLoginRole: resolvedRole ?? null,
           })
         } catch (err: any) {
           const msg = err?.message ?? 'تعذّر الاتصال بالخادم، حاول مرة أخرى'
@@ -259,6 +273,7 @@ export const useLoginStore = create<LoginState>()(
           forgotEmail: '',
           forgotCode: '',
           forgotError: null,
+          postLoginRole: null,
         }),
     }),
     {

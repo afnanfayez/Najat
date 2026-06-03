@@ -168,7 +168,7 @@ export default function AdminSidebarContent({
               lineHeight: '1.2',
             }}
           >
-            {user?.fullName ?? 'إسلام أبو منصور'}
+            {user?.fullName ?? 'مدير النظام'}
           </p>
           <p
             style={{

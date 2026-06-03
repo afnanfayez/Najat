@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { AuthProvider } from '@/context/AuthContext'
 import DashboardLayoutClient from '@/components/dashboard/DashboardLayoutClient'
 
 function ShellFallback() {
@@ -28,10 +27,8 @@ export default function AppShellLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthProvider>
-      <Suspense fallback={<ShellFallback />}>
-        <DashboardLayoutClient>{children}</DashboardLayoutClient>
-      </Suspense>
-    </AuthProvider>
+    <Suspense fallback={<ShellFallback />}>
+      <DashboardLayoutClient>{children}</DashboardLayoutClient>
+    </Suspense>
   )
 }

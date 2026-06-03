@@ -1,6 +1,5 @@
 import type { UserProfile } from '@/schemas/userProfile'
-import type { UserRole } from '@/lib/auth/roleUtils'
-import { getUserRole } from '@/lib/auth/sessionRole'
+import { normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
 
 function pickUserRecord(raw: unknown): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object') return null
@@ -14,31 +13,28 @@ function pickUserRecord(raw: unknown): Record<string, unknown> | null {
   return r
 }
 
+export function getExplicitApiRole(raw: unknown): UserRole | null {
+  const u = pickUserRecord(raw)
+  if (!u) return null
+  return normalizeUserRole(u.role)
+}
+
 export function mapUserProfile(raw: unknown): UserProfile | null {
   const u = pickUserRecord(raw)
-  if (!u?.id || typeof u.id !== 'string') return null
+  if (!u) return null
 
-  const rawRole = u.role
-  let role: UserRole = 'resident'
-  if (
-    rawRole === 'resident' ||
-    rawRole === 'volunteer' ||
-    rawRole === 'admin'
-  ) {
-    role = rawRole
-  } else {
-    const fallback = getUserRole()
-    if (
-      fallback === 'resident' ||
-      fallback === 'volunteer' ||
-      fallback === 'admin'
-    ) {
-      role = fallback
-    }
-  }
+  const id =
+    typeof u?.id === 'string'
+      ? u.id
+      : typeof u?.id === 'number'
+        ? String(u.id)
+        : ''
+  if (!id) return null
+
+  const role = normalizeUserRole(u.role) ?? 'resident' // finalized in profileAPI.me via JWT
 
   return {
-    id: u.id,
+    id,
     email: typeof u.email === 'string' ? u.email : '',
     fullName:
       (typeof u.fullName === 'string' && u.fullName) ||

@@ -1,32 +1,48 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
-import { getUserRole } from '@/lib/auth/sessionRole'
+import { useAuth } from '@/context/AuthContext'
+import { useQueryClient } from '@tanstack/react-query'
+import { clearUserSessionCache } from '@/lib/auth/clearSessionCache'
+import {
+  consumeLoginRedirect,
+  getCurrentAuthRole,
+  routeForRole,
+} from '@/lib/auth/currentAuthRole'
 
 const LoginSuccess = () => {
   const router = useRouter()
   const resetLogin = useLoginStore((s) => s.resetLogin)
+  const postLoginRole = useLoginStore((s) => s.postLoginRole)
+  const { refreshUser } = useAuth()
+  const queryClient = useQueryClient()
+  const didRedirect = useRef(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const role = getUserRole()
+    if (didRedirect.current) return
+    didRedirect.current = true
+
+    async function redirectAfterLogin() {
+      clearUserSessionCache(queryClient)
+      await refreshUser()
+
+      const savedPath = consumeLoginRedirect()
+      const role =
+        postLoginRole ?? getCurrentAuthRole()
+      const destination = savedPath ?? routeForRole(role)
+
       resetLogin()
-      if (role === 'admin') {
-        router.push('/admin')
-      } else if (role === 'volunteer') {
-        router.push('/volunteer')
-      } else {
-        router.push('/dashboard')
-      }
-    }, 3000)
-    return () => clearTimeout(timer)
-  }, [router, resetLogin])
+      router.replace(destination)
+    }
+
+    redirectAfterLogin()
+  }, [postLoginRole, queryClient, refreshUser, resetLogin, router])
 
   return (
     <div

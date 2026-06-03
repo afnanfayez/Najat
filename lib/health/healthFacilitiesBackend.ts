@@ -12,14 +12,16 @@ const PAGE_SIZE = 50
 const MAX_PAGES = 20
 
 async function fetchAllPages<T>(
-  fetchPage: (page: number) => Promise<{ data: T[]; meta: { hasNextPage: boolean } }>,
+  fetchPage: (
+    page: number,
+  ) => Promise<{ data: T[]; meta: { hasNextPage?: boolean } }>,
 ): Promise<T[]> {
   const all: T[] = []
   let page = 1
   while (page <= MAX_PAGES) {
     const res = await fetchPage(page)
     all.push(...res.data)
-    if (!res.meta.hasNextPage) break
+    if (!res.meta?.hasNextPage) break
     page += 1
   }
   return all

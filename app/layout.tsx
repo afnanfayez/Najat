@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TanStackProvider from "@/components/providers/TanStackProvider";
+import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,9 @@ export default function RootLayout({
       </head>
       <body>
         <TanStackProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
           <Toaster richColors position="top-center" closeButton dir="rtl" />
         </TanStackProvider>
       </body>

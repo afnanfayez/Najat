@@ -15,7 +15,7 @@ export default function AdminDashboardHeader({
   userName,
   onMenuOpen,
 }: AdminDashboardHeaderProps) {
-  const firstName = userName?.split(' ')[0] ?? 'إسلام'
+  const firstName = userName?.split(' ')[0] ?? 'مدير'
 
   return (
     <header style={{ marginBottom: '24px' }}>

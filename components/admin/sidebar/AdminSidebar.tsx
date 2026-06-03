@@ -16,10 +16,10 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <>
-      <div className="overlay" onClick={onMobileClose} aria-hidden={!isMobileOpen} />
+      <div className="admin-shell-overlay" onClick={onMobileClose} aria-hidden={!isMobileOpen} />
 
       <div
-        className="mobile-sidebar admin-mobile-sidebar"
+        className="admin-mobile-sidebar"
         style={{
           right: isMobileOpen ? '0' : '-320px',
           display: 'flex',
@@ -56,7 +56,7 @@ export default function AdminSidebar({
       </div>
 
       <aside
-        className="desktop-sidebar admin-desktop-sidebar"
+        className="admin-desktop-sidebar"
         style={{
           width: '320px',
           minWidth: '320px',

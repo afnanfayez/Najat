@@ -1,6 +1,12 @@
 import { request } from '@/lib/api/api'
+import { getToken } from '@/lib/api/auth'
+import { getUserRole } from '@/lib/auth/sessionRole'
+import { getRoleFromJwt, normalizeUserRole } from '@/lib/auth/roleUtils'
 import { mergeProfileWithLocal } from '@/lib/profile/localProfileStorage'
-import { mapUserProfile } from '@/lib/profile/mapUserProfile'
+import {
+  getExplicitApiRole,
+  mapUserProfile,
+} from '@/lib/profile/mapUserProfile'
 import type { UpdateUserProfileBody, UserProfile } from '@/schemas/userProfile'
 
 const V1_ROOT =
@@ -11,6 +17,26 @@ export type ProfileUpdateResult = {
   syncedWithServer: boolean
 }
 
+function resolveProfileRole(raw: unknown, profile: UserProfile): UserProfile['role'] {
+  const token = getToken()
+  const explicitApiRole = getExplicitApiRole(raw)
+  const jwtRole = getRoleFromJwt(token)
+  const storedRole = normalizeUserRole(getUserRole())
+
+  return (
+    explicitApiRole ??
+    jwtRole ??
+    storedRole ??
+    profile.role ??
+    'resident'
+  )
+}
+
+function finalizeProfile(raw: unknown, profile: UserProfile): UserProfile {
+  const role = resolveProfileRole(raw, profile)
+  return mergeProfileWithLocal({ ...profile, role })
+}
+
 export const profileAPI = {
   me(): Promise<UserProfile> {
     return request(`${V1_ROOT}/auth/me`).then((raw) => {
@@ -18,7 +44,7 @@ export const profileAPI = {
       if (!profile) {
         throw { status: 500, message: 'تعذّر قراءة بيانات الملف الشخصي' }
       }
-      return mergeProfileWithLocal(profile)
+      return finalizeProfile(raw, profile)
     })
   },
 
@@ -40,12 +66,13 @@ export const profileAPI = {
           ? (err as { status?: number }).status
           : undefined
       if (status === 403) {
-        const base = mapUserProfile(await request(`${V1_ROOT}/auth/me`))
+        const raw = await request(`${V1_ROOT}/auth/me`)
+        const base = mapUserProfile(raw)
         if (!base) {
           throw { status: 500, message: 'تعذّر قراءة بيانات الملف الشخصي' }
         }
         return {
-          profile: mergeProfileWithLocal(base),
+          profile: finalizeProfile(raw, base),
           syncedWithServer: false,
         }
       }

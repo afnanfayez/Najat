@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
+import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
 import {
   saveLocalAvatar,
   saveLocalOverrides,
@@ -17,12 +18,14 @@ export type ProfileSavePayload = UpdateUserProfileBody & {
 export function useProfile() {
   const { isHydrated, refreshUser } = useAuth()
   const queryClient = useQueryClient()
+  const token = getToken()
+  const queryKey = getProfileQueryKey(token)
 
   const query = useQuery({
-    queryKey: ['profile', 'me'],
+    queryKey,
     queryFn: () => profileAPI.me(),
-    enabled: isHydrated && Boolean(getToken()),
-    staleTime: 1000 * 60,
+    enabled: isHydrated && Boolean(token),
+    staleTime: 0,
     retry: 1,
   })
 
@@ -38,7 +41,7 @@ export function useProfile() {
       return profileAPI.update(id, body)
     },
     onSuccess: async ({ profile }) => {
-      queryClient.setQueryData(['profile', 'me'], profile)
+      queryClient.setQueryData(getProfileQueryKey(), profile)
       await refreshUser()
     },
   })

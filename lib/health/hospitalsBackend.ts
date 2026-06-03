@@ -14,7 +14,7 @@ export async function fetchAllHospitalPages(): Promise<HealthFacility[]> {
       limit: HOSPITAL_LIST_PAGE_SIZE,
     })
     all.push(...res.data.map(mapHospitalDtoToFacility))
-    if (!res.meta.hasNextPage) break
+    if (!res.meta?.hasNextPage) break
     page += 1
   }
   return all

@@ -19,6 +19,8 @@ import ResetPasswordForm from './ResetPasswordForm'
 
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
+import { toast } from 'sonner'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -316,6 +318,17 @@ const LoginForm = () => {
                 إنشاء حساب جديد
               </Link>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                resetBrowserSession({ keepLoginEmail: true })
+                toast.success('تم مسح بيانات الجلسة السابقة — سجّل الدخول الآن')
+              }}
+              className="mt-2 text-center text-[11px] font-semibold text-white/50 underline-offset-2 transition-colors hover:text-white/80 hover:underline sm:text-[12px]"
+            >
+              مشكلة في الدخول؟ امسح بيانات الجلسة السابقة
+            </button>
 
             <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
               <Separator className="flex-1 bg-white" />

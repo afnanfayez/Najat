@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { authAPI } from '@/lib/api/api'
 import { extractAuthPayload } from '@/lib/api/extractAuth'
 import { saveToken } from '@/lib/api/auth'
+import { notifyAuthSessionChanged } from '@/lib/auth/authEvents'
 import { saveUserRole } from '@/lib/auth/sessionRole'
 import { toast } from 'sonner'
 
@@ -336,6 +337,7 @@ export const useRegisterStore = create<RegisterState>()(
           const { token, role: authRole } = extractAuthPayload(res)
           if (token) {
             saveToken(token)
+            notifyAuthSessionChanged()
           }
           const role = authRole ?? (res as { role?: string })?.role
           saveUserRole(typeof role === 'string' ? role : 'resident')
@@ -370,6 +372,7 @@ export const useRegisterStore = create<RegisterState>()(
           const { token, role: authRole } = extractAuthPayload(res)
           if (token) {
             saveToken(token)
+            notifyAuthSessionChanged()
           }
           const role =
             authRole ??

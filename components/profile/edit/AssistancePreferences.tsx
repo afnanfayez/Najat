@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Plus, Minus, Check } from 'lucide-react'
 import CustomCheckbox from '../shared/CustomCheckbox'
+import { useAuth } from '@/context/AuthContext'
 
-const STORAGE_KEY = 'assistance_preferences'
+const STORAGE_PREFIX = 'assistance_preferences_'
 
 type Preferences = {
   food: boolean
@@ -30,12 +31,12 @@ const DEFAULT_PREFERENCES: Preferences = {
   transport: false,
 }
 
-function loadFromStorage(): StoredData {
+function loadFromStorage(storageKey: string): StoredData {
   if (typeof window === 'undefined') {
     return { preferences: DEFAULT_PREFERENCES, location: '', radius: '5' }
   }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey)
     if (!raw) return { preferences: DEFAULT_PREFERENCES, location: '', radius: '5' }
     return JSON.parse(raw) as StoredData
   } catch {
@@ -44,6 +45,8 @@ function loadFromStorage(): StoredData {
 }
 
 export default function AssistancePreferences() {
+  const { user } = useAuth()
+  const storageKey = user?.id ? `${STORAGE_PREFIX}${user.id}` : `${STORAGE_PREFIX}guest`
   const [preferences, setPreferences] = useState<Preferences>(DEFAULT_PREFERENCES)
   const [location, setLocation] = useState('')
   const [radius, setRadius] = useState('5')
@@ -51,18 +54,21 @@ export default function AssistancePreferences() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const stored = loadFromStorage()
+    const stored = loadFromStorage(storageKey)
     setPreferences(stored.preferences)
     setLocation(stored.location)
     setRadius(stored.radius)
-  }, [])
+  }, [storageKey])
 
-  const persist = (next: StoredData) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    setSaved(true)
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => setSaved(false), 2000)
-  }
+  const persist = useCallback(
+    (next: StoredData) => {
+      localStorage.setItem(storageKey, JSON.stringify(next))
+      setSaved(true)
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => setSaved(false), 2000)
+    },
+    [storageKey],
+  )
 
   const togglePreference = (key: keyof Preferences) => {
     setPreferences(prev => {

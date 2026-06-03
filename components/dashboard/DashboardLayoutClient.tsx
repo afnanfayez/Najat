@@ -194,12 +194,23 @@ export default function DashboardLayoutClient({
             display: 'flex',
             flexDirection: 'column',
             minWidth: 0,
+            minHeight: 0,
             overflow: 'hidden',
             boxSizing: 'border-box',
             position: 'relative',
           }}
         >
-          {children}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              width: '100%',
+            }}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </DashboardShellContext.Provider>

@@ -6,12 +6,18 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react'
 import { useRouter } from 'next/navigation'
-import { getToken, removeToken } from '@/lib/api/auth'
-import { removeUserRole, getUserRole } from '@/lib/auth/sessionRole'
+import { useQueryClient } from '@tanstack/react-query'
+import { getToken, TOKEN_KEY } from '@/lib/api/auth'
+import { AUTH_SESSION_CHANGED } from '@/lib/auth/authEvents'
+import { saveUserRole, SESSION_ROLE_KEY } from '@/lib/auth/sessionRole'
 import { profileAPI } from '@/lib/api/profile'
+import { clearUserSessionCache } from '@/lib/auth/clearSessionCache'
+import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
+import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import type { UserRole } from '@/lib/auth/roleUtils'
 
 export type AuthUser = Awaited<ReturnType<typeof profileAPI.me>>
@@ -36,37 +42,60 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isHydrated, setIsHydrated] = useState(false)
+  const refreshSeqRef = useRef(0)
 
   const logout = useCallback(() => {
-    removeToken()
-    removeUserRole()
+    resetBrowserSession()
     setUser(null)
+    clearUserSessionCache(queryClient)
     router.replace('/logout')
-  }, [router])
+  }, [router, queryClient])
 
   const refreshUser = useCallback(async () => {
     const token = getToken()
     if (!token) {
       setUser(null)
+      clearUserSessionCache(queryClient)
       return
     }
 
+    const seq = ++refreshSeqRef.current
+    const tokenAtStart = token
+
+    setIsLoading(true)
+    clearUserSessionCache(queryClient)
+
     try {
       const profile = await profileAPI.me()
+
+      if (seq !== refreshSeqRef.current) return
+      if (getToken() !== tokenAtStart) return
+
       setUser(profile)
+      saveUserRole(profile.role)
     } catch (err: unknown) {
+      if (seq !== refreshSeqRef.current) return
+      if (getToken() !== tokenAtStart) return
+
       const status =
         err && typeof err === 'object' && 'status' in err
           ? (err as { status?: number }).status
           : undefined
       if (status === 401) {
         logout()
+      } else {
+        setUser(null)
+      }
+    } finally {
+      if (seq === refreshSeqRef.current) {
+        setIsLoading(false)
       }
     }
-  }, [logout])
+  }, [logout, queryClient])
 
   useEffect(() => {
     setIsHydrated(true)
@@ -81,18 +110,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    refreshUser()
-      .catch(() => {
-        /* refreshUser handles 401 */
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+    refreshUser().catch(() => {
+      /* refreshUser handles 401 */
+    })
   }, [isHydrated, refreshUser])
 
-  const role = user?.role ?? null
+  useEffect(() => {
+    const onSessionChanged = () => {
+      setUser(null)
+      clearUserSessionCache(queryClient)
+      refreshUser().catch(() => {})
+    }
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== TOKEN_KEY && event.key !== SESSION_ROLE_KEY) return
+      setUser(null)
+      clearUserSessionCache(queryClient)
+      refreshUser().catch(() => {})
+    }
+
+    window.addEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
+    window.addEventListener('storage', onStorage)
+    return () => {
+      window.removeEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
+      window.removeEventListener('storage', onStorage)
+    }
+  }, [queryClient, refreshUser])
+
+  const role: UserRole | null = isHydrated ? getCurrentAuthRole() : null
   const visibleUser = isHydrated ? user : null
-  const visibleRole = isHydrated ? role : null
+  const visibleRole = role
 
   return (
     <AuthContext.Provider
