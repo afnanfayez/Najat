@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
+import ProfileAvatar from '@/components/profile/shared/ProfileAvatar'
 import { navItems, adminNavItem } from '../data/dashboardConstants'
 import { roleLabel, roleBadgeStyle, isAdmin } from '@/lib/auth/roleUtils'
 import type { AuthUser } from '@/context/AuthContext'
@@ -144,14 +145,26 @@ export default function SidebarContent({
             width: '38px',
             height: '38px',
             borderRadius: '50%',
-            background: 'rgba(255,255,255,0.25)',
+            background: user?.avatarUrl
+              ? 'transparent'
+              : 'rgba(255,255,255,0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
+            overflow: 'hidden',
           }}
         >
-          <User size={20} color="#fff" />
+          {user?.avatarUrl ? (
+            <ProfileAvatar
+              src={user.avatarUrl}
+              alt={user.fullName ?? 'المستخدم'}
+              size={38}
+              borderClassName=""
+            />
+          ) : (
+            <User size={20} color="#fff" />
+          )}
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <p

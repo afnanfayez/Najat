@@ -25,7 +25,6 @@ export default function GeneralSettings() {
         {/* Toggles Row */}
         <div className="flex flex-col md:flex-row gap-4">
            <ToggleSwitch label="تنبيهات الطوارئ فقط" defaultChecked={true} />
-           <ToggleSwitch label="تفعيل الوضع الليلي" defaultChecked={false} />
         </div>
 
         {/* Text Size */}
