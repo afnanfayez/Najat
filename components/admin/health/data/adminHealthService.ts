@@ -1,4 +1,5 @@
 import {
+  createAdminHealthFacilityFromApi,
   fetchAdminHealthContentFromApi,
   fetchAdminHealthFacilitiesFromApi,
 } from '@/lib/api/adminHealth'
@@ -13,16 +14,52 @@ import type {
   AdminHealthContentQueryParams,
   AdminHealthFacilitiesListResponse,
   AdminHealthFacilitiesQueryParams,
+  AdminHealthFacility,
   AdminHealthMedicalContent,
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
+  CreateAdminHealthFacilityBody,
 } from '@/schemas/adminHealth'
+import {
+  buildFacilityFormData,
+  mapFacilityFormToCreateBody,
+} from './facilitySetupMapper'
+import type { FacilitySetupForm } from '../setup/types'
 
 export type {
   AdminHealthFacilitiesQueryParams,
   AdminHealthContentQueryParams,
   AdminHealthFacilitiesListResponse,
   AdminHealthContentListResponse,
+}
+
+let mockFacilitiesStore: AdminHealthFacility[] | null = null
+
+function getMockFacilities(): AdminHealthFacility[] {
+  if (!mockFacilitiesStore) {
+    mockFacilitiesStore = [...ADMIN_HEALTH_FACILITIES]
+  }
+  return mockFacilitiesStore
+}
+
+function createMockFacility(body: CreateAdminHealthFacilityBody): AdminHealthFacility {
+  const facilities = getMockFacilities()
+  const facility: AdminHealthFacility = {
+    id: `mock-${Date.now()}`,
+    name: body.name,
+    address: body.address,
+    imageUrl: body.imageUrl ?? '/assets/health1.jpg',
+    isOpen: body.isOpen ?? body.status === 'open',
+    workloadPercent: body.workloadPercent ?? 0,
+    phone: body.phone,
+    region:
+      body.region === 'north' || body.region === 'central' || body.region === 'south'
+        ? body.region
+        : 'central',
+    status: body.status,
+  }
+  mockFacilitiesStore = [facility, ...facilities]
+  return facility
 }
 
 function normalizeSearch(value?: string) {
@@ -36,7 +73,7 @@ function filterMockFacilities(
   const region = params.region ?? 'all'
   const status = params.status ?? 'all'
 
-  const facilities = ADMIN_HEALTH_FACILITIES.filter((facility) => {
+  const facilities = getMockFacilities().filter((facility) => {
     if (region !== 'all' && facility.region !== region) return false
     if (status !== 'all' && facility.status !== status) return false
     if (!q) return true
@@ -124,5 +161,25 @@ export function toFacilitiesQueryParams(
 export function toContentQueryParams(search: string): AdminHealthContentQueryParams {
   return {
     search: search.trim() || undefined,
+  }
+}
+
+export async function createAdminHealthFacility(
+  form: FacilitySetupForm,
+): Promise<AdminHealthFacility> {
+  const hasImages = form.images.some((img) => img.file)
+  const body = mapFacilityFormToCreateBody(form)
+
+  if (USE_MOCK_ADMIN_HEALTH) {
+    await new Promise((r) => setTimeout(r, 500))
+    return createMockFacility(body)
+  }
+
+  try {
+    const payload = hasImages ? buildFacilityFormData(form) : body
+    return await createAdminHealthFacilityFromApi(payload)
+  } catch {
+    await new Promise((r) => setTimeout(r, 400))
+    return createMockFacility(body)
   }
 }

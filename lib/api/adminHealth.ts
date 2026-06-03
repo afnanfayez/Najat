@@ -102,11 +102,11 @@ export async function fetchAdminHealthContentFromApi(
 }
 
 export async function createAdminHealthFacilityFromApi(
-  body: CreateAdminHealthFacilityBody,
+  body: CreateAdminHealthFacilityBody | FormData,
 ): Promise<AdminHealthFacility> {
   const raw = await request(`${V1}/admin/health/facilities`, {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: body instanceof FormData ? body : JSON.stringify(body),
   })
   const obj = raw as Record<string, unknown>
   const facility = (obj.data ?? obj.facility ?? obj) as AdminHealthFacility

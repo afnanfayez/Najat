@@ -57,12 +57,35 @@ export type AdminHealthContentListResponse = {
   items: AdminHealthMedicalContent[]
 }
 
-export type CreateAdminHealthFacilityBody = Omit<
-  AdminHealthFacility,
-  'id' | 'workloadPercent' | 'isOpen'
-> & {
-  workloadPercent?: number
-  isOpen?: boolean
+export type UpdateAdminHealthFacilityBody = Partial<CreateAdminHealthFacilityBody>
+
+export type AdminHealthFacilityDrug = {
+  name: string
+  subtitle: string
+  status: 'available' | 'low' | 'unavailable'
 }
 
-export type UpdateAdminHealthFacilityBody = Partial<CreateAdminHealthFacilityBody>
+export type AdminHealthFacilityStaff = {
+  name: string
+  role: string
+  shift: string
+}
+
+export type CreateAdminHealthFacilityBody = {
+  name: string
+  address: string
+  phone?: string
+  region: AdminHealthFacilityRegion | string
+  status: AdminHealthFacilityStatus
+  imageUrl?: string
+  isOpen?: boolean
+  workloadPercent?: number
+  services?: string[]
+  drugs?: AdminHealthFacilityDrug[]
+  staff?: AdminHealthFacilityStaff[]
+  workingDays?: number[]
+  workingTimes?: string[]
+  operatingStatus?: 'efficient' | 'limited' | 'closed'
+  latitude?: number
+  longitude?: number
+}

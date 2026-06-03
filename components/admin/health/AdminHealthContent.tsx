@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminHealthPageHeader from './AdminHealthPageHeader'
@@ -32,6 +33,7 @@ const DEFAULT_STATS = {
 }
 
 export default function AdminHealthContent() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<AdminHealthViewTab>('facilities')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -78,7 +80,7 @@ export default function AdminHealthContent() {
   } = useAdminHealthMedicalContent(contentQueryParams)
 
   function handleAddFacility() {
-    toast.info('سيتم ربط إضافة المنشأة بالـ API قريباً')
+    router.push('/admin/health/new')
   }
 
   function handleAddContent() {
