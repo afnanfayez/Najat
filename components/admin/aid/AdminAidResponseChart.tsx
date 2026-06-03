@@ -51,11 +51,11 @@ export default function AdminAidResponseChart({
 
   return (
     <div
-      className="flex h-full flex-col rounded-2xl border border-[#E8EEF5] bg-white p-5"
+      className="flex h-full flex-col rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
       style={{ boxShadow: ADMIN_AID_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <h2
           className="text-right text-base font-bold text-[#1E293B] sm:text-lg"
           style={{ fontFamily: ADMIN_AID_FONT }}

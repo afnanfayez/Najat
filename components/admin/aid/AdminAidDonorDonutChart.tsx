@@ -37,7 +37,7 @@ export default function AdminAidDonorDonutChart({
 
   return (
     <div
-      className="flex h-full min-h-[200px] flex-col rounded-2xl border border-[#E8EEF5] bg-white p-5"
+      className="flex h-full min-h-[200px] flex-col rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
       style={{ boxShadow: ADMIN_AID_CARD_SHADOW }}
       dir="rtl"
     >

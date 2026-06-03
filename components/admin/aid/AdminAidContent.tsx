@@ -105,16 +105,31 @@ export default function AdminAidContent() {
     router.replace(url, { scroll: false })
   }
 
-  const addDonorButton =
+  const donorsHeaderActions =
     activeTab === 'donors' ? (
-      <button
-        type="button"
-        onClick={() => router.push('/admin/aid/donors/new')}
-        className="rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
-        style={{ background: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
-      >
-        + إضافة مانح جديد
-      </button>
+      <div className="flex w-full flex-row items-stretch gap-2 sm:w-auto sm:items-center sm:gap-3">
+        <button
+          type="button"
+          onClick={() => handleTabChange('distribution')}
+          className="min-w-0 flex-1 rounded-full px-2 py-2 text-[10px] leading-tight font-bold transition-all sm:flex-none sm:px-5 sm:py-2.5 sm:text-sm"
+          style={{
+            fontFamily: ADMIN_AID_FONT,
+            background: `${ADMIN_AID_BLUE}1A`,
+            color: ADMIN_AID_BLUE,
+            border: `1px solid ${ADMIN_AID_BLUE}33`,
+          }}
+        >
+          نقاط التوزيع والمخزون
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push('/admin/aid/donors/new')}
+          className="min-w-0 flex-1 rounded-xl px-2 py-2 text-[10px] leading-tight font-bold text-white transition-opacity hover:opacity-90 sm:flex-none sm:px-5 sm:py-2.5 sm:text-sm"
+          style={{ background: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
+        >
+          + إضافة مانح جديد
+        </button>
+      </div>
     ) : null
 
   return (
@@ -122,7 +137,7 @@ export default function AdminAidContent() {
       <AdminAidPageHeader
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        action={addDonorButton}
+        action={donorsHeaderActions}
         hideTabs={activeTab === 'donors'}
       />
 
@@ -137,7 +152,7 @@ export default function AdminAidContent() {
         <>
           {stats && <AdminAidDistributionStatsPanel stats={stats} />}
 
-          <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-5">
             <AdminAidResponseChart weeklyData={responseData} />
             <AdminAidAreaCoveragePanel areas={areas} />
           </section>

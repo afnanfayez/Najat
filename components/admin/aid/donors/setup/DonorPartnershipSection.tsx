@@ -71,7 +71,7 @@ export default function DonorPartnershipSection({
         >
           حالة الشراكة
         </p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           {STATUS_OPTIONS.map((opt) => {
             const selected = form.partnershipStatus === opt.id
             return (
@@ -79,7 +79,7 @@ export default function DonorPartnershipSection({
                 key={opt.id}
                 type="button"
                 onClick={() => onChange('partnershipStatus', opt.id)}
-                className="rounded-2xl border-2 px-2 py-3 text-xs font-bold transition-all"
+                className="rounded-xl border-2 px-1 py-2.5 text-[10px] font-bold transition-all sm:rounded-2xl sm:px-2 sm:py-3 sm:text-xs"
                 style={{
                   fontFamily: SETUP_FONT,
                   background: selected ? opt.bg : '#fff',

@@ -33,8 +33,8 @@ export default function AdminAidDonorCard({ donor, onDetails }: AdminAidDonorCar
         </p>
       </div>
 
-      <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-3">
-        <div className="flex flex-wrap items-start gap-5">
+      <div className="mt-auto flex flex-col gap-3 pt-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="flex flex-wrap items-start gap-4 sm:gap-5">
           <div className="text-right">
             <p
               className="text-xs font-bold text-[#0F172A]"
@@ -68,7 +68,7 @@ export default function AdminAidDonorCard({ donor, onDetails }: AdminAidDonorCar
         <button
           type="button"
           onClick={() => onDetails?.(donor)}
-          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
+          className="w-full rounded-lg px-3 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-1.5"
           style={{
             fontFamily: ADMIN_AID_FONT,
             background: ADMIN_AID_BLUE,

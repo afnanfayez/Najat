@@ -1,7 +1,5 @@
 'use client'
 
-import type { LucideIcon } from 'lucide-react'
-import { Building2, ClipboardList, Settings } from 'lucide-react'
 import type { AdminHealthStatsDto } from '@/schemas/adminHealth'
 import {
   ADMIN_HEALTH_BLUE,
@@ -9,41 +7,35 @@ import {
   ADMIN_HEALTH_CARD_SHADOW,
 } from './adminHealthStyles'
 
-interface StatItemProps {
-  title: string
-  value: string
-  icon: LucideIcon
+function formatNumber(value: number): string {
+  return value.toLocaleString('en-US')
 }
 
-function StatItem({ title, value, icon: Icon }: StatItemProps) {
+interface StatCardProps {
+  label: string
+  value: number
+}
+
+function StatCard({ label, value }: StatCardProps) {
   return (
     <div
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 text-center sm:p-5"
       style={{ boxShadow: ADMIN_HEALTH_CARD_SHADOW }}
     >
-      <div className="flex w-full items-center justify-start gap-3 text-right">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E3F2FD]">
-          <Icon size={22} style={{ color: ADMIN_HEALTH_BLUE }} strokeWidth={2} />
-        </div>
-        <p
-          className="text-sm font-medium text-[#334155]"
-          style={{ fontFamily: ADMIN_HEALTH_FONT }}
-        >
-          {title}
-        </p>
-      </div>
       <p
-        className="mt-3 w-full text-2xl font-bold leading-none sm:text-[28px] lg:text-[32px]"
+        className="text-base font-bold text-[#0F172A]"
+        style={{ fontFamily: ADMIN_HEALTH_FONT }}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-3 text-2xl font-bold leading-none sm:text-[28px] lg:text-[32px]"
         style={{ color: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
       >
-        {value}
+        {formatNumber(value)}
       </p>
     </div>
   )
-}
-
-function formatNumber(value: number): string {
-  return value.toLocaleString('en-US')
 }
 
 interface AdminHealthStatsProps {
@@ -53,21 +45,9 @@ interface AdminHealthStatsProps {
 export default function AdminHealthStats({ stats }: AdminHealthStatsProps) {
   return (
     <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-      <StatItem
-        title="إجمالي المنشآت"
-        value={formatNumber(stats.totalFacilities)}
-        icon={Building2}
-      />
-      <StatItem
-        title="نشطة الآن"
-        value={formatNumber(stats.activeNow)}
-        icon={ClipboardList}
-      />
-      <StatItem
-        title="تحت الصيانة"
-        value={formatNumber(stats.underMaintenance)}
-        icon={Settings}
-      />
+      <StatCard label="إجمالي المنشآت" value={stats.totalFacilities} />
+      <StatCard label="نشطة الآن" value={stats.activeNow} />
+      <StatCard label="تحت الصيانة" value={stats.underMaintenance} />
     </section>
   )
 }

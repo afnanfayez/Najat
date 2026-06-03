@@ -22,9 +22,13 @@ export default function SetupSectionCard({
       style={{ boxShadow: SETUP_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h3 style={SETUP_SECTION_TITLE}>{title}</h3>
-        {headerAction}
+        {headerAction && (
+          <div className="w-full shrink-0 sm:w-auto [&>button]:w-full sm:[&>button]:w-auto">
+            {headerAction}
+          </div>
+        )}
       </div>
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </section>

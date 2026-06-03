@@ -38,11 +38,11 @@ export default function AddFacilityHeader({
           </p>
         </div>
 
-        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:self-start">
+        <div className="flex w-full shrink-0 flex-row items-stretch gap-2 sm:w-auto sm:items-center sm:gap-3 sm:self-start">
           <button
             type="button"
             onClick={onCancel}
-            className="w-full rounded-xl px-5 py-3 text-sm font-bold text-[#64748B] transition-opacity hover:opacity-80 sm:w-auto"
+            className="min-w-0 flex-1 rounded-xl px-3 py-2.5 text-xs font-bold text-[#64748B] transition-opacity hover:opacity-80 sm:flex-none sm:px-5 sm:py-3 sm:text-sm"
             style={{
               fontFamily: SETUP_FONT,
               background: '#F1F5F9',
@@ -54,10 +54,11 @@ export default function AddFacilityHeader({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:flex-none sm:gap-2 sm:px-5 sm:py-3 sm:text-sm"
             style={{ background: SETUP_BLUE, fontFamily: SETUP_FONT }}
           >
-            <Save size={18} strokeWidth={2.5} />
+            <Save size={16} strokeWidth={2.5} className="shrink-0 sm:hidden" />
+            <Save size={18} strokeWidth={2.5} className="hidden shrink-0 sm:block" />
             {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
           </button>
         </div>

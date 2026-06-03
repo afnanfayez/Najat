@@ -19,7 +19,7 @@ interface StatCardProps {
 function StatCard({ label, value }: StatCardProps) {
   return (
     <div
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-5 text-center"
+      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 text-center sm:p-5"
       style={{ boxShadow: ADMIN_AID_CARD_SHADOW }}
     >
       <p
@@ -29,7 +29,7 @@ function StatCard({ label, value }: StatCardProps) {
         {label}
       </p>
       <p
-        className="mt-3 text-[28px] font-bold leading-none sm:text-[32px]"
+        className="mt-3 text-2xl font-bold leading-none sm:text-[28px] lg:text-[32px]"
         style={{ color: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
       >
         {formatNumber(value)}
@@ -46,7 +46,7 @@ export default function AdminAidDistributionStats({
   stats,
 }: AdminAidDistributionStatsProps) {
   return (
-    <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
       <StatCard label="إجمالي المستفيدين" value={stats.totalBeneficiaries} />
       <StatCard label="الكميات الموزعة" value={stats.distributedQuantities} />
       <StatCard label="المخزون المتاح" value={stats.availableInventory} />

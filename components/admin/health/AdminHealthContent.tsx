@@ -240,7 +240,7 @@ export default function AdminHealthContent() {
             <AdminHealthFacilityGrid
               facilities={facilities}
               deletingId={deletingId}
-              onDetails={() => toast.info('عرض التفاصيل قريباً')}
+              onDetails={handleEditFacility}
               onEdit={handleEditFacility}
               onDelete={handleDeleteFacility}
               onCall={(f) => handleCall(f.phone)}

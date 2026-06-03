@@ -31,7 +31,7 @@ function SetupRow({
   return (
     <div
       className={`grid grid-cols-1 items-stretch gap-5 ${
-        fullWidth ? 'grid-cols-1' : 'xl:grid-cols-12'
+        fullWidth ? 'grid-cols-1' : 'lg:grid-cols-12'
       }`}
     >
       {children}
@@ -48,10 +48,10 @@ function SetupCol({
 }) {
   const spanClass =
     span === 12
-      ? 'xl:col-span-12'
+      ? 'lg:col-span-12'
       : span === 4
-        ? 'xl:col-span-4'
-        : 'xl:col-span-8'
+        ? 'lg:col-span-4'
+        : 'lg:col-span-8'
 
   return <div className={`h-full min-h-0 ${spanClass}`}>{children}</div>
 }

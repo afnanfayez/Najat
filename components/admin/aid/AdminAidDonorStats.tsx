@@ -23,7 +23,7 @@ function SplitStatCard({ rows }: { rows: SplitStatRow[] }) {
       {rows.map((row, index) => (
         <div
           key={row.label}
-          className={`flex flex-1 flex-col justify-center px-6 py-3 text-right ${
+          className={`flex flex-1 flex-col justify-center px-4 py-3 text-right sm:px-6 ${
             index > 0 ? 'border-t border-[#E8EEF5]' : ''
           }`}
         >
@@ -51,7 +51,7 @@ interface AdminAidDonorStatsProps {
 
 export default function AdminAidDonorStats({ stats }: AdminAidDonorStatsProps) {
   return (
-    <section className="mb-6 grid grid-cols-1 items-stretch gap-3 lg:grid-cols-3">
+    <section className="mb-6 grid grid-cols-1 items-stretch gap-3 sm:gap-4 lg:grid-cols-3">
       <SplitStatCard
         rows={[
           { label: 'إجمالي التبرعات', value: stats.totalDonationsLabel },

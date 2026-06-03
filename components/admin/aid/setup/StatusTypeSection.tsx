@@ -66,7 +66,7 @@ export default function StatusTypeSection({ form, onChange }: StatusTypeSectionP
         >
           حالة العمل الحالية
         </p>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
           {STATUS_OPTIONS.map((opt) => {
             const Icon = opt.icon
             const selected = form.status === opt.id
@@ -75,16 +75,17 @@ export default function StatusTypeSection({ form, onChange }: StatusTypeSectionP
                 key={opt.id}
                 type="button"
                 onClick={() => onChange('status', opt.id)}
-                className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 px-2 py-4 transition-all"
+                className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-1 py-3 transition-all sm:gap-2 sm:rounded-2xl sm:px-2 sm:py-4"
                 style={{
                   fontFamily: SETUP_FONT,
                   background: selected ? opt.bg : '#fff',
                   borderColor: selected ? opt.color : opt.border,
                 }}
               >
-                <Icon size={24} style={{ color: opt.color }} strokeWidth={2} />
+                <Icon size={20} className="sm:hidden" style={{ color: opt.color }} strokeWidth={2} />
+                <Icon size={24} className="hidden sm:block" style={{ color: opt.color }} strokeWidth={2} />
                 <span
-                  className="text-xs font-bold"
+                  className="text-[10px] font-bold sm:text-xs"
                   style={{ color: selected ? opt.color : '#64748B' }}
                 >
                   {opt.label}

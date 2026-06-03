@@ -26,7 +26,7 @@ export const SETUP_CARD_CLASS =
 export const SETUP_SECTION_TITLE = {
   fontFamily: "'Cairo', sans-serif",
   fontWeight: 700,
-  fontSize: '16px',
+  fontSize: 'clamp(14px, 2.5vw, 16px)',
   color: '#1e293b',
   margin: 0,
   textAlign: 'right' as const,

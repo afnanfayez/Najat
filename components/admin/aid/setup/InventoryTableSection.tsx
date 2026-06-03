@@ -103,7 +103,7 @@ export default function InventoryTableSection({
     <button
       type="button"
       onClick={addItem}
-      className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
+      className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-2"
       style={{ background: SETUP_BLUE, fontFamily: SETUP_FONT }}
     >
       + إضافة صنف جديد

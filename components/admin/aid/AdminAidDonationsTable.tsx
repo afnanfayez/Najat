@@ -87,7 +87,7 @@ export default function AdminAidDonationsTable({
         className="overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white"
         style={{ boxShadow: ADMIN_AID_CARD_SHADOW }}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-[#E8EEF5] px-5 py-4">
+        <div className="flex flex-col gap-3 border-b border-[#E8EEF5] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
           <h2
             className="text-base font-bold text-[#1E293B] sm:text-lg"
             style={{ fontFamily: ADMIN_AID_FONT }}
@@ -97,7 +97,7 @@ export default function AdminAidDonationsTable({
           <button
             type="button"
             onClick={addRow}
-            className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
+            className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-2"
             style={{ background: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
           >
             + إضافة صنف جديد

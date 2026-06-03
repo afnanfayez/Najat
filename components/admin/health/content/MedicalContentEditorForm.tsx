@@ -163,24 +163,24 @@ export default function MedicalContentEditorForm({
         />
       </div>
 
-      <div className="mt-6 flex w-full flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start sm:gap-3" dir="ltr">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saving}
-          className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto"
-          style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
-        >
-          {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-        </button>
+      <div className="mt-6 flex w-full flex-row items-stretch gap-2 sm:items-center sm:justify-start sm:gap-3">
         <button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="w-full rounded-xl bg-[#F1F5F9] px-6 py-3 text-sm font-bold text-[#64748B] transition-opacity hover:opacity-80 disabled:opacity-60 sm:w-auto"
+          className="min-w-0 flex-1 rounded-xl bg-[#F1F5F9] px-3 py-2.5 text-xs font-bold text-[#64748B] transition-opacity hover:opacity-80 disabled:opacity-60 sm:flex-none sm:px-6 sm:py-3 sm:text-sm"
           style={{ fontFamily: ADMIN_HEALTH_FONT }}
         >
           إلغاء
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:flex-none sm:gap-2 sm:px-6 sm:py-3 sm:text-sm"
+          style={{ background: ADMIN_HEALTH_BLUE, fontFamily: ADMIN_HEALTH_FONT }}
+        >
+          {saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
         </button>
       </div>
     </section>

@@ -17,9 +17,9 @@ export default function AdminAidDistributionGrid({
 }: AdminAidDistributionGridProps) {
   return (
     <section dir="rtl">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2
-          className="text-base font-bold text-[#1E293B] sm:text-lg"
+          className="text-right text-base font-bold text-[#1E293B] sm:text-lg"
           style={{ fontFamily: ADMIN_AID_FONT }}
         >
           نقاط التوزيع
@@ -27,13 +27,13 @@ export default function AdminAidDistributionGrid({
         <button
           type="button"
           onClick={onAdd}
-          className="rounded-xl px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-2 sm:text-sm"
           style={{ background: ADMIN_AID_BLUE, fontFamily: ADMIN_AID_FONT }}
         >
           + إضافة نقطة توزيع
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         {points.map((point) => (
           <AdminAidDistributionCard
             key={point.id}

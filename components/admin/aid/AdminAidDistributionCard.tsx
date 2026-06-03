@@ -28,7 +28,7 @@ export default function AdminAidDistributionCard({
 
   return (
     <article
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
+      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:p-5"
       dir="rtl"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
