@@ -26,8 +26,8 @@ interface AdminSecurityScheduleCardProps {
 }
 
 function StorageTargetIcon({ icon }: { icon: AdminSecurityStorageTarget['icon'] }) {
-  if (icon === 'cloud') return <Cloud size={24} className="text-[#2196F3]" strokeWidth={1.75} />
-  return <HardDrive size={24} className="text-[#2196F3]" strokeWidth={1.75} />
+  if (icon === 'cloud') return <Cloud size={22} className="text-[#2196F3]" strokeWidth={1.75} />
+  return <HardDrive size={22} className="text-[#2196F3]" strokeWidth={1.75} />
 }
 
 export default function AdminSecurityScheduleCard({
@@ -58,12 +58,12 @@ export default function AdminSecurityScheduleCard({
 
   return (
     <section
-      className={`${ADMIN_SECURITY_CARD_SHELL} py-3 sm:py-4`}
+      className={`${ADMIN_SECURITY_CARD_SHELL} min-w-0 py-3 sm:py-4`}
       style={{ boxShadow: ADMIN_SECURITY_CARD_SHADOW, fontFamily: ADMIN_SECURITY_FONT }}
       dir="rtl"
     >
       <h3
-        className="mb-2.5 text-right text-sm font-bold sm:text-base"
+        className="mb-2.5 break-words text-right text-sm font-bold sm:text-base"
         style={{ color: ADMIN_SECURITY_BLUE }}
       >
         {scheduleTitle}
@@ -85,7 +85,7 @@ export default function AdminSecurityScheduleCard({
                 background: active ? ADMIN_SECURITY_INPUT_BG : '#fff',
               }}
             >
-              <span className="min-w-0 flex-1 text-xs font-bold text-[#0F172A] sm:text-sm">
+              <span className="min-w-0 flex-1 break-words text-xs font-bold text-[#0F172A] sm:text-sm">
                 {option.label}
               </span>
               <span
@@ -112,14 +112,14 @@ export default function AdminSecurityScheduleCard({
             key={target.id}
             type="button"
             onClick={() => toggleTarget(target.id)}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 transition-colors"
+            className="flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 transition-colors sm:py-3"
             style={{
               borderColor: target.active ? ADMIN_SECURITY_BLUE : '#E2E8F0',
               background: target.active ? ADMIN_SECURITY_INPUT_BG : '#fff',
             }}
           >
             <StorageTargetIcon icon={target.icon} />
-            <span className="text-xs font-bold text-[#0F172A]">{target.label}</span>
+            <span className="truncate text-xs font-bold text-[#0F172A]">{target.label}</span>
           </button>
         ))}
       </div>

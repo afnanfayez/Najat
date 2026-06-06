@@ -9,11 +9,17 @@ export const ADMIN_SECURITY_CARD_SHELL =
 export const ADMIN_SECURITY_PAGE = 'min-w-0 w-full max-w-full overflow-x-hidden'
 
 export const ADMIN_SECURITY_SPLIT_GRID =
-  'grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-stretch'
+  'grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-start'
 
 export const ADMIN_SECURITY_MAIN_COL = 'min-w-0 order-1 lg:col-span-8'
 
 export const ADMIN_SECURITY_SIDE_COL = 'min-w-0 order-2 lg:col-span-4'
+
+export const ADMIN_SECURITY_BACKUP_SCHEDULE_COL =
+  'min-w-0 order-2 lg:order-1 lg:col-span-4'
+
+export const ADMIN_SECURITY_BACKUP_TABLE_COL =
+  'min-w-0 order-1 lg:order-2 lg:col-span-8'
 
 export const ADMIN_SECURITY_BOTTOM_MAIN_COL = 'min-w-0 order-1 lg:col-span-7'
 

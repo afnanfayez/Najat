@@ -14,20 +14,24 @@ interface AdminSecurityBackupStatsRowProps {
 export default function AdminSecurityBackupStatsRow({ kpis }: AdminSecurityBackupStatsRowProps) {
   return (
     <section
-      className="mb-4 grid min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-3 sm:mb-6 sm:gap-4"
+      className="mb-4 grid min-w-0 grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:mb-6 md:grid-cols-3 sm:gap-4"
       dir="rtl"
     >
-      {kpis.map((kpi) => (
+      {kpis.map((kpi, index) => (
         <article
           key={kpi.id}
-          className="min-w-0 rounded-xl border border-[#E8EEF5] bg-white px-4 py-4 sm:px-5 sm:py-5"
+          className={`min-w-0 rounded-xl border border-[#E8EEF5] bg-white px-4 py-3.5 sm:px-5 sm:py-4 ${
+            index === kpis.length - 1 && kpis.length % 2 !== 0
+              ? 'min-[400px]:col-span-2 md:col-span-1'
+              : ''
+          }`}
           style={{ boxShadow: ADMIN_SECURITY_CARD_SHADOW, fontFamily: ADMIN_SECURITY_FONT }}
         >
-          <p className="mb-2 min-w-0 break-words text-right text-xs font-bold text-[#0F172A] sm:text-sm">
+          <p className="mb-1.5 min-w-0 break-words text-right text-xs font-bold text-[#0F172A] sm:text-sm">
             {kpi.label}
           </p>
           <p
-            className="break-words text-right text-lg font-bold leading-none sm:text-xl lg:text-2xl"
+            className="break-words text-right text-base font-bold leading-none sm:text-lg lg:text-xl"
             style={{ color: ADMIN_SECURITY_BLUE }}
           >
             {kpi.value}

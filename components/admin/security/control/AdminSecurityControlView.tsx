@@ -38,8 +38,8 @@ export default function AdminSecurityControlView({
         onSavePermissions={onSavePermissions}
       />
 
-      <div className={`${ADMIN_SECURITY_SPLIT_GRID} gap-3 lg:items-start`}>
-        <div className={`${ADMIN_SECURITY_BOTTOM_MAIN_COL} flex flex-col gap-3 sm:gap-4`}>
+      <div className={ADMIN_SECURITY_SPLIT_GRID} dir="rtl">
+        <div className={`${ADMIN_SECURITY_BOTTOM_MAIN_COL} flex min-w-0 flex-col gap-3 sm:gap-4`}>
           <AdminSecurityAlertsCard
             title={dashboard.alertsTitle}
             activeCount={dashboard.activeAlertsCount}

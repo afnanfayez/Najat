@@ -8,7 +8,6 @@ import {
   ADMIN_SECURITY_CARD_SHELL,
   ADMIN_SECURITY_CARD_SHADOW,
   ADMIN_SECURITY_FONT,
-  ADMIN_SECURITY_INPUT_BG,
 } from '../adminSecurityStyles'
 
 interface AdminSecurityRolesCardProps {
@@ -31,12 +30,12 @@ export default function AdminSecurityRolesCard({
       style={{ boxShadow: ADMIN_SECURITY_CARD_SHADOW, fontFamily: ADMIN_SECURITY_FONT }}
       dir="rtl"
     >
-      <div className="mb-4 flex flex-col gap-3 min-[560px]:flex-row min-[560px]:items-center min-[560px]:justify-between">
-        <h3 className="text-sm font-bold text-[#0F172A] sm:text-base">{data.rolesTitle}</h3>
+      <div className="mb-3 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between">
+        <h3 className="break-words text-sm font-bold text-[#0F172A] sm:text-base">{data.rolesTitle}</h3>
         <button
           type="button"
           onClick={onAddRole}
-          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white min-[560px]:w-auto sm:text-sm"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white min-[480px]:w-auto sm:text-sm"
           style={{ background: ADMIN_SECURITY_BLUE, fontFamily: ADMIN_SECURITY_FONT }}
         >
           <Plus size={16} strokeWidth={2.5} />
@@ -45,7 +44,7 @@ export default function AdminSecurityRolesCard({
       </div>
 
       <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
-        <div className="flex flex-col gap-1.5 lg:col-span-4">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0 lg:col-span-4">
           {data.roles.map((role) => {
             const active = selectedRoleId === role.id
             return (
@@ -53,7 +52,7 @@ export default function AdminSecurityRolesCard({
                 key={role.id}
                 type="button"
                 onClick={() => setSelectedRoleId(role.id)}
-                className="rounded-xl px-3 py-2.5 text-right transition-colors"
+                className="min-w-[148px] shrink-0 rounded-xl px-3 py-2.5 text-right transition-colors sm:min-w-[168px] lg:min-w-0 lg:w-full"
                 style={{
                   background: active ? ADMIN_SECURITY_BLUE : '#F1F5F9',
                   color: active ? '#fff' : '#0F172A',
@@ -61,7 +60,7 @@ export default function AdminSecurityRolesCard({
               >
                 <p className="text-sm font-bold">{role.name}</p>
                 <p
-                  className="mt-0.5 text-[11px] font-medium"
+                  className="mt-0.5 line-clamp-2 text-[11px] font-medium"
                   style={{ color: active ? 'rgba(255,255,255,0.85)' : '#64748B' }}
                 >
                   {role.description}
@@ -72,15 +71,15 @@ export default function AdminSecurityRolesCard({
         </div>
 
         <div
-          className="rounded-xl border border-[#E8EEF5] p-3 sm:p-4 lg:col-span-8"
+          className="min-w-0 rounded-xl border border-[#E8EEF5] p-3 sm:p-4 lg:col-span-8"
           style={{ background: '#FAFBFC' }}
         >
           <div className="mb-3 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between">
             <div className="min-w-0 text-right">
-              <h4 className="text-sm font-bold text-[#0F172A] sm:text-base">
+              <h4 className="break-words text-sm font-bold text-[#0F172A] sm:text-base">
                 {selectedRole ? `أذونات ${selectedRole.name}` : data.permissionsTitle}
               </h4>
-              <p className="mt-0.5 text-[11px] font-medium text-[#94A3B8] sm:text-xs">
+              <p className="mt-0.5 break-words text-[11px] font-medium text-[#94A3B8] sm:text-xs">
                 {data.permissionsSubtitle}
               </p>
             </div>
@@ -92,11 +91,11 @@ export default function AdminSecurityRolesCard({
             </span>
           </div>
 
-          <div className="mb-3 grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
+          <div className="mb-3 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2 lg:grid-cols-3">
             {data.permissions.map((permission) => (
               <div
                 key={permission.id}
-                className="flex items-center justify-start gap-2 rounded-xl border border-[#E8EEF5] bg-white px-3 py-2"
+                className="flex min-w-0 items-center justify-start gap-2 rounded-xl border border-[#E8EEF5] bg-white px-3 py-2"
               >
                 <span
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
@@ -104,7 +103,7 @@ export default function AdminSecurityRolesCard({
                 >
                   <Check size={14} className="text-[#22C55E]" strokeWidth={3} />
                 </span>
-                <span className="text-xs font-bold text-[#0F172A] sm:text-sm">
+                <span className="min-w-0 break-words text-xs font-bold text-[#0F172A] sm:text-sm">
                   {permission.label}
                 </span>
               </div>
@@ -114,7 +113,7 @@ export default function AdminSecurityRolesCard({
           <button
             type="button"
             onClick={() => onSavePermissions?.(selectedRoleId)}
-            className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white sm:py-3 sm:text-sm"
+            className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white sm:text-sm"
             style={{ background: ADMIN_SECURITY_BLUE, fontFamily: ADMIN_SECURITY_FONT }}
           >
             {data.savePermissionsLabel}

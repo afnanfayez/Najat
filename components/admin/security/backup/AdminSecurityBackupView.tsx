@@ -2,6 +2,8 @@
 
 import type { AdminSecurityBackupData } from '@/schemas/adminSecurity'
 import {
+  ADMIN_SECURITY_BACKUP_SCHEDULE_COL,
+  ADMIN_SECURITY_BACKUP_TABLE_COL,
   ADMIN_SECURITY_SPLIT_GRID,
 } from '../adminSecurityStyles'
 import AdminSecurityBackupStatsRow from './AdminSecurityBackupStatsRow'
@@ -27,8 +29,8 @@ export default function AdminSecurityBackupView({
       <AdminSecurityBackupStatsRow kpis={dashboard.kpis} />
       <AdminSecurityBackupWarningBanner message={dashboard.storageWarning} />
 
-      <div className={`${ADMIN_SECURITY_SPLIT_GRID} lg:items-start`} dir="rtl">
-        <div className="min-w-0 order-1 lg:col-span-4">
+      <div className={ADMIN_SECURITY_SPLIT_GRID} dir="rtl">
+        <div className={ADMIN_SECURITY_BACKUP_SCHEDULE_COL}>
           <AdminSecurityScheduleCard
             key={`${dashboard.selectedScheduleId}-${dashboard.storageTargets.map((t) => `${t.id}:${t.active}`).join(',')}`}
             scheduleTitle={dashboard.scheduleTitle}
@@ -41,7 +43,7 @@ export default function AdminSecurityBackupView({
             onUpdateSchedule={onUpdateSchedule}
           />
         </div>
-        <div className="min-w-0 order-2 lg:col-span-8">
+        <div className={ADMIN_SECURITY_BACKUP_TABLE_COL}>
           <AdminSecurityBackupTableCard
             title={dashboard.syncRequestsTitle}
             subtitle={dashboard.syncRequestsSubtitle}

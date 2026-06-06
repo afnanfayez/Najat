@@ -28,7 +28,7 @@ export default function AdminSecurityAuditLogCard({
     >
       <h3 className="mb-3 text-right text-base font-bold text-[#0F172A]">{title}</h3>
 
-      <div className="hidden min-w-0 overflow-hidden rounded-xl border border-[#E3F2FD] md:block">
+      <div className="hidden min-w-0 overflow-hidden rounded-xl border border-[#E3F2FD] lg:block">
         <table className="w-full table-fixed border-collapse text-right">
           <colgroup>
             <col style={{ width: '24%' }} />
@@ -98,7 +98,7 @@ export default function AdminSecurityAuditLogCard({
         </table>
       </div>
 
-      <div className="flex flex-col gap-2.5 md:hidden">
+      <div className="flex flex-col gap-2.5 lg:hidden">
         {entries.map((entry) => {
           const tone = ADMIN_SECURITY_AUDIT_STATUS[entry.statusTone]
           return (

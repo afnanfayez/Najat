@@ -47,11 +47,11 @@ export default function AdminSecurityEncryptionCard({
 }: AdminSecurityEncryptionCardProps) {
   return (
     <section
-      className={ADMIN_SECURITY_CARD_SHELL}
+      className={`${ADMIN_SECURITY_CARD_SHELL} min-w-0`}
       style={{ boxShadow: ADMIN_SECURITY_CARD_SHADOW, fontFamily: ADMIN_SECURITY_FONT }}
       dir="rtl"
     >
-      <h3 className="mb-2.5 text-right text-base font-bold text-[#0F172A]">{title}</h3>
+      <h3 className="mb-2.5 break-words text-right text-base font-bold text-[#0F172A]">{title}</h3>
 
       <div className="mb-3 flex flex-col gap-2">
         {protocols.map((protocol) => {
@@ -67,13 +67,13 @@ export default function AdminSecurityEncryptionCard({
                 <ProtocolIcon icon={protocol.icon} active={active} />
                 <div className="min-w-0 text-right">
                   <p
-                    className="text-sm font-bold leading-tight"
+                    className="break-words text-sm font-bold leading-tight"
                     style={{ color: active ? '#0F172A' : '#94A3B8' }}
                   >
                     {protocol.name}
                   </p>
                   <p
-                    className="text-[11px] font-medium leading-tight"
+                    className="break-words text-[11px] font-medium leading-tight"
                     style={{ color: active ? '#94A3B8' : '#CBD5E1' }}
                   >
                     {protocol.sublabel}
@@ -94,7 +94,7 @@ export default function AdminSecurityEncryptionCard({
       <button
         type="button"
         onClick={onAdvancedPrivacy}
-        className="w-full rounded-xl px-4 py-2.5 text-sm font-bold text-white"
+        className="w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white sm:text-sm"
         style={{ background: ADMIN_SECURITY_BLUE, fontFamily: ADMIN_SECURITY_FONT }}
       >
         {advancedPrivacyLabel}

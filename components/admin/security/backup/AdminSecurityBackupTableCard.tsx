@@ -35,15 +35,17 @@ export default function AdminSecurityBackupTableCard({
       style={{ boxShadow: ADMIN_SECURITY_CARD_SHADOW, fontFamily: ADMIN_SECURITY_FONT }}
       dir="rtl"
     >
-      <div className="mb-3 flex flex-col gap-2 min-[560px]:flex-row min-[560px]:items-start min-[560px]:justify-between">
-        <div className="min-w-0 text-right">
-          <h3 className="text-sm font-bold text-[#0F172A] sm:text-base">{title}</h3>
-          <p className="mt-0.5 text-[11px] font-medium text-[#94A3B8] sm:text-xs">{subtitle}</p>
+      <div className="mb-3 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between">
+        <div className="min-w-0 flex-1 text-right">
+          <h3 className="break-words text-sm font-bold text-[#0F172A] sm:text-base">{title}</h3>
+          <p className="mt-0.5 break-words text-[11px] font-medium text-[#94A3B8] sm:text-xs">
+            {subtitle}
+          </p>
         </div>
         <button
           type="button"
           onClick={onNewBackup}
-          className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white min-[560px]:w-auto sm:text-sm"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white min-[480px]:w-auto sm:text-sm"
           style={{ background: ADMIN_SECURITY_BLUE, fontFamily: ADMIN_SECURITY_FONT }}
         >
           <Plus size={16} strokeWidth={2.5} />
@@ -51,34 +53,34 @@ export default function AdminSecurityBackupTableCard({
         </button>
       </div>
 
-      <div className="hidden min-w-0 overflow-x-auto md:block">
-        <table className="w-full min-w-[520px] border-collapse text-right">
+      <div className="hidden min-w-0 overflow-hidden lg:block">
+        <table className="w-full table-fixed border-collapse text-right">
+          <colgroup>
+            <col style={{ width: '42%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '18%' }} />
+            <col style={{ width: '26%' }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-[#E8EEF5]">
-              <th className="pb-2 text-xs font-bold text-[#64748B] sm:text-sm">الإصدار / الملف</th>
-              <th className="pb-2 text-xs font-bold text-[#64748B] sm:text-sm">الحجم</th>
-              <th className="pb-2 text-center text-xs font-bold text-[#64748B] sm:text-sm">
-                فحص السلامة
-              </th>
-              <th className="pb-2 text-left text-xs font-bold text-[#64748B] sm:text-sm">
-                الإجراءات
-              </th>
+              <th className="pb-2 text-xs font-bold text-[#64748B]">الإصدار / الملف</th>
+              <th className="pb-2 text-xs font-bold text-[#64748B]">الحجم</th>
+              <th className="pb-2 text-center text-xs font-bold text-[#64748B]">فحص السلامة</th>
+              <th className="pb-2 text-left text-xs font-bold text-[#64748B]">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
             {backups.map((backup) => (
               <tr key={backup.id} className="border-b border-[#F1F5F9] last:border-0">
                 <td className="py-2.5">
-                  <p className="text-xs font-bold text-[#0F172A] sm:text-sm">
+                  <p className="truncate text-xs font-bold text-[#0F172A] sm:text-sm">
                     {backup.version} - {backup.filename}
                   </p>
-                  <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8] sm:text-xs">
+                  <p className="mt-0.5 truncate text-[10px] font-medium text-[#94A3B8] sm:text-xs">
                     {backup.timestamp}
                   </p>
                 </td>
-                <td className="py-2.5 text-xs font-bold text-[#0F172A] sm:text-sm">
-                  {backup.size}
-                </td>
+                <td className="py-2.5 text-xs font-bold text-[#0F172A] sm:text-sm">{backup.size}</td>
                 <td className="py-2.5 text-center">
                   {backup.integrityOk && (
                     <span className="inline-flex items-center justify-center">
@@ -90,7 +92,7 @@ export default function AdminSecurityBackupTableCard({
                   <button
                     type="button"
                     onClick={() => onPublish?.(backup.id)}
-                    className="text-xs font-bold sm:text-sm"
+                    className="whitespace-nowrap text-xs font-bold sm:text-sm"
                     style={{ color: ADMIN_SECURITY_BLUE }}
                   >
                     {publishLabel}
@@ -102,16 +104,16 @@ export default function AdminSecurityBackupTableCard({
         </table>
       </div>
 
-      <div className="flex flex-col gap-2 md:hidden">
+      <div className="flex flex-col gap-2 lg:hidden">
         {backups.map((backup) => (
           <article
             key={backup.id}
-            className="rounded-xl border border-[#E8EEF5] p-2.5"
+            className="rounded-xl border border-[#E8EEF5] p-2.5 sm:p-3"
             style={{ background: ADMIN_SECURITY_INPUT_BG }}
           >
             <div className="mb-1.5 flex items-start justify-between gap-2">
-              <div className="min-w-0 text-right">
-                <p className="text-xs font-bold text-[#0F172A] sm:text-sm">
+              <div className="min-w-0 flex-1 text-right">
+                <p className="break-words text-xs font-bold text-[#0F172A] sm:text-sm">
                   {backup.version} - {backup.filename}
                 </p>
                 <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">{backup.timestamp}</p>
@@ -125,7 +127,7 @@ export default function AdminSecurityBackupTableCard({
               <button
                 type="button"
                 onClick={() => onPublish?.(backup.id)}
-                className="text-xs font-bold"
+                className="shrink-0 text-xs font-bold"
                 style={{ color: ADMIN_SECURITY_BLUE }}
               >
                 {publishLabel}
