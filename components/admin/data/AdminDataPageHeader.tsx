@@ -22,13 +22,13 @@ export default function AdminDataPageHeader({
   const shell = useAdminShell()
 
   return (
-    <header className="mb-6">
+    <header className="mb-4 sm:mb-6">
       <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
 
-      <div className="flex w-full min-w-0 flex-col gap-4 sm:gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
         <div className="min-w-0 flex-1 text-right">
-          <h1 style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
-          <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>{subtitle}</p>
+          <h1 className="break-words" style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
+          <p className="break-words" style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>{subtitle}</p>
         </div>
 
         {action && (
@@ -52,7 +52,7 @@ export function AdminDataPrimaryButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:py-3 sm:text-sm ${className}`}
+      className={`w-full rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:px-5 sm:py-3 sm:text-sm ${className}`}
       style={{ background: ADMIN_DATA_BLUE, fontFamily: ADMIN_DATA_FONT }}
     >
       {children}

@@ -3,6 +3,7 @@
 import type { AdminDataReviewDetail } from '@/schemas/adminData'
 import {
   ADMIN_DATA_CARD_SHADOW,
+  ADMIN_DATA_CARD_SHELL,
   ADMIN_DATA_FONT,
 } from '../adminDataStyles'
 
@@ -22,11 +23,11 @@ export default function AdminDataFacilityInfoCard({
 
   return (
     <article
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={ADMIN_DATA_CARD_SHELL}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <h2
           className="text-base font-bold text-[#0F172A] sm:text-lg"
           style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -34,7 +35,7 @@ export default function AdminDataFacilityInfoCard({
           معلومات المنشأة
         </h2>
         <span
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold"
+          className="inline-flex w-fit shrink-0 items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-[11px] font-bold sm:px-3 sm:text-xs"
           style={{
             fontFamily: ADMIN_DATA_FONT,
             color: detail.isOpen ? '#4CAF50' : '#64748B',
@@ -49,7 +50,7 @@ export default function AdminDataFacilityInfoCard({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {fields.map((field) => (
           <div key={field.label} className="text-right">
             <p

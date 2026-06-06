@@ -5,6 +5,7 @@ import type { AdminDataReviewDecision } from '@/schemas/adminData'
 import {
   ADMIN_DATA_BLUE,
   ADMIN_DATA_CARD_SHADOW,
+  ADMIN_DATA_CARD_SHELL,
   ADMIN_DATA_FONT,
   ADMIN_DATA_INPUT_BG,
 } from '../adminDataStyles'
@@ -60,7 +61,7 @@ export default function AdminDataReviewActionsPanel({
 
   return (
     <aside
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={ADMIN_DATA_CARD_SHELL}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
@@ -86,7 +87,7 @@ export default function AdminDataReviewActionsPanel({
               key={opt.id}
               type="button"
               onClick={() => setDecision(opt.id)}
-              className="flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-right transition-all"
+              className="flex w-full items-center gap-2.5 rounded-xl border-2 px-3 py-3 text-right transition-all sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5"
               style={{
                 borderColor: selected ? opt.color : '#E8EEF5',
                 background: selected ? opt.bg : '#fff',
@@ -125,8 +126,8 @@ export default function AdminDataReviewActionsPanel({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="أضف ملاحظاتك حول توافق هذه البيانات مع المصادر الرسمية أو التقارير الأخرى..."
-        rows={4}
-        className="mb-4 w-full resize-y rounded-2xl border-none px-4 py-3 text-right text-sm leading-7 text-[#334155] outline-none placeholder:text-[#94A3B8] focus-visible:ring-2 focus-visible:ring-[#2196F3]/30"
+        rows={3}
+        className="mb-4 min-h-[88px] w-full resize-y rounded-xl border-none px-3 py-2.5 text-right text-xs leading-6 text-[#334155] outline-none placeholder:text-[#94A3B8] focus-visible:ring-2 focus-visible:ring-[#2196F3]/30 sm:min-h-[100px] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm sm:leading-7"
         style={{ fontFamily: ADMIN_DATA_FONT, background: ADMIN_DATA_INPUT_BG }}
       />
 

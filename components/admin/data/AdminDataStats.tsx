@@ -41,28 +41,33 @@ const STAT_ITEMS = [
 
 export default function AdminDataStats({ stats }: AdminDataStatsProps) {
   return (
-    <section className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+    <section className="mb-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:mb-6 sm:gap-3 md:gap-4 xl:grid-cols-4">
       {STAT_ITEMS.map((item) => {
         const Icon = item.icon
         return (
           <div
             key={item.key}
-            className="rounded-xl bg-white px-5 py-5 sm:px-6 sm:py-6"
+            className="rounded-xl bg-white px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6"
             style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
             dir="rtl"
           >
             <div className="flex w-full flex-col items-start text-right">
-              <div className="flex items-center gap-2">
-                <Icon size={22} style={{ color: item.color }} strokeWidth={2.5} />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Icon
+                  size={20}
+                  className="sm:h-[22px] sm:w-[22px]"
+                  style={{ color: item.color }}
+                  strokeWidth={2.5}
+                />
                 <p
-                  className="text-sm font-bold text-[#0F172A] sm:text-base"
+                  className="text-xs font-bold text-[#0F172A] sm:text-sm md:text-base"
                   style={{ fontFamily: ADMIN_DATA_FONT }}
                 >
                   {item.label}
                 </p>
               </div>
               <p
-                className="mt-3 self-start text-[32px] font-bold leading-none sm:text-[36px]"
+                className="mt-2 self-start text-2xl font-bold leading-none sm:mt-3 sm:text-[32px] md:text-[36px]"
                 style={{ color: item.color, fontFamily: ADMIN_DATA_FONT }}
               >
                 {stats[item.key].toLocaleString('en-US')}

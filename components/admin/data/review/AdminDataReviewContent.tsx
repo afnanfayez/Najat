@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminShell from '../../AdminShell'
+import AdminDataBackButton from '../AdminDataBackButton'
 import AdminDataReviewHeader from './AdminDataReviewHeader'
 import AdminDataReviewActionsPanel from './AdminDataReviewActionsPanel'
 import AdminDataFacilityInfoCard from './AdminDataFacilityInfoCard'
@@ -81,16 +81,7 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
 
   return (
     <AdminShell activeNav="data">
-      <button
-        type="button"
-        onClick={() => router.push('/admin/data')}
-        className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] transition-colors hover:text-[#2196F3] sm:text-sm"
-        style={{ fontFamily: ADMIN_DATA_FONT }}
-        dir="rtl"
-      >
-        <ArrowRight size={16} />
-        العودة إلى نظرة عامة على البيانات
-      </button>
+      <AdminDataBackButton />
 
       {loading ? (
         <div
@@ -109,12 +100,12 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
           />
 
           <div
-            className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start"
+            className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-start"
             dir="rtl"
           >
-            <div className="flex flex-col gap-4 lg:col-span-8">
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-8">
               <AdminDataFacilityInfoCard detail={detail} />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                 <AdminDataServicesCard services={detail.services} />
                 <AdminDataInventoryCard items={detail.inventory} />
               </div>
@@ -122,7 +113,7 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
               <AdminDataSourceNotesCard notes={detail.sourceNotes} />
             </div>
 
-            <div className="flex flex-col gap-4 lg:col-span-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-4">
               <AdminDataReviewActionsPanel
                 saving={saving}
                 onSaveDraft={(notes, decision) => handleSubmit(notes, decision, 'draft')}

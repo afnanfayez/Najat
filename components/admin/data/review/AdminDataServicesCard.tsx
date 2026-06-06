@@ -3,6 +3,7 @@
 import {
   ADMIN_DATA_BLUE,
   ADMIN_DATA_CARD_SHADOW,
+  ADMIN_DATA_CARD_SHELL,
   ADMIN_DATA_FONT,
   ADMIN_DATA_INPUT_BG,
 } from '../adminDataStyles'
@@ -14,7 +15,7 @@ interface AdminDataServicesCardProps {
 export default function AdminDataServicesCard({ services }: AdminDataServicesCardProps) {
   return (
     <article
-      className="h-full rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={`h-full ${ADMIN_DATA_CARD_SHELL}`}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
@@ -24,7 +25,7 @@ export default function AdminDataServicesCard({ services }: AdminDataServicesCar
       >
         الخدمات المتاحة
       </h2>
-      <div className="flex flex-wrap justify-start gap-2">
+      <div className="flex flex-wrap justify-start gap-1.5 sm:gap-2">
         {services.map((service) => (
           <span
             key={service}

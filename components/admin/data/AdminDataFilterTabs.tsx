@@ -20,28 +20,27 @@ export default function AdminDataFilterTabs({
   onChange,
 }: AdminDataFilterTabsProps) {
   return (
-    <div
-      className="mb-6 flex flex-wrap items-center justify-start gap-2"
-      dir="rtl"
-    >
-      {TABS.map((tab) => {
-        const selected = active === tab.id
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className="rounded-xl px-4 py-2 text-xs font-bold transition-all sm:px-5 sm:py-2.5 sm:text-sm"
-            style={{
-              fontFamily: ADMIN_DATA_FONT,
-              background: selected ? ADMIN_DATA_BLUE : '#F1F5F9',
-              color: selected ? '#fff' : '#64748B',
-            }}
-          >
-            {tab.label}
-          </button>
-        )
-      })}
+    <div className="mb-4 -mx-1 overflow-x-auto pb-1 sm:mb-6 sm:overflow-visible" dir="rtl">
+      <div className="flex min-w-max items-center gap-2 px-1 sm:min-w-0 sm:flex-wrap">
+        {TABS.map((tab) => {
+          const selected = active === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className="shrink-0 rounded-xl px-3.5 py-2 text-xs font-bold transition-all sm:px-5 sm:py-2.5 sm:text-sm"
+              style={{
+                fontFamily: ADMIN_DATA_FONT,
+                background: selected ? ADMIN_DATA_BLUE : '#F1F5F9',
+                color: selected ? '#fff' : '#64748B',
+              }}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

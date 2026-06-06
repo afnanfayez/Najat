@@ -1,10 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminShell from '../../AdminShell'
+import AdminDataBackButton from '../AdminDataBackButton'
 import AdminDataPageHeader from '../AdminDataPageHeader'
 import AdminDataSyncRequestsTable from './AdminDataSyncRequestsTable'
 import AdminDataSyncStatusCard from './AdminDataSyncStatusCard'
@@ -19,7 +18,6 @@ import type { AdminDataSyncDashboard, AdminDataSyncRequest } from '@/schemas/adm
 import { ADMIN_DATA_BLUE, ADMIN_DATA_FONT } from '../adminDataStyles'
 
 export default function AdminDataSyncContent() {
-  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [publishingId, setPublishingId] = useState<string | null>(null)
   const [publishingAll, setPublishingAll] = useState(false)
@@ -78,16 +76,7 @@ export default function AdminDataSyncContent() {
 
   return (
     <AdminShell activeNav="data">
-      <button
-        type="button"
-        onClick={() => router.push('/admin/data')}
-        className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] transition-colors hover:text-[#2196F3] sm:text-sm"
-        style={{ fontFamily: ADMIN_DATA_FONT }}
-        dir="rtl"
-      >
-        <ArrowRight size={16} />
-        العودة إلى نظرة عامة على البيانات
-      </button>
+      <AdminDataBackButton />
 
       <AdminDataPageHeader
         title="نشر ومزامنة البيانات"
@@ -104,20 +93,15 @@ export default function AdminDataSyncContent() {
       ) : dashboard ? (
         <>
           <div
-            className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(260px,300px)_minmax(0,1fr)] xl:items-stretch"
+            className="mb-4 grid grid-cols-1 gap-3 sm:mb-6 sm:gap-4 xl:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] xl:items-stretch"
             dir="rtl"
           >
-            <AdminDataSyncStatusCard
-              status={dashboard.syncStatus}
-              publishingAll={publishingAll}
-              onPublishAll={handlePublishAll}
-            />
-            <div className="flex min-h-0 min-w-0 flex-col">
+            <div className="order-1 flex min-h-0 min-w-0 flex-col xl:order-2">
               <div
                 className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
                 dir="rtl"
               >
-                <div className="min-w-0 text-right">
+                <div className="min-w-0 flex-1 text-right">
                   <h2
                     className="text-base font-bold text-[#0F172A] sm:text-lg"
                     style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -125,7 +109,7 @@ export default function AdminDataSyncContent() {
                     الطلبات المقبولة للمزامنة
                   </h2>
                   <p
-                    className="mt-1 text-xs font-medium text-[#64748B] sm:text-sm"
+                    className="mt-1 text-xs font-medium leading-relaxed text-[#64748B] sm:text-sm"
                     style={{ fontFamily: ADMIN_DATA_FONT }}
                   >
                     تم التحقق من هذه البيانات وهي جاهزة للنشر العالمي
@@ -134,7 +118,7 @@ export default function AdminDataSyncContent() {
                 <button
                   type="button"
                   onClick={handleExportCsv}
-                  className="w-full shrink-0 rounded-xl px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:px-5 sm:text-sm"
+                  className="w-full shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 sm:w-auto sm:px-5 sm:text-sm"
                   style={{
                     fontFamily: ADMIN_DATA_FONT,
                     background: ADMIN_DATA_BLUE,
@@ -147,6 +131,14 @@ export default function AdminDataSyncContent() {
                 requests={dashboard.acceptedRequests}
                 publishingId={publishingId}
                 onPublish={handlePublish}
+              />
+            </div>
+
+            <div className="order-2 xl:order-1">
+              <AdminDataSyncStatusCard
+                status={dashboard.syncStatus}
+                publishingAll={publishingAll}
+                onPublishAll={handlePublishAll}
               />
             </div>
           </div>

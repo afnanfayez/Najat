@@ -1,7 +1,7 @@
 'use client'
 
 import type { AdminDataAuditEntry } from '@/schemas/adminData'
-import { ADMIN_DATA_BLUE, ADMIN_DATA_CARD_SHADOW, ADMIN_DATA_FONT } from '../adminDataStyles'
+import { ADMIN_DATA_BLUE, ADMIN_DATA_CARD_SHADOW, ADMIN_DATA_CARD_SHELL, ADMIN_DATA_FONT } from '../adminDataStyles'
 
 interface AdminDataAuditLogProps {
   entries: AdminDataAuditEntry[]
@@ -10,7 +10,7 @@ interface AdminDataAuditLogProps {
 export default function AdminDataAuditLog({ entries }: AdminDataAuditLogProps) {
   return (
     <section
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={ADMIN_DATA_CARD_SHELL}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >

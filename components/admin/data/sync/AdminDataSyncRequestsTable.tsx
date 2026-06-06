@@ -39,15 +39,15 @@ export default function AdminDataSyncRequestsTable({
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[680px] text-right">
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[640px] text-right">
           <thead>
             <tr className="border-y border-[#E3F2FD] bg-[#E3F2FD]">
               {['المعرف', 'نوع البيانات', 'تاريخ القبول', 'الأولوية', 'الإجراء'].map(
                 (col) => (
                   <th
                     key={col}
-                    className="px-5 py-3 text-xs font-bold text-[#64748B]"
+                    className="px-3 py-3 text-xs font-bold text-[#64748B] sm:px-5"
                     style={{ fontFamily: ADMIN_DATA_FONT }}
                   >
                     {col}
@@ -62,7 +62,7 @@ export default function AdminDataSyncRequestsTable({
               const { day, time } = splitAcceptedAt(row.acceptedAt)
               return (
                 <tr key={row.id} className="border-b border-[#E8EEF5] last:border-b-0">
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 py-3 sm:px-5 sm:py-3.5">
                     <p
                       className="text-sm font-bold text-[#0F172A]"
                       style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -76,7 +76,7 @@ export default function AdminDataSyncRequestsTable({
                       موقع: {row.location}
                     </p>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 py-3 sm:px-5 sm:py-3.5">
                     <span
                       className="text-sm font-medium text-[#0F172A]"
                       style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -84,7 +84,7 @@ export default function AdminDataSyncRequestsTable({
                       {row.dataType}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 py-3 sm:px-5 sm:py-3.5">
                     <p
                       className="text-sm font-medium text-[#0F172A]"
                       style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -100,7 +100,7 @@ export default function AdminDataSyncRequestsTable({
                       </p>
                     ) : null}
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 py-3 sm:px-5 sm:py-3.5">
                     <span
                       className="inline-block rounded-full px-3 py-1 text-xs font-bold"
                       style={{
@@ -112,7 +112,7 @@ export default function AdminDataSyncRequestsTable({
                       {priority.label}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-3 py-3 sm:px-5 sm:py-3.5">
                     <button
                       type="button"
                       disabled={publishingId === row.id}
@@ -130,7 +130,7 @@ export default function AdminDataSyncRequestsTable({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 p-4 md:hidden">
+      <div className="flex flex-col gap-2 p-3 sm:gap-3 sm:p-4 lg:hidden">
         {requests.map((row) => {
           const priority = ADMIN_DATA_PRIORITY_LABELS[row.priority]
           const { day, time } = splitAcceptedAt(row.acceptedAt)

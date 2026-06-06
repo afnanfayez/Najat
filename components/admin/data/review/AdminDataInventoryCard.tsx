@@ -3,6 +3,7 @@
 import type { AdminDataInventoryItem } from '@/schemas/adminData'
 import {
   ADMIN_DATA_CARD_SHADOW,
+  ADMIN_DATA_CARD_SHELL,
   ADMIN_DATA_FONT,
 } from '../adminDataStyles'
 
@@ -13,7 +14,7 @@ interface AdminDataInventoryCardProps {
 export default function AdminDataInventoryCard({ items }: AdminDataInventoryCardProps) {
   return (
     <article
-      className="h-full rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={`h-full ${ADMIN_DATA_CARD_SHELL}`}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >

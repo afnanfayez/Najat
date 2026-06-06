@@ -94,7 +94,7 @@ export default function AdminDataContent() {
         <>
           <AdminDataStats stats={dashboard.stats} />
           <AdminDataFilterTabs active={activeTab} onChange={setActiveTab} />
-          <section className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+          <section className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 lg:grid-cols-2">
             {filtered.map((request) => (
               <AdminDataRequestCard
                 key={request.id}

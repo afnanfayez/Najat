@@ -3,6 +3,10 @@ export const ADMIN_DATA_FONT = "'Cairo', sans-serif"
 export const ADMIN_DATA_CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.06)'
 export const ADMIN_DATA_INPUT_BG = '#2196F31A'
 
+/** Shared card shell — consistent padding across breakpoints */
+export const ADMIN_DATA_CARD_SHELL =
+  'rounded-xl border border-[#E8EEF5] bg-white p-4 sm:p-5'
+
 export const ADMIN_DATA_STATUS_LABELS = {
   under_review: { label: 'تحت المراجعة', color: '#2196F3', bg: '#E3F2FD', dot: '#2196F3' },
   pending_review: { label: 'قيد المراجعة', color: '#FF9800', bg: '#FFF3E0', dot: '#FF9800' },

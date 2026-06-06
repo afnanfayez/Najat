@@ -2,6 +2,7 @@
 
 import {
   ADMIN_DATA_CARD_SHADOW,
+  ADMIN_DATA_CARD_SHELL,
   ADMIN_DATA_FONT,
 } from '../adminDataStyles'
 
@@ -12,7 +13,7 @@ interface AdminDataSourceNotesCardProps {
 export default function AdminDataSourceNotesCard({ notes }: AdminDataSourceNotesCardProps) {
   return (
     <article
-      className="rounded-2xl border border-[#E8EEF5] bg-white p-4 sm:p-5"
+      className={ADMIN_DATA_CARD_SHELL}
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
@@ -23,7 +24,7 @@ export default function AdminDataSourceNotesCard({ notes }: AdminDataSourceNotes
         ملاحظات المصادر المعلوماتية
       </h2>
       <p
-        className="text-right text-xs leading-7 text-[#64748B] sm:text-sm"
+        className="text-right text-xs leading-6 text-[#64748B] sm:text-sm sm:leading-7"
         style={{ fontFamily: ADMIN_DATA_FONT }}
       >
         {notes}
