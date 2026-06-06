@@ -38,10 +38,10 @@ export default function AdminCommunicationLiveIndicatorsCard({
         {indicators.map((indicator) => (
           <div
             key={indicator.id}
-            className="flex items-center gap-4 rounded-xl border border-[#E8EEF5] bg-white p-3 sm:p-4"
+            className="flex flex-col items-center gap-3 rounded-xl border border-[#E8EEF5] bg-white p-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:gap-4 sm:p-4"
             style={{ boxShadow: ADMIN_COMM_CARD_SHADOW }}
           >
-            <div className="min-w-0 flex-1 text-right">
+            <div className="min-w-0 w-full flex-1 text-right min-[480px]:w-auto">
               <h4 className="mb-1 text-sm font-bold text-[#0F172A] sm:text-base">
                 {indicator.title}
               </h4>
@@ -69,7 +69,7 @@ export default function AdminCommunicationLiveIndicatorsCard({
         type="button"
         onClick={onExport}
         disabled={exporting}
-        className="flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:text-sm"
         style={{ background: ADMIN_COMM_BLUE, fontFamily: ADMIN_COMM_FONT }}
       >
         <Download size={16} strokeWidth={2.5} />

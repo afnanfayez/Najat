@@ -88,15 +88,15 @@ function AlertChip({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-bold transition-all sm:gap-2 sm:px-3 sm:py-3 sm:text-sm"
+      className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[11px] font-bold transition-all min-[420px]:gap-1.5 min-[420px]:px-2 min-[420px]:py-2.5 min-[420px]:text-xs sm:gap-2 sm:px-3 sm:py-3 sm:text-sm"
       style={{
         background: bg,
         color,
         outline: selected ? `2px solid ${color}` : '2px solid transparent',
       }}
     >
-      <Icon size={14} strokeWidth={2.5} />
-      <span>{label}</span>
+      <Icon size={14} strokeWidth={2.5} className="shrink-0" />
+      <span className="truncate">{label}</span>
     </button>
   )
 }
@@ -144,7 +144,7 @@ export default function AdminCommunicationBroadcastForm({
           <label className="mb-3 block text-right" style={ADMIN_COMM_LABEL_STYLE}>
             نوع التنبيه
           </label>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 max-[380px]:grid-cols-1 sm:flex sm:gap-3">
             {ALERT_CATEGORY_OPTIONS.map((type) => (
               <AlertChip
                 key={type.id}
@@ -163,7 +163,7 @@ export default function AdminCommunicationBroadcastForm({
           <label className="mb-3 block text-right" style={ADMIN_COMM_LABEL_STYLE}>
             توقيت البث
           </label>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 max-[380px]:grid-cols-1 sm:flex sm:gap-3">
             {BROADCAST_TIMING_OPTIONS.map((type) => (
               <AlertChip
                 key={type.id}
@@ -207,8 +207,8 @@ export default function AdminCommunicationBroadcastForm({
         />
       </div>
 
-      <div className="mb-6 rounded-xl border border-[#E8EEF5] bg-white p-4">
-        <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-6 rounded-xl border border-[#E8EEF5] bg-white p-3 sm:p-4">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <label className="text-right" style={ADMIN_COMM_LABEL_STYLE}>
             تحديد الجمهور المستهدف
           </label>

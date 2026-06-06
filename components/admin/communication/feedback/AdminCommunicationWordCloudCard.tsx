@@ -25,7 +25,7 @@ export default function AdminCommunicationWordCloudCard({
       style={{ fontFamily: ADMIN_COMM_FONT, boxShadow: ADMIN_COMM_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center justify-start gap-2">
           <PieChart size={18} style={{ color: ADMIN_COMM_BLUE }} strokeWidth={2.5} />
           <h3 className="text-base font-bold text-[#0F172A] sm:text-lg">
@@ -36,7 +36,7 @@ export default function AdminCommunicationWordCloudCard({
         <button
           type="button"
           onClick={onRefresh}
-          className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold sm:text-sm"
+          className="w-full shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold sm:w-auto sm:text-sm"
           style={{
             background: ADMIN_COMM_INPUT_BG,
             color: ADMIN_COMM_BLUE,
@@ -63,7 +63,7 @@ export default function AdminCommunicationWordCloudCard({
       </div>
 
       <div className="rounded-xl border border-[#E8EEF5] bg-[#FAFBFC] p-3 sm:p-4">
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-2 flex flex-col gap-1 min-[400px]:flex-row min-[400px]:items-center min-[400px]:justify-between min-[400px]:gap-2">
           <span className="text-xs font-semibold text-[#64748B] sm:text-sm">
             معدل التغيير عن الأسبوع الماضي
           </span>

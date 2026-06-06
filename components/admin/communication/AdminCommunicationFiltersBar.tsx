@@ -54,7 +54,7 @@ export default function AdminCommunicationFiltersBar({
       style={{ boxShadow: ADMIN_COMM_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+      <div className="grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 md:gap-6">
         <AdminCommunicationSelectField
           label="حسب الأولوية"
           value={priority}

@@ -6,9 +6,15 @@ import Image from 'next/image'
 
 interface AdminMobileHeaderProps {
   onMenuOpen: () => void
+  className?: string
+  style?: React.CSSProperties
 }
 
-export default function AdminMobileHeader({ onMenuOpen }: AdminMobileHeaderProps) {
+export default function AdminMobileHeader({
+  onMenuOpen,
+  className = '',
+  style,
+}: AdminMobileHeaderProps) {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -22,6 +28,7 @@ export default function AdminMobileHeader({ onMenuOpen }: AdminMobileHeaderProps
 
   return (
     <div
+      className={className}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -31,6 +38,7 @@ export default function AdminMobileHeader({ onMenuOpen }: AdminMobileHeaderProps
         marginBottom: '20px',
         width: '100%',
         backgroundColor: 'transparent',
+        ...style,
       }}
     >
       <div

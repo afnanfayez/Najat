@@ -35,7 +35,10 @@ import type {
 } from '@/schemas/adminCommunication'
 import {
   ADMIN_COMM_FONT,
+  ADMIN_COMM_MAIN_COL,
   ADMIN_COMM_PAGE,
+  ADMIN_COMM_SIDE_COL,
+  ADMIN_COMM_SPLIT_GRID,
   ADMIN_COMM_TAB_META,
 } from './adminCommunicationStyles'
 
@@ -134,11 +137,22 @@ export default function AdminCommunicationContent() {
   return (
     <AdminShell activeNav="communication">
       <div className={ADMIN_COMM_PAGE}>
-        <AdminCommunicationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <AdminCommunicationTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          className="mb-4 hidden sm:mb-6 lg:flex"
+        />
 
         <AdminCommunicationPageHeader
           title={tabMeta.title}
           subtitle={tabMeta.subtitle}
+          mobileTabs={
+            <AdminCommunicationTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              className="mb-4"
+            />
+          }
           sidePanel={
             activeTab === 'feedback_analysis' && dashboard ? (
               <AdminCommunicationFeedbackStatsRow summary={dashboard.feedback.summary} />
@@ -205,17 +219,14 @@ export default function AdminCommunicationContent() {
               </p>
             )}
 
-            <div
-              className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-stretch"
-              dir="rtl"
-            >
-              <div className="lg:col-span-8">
+            <div className={ADMIN_COMM_SPLIT_GRID} dir="rtl">
+              <div className={ADMIN_COMM_MAIN_COL}>
                 <AdminCommunicationPerformanceChart
                   weeklyData={dashboard.performanceWeekly}
                   monthlyData={dashboard.performanceMonthly}
                 />
               </div>
-              <div className="lg:col-span-4">
+              <div className={ADMIN_COMM_SIDE_COL}>
                 <AdminCommunicationResilienceCard resilience={dashboard.systemResilience} />
               </div>
             </div>

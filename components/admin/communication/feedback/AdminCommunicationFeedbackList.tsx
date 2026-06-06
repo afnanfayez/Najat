@@ -25,7 +25,7 @@ function FeedbackCard({ item }: { item: AdminCommunicationFeedbackItem }) {
       style={{ fontFamily: ADMIN_COMM_FONT, boxShadow: ADMIN_COMM_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="mb-3 flex flex-col gap-2 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between min-[480px]:gap-3">
         <div className="flex min-w-0 items-center justify-start gap-3">
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -40,7 +40,7 @@ function FeedbackCard({ item }: { item: AdminCommunicationFeedbackItem }) {
         </div>
 
         <span
-          className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold sm:text-xs"
+          className="self-start rounded-full px-2.5 py-0.5 text-[11px] font-bold sm:self-auto sm:text-xs"
           style={{ background: '#FEE2E2', color: '#EF4444' }}
         >
           {item.priorityLabel}
@@ -71,12 +71,12 @@ export default function AdminCommunicationFeedbackList({
 
   return (
     <section style={{ fontFamily: ADMIN_COMM_FONT }} dir="rtl">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-between">
         <h3 className="text-base font-bold text-[#0F172A] sm:text-lg">
           تحليل المقترحات والآراء
         </h3>
 
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setFilter('latest')}

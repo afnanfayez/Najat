@@ -19,7 +19,7 @@ const STAT_ITEMS = [
 
 export default function AdminCommunicationStats({ stats }: AdminCommunicationStatsProps) {
   return (
-    <section className="mb-4 grid min-w-0 grid-cols-1 gap-3 sm:mb-6 sm:grid-cols-3 sm:gap-4">
+    <section className="mb-4 grid min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mb-6 sm:grid-cols-3 sm:gap-4">
       {STAT_ITEMS.map((item) => {
         const value = stats[item.key]
         const display =
@@ -28,7 +28,7 @@ export default function AdminCommunicationStats({ stats }: AdminCommunicationSta
         return (
           <div
             key={item.key}
-            className="min-w-0 rounded-xl bg-white px-4 py-4 sm:px-5 sm:py-5"
+            className="min-w-0 rounded-xl bg-white px-4 py-4 min-[480px]:last:col-span-2 sm:last:col-span-1 sm:px-5 sm:py-5"
             style={{ boxShadow: ADMIN_COMM_CARD_SHADOW }}
             dir="rtl"
           >

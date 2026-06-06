@@ -11,24 +11,28 @@ import {
 interface AdminCommunicationTabsProps {
   activeTab: AdminCommunicationTab
   onTabChange: (tab: AdminCommunicationTab) => void
+  className?: string
 }
 
 export default function AdminCommunicationTabs({
   activeTab,
   onTabChange,
+  className = '',
 }: AdminCommunicationTabsProps) {
   return (
-    <div className="no-scrollbar mb-4 flex items-center justify-start gap-6 overflow-x-auto border-b border-[#E2E8F0] sm:mb-6 sm:gap-10">
+    <div
+      className={`no-scrollbar flex snap-x snap-mandatory items-center justify-start gap-4 overflow-x-auto border-b border-[#E2E8F0] sm:gap-8 md:gap-10 ${className}`}
+    >
       {ADMIN_COMMUNICATION_TABS.map((tab) => {
         const isActive = activeTab === tab.id
         return (
           <button
             key={tab.id}
             type="button"
-            className="admin-tab shrink-0"
+            className="admin-tab shrink-0 snap-start"
             onClick={() => onTabChange(tab.id)}
             style={{
-              padding: '6px 20px 10px',
+              padding: '6px 12px 10px',
               background: 'transparent',
               border: 'none',
               borderBottom: isActive
@@ -37,7 +41,7 @@ export default function AdminCommunicationTabs({
               cursor: 'pointer',
               fontFamily: "'Cairo', sans-serif",
               fontWeight: isActive ? 700 : 500,
-              fontSize: '14px',
+              fontSize: '13px',
               color: isActive ? ADMIN_TAB_ACTIVE_COLOR : ADMIN_TAB_INACTIVE_COLOR,
               whiteSpace: 'nowrap',
               transition: 'all 0.2s ease',

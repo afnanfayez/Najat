@@ -6,7 +6,16 @@ export const ADMIN_COMM_INPUT_BG = '#2196F31A'
 export const ADMIN_COMM_CARD_SHELL =
   'rounded-xl border border-[#E8EEF5] bg-white p-4 sm:p-5'
 
-export const ADMIN_COMM_PAGE = 'min-w-0 w-full max-w-full'
+export const ADMIN_COMM_PAGE = 'min-w-0 w-full max-w-full overflow-x-hidden'
+
+/** Two-column RTL layout: main (8) + sidebar (4) from lg */
+export const ADMIN_COMM_SPLIT_GRID =
+  'grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-stretch'
+
+export const ADMIN_COMM_MAIN_COL = 'min-w-0 order-1 lg:col-span-8'
+
+export const ADMIN_COMM_SIDE_COL =
+  'flex min-w-0 flex-col gap-3 sm:gap-4 order-2 lg:col-span-4 lg:h-full'
 
 export const ADMIN_COMM_LABEL_STYLE = {
   fontFamily: ADMIN_COMM_FONT,

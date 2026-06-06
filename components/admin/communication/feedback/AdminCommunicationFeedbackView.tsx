@@ -1,6 +1,11 @@
 'use client'
 
 import type { AdminCommunicationFeedbackData } from '@/schemas/adminCommunication'
+import {
+  ADMIN_COMM_MAIN_COL,
+  ADMIN_COMM_SIDE_COL,
+  ADMIN_COMM_SPLIT_GRID,
+} from '../adminCommunicationStyles'
 import AdminCommunicationLiveIndicatorsCard from './AdminCommunicationLiveIndicatorsCard'
 import AdminCommunicationWordCloudCard from './AdminCommunicationWordCloudCard'
 import AdminCommunicationFeedbackList from './AdminCommunicationFeedbackList'
@@ -22,22 +27,24 @@ export default function AdminCommunicationFeedbackView({
 }: AdminCommunicationFeedbackViewProps) {
   return (
     <div dir="rtl">
-      <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-start">
-        <div className="lg:col-span-4">
+      <div className={ADMIN_COMM_SPLIT_GRID}>
+        <div className={`${ADMIN_COMM_MAIN_COL} order-1`}>
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <AdminCommunicationWordCloudCard
+              wordCloud={feedback.wordCloud}
+              onRefresh={onRefreshWordCloud}
+            />
+            <AdminCommunicationFeedbackList items={feedback.feedbackItems} />
+          </div>
+        </div>
+
+        <div className={`${ADMIN_COMM_SIDE_COL} order-2`}>
           <AdminCommunicationLiveIndicatorsCard
             indicators={feedback.liveIndicators}
             exporting={exporting}
             onExport={onExportReports}
             onSentimentAnalysis={onSentimentAnalysis}
           />
-        </div>
-
-        <div className="flex flex-col gap-3 sm:gap-4 lg:col-span-8">
-          <AdminCommunicationWordCloudCard
-            wordCloud={feedback.wordCloud}
-            onRefresh={onRefreshWordCloud}
-          />
-          <AdminCommunicationFeedbackList items={feedback.feedbackItems} />
         </div>
       </div>
     </div>

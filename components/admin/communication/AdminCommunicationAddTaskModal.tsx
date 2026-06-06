@@ -129,7 +129,7 @@ export default function AdminCommunicationAddTaskModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[92vh] max-w-2xl overflow-y-auto p-0 [&>button]:left-4 [&>button]:right-auto"
+        className="max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-0 sm:w-full [&>button]:left-4 [&>button]:right-auto"
         dir="rtl"
       >
         <div className="px-5 py-4 sm:px-6">

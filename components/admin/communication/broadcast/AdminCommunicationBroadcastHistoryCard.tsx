@@ -40,11 +40,11 @@ function HistoryItem({ item }: { item: AdminCommunicationBroadcastHistoryItem })
         {item.title}
       </h4>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-3 sm:gap-2">
         {metrics.map((metric) => (
           <div
             key={metric}
-            className="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold sm:text-xs"
+            className="min-w-0 rounded-lg px-1.5 py-1.5 text-center text-[10px] font-semibold sm:px-2 sm:text-xs"
             style={{
               background: ADMIN_COMM_INPUT_BG,
               color: '#2196F3',

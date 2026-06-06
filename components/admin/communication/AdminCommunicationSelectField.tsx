@@ -54,11 +54,11 @@ export default function AdminCommunicationSelectField({
             color: ADMIN_COMM_BLUE,
           }}
         >
-          <div dir="rtl" className="flex w-full items-center justify-start gap-1.5">
+          <div dir="rtl" className="flex w-full min-w-0 items-center justify-start gap-1.5">
             <SelectChevronIcon />
             <SelectValue
               placeholder="الكل"
-              className="font-semibold text-right"
+              className="truncate font-semibold text-right"
               style={{ color: ADMIN_COMM_BLUE }}
             />
           </div>
