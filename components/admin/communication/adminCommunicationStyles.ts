@@ -30,8 +30,9 @@ export const ADMIN_COMM_TAB_META: Record<
     subtitle: 'نظرة استراتيجية على تنسيق العمليات الميدانية',
   },
   strategic_broadcast: {
-    title: 'البث الاستراتيجي',
-    subtitle: 'إدارة الرسائل والتنبيهات الموجهة للفرق الميدانية',
+    title: 'مركز البث الاستراتيجي',
+    subtitle:
+      'إدارة وتوجيه التنبيهات الحرجة والخدمية عبر الشبكة الوطنية الموحدة.',
   },
   feedback_analysis: {
     title: 'تحليل الملاحظات',

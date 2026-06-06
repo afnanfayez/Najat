@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminCommunicationTabs from './AdminCommunicationTabs'
@@ -14,10 +14,13 @@ import AdminCommunicationTaskCard from './AdminCommunicationTaskCard'
 import AdminCommunicationPerformanceChart from './AdminCommunicationPerformanceChart'
 import AdminCommunicationResilienceCard from './AdminCommunicationResilienceCard'
 import AdminCommunicationAddTaskModal from './AdminCommunicationAddTaskModal'
+import AdminCommunicationBroadcastView from './broadcast/AdminCommunicationBroadcastView'
 import {
   createAdminCommunicationTask,
+  exportAdminCommunicationBroadcastData,
   fetchAdminCommunicationDashboard,
   filterAdminCommunicationTasks,
+  launchAdminCommunicationBroadcast,
 } from './data/adminCommunicationService'
 import type {
   AdminCommunicationPriorityFilter,
@@ -25,6 +28,7 @@ import type {
   AdminCommunicationTab,
   AdminCommunicationVolunteerFilter,
   CreateAdminCommunicationTaskBody,
+  LaunchAdminCommunicationBroadcastBody,
 } from '@/schemas/adminCommunication'
 import {
   ADMIN_COMM_FONT,
@@ -35,6 +39,7 @@ import {
 export default function AdminCommunicationContent() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminCommunicationTab>('internal_tasks')
   const [priority, setPriority] = useState<AdminCommunicationPriorityFilter>('all')
@@ -86,6 +91,31 @@ export default function AdminCommunicationContent() {
     }
   }
 
+  async function handleLaunchBroadcast(body: LaunchAdminCommunicationBroadcastBody) {
+    setSaving(true)
+    try {
+      const updated = await launchAdminCommunicationBroadcast(body)
+      setDashboard(updated)
+      toast.success('تم إطلاق البث الجماعي بنجاح', { position: 'top-center' })
+    } catch {
+      toast.error('تعذّر إطلاق البث')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleExportBroadcast() {
+    setExporting(true)
+    try {
+      await exportAdminCommunicationBroadcastData()
+      toast.success('تم تصدير البيانات بنجاح', { position: 'top-center' })
+    } catch {
+      toast.error('تعذّر تصدير البيانات')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <AdminShell activeNav="communication">
       <div className={ADMIN_COMM_PAGE}>
@@ -101,6 +131,16 @@ export default function AdminCommunicationContent() {
                   <Plus size={14} strokeWidth={3} />
                 </span>
                 إضافة مهمة استراتيجية
+              </AdminCommunicationPrimaryButton>
+            ) : activeTab === 'strategic_broadcast' ? (
+              <AdminCommunicationPrimaryButton
+                onClick={handleExportBroadcast}
+                className={exporting ? 'opacity-70' : ''}
+              >
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20">
+                  <Download size={14} strokeWidth={2.5} />
+                </span>
+                {exporting ? 'جاري التصدير...' : 'تصدير البيانات'}
               </AdminCommunicationPrimaryButton>
             ) : undefined
           }
@@ -167,6 +207,13 @@ export default function AdminCommunicationContent() {
               onSubmit={handleCreateTask}
             />
           </>
+        ) : dashboard && activeTab === 'strategic_broadcast' ? (
+          <AdminCommunicationBroadcastView
+            broadcast={dashboard.broadcast}
+            saving={saving}
+            onLaunch={handleLaunchBroadcast}
+            onViewArchive={() => toast.info('الأرشيف الكامل — قريباً')}
+          />
         ) : dashboard ? (
           <div
             className="flex min-h-[40vh] items-center justify-center rounded-xl border border-[#E8EEF5] bg-white p-8"

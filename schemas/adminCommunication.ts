@@ -57,6 +57,7 @@ export interface AdminCommunicationDashboard {
   performanceWeekly: AdminCommunicationPerformancePoint[]
   performanceMonthly: AdminCommunicationPerformancePoint[]
   systemResilience: AdminCommunicationSystemResilience
+  broadcast: AdminCommunicationBroadcastData
 }
 
 export interface CreateAdminCommunicationTaskBody {
@@ -71,4 +72,41 @@ export interface CreateAdminCommunicationTaskBody {
 export interface AdminCommunicationVolunteerOption {
   id: string
   name: string
+}
+
+export type AdminCommunicationAlertType =
+  | 'emergency'
+  | 'service_update'
+  | 'immediate'
+  | 'scheduled'
+
+export interface AdminCommunicationBroadcastStats {
+  totalReach: string
+  responseRate: string
+  networkEfficiency: number
+  networkEfficiencyLabel: string
+}
+
+export interface AdminCommunicationBroadcastHistoryItem {
+  id: string
+  timeLabel: string
+  tagLabel: string
+  tagTone: 'emergency' | 'service'
+  title: string
+  reach: string
+  openRate: string
+  confirmations: string
+}
+
+export interface AdminCommunicationBroadcastData {
+  stats: AdminCommunicationBroadcastStats
+  history: AdminCommunicationBroadcastHistoryItem[]
+}
+
+export interface LaunchAdminCommunicationBroadcastBody {
+  alertType: AdminCommunicationAlertType
+  title: string
+  description: string
+  geographicScope: string
+  beneficiarySegment: string
 }

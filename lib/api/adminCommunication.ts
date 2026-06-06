@@ -2,6 +2,7 @@ import { request } from '@/lib/api/api'
 import type {
   AdminCommunicationDashboard,
   CreateAdminCommunicationTaskBody,
+  LaunchAdminCommunicationBroadcastBody,
 } from '@/schemas/adminCommunication'
 
 const V1 = '/v1/admin/communication'
@@ -27,4 +28,20 @@ export async function createAdminCommunicationTaskFromApi(
     body: JSON.stringify(body),
   })
   return unwrap<AdminCommunicationDashboard>(response, 'dashboard')
+}
+
+export async function launchAdminCommunicationBroadcastFromApi(
+  body: LaunchAdminCommunicationBroadcastBody
+): Promise<AdminCommunicationDashboard> {
+  const response = await request(`${V1}/broadcasts`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  return unwrap<AdminCommunicationDashboard>(response, 'dashboard')
+}
+
+export async function exportAdminCommunicationBroadcastDataFromApi(): Promise<Blob> {
+  const response = await request(`${V1}/broadcasts/export`, { method: 'GET' })
+  if (response instanceof Blob) return response
+  return new Blob([JSON.stringify(response)], { type: 'application/json' })
 }

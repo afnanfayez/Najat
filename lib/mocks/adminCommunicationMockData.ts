@@ -17,6 +17,20 @@ export const ADMIN_COMMUNICATION_VOLUNTEERS: AdminCommunicationVolunteerOption[]
   { id: 'v5', name: 'ليلى حسن' },
 ]
 
+export const ADMIN_COMMUNICATION_GEOGRAPHIC_OPTIONS = [
+  { value: 'all', label: 'كافة الأقاليم' },
+  { value: 'north', label: 'الشمال' },
+  { value: 'central', label: 'الوسط' },
+  { value: 'south', label: 'الجنوب' },
+]
+
+export const ADMIN_COMMUNICATION_BENEFICIARY_OPTIONS = [
+  { value: 'all', label: 'العموم كافة المستفيدين' },
+  { value: 'volunteers', label: 'المتطوعون' },
+  { value: 'medical', label: 'الطاقم الطبي' },
+  { value: 'logistics', label: 'اللوجستيات' },
+]
+
 export const ADMIN_COMMUNICATION_DASHBOARD: AdminCommunicationDashboard = {
   stats: {
     activeInProgress: 12,
@@ -103,5 +117,35 @@ export const ADMIN_COMMUNICATION_DASHBOARD: AdminCommunicationDashboard = {
       'تم تعزيز استقرار الخوادم المركزية. وقت الاستجابة الحالي 14ms. جميع بوابات التواصل الميداني مؤمنة بالكامل.',
     lastCheckLabel: 'آخر فحص',
     lastCheckAgo: 'منذ دقيقتين',
+  },
+  broadcast: {
+    stats: {
+      totalReach: '12.4M',
+      responseRate: '94.2%',
+      networkEfficiency: 92,
+      networkEfficiencyLabel: 'ممتازة',
+    },
+    history: [
+      {
+        id: 'b1',
+        timeLabel: 'منذ 15 دقيقة',
+        tagLabel: 'طارئ جداً',
+        tagTone: 'emergency',
+        title: 'تنبيه مناخي: عاصفة رملية',
+        reach: '850K وصول',
+        openRate: '91% فتح',
+        confirmations: '642 تأكيد',
+      },
+      {
+        id: 'b2',
+        timeLabel: 'أمس، 09:00 م',
+        tagLabel: 'تحديث خدمي',
+        tagTone: 'service',
+        title: 'صيانة مركز بيانات الشمال',
+        reach: '12K وصول',
+        openRate: '98% فتح',
+        confirmations: '-- تأكيد',
+      },
+    ],
   },
 }
