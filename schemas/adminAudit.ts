@@ -2,6 +2,8 @@ export type AdminAuditFilterTab = 'all' | 'under_review' | 'archived'
 
 export type AdminAuditPriorityFilter = 'all' | 'urgent' | 'normal'
 
+export type AdminAuditRegionFilter = 'all' | string
+
 export type AdminAuditClassificationFilter = 'all' | 'medical' | 'logistics'
 
 export type AdminAuditReportStatus = 'under_review' | 'archived' | 'resolved'
@@ -25,6 +27,7 @@ export interface AdminAuditReport {
   priority: AdminAuditPriority
   status: AdminAuditReportStatus
   targetLocation: string
+  region: string
   reporter: string
   reportDate: string
   reviewer?: string

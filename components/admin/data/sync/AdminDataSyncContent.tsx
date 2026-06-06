@@ -15,7 +15,7 @@ import {
   publishAllAdminDataSync,
 } from '../data/adminDataService'
 import type { AdminDataSyncDashboard, AdminDataSyncRequest } from '@/schemas/adminData'
-import { ADMIN_DATA_BLUE, ADMIN_DATA_FONT } from '../adminDataStyles'
+import { ADMIN_DATA_BLUE, ADMIN_DATA_FONT, ADMIN_DATA_PAGE } from '../adminDataStyles'
 
 export default function AdminDataSyncContent() {
   const [loading, setLoading] = useState(true)
@@ -76,6 +76,7 @@ export default function AdminDataSyncContent() {
 
   return (
     <AdminShell activeNav="data">
+      <div className={ADMIN_DATA_PAGE}>
       <AdminDataBackButton />
 
       <AdminDataPageHeader
@@ -93,10 +94,18 @@ export default function AdminDataSyncContent() {
       ) : dashboard ? (
         <>
           <div
-            className="mb-4 grid grid-cols-1 gap-3 sm:mb-6 sm:gap-4 xl:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] xl:items-stretch"
+            className="mb-4 grid min-w-0 grid-cols-1 gap-3 sm:mb-6 sm:gap-4 lg:grid-cols-[minmax(240px,300px)_minmax(0,1fr)] lg:items-stretch"
             dir="rtl"
           >
-            <div className="order-1 flex min-h-0 min-w-0 flex-col xl:order-2">
+            <div className="order-1 flex min-h-0 min-w-0 flex-col lg:order-1">
+              <AdminDataSyncStatusCard
+                status={dashboard.syncStatus}
+                publishingAll={publishingAll}
+                onPublishAll={handlePublishAll}
+              />
+            </div>
+
+            <div className="order-2 flex min-h-0 min-w-0 flex-col lg:order-2">
               <div
                 className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
                 dir="rtl"
@@ -133,18 +142,11 @@ export default function AdminDataSyncContent() {
                 onPublish={handlePublish}
               />
             </div>
-
-            <div className="order-2 xl:order-1">
-              <AdminDataSyncStatusCard
-                status={dashboard.syncStatus}
-                publishingAll={publishingAll}
-                onPublishAll={handlePublishAll}
-              />
-            </div>
           </div>
           <AdminDataActivityLog entries={dashboard.activityLog} />
         </>
       ) : null}
+      </div>
     </AdminShell>
   )
 }

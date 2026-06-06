@@ -30,7 +30,7 @@ export default function AdminDataReviewHeader({
 
       <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
         <div className="min-w-0 flex-1 text-right">
-          <h1 className="break-words" style={ADMIN_PAGE_TITLE_STYLE}>
+          <h1 className="break-words text-balance" style={ADMIN_PAGE_TITLE_STYLE}>
             مراجعة طلب التحديث: {title}
           </h1>
           <p

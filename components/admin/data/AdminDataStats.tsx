@@ -41,13 +41,13 @@ const STAT_ITEMS = [
 
 export default function AdminDataStats({ stats }: AdminDataStatsProps) {
   return (
-    <section className="mb-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:mb-6 sm:gap-3 md:gap-4 xl:grid-cols-4">
+    <section className="mb-4 grid min-w-0 grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:mb-6 sm:gap-3 md:gap-4 xl:grid-cols-4">
       {STAT_ITEMS.map((item) => {
         const Icon = item.icon
         return (
           <div
             key={item.key}
-            className="rounded-xl bg-white px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6"
+            className="min-w-0 rounded-xl bg-white px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6"
             style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
             dir="rtl"
           >

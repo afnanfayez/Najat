@@ -3,6 +3,13 @@ export const ADMIN_AUDIT_FONT = "'Cairo', sans-serif"
 export const ADMIN_AUDIT_CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.06)'
 export const ADMIN_AUDIT_INPUT_BG = '#2196F31A'
 
+export const ADMIN_AUDIT_LABEL_STYLE = {
+  fontFamily: ADMIN_AUDIT_FONT,
+  fontWeight: 700,
+  fontSize: '14px',
+  color: '#1e293b',
+} as const
+
 export const ADMIN_AUDIT_CARD_SHELL =
   'rounded-xl border border-[#E8EEF5] bg-white p-4 sm:p-5'
 

@@ -15,7 +15,7 @@ import {
   filterAdminDataRequests,
 } from './data/adminDataService'
 import type { AdminDataDashboard, AdminDataFilterTab, AdminDataRequest } from '@/schemas/adminData'
-import { ADMIN_DATA_FONT } from './adminDataStyles'
+import { ADMIN_DATA_FONT, ADMIN_DATA_PAGE, ADMIN_DATA_REQUESTS_GRID } from './adminDataStyles'
 
 export default function AdminDataContent() {
   const router = useRouter()
@@ -73,6 +73,7 @@ export default function AdminDataContent() {
 
   return (
     <AdminShell activeNav="data">
+      <div className={ADMIN_DATA_PAGE}>
       <AdminDataPageHeader
         title="نظرة عامة على البيانات"
         subtitle="إدارة وتدقيق طلبات تحديث المعلومات الميدانية الواردة من المتطوعين في قطاع غزة"
@@ -94,7 +95,7 @@ export default function AdminDataContent() {
         <>
           <AdminDataStats stats={dashboard.stats} />
           <AdminDataFilterTabs active={activeTab} onChange={setActiveTab} />
-          <section className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 lg:grid-cols-2">
+          <section className={ADMIN_DATA_REQUESTS_GRID}>
             {filtered.map((request) => (
               <AdminDataRequestCard
                 key={request.id}
@@ -116,6 +117,7 @@ export default function AdminDataContent() {
           )}
         </>
       ) : null}
+      </div>
     </AdminShell>
   )
 }

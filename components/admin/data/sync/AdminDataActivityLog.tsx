@@ -28,7 +28,7 @@ export default function AdminDataActivityLog({ entries }: AdminDataActivityLogPr
         سجل المراجعة والنشاط
       </h2>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
         {entries.map((entry) => (
           <article
             key={entry.id}

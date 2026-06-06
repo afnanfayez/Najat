@@ -20,8 +20,8 @@ export default function AdminDataFilterTabs({
   onChange,
 }: AdminDataFilterTabsProps) {
   return (
-    <div className="mb-4 -mx-1 overflow-x-auto pb-1 sm:mb-6 sm:overflow-visible" dir="rtl">
-      <div className="flex min-w-max items-center gap-2 px-1 sm:min-w-0 sm:flex-wrap">
+    <div className="mb-4 -mx-1 overflow-x-auto pb-1 sm:mb-6 sm:mx-0 sm:overflow-visible" dir="rtl">
+      <div className="flex min-w-max items-center gap-2 px-1 sm:min-w-0 sm:flex-wrap sm:gap-2.5">
         {TABS.map((tab) => {
           const selected = active === tab.id
           return (

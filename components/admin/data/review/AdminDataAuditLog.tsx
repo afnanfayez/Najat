@@ -20,7 +20,7 @@ export default function AdminDataAuditLog({ entries }: AdminDataAuditLogProps) {
       >
         سجل التدقيق
       </h3>
-      <div className="space-y-4 border-r-2 border-[#E3F2FD] pr-4">
+      <div className="space-y-4 border-r-2 border-[#E3F2FD] pr-3 sm:pr-4">
         {entries.map((entry) => (
           <div key={entry.id} className="relative text-right">
             <span

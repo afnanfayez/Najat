@@ -50,9 +50,9 @@ export default function AdminDataFacilityInfoCard({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {fields.map((field) => (
-          <div key={field.label} className="text-right">
+          <div key={field.label} className="min-w-0 text-right">
             <p
               className="text-xs font-bold text-[#2196F3] sm:text-sm"
               style={{ fontFamily: ADMIN_DATA_FONT }}
@@ -60,7 +60,7 @@ export default function AdminDataFacilityInfoCard({
               {field.label}
             </p>
             <p
-              className="mt-1 text-sm font-bold text-[#0F172A]"
+              className="mt-1 break-words text-sm font-bold text-[#0F172A]"
               style={{ fontFamily: ADMIN_DATA_FONT }}
             >
               {field.value}

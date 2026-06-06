@@ -7,6 +7,14 @@ export const ADMIN_DATA_INPUT_BG = '#2196F31A'
 export const ADMIN_DATA_CARD_SHELL =
   'rounded-xl border border-[#E8EEF5] bg-white p-4 sm:p-5'
 
+/** Page / section wrappers — prevent horizontal overflow */
+export const ADMIN_DATA_PAGE = 'min-w-0 w-full max-w-full'
+
+export const ADMIN_DATA_SECTION_STACK = 'flex min-w-0 flex-col gap-3 sm:gap-4'
+
+export const ADMIN_DATA_REQUESTS_GRID =
+  'grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4'
+
 export const ADMIN_DATA_STATUS_LABELS = {
   under_review: { label: 'تحت المراجعة', color: '#2196F3', bg: '#E3F2FD', dot: '#2196F3' },
   pending_review: { label: 'قيد المراجعة', color: '#FF9800', bg: '#FFF3E0', dot: '#FF9800' },

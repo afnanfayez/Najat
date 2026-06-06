@@ -27,8 +27,8 @@ export default function AdminDataPageHeader({
 
       <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
         <div className="min-w-0 flex-1 text-right">
-          <h1 className="break-words" style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
-          <p className="break-words" style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>{subtitle}</p>
+          <h1 className="break-words text-balance" style={ADMIN_PAGE_TITLE_STYLE}>{title}</h1>
+          <p className="break-words text-pretty" style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px' }}>{subtitle}</p>
         </div>
 
         {action && (

@@ -20,7 +20,7 @@ export default function AdminDataUploadCard() {
       >
         الصور والوثائق الداعمة
       </h2>
-      <div className="flex min-h-[140px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#CBD5E1] bg-[#FAFBFC] px-3 py-6 text-center sm:min-h-[180px] sm:rounded-2xl sm:px-4 sm:py-8">
+      <div className="flex min-h-[120px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#CBD5E1] bg-[#FAFBFC] px-3 py-5 text-center sm:min-h-[160px] sm:rounded-2xl sm:px-4 sm:py-8 md:min-h-[180px]">
         <Upload size={32} className="mb-3 text-[#94A3B8]" strokeWidth={2} />
         <p
           className="text-sm font-bold text-[#64748B]"

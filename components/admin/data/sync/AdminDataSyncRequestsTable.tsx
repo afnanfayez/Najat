@@ -39,8 +39,8 @@ export default function AdminDataSyncRequestsTable({
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
-      <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[640px] text-right">
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[520px] text-right">
           <thead>
             <tr className="border-y border-[#E3F2FD] bg-[#E3F2FD]">
               {['المعرف', 'نوع البيانات', 'تاريخ القبول', 'الأولوية', 'الإجراء'].map(
@@ -130,7 +130,7 @@ export default function AdminDataSyncRequestsTable({
         </table>
       </div>
 
-      <div className="flex flex-col gap-2 p-3 sm:gap-3 sm:p-4 lg:hidden">
+      <div className="flex flex-col gap-2 p-3 sm:gap-3 sm:p-4 md:hidden">
         {requests.map((row) => {
           const priority = ADMIN_DATA_PRIORITY_LABELS[row.priority]
           const { day, time } = splitAcceptedAt(row.acceptedAt)

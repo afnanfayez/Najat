@@ -19,7 +19,7 @@ import {
   submitAdminDataReview,
 } from '../data/adminDataService'
 import type { AdminDataReviewDecision, AdminDataReviewDetail } from '@/schemas/adminData'
-import { ADMIN_DATA_FONT } from '../adminDataStyles'
+import { ADMIN_DATA_FONT, ADMIN_DATA_PAGE } from '../adminDataStyles'
 
 interface AdminDataReviewContentProps {
   requestId: string
@@ -81,6 +81,7 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
 
   return (
     <AdminShell activeNav="data">
+      <div className={ADMIN_DATA_PAGE}>
       <AdminDataBackButton />
 
       {loading ? (
@@ -100,12 +101,12 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
           />
 
           <div
-            className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-start"
+            className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-start"
             dir="rtl"
           >
             <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-8">
               <AdminDataFacilityInfoCard detail={detail} />
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                 <AdminDataServicesCard services={detail.services} />
                 <AdminDataInventoryCard items={detail.inventory} />
               </div>
@@ -113,7 +114,7 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
               <AdminDataSourceNotesCard notes={detail.sourceNotes} />
             </div>
 
-            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-4">
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 lg:col-span-4 lg:sticky lg:top-4 lg:self-start">
               <AdminDataReviewActionsPanel
                 saving={saving}
                 onSaveDraft={(notes, decision) => handleSubmit(notes, decision, 'draft')}
@@ -124,6 +125,7 @@ export default function AdminDataReviewContent({ requestId }: AdminDataReviewCon
           </div>
         </>
       ) : null}
+      </div>
     </AdminShell>
   )
 }

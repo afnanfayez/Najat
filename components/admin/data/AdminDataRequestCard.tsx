@@ -37,7 +37,7 @@ export default function AdminDataRequestCard({
       <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <div className="min-w-0 flex-1 text-right">
           <h3
-            className="text-base font-bold leading-snug sm:text-lg lg:text-xl"
+            className="break-words text-base font-bold leading-snug sm:text-lg lg:text-xl"
             style={{ color: ADMIN_DATA_BLUE, fontFamily: ADMIN_DATA_FONT }}
           >
             {request.title}
@@ -66,7 +66,7 @@ export default function AdminDataRequestCard({
       </div>
 
       <p
-        className="mb-4 flex-1 text-right text-sm leading-6 text-[#1E293B] sm:mb-5 sm:text-[15px] sm:leading-7"
+        className="mb-4 flex-1 break-words text-right text-sm leading-6 text-[#1E293B] sm:mb-5 sm:text-[15px] sm:leading-7"
         style={{ fontFamily: ADMIN_DATA_FONT }}
       >
         {request.description}
@@ -74,7 +74,7 @@ export default function AdminDataRequestCard({
 
       <div className="mt-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div
-          className="w-full rounded-xl px-3 py-2 sm:w-auto sm:px-4 sm:py-2.5"
+          className="w-full min-w-0 rounded-xl px-3 py-2 sm:w-auto sm:max-w-[220px] sm:px-4 sm:py-2.5 md:max-w-none"
           style={{ background: ADMIN_DATA_INPUT_BG }}
         >
           <p

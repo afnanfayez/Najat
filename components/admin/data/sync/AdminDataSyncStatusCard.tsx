@@ -28,7 +28,7 @@ export default function AdminDataSyncStatusCard({
 }: AdminDataSyncStatusCardProps) {
   return (
     <aside
-      className="flex h-auto min-h-0 flex-col rounded-xl border border-[#E8EEF5] bg-white p-4 xl:h-full"
+      className="flex h-full min-h-0 flex-col rounded-xl border border-[#E8EEF5] bg-white p-4 lg:h-full"
       style={{ boxShadow: ADMIN_DATA_CARD_SHADOW }}
       dir="rtl"
     >
@@ -39,7 +39,7 @@ export default function AdminDataSyncStatusCard({
         حالة المزامنة
       </h2>
 
-      <div className="flex flex-col gap-2 xl:min-h-0 xl:flex-1">
+      <div className="flex flex-col gap-2 lg:min-h-0 lg:flex-1">
         {STATUS_ITEMS.map((item) => {
           const Icon = item.icon
           const rawValue = status[item.key]
@@ -53,7 +53,7 @@ export default function AdminDataSyncStatusCard({
           return (
             <div
               key={item.key}
-              className="rounded-lg border border-[#E8EEF5] px-3 py-2 xl:flex xl:flex-1 xl:flex-col xl:justify-center"
+              className="rounded-lg border border-[#E8EEF5] px-3 py-2 lg:flex lg:flex-1 lg:flex-col lg:justify-center"
               style={{ background: ADMIN_DATA_INPUT_BG }}
             >
               <div className="flex items-center justify-start gap-1.5">
