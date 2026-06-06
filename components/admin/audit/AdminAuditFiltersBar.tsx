@@ -1,9 +1,8 @@
 'use client'
 
-import { ADMIN_USER_REGION_OPTIONS } from '@/lib/mocks/adminUsersMockData'
 import type {
+  AdminAuditClassificationFilter,
   AdminAuditPriorityFilter,
-  AdminAuditRegionFilter,
 } from '@/schemas/adminAudit'
 import {
   ADMIN_AUDIT_CARD_SHADOW,
@@ -13,9 +12,9 @@ import AdminAuditSelectField from './AdminAuditSelectField'
 
 interface AdminAuditFiltersBarProps {
   priority: AdminAuditPriorityFilter
-  region: AdminAuditRegionFilter
+  classification: AdminAuditClassificationFilter
   onPriorityChange: (value: AdminAuditPriorityFilter) => void
-  onRegionChange: (value: AdminAuditRegionFilter) => void
+  onClassificationChange: (value: AdminAuditClassificationFilter) => void
 }
 
 const PRIORITY_OPTIONS: { value: AdminAuditPriorityFilter; label: string }[] = [
@@ -24,19 +23,17 @@ const PRIORITY_OPTIONS: { value: AdminAuditPriorityFilter; label: string }[] = [
   { value: 'normal', label: 'عادي' },
 ]
 
-const regionOptions: { value: string; label: string }[] = [
+const CLASSIFICATION_OPTIONS: { value: AdminAuditClassificationFilter; label: string }[] = [
   { value: 'all', label: 'الكل' },
-  ...ADMIN_USER_REGION_OPTIONS.map((option) => ({
-    value: option,
-    label: option,
-  })),
+  { value: 'medical', label: 'طبي' },
+  { value: 'logistics', label: 'لوجستي' },
 ]
 
 export default function AdminAuditFiltersBar({
   priority,
-  region,
+  classification,
   onPriorityChange,
-  onRegionChange,
+  onClassificationChange,
 }: AdminAuditFiltersBarProps) {
   return (
     <section
@@ -52,10 +49,10 @@ export default function AdminAuditFiltersBar({
           options={PRIORITY_OPTIONS}
         />
         <AdminAuditSelectField
-          label="المناطق"
-          value={region}
-          onValueChange={(v) => onRegionChange(v as AdminAuditRegionFilter)}
-          options={regionOptions}
+          label="التصنيف"
+          value={classification}
+          onValueChange={(v) => onClassificationChange(v as AdminAuditClassificationFilter)}
+          options={CLASSIFICATION_OPTIONS}
         />
       </div>
     </section>

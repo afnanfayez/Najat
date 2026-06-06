@@ -49,6 +49,7 @@ export default function AdminShell({ activeNav = 'dashboard', children }: AdminS
       maps: '/admin/maps',
       data: '/admin/data',
       audit: '/admin/audit',
+      communication: '/admin/communication',
       alerts: '/admin/alerts',
     }
 

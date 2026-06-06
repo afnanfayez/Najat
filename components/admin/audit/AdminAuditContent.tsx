@@ -17,9 +17,9 @@ import {
   updateAdminAuditReport,
 } from './data/adminAuditService'
 import type {
+  AdminAuditClassificationFilter,
   AdminAuditFilterTab,
   AdminAuditPriorityFilter,
-  AdminAuditRegionFilter,
   AdminAuditReport,
   UpdateAdminAuditReportBody,
 } from '@/schemas/adminAudit'
@@ -33,7 +33,8 @@ export default function AdminAuditContent() {
   > | null>(null)
   const [activeTab, setActiveTab] = useState<AdminAuditFilterTab>('all')
   const [priority, setPriority] = useState<AdminAuditPriorityFilter>('all')
-  const [region, setRegion] = useState<AdminAuditRegionFilter>('all')
+  const [classification, setClassification] =
+    useState<AdminAuditClassificationFilter>('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const loadDashboard = useCallback(async () => {
@@ -62,9 +63,9 @@ export default function AdminAuditContent() {
       dashboard.reports,
       activeTab,
       priority,
-      region
+      classification
     )
-  }, [dashboard, activeTab, priority, region])
+  }, [dashboard, activeTab, priority, classification])
 
   const selectedReport = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
@@ -150,9 +151,9 @@ export default function AdminAuditContent() {
             <div className="flex min-w-0 flex-col gap-3 xl:col-span-8">
               <AdminAuditFiltersBar
                 priority={priority}
-                region={region}
+                classification={classification}
                 onPriorityChange={setPriority}
-                onRegionChange={setRegion}
+                onClassificationChange={setClassification}
               />
               <div className="flex min-h-0 flex-1 flex-col">
                 <AdminAuditReportsTable

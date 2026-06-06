@@ -13,11 +13,11 @@ import {
 } from '@/lib/mocks/adminAuditMockData'
 import { USE_MOCK_ADMIN_AUDIT } from '@/lib/mocks/mockConfig'
 import type {
+  AdminAuditClassificationFilter,
   AdminAuditCompareDetail,
   AdminAuditDashboard,
   AdminAuditFilterTab,
   AdminAuditPriorityFilter,
-  AdminAuditRegionFilter,
   AdminAuditReport,
   AdminAuditStats,
   UpdateAdminAuditReportBody,
@@ -69,7 +69,7 @@ export function filterAdminAuditReports(
   reports: AdminAuditReport[],
   tab: AdminAuditFilterTab,
   priority: AdminAuditPriorityFilter,
-  region: AdminAuditRegionFilter
+  classification: AdminAuditClassificationFilter
 ): AdminAuditReport[] {
   return reports.filter((report) => {
     const tabMatch =
@@ -78,8 +78,9 @@ export function filterAdminAuditReports(
       (tab === 'archived' &&
         (report.status === 'archived' || report.status === 'resolved'))
     const priorityMatch = priority === 'all' || report.priority === priority
-    const regionMatch = region === 'all' || report.region === region
-    return tabMatch && priorityMatch && regionMatch
+    const classMatch =
+      classification === 'all' || report.classification === classification
+    return tabMatch && priorityMatch && classMatch
   })
 }
 

@@ -32,3 +32,6 @@ export const USE_MOCK_ADMIN_DATA =
 
 export const USE_MOCK_ADMIN_AUDIT =
   process.env.NEXT_PUBLIC_ADMIN_AUDIT_API !== '1'
+
+export const USE_MOCK_ADMIN_COMMUNICATION =
+  process.env.NEXT_PUBLIC_ADMIN_COMMUNICATION_API !== '1'
