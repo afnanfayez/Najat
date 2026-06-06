@@ -29,7 +29,9 @@ export default function AdminReportsNeedyRegionsCard({
           return (
             <div key={region.id}>
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-[#0F172A] sm:text-sm">{region.name}</span>
+                <span className="min-w-0 truncate text-xs font-bold text-[#0F172A] sm:text-sm">
+                  {region.name}
+                </span>
                 <span
                   className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold sm:text-[11px]"
                   style={{ background: tone.bg, color: tone.text }}

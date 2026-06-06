@@ -34,7 +34,7 @@ export default function AdminReportsActiveRegionsCard({
         <button
           type="button"
           onClick={onOpenMap}
-          className="shrink-0 self-start rounded-lg px-3 py-1.5 text-xs font-bold sm:text-sm"
+          className="w-full shrink-0 self-stretch rounded-lg px-3 py-2 text-xs font-bold min-[480px]:w-auto min-[480px]:self-start min-[480px]:py-1.5 sm:text-sm"
           style={{
             background: ADMIN_REPORTS_INPUT_BG,
             color: ADMIN_REPORTS_BLUE,
@@ -49,7 +49,9 @@ export default function AdminReportsActiveRegionsCard({
         {data.regions.map((region) => (
           <div key={region.id}>
             <div className="mb-1.5 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-[#0F172A] sm:text-sm">{region.name}</span>
+              <span className="min-w-0 truncate text-xs font-bold text-[#0F172A] sm:text-sm">
+                {region.name}
+              </span>
               <span
                 className="text-xs font-bold sm:text-sm"
                 style={{ color: ADMIN_REPORTS_BLUE }}

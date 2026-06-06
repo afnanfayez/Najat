@@ -54,17 +54,17 @@ export default function AdminReportsContent() {
   }
 
   const headerAction = (
-    <>
+    <div className="flex w-full min-w-0 flex-col gap-3">
       <AdminReportsTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        className="hidden lg:flex"
+        className="hidden lg:flex lg:flex-wrap lg:overflow-visible"
       />
       <AdminReportsPrimaryButton onClick={handleExportPdf} disabled={exporting}>
         <Download size={16} strokeWidth={2.5} />
         {exporting ? 'جاري التحميل...' : 'تحميل PDF'}
       </AdminReportsPrimaryButton>
-    </>
+    </div>
   )
 
   return (

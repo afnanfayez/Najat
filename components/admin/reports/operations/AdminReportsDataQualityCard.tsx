@@ -36,7 +36,15 @@ export default function AdminReportsDataQualityCard({ data }: AdminReportsDataQu
               value={gauge.value}
               color={gauge.color}
               trackColor={gauge.color === '#22C55E' ? '#E8F5E9' : '#E3F2FD'}
+              size={88}
+              className="sm:hidden"
+            />
+            <AdminReportsCircularGauge
+              value={gauge.value}
+              color={gauge.color}
+              trackColor={gauge.color === '#22C55E' ? '#E8F5E9' : '#E3F2FD'}
               size={100}
+              className="hidden sm:block"
             />
             <div className="min-w-0 flex-1 text-right">
               <h4 className="mb-1 text-sm font-bold text-[#0F172A] sm:text-base">

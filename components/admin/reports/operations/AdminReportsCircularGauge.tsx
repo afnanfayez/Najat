@@ -5,6 +5,7 @@ interface AdminReportsCircularGaugeProps {
   color?: string
   trackColor?: string
   size?: number
+  className?: string
 }
 
 export default function AdminReportsCircularGauge({
@@ -12,6 +13,7 @@ export default function AdminReportsCircularGauge({
   color = '#2196F3',
   trackColor = '#E3F2FD',
   size = 96,
+  className = '',
 }: AdminReportsCircularGaugeProps) {
   const strokeWidth = 8
   const radius = (size - strokeWidth) / 2
@@ -19,7 +21,7 @@ export default function AdminReportsCircularGauge({
   const offset = circumference - (value / 100) * circumference
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className={`relative shrink-0 ${className}`} style={{ width: size, height: size }}>
       <svg width={size} height={size} className="absolute inset-0 -rotate-90">
         <circle
           cx={size / 2}

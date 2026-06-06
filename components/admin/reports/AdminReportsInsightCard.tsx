@@ -26,7 +26,7 @@ export default function AdminReportsInsightCard({
         {insight.title}
       </h3>
 
-      <p className="flex-1 text-right text-xs leading-7 text-white/95 sm:text-sm sm:leading-8">
+      <p className="flex-1 break-words text-right text-xs leading-7 text-white/95 sm:text-sm sm:leading-8">
         {insight.body}
       </p>
 

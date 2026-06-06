@@ -40,7 +40,7 @@ export default function AdminReportsResourceDonutCard({
     <div
       className={
         layout === 'vertical'
-          ? 'flex w-full flex-col items-start gap-2.5 text-right'
+          ? 'flex w-full min-w-0 flex-col items-center gap-2.5 text-center sm:items-start sm:text-right'
           : 'flex w-full min-w-0 flex-col gap-2 sm:w-auto'
       }
     >
@@ -51,7 +51,7 @@ export default function AdminReportsResourceDonutCard({
             style={{ background: segment.color }}
           />
           {layout === 'vertical' ? (
-            <span className="text-sm font-bold text-[#0F172A]">
+            <span className="min-w-0 break-words text-xs font-bold text-[#0F172A] sm:text-sm">
               {segment.label} {segment.percent}%
             </span>
           ) : (
@@ -74,8 +74,8 @@ export default function AdminReportsResourceDonutCard({
       dir="rtl"
     >
       {layout === 'vertical' ? (
-        <div className="flex flex-1 flex-col items-start justify-center gap-5 py-2">
-          <div className={`relative flex shrink-0 items-center justify-center self-center ${chartSize}`}>
+        <div className="flex w-full min-w-0 flex-1 flex-col items-center justify-center gap-4 py-2 sm:items-start sm:gap-5">
+          <div className={`relative flex shrink-0 items-center justify-center ${chartSize}`}>
             <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
               <circle cx="60" cy="60" r="54" fill="none" stroke="#F1F5F9" strokeWidth="12" />
               {segments.map((segment) => (

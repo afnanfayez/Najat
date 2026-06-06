@@ -18,14 +18,20 @@ export default function AdminReportsStatsRow({ kpis }: AdminReportsStatsRowProps
       className="mb-4 grid min-w-0 grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mb-6 lg:grid-cols-4 sm:gap-4"
       dir="rtl"
     >
-      {kpis.map((kpi) => (
+      {kpis.map((kpi, index) => (
         <article
           key={kpi.id}
-          className="min-w-0 rounded-xl border border-[#E8EEF5] bg-white px-4 py-4 sm:px-5 sm:py-5"
+          className={`min-w-0 rounded-xl border border-[#E8EEF5] bg-white px-4 py-4 sm:px-5 sm:py-5 ${
+            index === kpis.length - 1 && kpis.length % 2 !== 0
+              ? 'min-[480px]:col-span-2 lg:col-span-1'
+              : ''
+          }`}
           style={{ boxShadow: ADMIN_REPORTS_CARD_SHADOW, fontFamily: ADMIN_REPORTS_FONT }}
         >
           <div className="mb-2 flex items-start justify-between gap-2">
-            <p className="text-right text-xs font-bold text-[#0F172A] sm:text-sm">{kpi.label}</p>
+            <p className="min-w-0 break-words text-right text-xs font-bold text-[#0F172A] sm:text-sm">
+              {kpi.label}
+            </p>
             {kpi.tag && (
               <span
                 className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold sm:text-[11px]"
@@ -36,7 +42,7 @@ export default function AdminReportsStatsRow({ kpis }: AdminReportsStatsRowProps
             )}
           </div>
           <p
-            className="text-right text-2xl font-bold leading-none sm:text-3xl"
+            className="break-words text-right text-xl font-bold leading-none sm:text-2xl lg:text-3xl"
             style={{ color: ADMIN_REPORTS_BLUE }}
           >
             {kpi.value}

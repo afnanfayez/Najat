@@ -11,6 +11,14 @@ export const ADMIN_REPORTS_PAGE = 'min-w-0 w-full max-w-full overflow-x-hidden'
 export const ADMIN_REPORTS_SPLIT_GRID =
   'grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12 lg:items-stretch'
 
+export const ADMIN_REPORTS_MAIN_COL = 'min-w-0 order-1 lg:col-span-8'
+
+export const ADMIN_REPORTS_SIDE_COL = 'min-w-0 order-2 lg:col-span-4'
+
+export const ADMIN_REPORTS_MAIN_COL_7 = 'min-w-0 order-1 lg:col-span-7'
+
+export const ADMIN_REPORTS_SIDE_COL_5 = 'min-w-0 order-2 lg:col-span-5'
+
 export const ADMIN_REPORTS_NEED_LEVEL = {
   critical: { bar: '#EF4444', text: '#EF4444', bg: '#FEE2E2' },
   stable: { bar: '#22C55E', text: '#22C55E', bg: '#E8F5E9' },

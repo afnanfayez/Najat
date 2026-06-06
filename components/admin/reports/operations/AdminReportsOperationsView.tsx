@@ -1,7 +1,11 @@
 'use client'
 
 import type { AdminReportsOperationsData } from '@/schemas/adminReports'
-import { ADMIN_REPORTS_SPLIT_GRID } from '../adminReportsStyles'
+import {
+  ADMIN_REPORTS_MAIN_COL,
+  ADMIN_REPORTS_SIDE_COL,
+  ADMIN_REPORTS_SPLIT_GRID,
+} from '../adminReportsStyles'
 import AdminReportsResourceDonutCard from '../AdminReportsResourceDonutCard'
 import AdminReportsOperationsStatsRow from './AdminReportsOperationsStatsRow'
 import AdminReportsActiveRegionsCard from './AdminReportsActiveRegionsCard'
@@ -17,18 +21,21 @@ export default function AdminReportsOperationsView({
   onOpenMap,
 }: AdminReportsOperationsViewProps) {
   return (
-    <div dir="rtl">
+    <div dir="rtl" className="min-w-0">
       <AdminReportsOperationsStatsRow kpis={dashboard.kpis} />
 
       <div className={`${ADMIN_REPORTS_SPLIT_GRID} mb-3 sm:mb-4`}>
-        <div className="lg:col-span-8">
+        <div className={`${ADMIN_REPORTS_MAIN_COL} order-1`}>
           <AdminReportsActiveRegionsCard
             data={dashboard.activeRegions}
             onOpenMap={onOpenMap}
           />
         </div>
-        <div className="lg:col-span-4">
-          <AdminReportsResourceDonutCard data={dashboard.activityBreakdown} layout="vertical" />
+        <div className={`${ADMIN_REPORTS_SIDE_COL} order-2`}>
+          <AdminReportsResourceDonutCard
+            data={dashboard.activityBreakdown}
+            layout="vertical"
+          />
         </div>
       </div>
 

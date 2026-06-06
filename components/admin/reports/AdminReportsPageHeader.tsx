@@ -49,7 +49,7 @@ export default function AdminReportsPageHeader({
         </div>
 
         {action && (
-          <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 xl:w-auto xl:self-start">
+          <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 sm:gap-3 xl:w-auto xl:self-start">
             {action}
           </div>
         )}
@@ -74,7 +74,7 @@ export function AdminReportsPrimaryButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto sm:px-5 sm:py-3 sm:text-sm ${className}`}
+      className={`inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60 min-[480px]:w-auto sm:px-5 sm:py-3 sm:text-sm xl:w-auto ${className}`}
       style={{
         background: '#2196F3',
         fontFamily: "'Cairo', sans-serif",
