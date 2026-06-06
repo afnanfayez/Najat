@@ -45,3 +45,9 @@ export async function exportAdminCommunicationBroadcastDataFromApi(): Promise<Bl
   if (response instanceof Blob) return response
   return new Blob([JSON.stringify(response)], { type: 'application/json' })
 }
+
+export async function exportAdminCommunicationFeedbackReportsFromApi(): Promise<Blob> {
+  const response = await request(`${V1}/feedback/export`, { method: 'GET' })
+  if (response instanceof Blob) return response
+  return new Blob([JSON.stringify(response)], { type: 'application/json' })
+}

@@ -11,12 +11,14 @@ interface AdminCommunicationPageHeaderProps {
   title: string
   subtitle: string
   action?: React.ReactNode
+  sidePanel?: React.ReactNode
 }
 
 export default function AdminCommunicationPageHeader({
   title,
   subtitle,
   action,
+  sidePanel,
 }: AdminCommunicationPageHeaderProps) {
   const shell = useAdminShell()
 
@@ -24,7 +26,10 @@ export default function AdminCommunicationPageHeader({
     <header className="mb-4 sm:mb-6">
       <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
 
-      <div className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5">
+      <div
+        className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-5"
+        dir="rtl"
+      >
         <div className="min-w-0 flex-1 text-right">
           <h1 className="break-words text-balance" style={ADMIN_PAGE_TITLE_STYLE}>
             {title}
@@ -33,6 +38,12 @@ export default function AdminCommunicationPageHeader({
             {subtitle}
           </p>
         </div>
+
+        {sidePanel && (
+          <div className="flex w-full shrink-0 flex-wrap justify-end gap-3 lg:w-auto">
+            {sidePanel}
+          </div>
+        )}
 
         {action && (
           <div className="flex w-full shrink-0 sm:w-auto lg:self-start">{action}</div>

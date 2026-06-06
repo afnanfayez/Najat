@@ -15,9 +15,12 @@ import AdminCommunicationPerformanceChart from './AdminCommunicationPerformanceC
 import AdminCommunicationResilienceCard from './AdminCommunicationResilienceCard'
 import AdminCommunicationAddTaskModal from './AdminCommunicationAddTaskModal'
 import AdminCommunicationBroadcastView from './broadcast/AdminCommunicationBroadcastView'
+import AdminCommunicationFeedbackView from './feedback/AdminCommunicationFeedbackView'
+import AdminCommunicationFeedbackStatsRow from './feedback/AdminCommunicationFeedbackStatsRow'
 import {
   createAdminCommunicationTask,
   exportAdminCommunicationBroadcastData,
+  exportAdminCommunicationFeedbackReports,
   fetchAdminCommunicationDashboard,
   filterAdminCommunicationTasks,
   launchAdminCommunicationBroadcast,
@@ -116,6 +119,18 @@ export default function AdminCommunicationContent() {
     }
   }
 
+  async function handleExportFeedbackReports() {
+    setExporting(true)
+    try {
+      await exportAdminCommunicationFeedbackReports()
+      toast.success('تم تصدير التقارير بنجاح', { position: 'top-center' })
+    } catch {
+      toast.error('تعذّر تصدير التقارير')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <AdminShell activeNav="communication">
       <div className={ADMIN_COMM_PAGE}>
@@ -124,6 +139,11 @@ export default function AdminCommunicationContent() {
         <AdminCommunicationPageHeader
           title={tabMeta.title}
           subtitle={tabMeta.subtitle}
+          sidePanel={
+            activeTab === 'feedback_analysis' && dashboard ? (
+              <AdminCommunicationFeedbackStatsRow summary={dashboard.feedback.summary} />
+            ) : undefined
+          }
           action={
             activeTab === 'internal_tasks' ? (
               <AdminCommunicationPrimaryButton onClick={() => setModalOpen(true)}>
@@ -213,6 +233,14 @@ export default function AdminCommunicationContent() {
             saving={saving}
             onLaunch={handleLaunchBroadcast}
             onViewArchive={() => toast.info('الأرشيف الكامل — قريباً')}
+          />
+        ) : dashboard && activeTab === 'feedback_analysis' ? (
+          <AdminCommunicationFeedbackView
+            feedback={dashboard.feedback}
+            exporting={exporting}
+            onExportReports={handleExportFeedbackReports}
+            onRefreshWordCloud={() => toast.success('تم تحديث سحابة الكلمات')}
+            onSentimentAnalysis={() => toast.info('تحليل المشاعر — قريباً')}
           />
         ) : dashboard ? (
           <div

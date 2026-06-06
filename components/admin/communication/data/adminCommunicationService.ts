@@ -1,6 +1,7 @@
 import {
   createAdminCommunicationTaskFromApi,
   exportAdminCommunicationBroadcastDataFromApi,
+  exportAdminCommunicationFeedbackReportsFromApi,
   fetchAdminCommunicationDashboardFromApi,
   launchAdminCommunicationBroadcastFromApi,
 } from '@/lib/api/adminCommunication'
@@ -156,4 +157,18 @@ function downloadBlob(blob: Blob, filename: string) {
   anchor.download = filename
   anchor.click()
   URL.revokeObjectURL(url)
+}
+
+export async function exportAdminCommunicationFeedbackReports(): Promise<void> {
+  if (!USE_MOCK_ADMIN_COMMUNICATION) {
+    const blob = await exportAdminCommunicationFeedbackReportsFromApi()
+    downloadBlob(blob, 'feedback-reports.json')
+    return
+  }
+  await delay(300)
+  const store = getMockStore()
+  const blob = new Blob([JSON.stringify(store.feedback, null, 2)], {
+    type: 'application/json',
+  })
+  downloadBlob(blob, 'feedback-reports.json')
 }

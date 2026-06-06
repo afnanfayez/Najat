@@ -148,4 +148,57 @@ export const ADMIN_COMMUNICATION_DASHBOARD: AdminCommunicationDashboard = {
       },
     ],
   },
+  feedback: {
+    summary: {
+      totalReach: '42.5k',
+      generalPulse: 'إيجابي جدًا',
+    },
+    liveIndicators: [
+      {
+        id: 'li1',
+        title: 'استطلاع رضا المستخدمين',
+        participationsLabel: '856 مشاركة مكتملة',
+        progress: 72,
+      },
+      {
+        id: 'li2',
+        title: 'ملاحظات تسليم المعونات',
+        participationsLabel: '428 مشاركة مكتملة',
+        progress: 45,
+      },
+    ],
+    wordCloud: {
+      tags: [
+        'سرعة الاستجابة',
+        'المؤن الغذائية',
+        'تطبيق الميدان',
+        'الخريطة التفاعلية',
+        'تأخر الدعم',
+        'تحديث البيانات',
+      ],
+      weeklyChangeRate: 12.4,
+    },
+    feedbackItems: [
+      {
+        id: 'f1',
+        authorName: 'أحمد منصور',
+        authorMeta: 'قطاع الإغاثة • منذ ساعتين',
+        priorityLabel: 'أولوية قصوى',
+        content:
+          'يجب إضافة خيار الإبلاغ السريع عن نقص المؤن في مناطق النزوح داخل الخريطة التفاعلية لتسريع الاستجابة.',
+        createdAt: 2,
+        priorityRank: 10,
+      },
+      {
+        id: 'f2',
+        authorName: 'سارة الكردي',
+        authorMeta: 'الدعم الفني • منذ 5 ساعات',
+        priorityLabel: 'أولوية قصوى',
+        content:
+          'تفعيل نظام التنبيهات الصوتية في تطبيق الميدان للطوارئ القصوى لضمان تنبيه الموظفين حتى في وضع الصامت.',
+        createdAt: 5,
+        priorityRank: 9,
+      },
+    ],
+  },
 }

@@ -58,6 +58,7 @@ export interface AdminCommunicationDashboard {
   performanceMonthly: AdminCommunicationPerformancePoint[]
   systemResilience: AdminCommunicationSystemResilience
   broadcast: AdminCommunicationBroadcastData
+  feedback: AdminCommunicationFeedbackData
 }
 
 export interface CreateAdminCommunicationTaskBody {
@@ -109,4 +110,40 @@ export interface LaunchAdminCommunicationBroadcastBody {
   description: string
   geographicScope: string
   beneficiarySegment: string
+}
+
+export interface AdminCommunicationFeedbackSummary {
+  totalReach: string
+  generalPulse: string
+}
+
+export interface AdminCommunicationLiveIndicator {
+  id: string
+  title: string
+  participationsLabel: string
+  progress: number
+}
+
+export interface AdminCommunicationWordCloud {
+  tags: string[]
+  weeklyChangeRate: number
+}
+
+export type AdminCommunicationFeedbackFilter = 'latest' | 'priority'
+
+export interface AdminCommunicationFeedbackItem {
+  id: string
+  authorName: string
+  authorMeta: string
+  priorityLabel: string
+  content: string
+  createdAt: number
+  priorityRank: number
+}
+
+export interface AdminCommunicationFeedbackData {
+  summary: AdminCommunicationFeedbackSummary
+  liveIndicators: AdminCommunicationLiveIndicator[]
+  wordCloud: AdminCommunicationWordCloud
+  feedbackItems: AdminCommunicationFeedbackItem[]
 }
