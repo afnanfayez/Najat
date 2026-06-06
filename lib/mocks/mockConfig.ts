@@ -29,3 +29,6 @@ export const USE_MOCK_ADMIN_MAPS =
 
 export const USE_MOCK_ADMIN_DATA =
   process.env.NEXT_PUBLIC_ADMIN_DATA_API !== '1'
+
+export const USE_MOCK_ADMIN_AUDIT =
+  process.env.NEXT_PUBLIC_ADMIN_AUDIT_API !== '1'

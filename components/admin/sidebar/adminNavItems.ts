@@ -26,7 +26,7 @@ export const adminNavItems: AdminNavItem[] = [
   { id: 'aid', label: 'إدارة المساعدات الإنسانية', icon: Heart },
   { id: 'maps', label: 'إدارة الخرائط والملاحة', icon: Compass },
   { id: 'data', label: 'البيانات', icon: BarChart3 },
-  { id: 'audit', label: 'المراجعة والتحقيق', icon: Search },
+  { id: 'audit', label: 'المراجعة والتدقيق', icon: Search },
   { id: 'communication', label: 'التواصل والتنسيق', icon: MessageCircle },
   { id: 'reports', label: 'التقرير والتحليلات', icon: PieChart },
   { id: 'security', label: 'أمان النظام والنسخ الاحتياطي', icon: Shield },
