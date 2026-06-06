@@ -1,8 +1,6 @@
 'use client'
 
 import { Save } from 'lucide-react'
-import AdminMobileHeader from '../../../dashboard/AdminMobileHeader'
-import { useAdminShell } from '../../../AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -22,12 +20,8 @@ export default function DonorEditorHeader({
   saving = false,
   isEdit = false,
 }: DonorEditorHeaderProps) {
-  const shell = useAdminShell()
-
   return (
     <header className="mb-6" dir="rtl">
-      <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
-
       <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 lg:gap-4">
         <div className="min-w-0 flex-1 text-right">
           <h1 style={ADMIN_PAGE_TITLE_STYLE}>المانحون والشراكات</h1>

@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import AdminShell from '@/components/admin/AdminShell'
-import AdminMobileHeader from '@/components/admin/dashboard/AdminMobileHeader'
-import { useAdminShell } from '@/components/admin/AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -34,7 +32,6 @@ const REQUIRED: Record<number, (keyof VolunteerFormData)[]> = {
 
 export default function AddVolunteerContent() {
   const router = useRouter()
-  const shell = useAdminShell()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<VolunteerFormData>(INITIAL_FORM_DATA)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -116,8 +113,6 @@ export default function AddVolunteerContent() {
   return (
     <AdminShell activeNav="users">
       <div dir="rtl">
-        <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
-
         {/* Back button — same style as AdminAlertsBackButton */}
         <button
           type="button"

@@ -33,7 +33,7 @@ export default function AdminSidebarContent({
         boxSizing: 'border-box',
       }}
     >
-      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
         <Image
           src="/assets/Logo2.png"
           alt="شعار نجاة"
@@ -51,7 +51,7 @@ export default function AdminSidebarContent({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '16px',
+          gap: '12px',
         }}
       >
         {adminNavItems.map((item) => {
@@ -69,15 +69,12 @@ export default function AdminSidebarContent({
               style={{
                 width: '260px',
                 maxWidth: '100%',
-                height: '51px',
+                minHeight: '48px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                gap: '12px',
-                paddingTop: '2px',
-                paddingRight: '12px',
-                paddingBottom: '2px',
-                paddingLeft: '8px',
+                gap: '10px',
+                padding: '6px 10px 6px 8px',
                 background: isActive
                   ? '#FFFFFF80'
                   : isHovered
@@ -88,9 +85,9 @@ export default function AdminSidebarContent({
                 cursor: 'pointer',
                 color: '#fff',
                 fontFamily: "'Cairo', sans-serif",
-                fontSize: '20px',
+                fontSize: '18px',
                 fontWeight: isActive ? '600' : '500',
-                lineHeight: '100%',
+                lineHeight: '1.25',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 outline: 'none',
                 textAlign: 'right',
@@ -103,13 +100,13 @@ export default function AdminSidebarContent({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '32px',
+                  width: '28px',
                   flexShrink: 0,
                 }}
               >
-                <Icon size={24} strokeWidth={2} />
+                <Icon size={22} strokeWidth={2} />
               </div>
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1, lineHeight: '1.3' }}>{item.label}</span>
             </button>
           )
         })}
@@ -126,8 +123,8 @@ export default function AdminSidebarContent({
           paddingRight: '12px',
           paddingBottom: '2px',
           paddingLeft: '8px',
-          marginTop: '24px',
-          marginBottom: '12px',
+          marginTop: '20px',
+          marginBottom: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-start',

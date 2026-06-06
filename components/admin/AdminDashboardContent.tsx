@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/context/AuthContext'
 import AdminShell from './AdminShell'
-import { useAdminShell } from './AdminShellContext'
 import AdminDashboardHeader from './dashboard/AdminDashboardHeader'
 import StatCard from './dashboard/StatCard'
 import ResponseTimeChart from './dashboard/ResponseTimeChart'
@@ -14,15 +13,11 @@ import { getAdminDashboardData } from './data/adminDashboardService'
 
 function AdminDashboardMain() {
   const { user } = useAuth()
-  const shell = useAdminShell()
   const dashboardData = getAdminDashboardData()
 
   return (
     <>
-      <AdminDashboardHeader
-        userName={user?.fullName}
-        onMenuOpen={() => shell?.openMobileMenu()}
-      />
+      <AdminDashboardHeader userName={user?.fullName} />
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {dashboardData.stats.map((stat) => (

@@ -1,7 +1,5 @@
 'use client'
 
-import AdminMobileHeader from '../dashboard/AdminMobileHeader'
-import { useAdminShell } from '../AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -26,8 +24,6 @@ export default function AdminAidPageHeader({
   action,
   hideTabs = false,
 }: AdminAidPageHeaderProps) {
-  const shell = useAdminShell()
-
   const resolvedTitle =
     title ??
     (activeTab === 'donors'
@@ -42,8 +38,6 @@ export default function AdminAidPageHeader({
 
   return (
     <header className="mb-6">
-      <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
-
       <div className="flex w-full min-w-0 flex-col gap-4 sm:gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-right">
           <h1 style={ADMIN_PAGE_TITLE_STYLE}>{resolvedTitle}</h1>

@@ -1,7 +1,5 @@
 'use client'
 
-import AdminMobileHeader from '../dashboard/AdminMobileHeader'
-import { useAdminShell } from '../AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -22,17 +20,9 @@ export default function AdminCommunicationPageHeader({
   sidePanel,
   mobileTabs,
 }: AdminCommunicationPageHeaderProps) {
-  const shell = useAdminShell()
-
   return (
     <header className="mb-4 min-w-0 sm:mb-6">
-      <div className="lg:hidden">
-        <AdminMobileHeader
-          onMenuOpen={() => shell?.openMobileMenu()}
-          style={{ marginBottom: 0, borderBottom: 'none' }}
-        />
-        {mobileTabs}
-      </div>
+      {mobileTabs ? <div className="mb-4 lg:hidden">{mobileTabs}</div> : null}
 
       <div
         className="flex w-full min-w-0 flex-col gap-3 sm:gap-4 xl:flex-row xl:items-start xl:justify-between xl:gap-5"

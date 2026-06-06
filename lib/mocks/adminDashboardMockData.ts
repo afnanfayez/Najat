@@ -29,6 +29,7 @@ export type AdminQuickActionMock = {
   id: string
   label: string
   icon: AdminIconKey
+  href: string
 }
 
 export type AdminUrgentAlertMock = {
@@ -121,10 +122,10 @@ export const ADMIN_DASHBOARD_MOCK: AdminDashboardMockData = {
     },
   ],
   quickActions: [
-    { id: 'volunteers', label: 'إدارة المتطوعين', icon: 'users' },
-    { id: 'content', label: 'إدارة المحتوى', icon: 'fileText' },
-    { id: 'reports', label: 'التقارير', icon: 'barChart' },
-    { id: 'settings', label: 'إعدادات النظام', icon: 'settings' },
+    { id: 'volunteers', label: 'إدارة المتطوعين', icon: 'users', href: '/admin/users' },
+    { id: 'content', label: 'إدارة المحتوى', icon: 'fileText', href: '/admin/health?tab=content' },
+    { id: 'reports', label: 'التقارير', icon: 'barChart', href: '/admin/reports' },
+    { id: 'settings', label: 'إعدادات النظام', icon: 'settings', href: '/admin/security' },
   ],
   urgentAlerts: [
     {

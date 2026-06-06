@@ -9,7 +9,6 @@ import {
   Search,
   Shield,
   Stethoscope,
-  UserCog,
   Users,
 } from 'lucide-react'
 
@@ -30,5 +29,4 @@ export const adminNavItems: AdminNavItem[] = [
   { id: 'communication', label: 'التواصل والتنسيق', icon: MessageCircle },
   { id: 'reports', label: 'التقرير والتحليلات', icon: PieChart },
   { id: 'security', label: 'أمان النظام والنسخ الاحتياطي', icon: Shield },
-  { id: 'support', label: 'نظام إدارة الدعم والتدريب', icon: UserCog },
 ]

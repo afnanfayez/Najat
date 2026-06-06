@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import AdminShell from '../../AdminShell'
-import AdminMobileHeader from '../../dashboard/AdminMobileHeader'
-import { useAdminShell } from '../../AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -72,7 +70,6 @@ const FALLBACK_MAP_LAYERS = {
 
 export default function AdminMapsPackageEditorContent() {
   const router = useRouter()
-  const shell = useAdminShell()
   const mapDataQuery = useSafetyMapData()
 
   const [loading, setLoading] = useState(true)
@@ -137,8 +134,6 @@ export default function AdminMapsPackageEditorContent() {
   return (
     <AdminShell activeNav="maps">
       <header className="mb-4 sm:mb-5" dir="rtl">
-        <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
-
         <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 text-right">
             <button

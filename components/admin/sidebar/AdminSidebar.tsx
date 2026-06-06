@@ -65,7 +65,7 @@ export default function AdminSidebar({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: '30px 0 20px',
+          padding: '30px 0 16px',
           position: 'relative',
           zIndex: 10,
           boxSizing: 'border-box',

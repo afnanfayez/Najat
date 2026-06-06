@@ -1,63 +1,37 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import Image from 'next/image'
 
 interface AdminMobileHeaderProps {
   onMenuOpen: () => void
   className?: string
-  style?: React.CSSProperties
 }
 
 export default function AdminMobileHeader({
   onMenuOpen,
   className = '',
-  style,
 }: AdminMobileHeaderProps) {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  if (!isMobile) return null
-
   return (
     <div
-      className={className}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 0',
-        borderBottom: '1px solid #e8eef5',
-        marginBottom: '20px',
-        width: '100%',
-        backgroundColor: 'transparent',
-        ...style,
-      }}
+      className={`mb-5 flex w-full items-center justify-between border-b border-[#e8eef5] py-3 lg:hidden ${className}`}
     >
-      <div
-        style={{ color: '#2196F3', cursor: 'pointer' }}
+      <button
+        type="button"
         onClick={onMenuOpen}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && onMenuOpen()}
+        className="cursor-pointer border-none bg-transparent p-0 text-[#2196F3]"
         aria-label="فتح القائمة"
       >
         <Menu size={32} />
-      </div>
-      <div style={{ position: 'relative', width: '40px', height: '40px' }}>
+      </button>
+
+      <div className="relative h-10 w-10 shrink-0">
         <Image
           src="/assets/Logo2.png"
           alt="شعار نجاة"
           fill
           sizes="40px"
-          style={{ objectFit: 'contain' }}
+          className="object-contain"
           priority
         />
       </div>

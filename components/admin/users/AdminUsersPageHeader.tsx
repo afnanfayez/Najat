@@ -2,8 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 import { UserPlus } from 'lucide-react'
-import AdminMobileHeader from '../dashboard/AdminMobileHeader'
-import { useAdminShell } from '../AdminShellContext'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -11,12 +9,9 @@ import {
 
 export default function AdminUsersPageHeader() {
   const router = useRouter()
-  const shell = useAdminShell()
 
   return (
     <header className="mb-6">
-      <AdminMobileHeader onMenuOpen={() => shell?.openMobileMenu()} />
-
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-right">
           <h1 style={ADMIN_PAGE_TITLE_STYLE}>إدارة المستخدمين والصلاحيات</h1>
