@@ -6,9 +6,12 @@ export type EmergencyContact = {
   phone: string
 }
 
+/**
+ * Local-only data that should NOT come from Backend API.
+ * API data (fullName, nationalId, etc.) is managed by Backend only.
+ */
 export type LocalProfileData = {
-  avatarDataUrl?: string
-  overrides?: UpdateUserProfileBody
+  avatarDataUrl?: string        // Local image before upload
   emergencyContacts?: EmergencyContact[]
   sosMessage?: string
 }
@@ -45,6 +48,22 @@ export function saveLocalAvatar(userId: string, avatarDataUrl: string) {
   writeRaw(userId, { ...current, avatarDataUrl })
 }
 
+/**
+ * Save all personal data locally for use as offline cache or when switching users.
+ * Called automatically after profile save.
+ */
+/**
+ * Save LOCAL-ONLY data (not from Backend).
+ * Do NOT use this for API data like fullName, nationalId, etc.
+ */
+export function saveLocalProfileData(
+  userId: string,
+  data: Partial<LocalProfileData>,
+) {
+  const current = readRaw(userId)
+  writeRaw(userId, { ...current, ...data })
+}
+
 export function saveLocalOverrides(
   userId: string,
   overrides: UpdateUserProfileBody,
@@ -77,18 +96,59 @@ export function getDisplayAvatar(
   return local ?? apiAvatar ?? undefined
 }
 
-export function mergeProfileWithLocal(profile: UserProfile): UserProfile {
+/**
+ * Merge profile with LOCAL-ONLY data.
+ * ✅ Local avatar (user's local edits) overrides API avatar
+ * ❌ API data (fullName, nationalId, etc.) always comes from Backend only
+ */
+export function mergeProfileAvatarOnly(profile: UserProfile): UserProfile {
   const local = readRaw(profile.id)
-  const overrides = local.overrides ?? {}
-
   return {
     ...profile,
-    fullName: overrides.fullName ?? profile.fullName,
-    nationalId: overrides.nationalId ?? profile.nationalId,
-    phoneNumber: overrides.phoneNumber ?? profile.phoneNumber,
-    region: overrides.region ?? profile.region,
+    // ✅ Local image takes precedence (pending upload)
     avatarUrl: local.avatarDataUrl ?? profile.avatarUrl ?? null,
+    // ❌ All other fields come ONLY from API, never from localStorage
   }
+}
+
+/** @deprecated Use mergeProfileAvatarOnly — kept for emergency contacts UI. */
+export function mergeProfileWithLocal(profile: UserProfile): UserProfile {
+  return mergeProfileAvatarOnly(profile)
+}
+
+/**
+ * Clear profile data for a specific user (used when switching to another user).
+ * Does NOT clear current user's data.
+ */
+export function clearUserProfileData(userId: string) {
+  if (typeof window === 'undefined' || !userId) return
+  localStorage.removeItem(storageKey(userId))
+}
+
+/**
+ * Get all stored user IDs (for clearing old user data on logout).
+ */
+export function getAllStoredUserIds(): string[] {
+  if (typeof window === 'undefined') return []
+  const ids: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(STORAGE_PREFIX)) {
+      const userId = key.slice(STORAGE_PREFIX.length)
+      if (userId) ids.push(userId)
+    }
+  }
+  return ids
+}
+
+export function clearAllLocalProfileData() {
+  if (typeof window === 'undefined') return
+  const keysToRemove: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key?.startsWith(STORAGE_PREFIX)) keysToRemove.push(key)
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key))
 }
 
 export async function readAvatarFile(file: File): Promise<string> {

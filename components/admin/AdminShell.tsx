@@ -26,10 +26,13 @@ export default function AdminShell({ activeNav = 'dashboard', children }: AdminS
     setNav(activeNav)
   }, [activeNav])
 
+  // التحقق من الصلاحيات: إذا لم يكن admin، انتقل إلى /logout بدلاً من /dashboard
   useEffect(() => {
     if (!isHydrated || isLoading) return
     if (!adminAllowed) {
-      router.replace('/dashboard')
+      // عند محاولة دخول admin بدون صلاحيات، انتقل مباشرة إلى logout
+      // بدلاً من /dashboard لتنظيف الجلسة بشكل صحيح
+      router.replace('/logout')
     }
   }, [isHydrated, isLoading, adminAllowed, router])
 

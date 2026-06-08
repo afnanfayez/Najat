@@ -1,4 +1,4 @@
-import type { UserProfile } from '@/schemas/userProfile'
+import type { UserProfile, AssistancePreferences } from '@/schemas/userProfile'
 import { normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
 
 function pickUserRecord(raw: unknown): Record<string, unknown> | null {
@@ -11,6 +11,19 @@ function pickUserRecord(raw: unknown): Record<string, unknown> | null {
     return r.user as Record<string, unknown>
   }
   return r
+}
+
+function parseAssistancePreferences(raw: unknown): AssistancePreferences | null {
+  if (!raw || typeof raw !== 'object') return null
+  const p = raw as Record<string, unknown>
+  return {
+    food: p.food === true,
+    medicine: p.medicine === true,
+    water: p.water === true,
+    clothes: p.clothes === true,
+    health: p.health === true,
+    transport: p.transport === true,
+  }
 }
 
 export function getExplicitApiRole(raw: unknown): UserRole | null {
@@ -32,6 +45,8 @@ export function mapUserProfile(raw: unknown): UserProfile | null {
   if (!id) return null
 
   const role = normalizeUserRole(u.role) ?? 'resident' // finalized in profileAPI.me via JWT
+
+  const assistancePrefs = parseAssistancePreferences(u.assistancePreferences)
 
   return {
     id,
@@ -80,6 +95,11 @@ export function mapUserProfile(raw: unknown): UserProfile | null {
       (typeof u.avatarUrl === 'string' ? u.avatarUrl : null) ??
       (typeof u.avatar === 'string' ? u.avatar : null) ??
       (typeof u.profileImage === 'string' ? u.profileImage : null),
+    assistancePreferences: assistancePrefs ?? undefined,
+    assistanceLocation:
+      typeof u.assistanceLocation === 'string' ? u.assistanceLocation : null,
+    assistanceRadius:
+      typeof u.assistanceRadius === 'number' ? u.assistanceRadius : null,
   }
 }
 

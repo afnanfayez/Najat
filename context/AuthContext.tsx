@@ -118,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onSessionChanged = () => {
       setUser(null)
+      setIsLoading(true)
       clearUserSessionCache(queryClient)
       refreshUser().catch(() => {})
     }

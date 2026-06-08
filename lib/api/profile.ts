@@ -2,7 +2,7 @@ import { request } from '@/lib/api/api'
 import { getToken } from '@/lib/api/auth'
 import { getUserRole } from '@/lib/auth/sessionRole'
 import { getRoleFromJwt, normalizeUserRole } from '@/lib/auth/roleUtils'
-import { mergeProfileWithLocal } from '@/lib/profile/localProfileStorage'
+import { mergeProfileAvatarOnly } from '@/lib/profile/localProfileStorage'
 import {
   getExplicitApiRole,
   mapUserProfile,
@@ -34,7 +34,7 @@ function resolveProfileRole(raw: unknown, profile: UserProfile): UserProfile['ro
 
 function finalizeProfile(raw: unknown, profile: UserProfile): UserProfile {
   const role = resolveProfileRole(raw, profile)
-  return mergeProfileWithLocal({ ...profile, role })
+  return mergeProfileAvatarOnly({ ...profile, role })
 }
 
 export const profileAPI = {
@@ -48,35 +48,13 @@ export const profileAPI = {
     })
   },
 
-  /** Tries server PATCH; on 403 merges local overrides so the UI still saves. */
-  async update(
-    id: string,
-    body: UpdateUserProfileBody,
-  ): Promise<ProfileUpdateResult> {
-    try {
-      await request(`${V1_ROOT}/users/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      })
-      const profile = await profileAPI.me()
-      return { profile, syncedWithServer: true }
-    } catch (err: unknown) {
-      const status =
-        err && typeof err === 'object' && 'status' in err
-          ? (err as { status?: number }).status
-          : undefined
-      if (status === 403) {
-        const raw = await request(`${V1_ROOT}/auth/me`)
-        const base = mapUserProfile(raw)
-        if (!base) {
-          throw { status: 500, message: 'تعذّر قراءة بيانات الملف الشخصي' }
-        }
-        return {
-          profile: finalizeProfile(raw, base),
-          syncedWithServer: false,
-        }
-      }
-      throw err
-    }
+  /** Updates the authenticated user's profile via PATCH /auth/me. */
+  async update(body: UpdateUserProfileBody): Promise<ProfileUpdateResult> {
+    await request(`${V1_ROOT}/auth/me`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+    const profile = await profileAPI.me()
+    return { profile, syncedWithServer: true }
   },
 }

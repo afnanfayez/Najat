@@ -1,5 +1,16 @@
 import { z } from 'zod'
 
+export const assistancePreferencesSchema = z.object({
+  food: z.boolean().default(false),
+  medicine: z.boolean().default(false),
+  water: z.boolean().default(false),
+  clothes: z.boolean().default(false),
+  health: z.boolean().default(false),
+  transport: z.boolean().default(false),
+})
+
+export type AssistancePreferences = z.infer<typeof assistancePreferencesSchema>
+
 export const userProfileSchema = z.object({
   id: z.string(),
   email: z.string(),
@@ -25,6 +36,9 @@ export const userProfileSchema = z.object({
   isVerified: z.boolean().optional(),
   isActive: z.boolean().optional(),
   avatarUrl: z.string().nullable().optional(),
+  assistancePreferences: assistancePreferencesSchema.nullable().optional(),
+  assistanceLocation: z.string().nullable().optional(),
+  assistanceRadius: z.coerce.number().nullable().optional(),
 })
 
 export type UserProfile = z.infer<typeof userProfileSchema>
@@ -46,6 +60,9 @@ export const updateUserProfileSchema = z.object({
   femalesCount: z.coerce.number().optional(),
   malesCount: z.coerce.number().optional(),
   region: z.string().optional(),
+  assistancePreferences: assistancePreferencesSchema.optional(),
+  assistanceLocation: z.string().optional(),
+  assistanceRadius: z.coerce.number().optional(),
 })
 
 export type UpdateUserProfileBody = z.infer<typeof updateUserProfileSchema>

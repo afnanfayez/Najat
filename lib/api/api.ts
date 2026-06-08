@@ -30,6 +30,11 @@ function buildHeaders(options: RequestInit): HeadersInit {
     merged.set('Authorization', `Bearer ${token}`)
   }
 
+  // Prevent browser and proxy caching of API calls
+  merged.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  merged.set('Pragma', 'no-cache')
+  merged.set('Expires', '0')
+
   return merged
 }
 
@@ -57,6 +62,7 @@ export async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${BASE_URL}${endpoint}`
 
   const config: RequestInit = {
+    cache: 'no-store', // Disable browser and Next.js fetch caching
     ...options,
     headers: buildHeaders(options),
   }

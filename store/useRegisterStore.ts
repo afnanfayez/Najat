@@ -4,6 +4,7 @@ import { authAPI } from '@/lib/api/api'
 import { extractAuthPayload } from '@/lib/api/extractAuth'
 import { saveToken } from '@/lib/api/auth'
 import { notifyAuthSessionChanged } from '@/lib/auth/authEvents'
+import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import { saveUserRole } from '@/lib/auth/sessionRole'
 import { toast } from 'sonner'
 
@@ -336,6 +337,7 @@ export const useRegisterStore = create<RegisterState>()(
           const res = await authAPI.register(payload)
           const { token, role: authRole } = extractAuthPayload(res)
           if (token) {
+            resetBrowserSession()
             saveToken(token)
             notifyAuthSessionChanged()
           }
@@ -371,6 +373,7 @@ export const useRegisterStore = create<RegisterState>()(
           const res = await authAPI.verify(payload)
           const { token, role: authRole } = extractAuthPayload(res)
           if (token) {
+            resetBrowserSession()
             saveToken(token)
             notifyAuthSessionChanged()
           }

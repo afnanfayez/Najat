@@ -4,10 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
-import {
-  saveLocalAvatar,
-  saveLocalOverrides,
-} from '@/lib/profile/localProfileStorage'
+import { saveLocalAvatar, saveLocalProfileData } from '@/lib/profile/localProfileStorage'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
 
@@ -35,13 +32,17 @@ export function useProfile() {
       if (!id) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
 
       const { avatarDataUrl, ...body } = payload
-      if (avatarDataUrl) saveLocalAvatar(id, avatarDataUrl)
-      if (Object.keys(body).length > 0) saveLocalOverrides(id, body)
+      
+      // ✅ Save ONLY local data (avatar before upload)
+      // ✅ API data (fullName, nationalId, etc.) goes to Backend only
+      if (avatarDataUrl) {
+        saveLocalProfileData(id, { avatarDataUrl })
+      }
 
-      return profileAPI.update(id, body)
+      return profileAPI.update(body)
     },
     onSuccess: async ({ profile }) => {
-      queryClient.setQueryData(getProfileQueryKey(), profile)
+      queryClient.setQueryData(getProfileQueryKey(token), profile)
       await refreshUser()
     },
   })
