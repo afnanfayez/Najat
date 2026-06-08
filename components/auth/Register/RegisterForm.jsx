@@ -30,7 +30,22 @@ const AppleAppStoreIcon = ({ size = 24 }) => (
 
 const RegisterForm = () => {
   const { step, goToStep, resetRegister, formData } = useRegisterStore()
-  
+  const [isOffline, setIsOffline] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOffline(!navigator.onLine)
+      const handleOnline = () => setIsOffline(false)
+      const handleOffline = () => setIsOffline(true)
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+      return () => {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     // If the user is on step 5 or 6 but hasn't even started (no name), reset to step 1
     if ((step === 5 || step === 6) && !formData.name) {
@@ -87,6 +102,12 @@ const RegisterForm = () => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
+            {isOffline && (
+              <div className="w-full max-w-[580px] bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 text-amber-200 text-center text-[13px] font-semibold flex items-center justify-center gap-2 animate-pulse mb-2">
+                <i className="bx bx-wifi-off text-[18px]"></i>
+                <span>أنت تعمل حالياً بدون اتصال بالإنترنت. يرجى التحقق من الشبكة للمتابعة.</span>
+              </div>
+            )}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"

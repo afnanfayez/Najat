@@ -65,8 +65,25 @@ const LoginForm = () => {
   } = useLoginStore()
   const { resetRegister } = useRegisterStore()
 
+  const [isOffline, setIsOffline] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOffline(!navigator.onLine)
+      const handleOnline = () => setIsOffline(false)
+      const handleOffline = () => setIsOffline(true)
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+      return () => {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
+    }
+  }, [])
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (isOffline) return
     if (isValid) {
       handleLoginSuccess()
     } else {
@@ -143,6 +160,12 @@ const LoginForm = () => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
+            {isOffline && (
+              <div className="w-full max-w-[580px] bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 text-amber-200 text-center text-[13px] font-semibold flex items-center justify-center gap-2 animate-pulse mb-2">
+                <i className="bx bx-wifi-off text-[18px]"></i>
+                <span>أنت تعمل حالياً بدون اتصال بالإنترنت. يرجى التحقق من الشبكة للمتابعة.</span>
+              </div>
+            )}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -280,11 +303,13 @@ const LoginForm = () => {
 
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isOffline}
                 className={`mx-auto mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[300px] sm:gap-[10px] ${
-                  isSubmitting
-                    ? 'bg-[#459F49] shadow-[#459F49]/20 hover:bg-[#3A8A3F]'
-                    : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6] sm:text-[20px]'
+                  isOffline
+                    ? 'bg-gray-500 cursor-not-allowed hover:bg-gray-500 shadow-none'
+                    : isSubmitting
+                      ? 'bg-[#459F49] shadow-[#459F49]/20 hover:bg-[#3A8A3F]'
+                      : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6] sm:text-[20px]'
                 }`}
                 style={{ lineHeight: '100%' }}
               >
@@ -293,6 +318,11 @@ const LoginForm = () => {
                     className="h-20 w-20 sm:h-24 sm:w-24"
                     style={{ width: '30px', height: '30px' }}
                   />
+                ) : isOffline ? (
+                  <>
+                    لا يوجد اتصال بالإنترنت
+                    <i className="bx bx-wifi-off text-[20px]" />
+                  </>
                 ) : (
                   <>
                     دخول

@@ -5,12 +5,18 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import PWARegister from "@/components/providers/PWARegister";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "App",
-  description: "Application",
+  title: "منصة نجاة للطوارئ",
+  description: "منصة نجاة للخدمات الإنسانية والطوارئ",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "نجاة",
+  },
 };
 
 export default function RootLayout({
@@ -22,8 +28,13 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable)}>
       <head>
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet' />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="نجاة" />
+        <link rel="apple-touch-icon" href="/assets/Logo1.png" />
       </head>
       <body>
+        <PWARegister />
         <TanStackProvider>
           <AuthProvider>
             {children}

@@ -11,6 +11,21 @@ const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
   const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors, prevStep } = useRegisterStore()
   const router = useRouter()
+  const [isOffline, setIsOffline] = useState(false)
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOffline(!navigator.onLine)
+      const handleOnline = () => setIsOffline(false)
+      const handleOffline = () => setIsOffline(true)
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+      return () => {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
+    }
+  }, [])
   
   React.useEffect(() => {
     clearErrors()
@@ -20,6 +35,7 @@ const TermsStep = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isOffline) return
     clearErrors()
     if (accepted) {
       // submitRegistration() is the ONLY place in the entire app that calls POST /register.
@@ -134,15 +150,17 @@ const TermsStep = () => {
         <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-3">
           <Button
             type="submit"
-            disabled={!accepted || isSubmitting}
+            disabled={!accepted || isSubmitting || isOffline}
             className={`flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${
-              accepted && !isSubmitting
-                ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
-                : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
+              isOffline
+                ? 'bg-gray-500 cursor-not-allowed hover:bg-gray-500 shadow-none'
+                : accepted && !isSubmitting
+                  ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
+                  : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
             }`}
             style={{ lineHeight: '100%' }}
           >
-            {isSubmitting ? 'جاري إنشاء الحساب...' : 'دخول'}
+            {isSubmitting ? 'جاري إنشاء الحساب...' : isOffline ? 'لا يوجد اتصال بالإنترنت' : 'دخول'}
           </Button>
 
           <Button
