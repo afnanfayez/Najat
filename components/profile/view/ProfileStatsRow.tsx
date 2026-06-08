@@ -4,14 +4,37 @@ import React from 'react'
 import { Droplet } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
+const PREF_LABELS: Record<string, string> = {
+  food: 'غذاء',
+  medicine: 'دواء',
+  water: 'ماء',
+  clothes: 'ملابس',
+  health: 'صحة',
+  transport: 'نقل',
+}
+
 export default function ProfileStatsRow() {
   const { user } = useAuth()
+
+  const activePrefs = Object.entries(user?.assistancePreferences || {})
+    .filter(([_, value]) => value === true)
+    .map(([key]) => PREF_LABELS[key] || key)
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
         <h3 className="text-blue-500 text-sm font-semibold mb-2">طلبات المساعدة</h3>
-        <span className="text-3xl font-bold text-slate-800">—</span>
+        {activePrefs.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+            {activePrefs.map((label, idx) => (
+              <span key={idx} className="bg-slate-50 text-slate-600 text-[11px] font-semibold px-2 py-1 rounded-md border border-slate-100">
+                {label}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-3xl font-bold text-slate-800">—</span>
+        )}
       </div>
       <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
         <h3 className="text-blue-500 text-sm font-semibold mb-2">جهة اتصال الطوارئ</h3>

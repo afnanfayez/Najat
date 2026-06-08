@@ -21,7 +21,7 @@ export type LocalProfileData = {
 }
 
 const STORAGE_PREFIX = 'najat_profile_local_'
-const MAX_AVATAR_BYTES = 800_000
+const MAX_AVATAR_BYTES = 5_000_000
 
 function storageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`
@@ -164,7 +164,7 @@ export async function readAvatarFile(file: File): Promise<string> {
     throw new Error('يرجى اختيار ملف صورة')
   }
   if (file.size > MAX_AVATAR_BYTES) {
-    throw new Error('حجم الصورة كبير جداً (الحد الأقصى 800KB)')
+    throw new Error('حجم الصورة كبير جداً (الحد الأقصى 5MB)')
   }
 
   return new Promise((resolve, reject) => {
