@@ -66,24 +66,188 @@ const LoginForm = () => {
   const { resetRegister } = useRegisterStore()
 
   const [isOffline, setIsOffline] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsOffline(!navigator.onLine)
-      const handleOnline = () => setIsOffline(false)
-      const handleOffline = () => setIsOffline(true)
+      const offline = !navigator.onLine
+      setIsOffline(offline)
+
+      const handleOnline = () => {
+        setIsOffline(false)
+      }
+      const handleOffline = () => {
+        setIsOffline(true)
+        toast.custom((t) => (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: '#DC2626',
+            color: '#FFFFFF',
+            borderRadius: '10px',
+            padding: '12px 20px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
+            width: 'max-content',
+            maxWidth: '90vw',
+            fontFamily: 'Cairo, sans-serif',
+            direction: 'rtl',
+          }}>
+            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
+            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              أنت تعمل حالياً بدون اتصال بالإنترنت
+            </span>
+          </div>
+        ), {
+          id: 'offline-status',
+          duration: 4000,
+          position: 'top-center',
+          unstyled: true,
+        })
+      }
       window.addEventListener('online', handleOnline)
       window.addEventListener('offline', handleOffline)
+
+      if (offline) {
+        toast.custom((t) => (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: '#DC2626',
+            color: '#FFFFFF',
+            borderRadius: '10px',
+            padding: '12px 20px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
+            width: 'max-content',
+            maxWidth: '90vw',
+            fontFamily: 'Cairo, sans-serif',
+            direction: 'rtl',
+          }}>
+            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
+            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              أنت تعمل حالياً بدون اتصال بالإنترنت
+            </span>
+          </div>
+        ), {
+          id: 'offline-status',
+          duration: 4000,
+          position: 'top-center',
+          unstyled: true,
+        })
+      }
+
+      const handleBeforeInstallPrompt = (e) => {
+        e.preventDefault()
+        setDeferredPrompt(e)
+
+        // Only show once per page session
+        if (sessionStorage.getItem('install-prompt-dismissed')) return
+
+        toast.custom((toastId) => (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'white',
+              border: '1px solid rgba(0,0,0,0.08)',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+              width: 'min(420px, 92vw)',
+              fontFamily: 'Cairo, sans-serif',
+            }}
+          >
+            {/* Left: Icon */}
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              background: '#EFF6FF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <i className="bx bx-download" style={{ fontSize: '22px', color: '#2496FF' }}></i>
+            </div>
+
+            {/* Middle: Text */}
+            <div style={{ flex: 1, minWidth: 0, direction: 'rtl' }}>
+              <div style={{ fontWeight: '700', fontSize: '14px', color: '#111' }}>يمكنك الآن تنزيل تطبيق نجاة</div>
+              <div style={{ fontSize: '12px', color: '#777', marginTop: '3px' }}>تجربة أسرع وإمكانية الاستخدام بدون إنترنت!</div>
+            </div>
+
+            {/* Right: Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flexShrink: 0 }}>
+              <button
+                onClick={async () => {
+                  toast.dismiss(toastId)
+                  e.prompt()
+                  const { outcome } = await e.userChoice
+                  if (outcome === 'accepted') {
+                    console.log('User accepted install')
+                  }
+                  setDeferredPrompt(null)
+                }}
+                style={{
+                  background: '#2496FF',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '7px 14px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'Cairo, sans-serif',
+                }}
+              >
+                تثبيت الآن
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(toastId)
+                  sessionStorage.setItem('install-prompt-dismissed', '1')
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  fontFamily: 'Cairo, sans-serif',
+                  padding: '2px 0',
+                }}
+              >
+                تخطي
+              </button>
+            </div>
+          </div>
+        ), {
+          id: 'install-prompt',
+          duration: 120000,
+          position: 'top-center',
+          unstyled: true,
+        })
+      }
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
       return () => {
         window.removeEventListener('online', handleOnline)
         window.removeEventListener('offline', handleOffline)
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       }
     }
   }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (isOffline) return
     if (isValid) {
       handleLoginSuccess()
     } else {
@@ -147,6 +311,7 @@ const LoginForm = () => {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
         <div className="absolute inset-0"></div>
       </div>
@@ -160,12 +325,6 @@ const LoginForm = () => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {isOffline && (
-              <div className="w-full max-w-[580px] bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 text-amber-200 text-center text-[13px] font-semibold flex items-center justify-center gap-2 animate-pulse mb-2">
-                <i className="bx bx-wifi-off text-[18px]"></i>
-                <span>أنت تعمل حالياً بدون اتصال بالإنترنت. يرجى التحقق من الشبكة للمتابعة.</span>
-              </div>
-            )}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -303,10 +462,10 @@ const LoginForm = () => {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || isOffline}
+                disabled={isSubmitting}
                 className={`mx-auto mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[300px] sm:gap-[10px] ${
                   isOffline
-                    ? 'bg-gray-500 cursor-not-allowed hover:bg-gray-500 shadow-none'
+                    ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700'
                     : isSubmitting
                       ? 'bg-[#459F49] shadow-[#459F49]/20 hover:bg-[#3A8A3F]'
                       : 'bg-[#2496FF] text-[18px] shadow-[#2496FF]/10 hover:bg-[#1C7ED6] sm:text-[20px]'
@@ -320,7 +479,7 @@ const LoginForm = () => {
                   />
                 ) : isOffline ? (
                   <>
-                    لا يوجد اتصال بالإنترنت
+                    دخول (وضع الأوفلاين)
                     <i className="bx bx-wifi-off text-[20px]" />
                   </>
                 ) : (
@@ -339,26 +498,22 @@ const LoginForm = () => {
               >
                 ليس لديك حساب؟{' '}
               </span>
-              <Link
-                href="/register"
-                onClick={() => resetRegister()}
+              <button
+                type="button"
+                onClick={() => {
+                  resetRegister()
+                  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                    window.location.href = '/register'
+                  } else {
+                    window.location.href = '/register'
+                  }
+                }}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >
                 إنشاء حساب جديد
-              </Link>
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                resetBrowserSession({ keepLoginEmail: true })
-                toast.success('تم مسح بيانات الجلسة السابقة — سجّل الدخول الآن')
-              }}
-              className="mt-2 text-center text-[11px] font-semibold text-white/50 underline-offset-2 transition-colors hover:text-white/80 hover:underline sm:text-[12px]"
-            >
-              مشكلة في الدخول؟ امسح بيانات الجلسة السابقة
-            </button>
 
             <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
               <Separator className="flex-1 bg-white" />

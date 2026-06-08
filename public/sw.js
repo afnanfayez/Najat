@@ -1,10 +1,10 @@
-const CACHE_NAME = 'najat-pwa-cache-v1';
+const CACHE_NAME = 'najat-pwa-cache-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/login',
   '/register',
   '/favicon.ico',
-  '/assets/Logo1.png',
+  '/assets/Logo1_cropped.png',
   '/assets/Logo2.png',
   '/assets/Logo3.png',
   '/assets/Photo1.png',
@@ -78,7 +78,7 @@ self.addEventListener('fetch', (event) => {
   // Cache-first with network fallback for static assets (_next/static, images, fonts, styles)
   const isStaticAsset =
     url.pathname.startsWith('/_next/static/') ||
-    url.pathname.startsWith('/_next/image/') ||
+    url.pathname.startsWith('/_next/image') ||
     url.pathname.startsWith('/assets/') ||
     url.pathname === '/favicon.ico' ||
     request.url.includes('unpkg.com') ||

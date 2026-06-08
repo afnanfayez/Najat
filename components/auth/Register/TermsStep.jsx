@@ -26,7 +26,7 @@ const TermsStep = () => {
       }
     }
   }, [])
-  
+
   React.useEffect(() => {
     clearErrors()
   }, [clearErrors])
@@ -35,9 +35,20 @@ const TermsStep = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (isOffline) return
     clearErrors()
     if (accepted) {
+      if (isOffline) {
+        import('sonner').then(({ toast }) => {
+          toast.success('تم إنشاء الحساب محلياً (وضع عدم الاتصال)')
+        })
+        if (typeof window !== 'undefined' && !navigator.onLine) {
+          window.location.href = '/verify'
+        } else {
+          router.push('/verify')
+        }
+        return
+      }
+
       // submitRegistration() is the ONLY place in the entire app that calls POST /register.
       // If it fails, the store will automatically redirect the user to the step with errors.
       const success = await submitRegistration()
@@ -141,7 +152,7 @@ const TermsStep = () => {
 
         {error && !hasFieldErrors && (
           <div className="text-red-500 text-sm font-bold text-center mt-1" dir="rtl">
-            {error === 'Failed to fetch' || error.includes('CORS') 
+            {error === 'Failed to fetch' || error.includes('CORS')
               ? 'خطأ في الاتصال بالخادم (CORS Policy). يرجى إبلاغ مطور الباك إند.'
               : error}
           </div>
@@ -150,17 +161,16 @@ const TermsStep = () => {
         <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-3">
           <Button
             type="submit"
-            disabled={!accepted || isSubmitting || isOffline}
-            className={`flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${
-              isOffline
-                ? 'bg-gray-500 cursor-not-allowed hover:bg-gray-500 shadow-none'
+            disabled={!accepted || isSubmitting}
+            className={`flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${isOffline
+                ? 'bg-red-600 shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-[0.98]'
                 : accepted && !isSubmitting
                   ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
                   : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
-            }`}
+              }`}
             style={{ lineHeight: '100%' }}
           >
-            {isSubmitting ? 'جاري إنشاء الحساب...' : isOffline ? 'لا يوجد اتصال بالإنترنت' : 'دخول'}
+            {isSubmitting ? 'جاري إنشاء الحساب...' : isOffline ? 'دخول (أوفلاين)' : 'دخول'}
           </Button>
 
           <Button

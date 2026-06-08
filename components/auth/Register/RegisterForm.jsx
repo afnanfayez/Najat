@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import Link from 'next/link'
 import StepOne from './StepOne'
 import StepTwo from './StepTwo'
 import StepThree from './StepThree'
@@ -12,6 +12,7 @@ import StepFour from './StepFour'
 import TermsStep from './TermsStep'
 import SuccessStep from './SuccessStep'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { toast } from 'sonner'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -34,11 +35,73 @@ const RegisterForm = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsOffline(!navigator.onLine)
+      const offline = !navigator.onLine
+      setIsOffline(offline)
+
       const handleOnline = () => setIsOffline(false)
-      const handleOffline = () => setIsOffline(true)
+      const handleOffline = () => {
+        setIsOffline(true)
+        toast.custom((t) => (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: '#DC2626',
+            color: '#FFFFFF',
+            borderRadius: '10px',
+            padding: '12px 20px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
+            width: 'max-content',
+            maxWidth: '90vw',
+            fontFamily: 'Cairo, sans-serif',
+            direction: 'rtl',
+          }}>
+            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
+            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              أنت تعمل حالياً بدون اتصال بالإنترنت
+            </span>
+          </div>
+        ), {
+          id: 'offline-status',
+          duration: 4000,
+          position: 'top-center',
+          unstyled: true,
+        })
+      }
       window.addEventListener('online', handleOnline)
       window.addEventListener('offline', handleOffline)
+
+      if (offline) {
+        toast.custom((t) => (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: '#DC2626',
+            color: '#FFFFFF',
+            borderRadius: '10px',
+            padding: '12px 20px',
+            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
+            width: 'max-content',
+            maxWidth: '90vw',
+            fontFamily: 'Cairo, sans-serif',
+            direction: 'rtl',
+          }}>
+            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
+            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
+              أنت تعمل حالياً بدون اتصال بالإنترنت
+            </span>
+          </div>
+        ), {
+          id: 'offline-status',
+          duration: 4000,
+          position: 'top-center',
+          unstyled: true,
+        })
+      }
+
       return () => {
         window.removeEventListener('online', handleOnline)
         window.removeEventListener('offline', handleOffline)
@@ -88,6 +151,7 @@ const RegisterForm = () => {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
         <div className="absolute inset-0"></div>
       </div>
@@ -102,12 +166,6 @@ const RegisterForm = () => {
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">
-            {isOffline && (
-              <div className="w-full max-w-[580px] bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 text-amber-200 text-center text-[13px] font-semibold flex items-center justify-center gap-2 animate-pulse mb-2">
-                <i className="bx bx-wifi-off text-[18px]"></i>
-                <span>أنت تعمل حالياً بدون اتصال بالإنترنت. يرجى التحقق من الشبكة للمتابعة.</span>
-              </div>
-            )}
             <div className="relative -mt-10 -mb-6 flex h-32 w-32 items-center justify-center sm:-mt-[50px] sm:-mb-[40px] sm:h-[200px] sm:w-[200px]">
               <Image
                 src="/assets/Logo1.png"
@@ -179,13 +237,14 @@ const RegisterForm = () => {
                 >
                   هل تمتلك فعلاً حساب؟{' '}
                 </span>
-                <Link
-                  href="/login"
+                <button
+                  type="button"
+                  onClick={() => window.location.href = '/login'}
                   className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                   style={{ color: '#FDB022', lineHeight: '100%' }}
                 >
                   تسجيل الدخول
-                </Link>
+                </button>
               </div>
 
               <div className="mx-auto flex w-full max-w-[580px] items-center gap-3 py-1 sm:gap-4">

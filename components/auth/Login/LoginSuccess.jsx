@@ -38,7 +38,11 @@ const LoginSuccess = () => {
       const destination = savedPath ?? routeForRole(role)
 
       resetLogin()
-      router.replace(destination)
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        window.location.href = destination
+      } else {
+        router.replace(destination)
+      }
     }
 
     redirectAfterLogin()
@@ -56,6 +60,7 @@ const LoginSuccess = () => {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
         <div className="absolute inset-0"></div>
       </div>

@@ -135,6 +135,24 @@ export const useLoginStore = create<LoginState>()(
           emailError: false,
           passwordError: false,
         })
+
+        // MOCK OFFLINE LOGIN
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          setTimeout(() => {
+            resetBrowserSession({ keepLoginEmail: true })
+            const fakeRole = 'citizen'
+            saveUserRole(fakeRole)
+            notifyAuthSessionChanged()
+            saveLoginRedirect(routeForRole(fakeRole))
+            set({
+              isSuccess: true,
+              isSubmitting: false,
+              postLoginRole: fakeRole,
+            })
+          }, 1000)
+          return
+        }
+
         try {
           const res = await authAPI.login({ email, password })
           const { token, role } = extractAuthPayload(res)

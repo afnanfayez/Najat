@@ -73,6 +73,7 @@ const LoginError = () => {
           fill
           className="object-cover"
           priority
+          unoptimized
         />
         <div className="absolute inset-0"></div>
       </div>
@@ -256,14 +257,17 @@ const LoginError = () => {
               >
                 ليس لديك حساب؟{' '}
               </span>
-              <Link
-                href="/register"
-                onClick={() => resetRegister()}
+              <button
+                type="button"
+                onClick={() => {
+                  resetRegister()
+                  window.location.href = '/register'
+                }}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >
                 إنشاء حساب جديد
-              </Link>
+              </button>
             </div>
 
             <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
