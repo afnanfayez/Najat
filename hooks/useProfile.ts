@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
-import { saveLocalAvatar, saveLocalProfileData } from '@/lib/profile/localProfileStorage'
+import { saveLocalAvatar, saveLocalProfileData, type LocalProfileData } from '@/lib/profile/localProfileStorage'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
 
@@ -31,15 +31,39 @@ export function useProfile() {
       const id = query.data?.id
       if (!id) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
 
-      const { avatarDataUrl, ...body } = payload
-      
-      // ✅ Save ONLY local data (avatar before upload)
-      // ✅ API data (fullName, nationalId, etc.) goes to Backend only
-      if (avatarDataUrl) {
-        saveLocalProfileData(id, { avatarDataUrl })
+      const {
+        avatarDataUrl,
+        assistancePreferences,
+        assistanceLocation,
+        assistanceRadius,
+        ...backendBody
+      } = payload
+
+      const localDataToSave: Partial<LocalProfileData> = {}
+      if (avatarDataUrl !== undefined) {
+        localDataToSave.avatarDataUrl = avatarDataUrl
+      }
+      if (assistancePreferences !== undefined) {
+        localDataToSave.assistancePreferences = assistancePreferences
+      }
+      if (assistanceLocation !== undefined) {
+        localDataToSave.assistanceLocation = assistanceLocation
+      }
+      if (assistanceRadius !== undefined) {
+        localDataToSave.assistanceRadius = assistanceRadius
       }
 
-      return profileAPI.update(body)
+      if (Object.keys(localDataToSave).length > 0) {
+        saveLocalProfileData(id, localDataToSave)
+      }
+
+      // If only local fields were updated, skip backend API call
+      if (Object.keys(backendBody).length === 0) {
+        const profile = await profileAPI.me()
+        return { profile, syncedWithServer: false }
+      }
+
+      return profileAPI.update(backendBody)
     },
     onSuccess: async ({ profile }) => {
       queryClient.setQueryData(getProfileQueryKey(token), profile)

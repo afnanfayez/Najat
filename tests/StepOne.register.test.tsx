@@ -27,6 +27,7 @@ describe('StepOne register', () => {
       formData: { name: '', email: '', phone: '' },
       updateFormData: mockUpdateFormData,
       nextStep: mockNextStep,
+      fieldErrors: {},
     } as never)
     vi.mocked(probeRegisterStepOne).mockClear()
     vi.mocked(probeRegisterStepOne).mockResolvedValue({ ok: true })

@@ -1,4 +1,4 @@
-import type { UpdateUserProfileBody, UserProfile } from '@/schemas/userProfile'
+import type { UpdateUserProfileBody, UserProfile, AssistancePreferences } from '@/schemas/userProfile'
 
 export type EmergencyContact = {
   id: string
@@ -14,6 +14,10 @@ export type LocalProfileData = {
   avatarDataUrl?: string        // Local image before upload
   emergencyContacts?: EmergencyContact[]
   sosMessage?: string
+  assistancePreferences?: AssistancePreferences
+  assistanceLocation?: string
+  assistanceRadius?: number
+  overrides?: UpdateUserProfileBody
 }
 
 const STORAGE_PREFIX = 'najat_profile_local_'
@@ -99,6 +103,7 @@ export function getDisplayAvatar(
 /**
  * Merge profile with LOCAL-ONLY data.
  * ✅ Local avatar (user's local edits) overrides API avatar
+ * ✅ Local assistance data (not supported by backend) is restored from localStorage
  * ❌ API data (fullName, nationalId, etc.) always comes from Backend only
  */
 export function mergeProfileAvatarOnly(profile: UserProfile): UserProfile {
@@ -107,7 +112,10 @@ export function mergeProfileAvatarOnly(profile: UserProfile): UserProfile {
     ...profile,
     // ✅ Local image takes precedence (pending upload)
     avatarUrl: local.avatarDataUrl ?? profile.avatarUrl ?? null,
-    // ❌ All other fields come ONLY from API, never from localStorage
+    // ✅ Local assistance settings
+    assistancePreferences: local.assistancePreferences ?? profile.assistancePreferences ?? null,
+    assistanceLocation: local.assistanceLocation ?? profile.assistanceLocation ?? null,
+    assistanceRadius: local.assistanceRadius ?? profile.assistanceRadius ?? null,
   }
 }
 
