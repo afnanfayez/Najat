@@ -1,14 +1,12 @@
-/**
- * sw.js — Najat PWA Service Worker
- *
- * يدعم:
- *  • Cache-first للأصول الثابتة والصفحات
- *  • تسجيل الدخول أوفلاين (بيانات محفوظة في IndexedDB)
- *  • Background Sync عند عودة الإنترنت
- */
-
-const CACHE_NAME = 'najat-pwa-cache-v8';
-const AUTH_ROUTES = ['/login', '/logout', '/register', '/dashboard', '/admin', '/volunteer'];
+const CACHE_NAME = 'najat-pwa-cache-v9'
+const AUTH_ROUTES = [
+  '/login',
+  '/logout',
+  '/register',
+  '/dashboard',
+  '/admin',
+  '/volunteer',
+]
 const ASSETS_TO_CACHE = [
   '/',
   '/login',
@@ -25,7 +23,7 @@ const ASSETS_TO_CACHE = [
   '/assets/Photo1.png',
   'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css',
   'https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2',
-];
+]
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -33,35 +31,35 @@ const ASSETS_TO_CACHE = [
 
 async function cachePageAssets(cache, pagePath) {
   try {
-    const response = await fetch(pagePath);
-    if (!response.ok) return;
-    await cache.put(pagePath, response.clone());
-    const html = await response.text();
+    const response = await fetch(pagePath)
+    if (!response.ok) return
+    await cache.put(pagePath, response.clone())
+    const html = await response.text()
     const assetUrls = [
       ...html.matchAll(/(?:src|href)="([^"]*\/_next\/[^"]+)"/g),
       ...html.matchAll(/(?:src|href)="(\/_next\/[^"]+)"/g),
     ]
       .map((match) => {
         try {
-          return new URL(match[1], self.location.origin).toString();
+          return new URL(match[1], self.location.origin).toString()
         } catch {
-          return null;
+          return null
         }
       })
-      .filter(Boolean);
+      .filter(Boolean)
 
     await Promise.all(
       [...new Set(assetUrls)].map((assetUrl) =>
         cache.add(assetUrl).catch(() => undefined),
       ),
-    );
+    )
   } catch {
     // ignore precache failures for individual pages
   }
 }
 
 async function precacheAuthPages(cache) {
-  await Promise.all(AUTH_ROUTES.map((route) => cachePageAssets(cache, route)));
+  await Promise.all(AUTH_ROUTES.map((route) => cachePageAssets(cache, route)))
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -79,8 +77,8 @@ self.addEventListener('install', (event) => {
           .then(() => precacheAuthPages(cache)),
       )
       .then(() => self.skipWaiting()),
-  );
-});
+  )
+})
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Activate
@@ -94,29 +92,29 @@ self.addEventListener('activate', (event) => {
         Promise.all(
           cacheNames.map((cache) => {
             if (cache !== CACHE_NAME) {
-              return caches.delete(cache);
+              return caches.delete(cache)
             }
           }),
         ),
       )
       .then(() => self.clients.claim()),
-  );
-});
+  )
+})
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Messages from client
 // ──────────────────────────────────────────────────────────────────────────────
 
 self.addEventListener('message', (event) => {
-  const { type, path } = event.data ?? {};
+  const { type, path } = event.data ?? {}
 
   // Precache a specific route (called after login)
   if (type === 'PRECACHE_ROUTE') {
-    if (typeof path !== 'string' || !path.startsWith('/')) return;
+    if (typeof path !== 'string' || !path.startsWith('/')) return
     event.waitUntil(
       caches.open(CACHE_NAME).then((cache) => cachePageAssets(cache, path)),
-    );
-    return;
+    )
+    return
   }
 
   // Client requests a background sync registration
@@ -125,16 +123,16 @@ self.addEventListener('message', (event) => {
       event.waitUntil(
         self.registration.sync.register('najat-session-sync').catch(() => {
           // Background Sync API not supported → notify client directly
-          notifyClientsSync();
+          notifyClientsSync()
         }),
-      );
+      )
     } else {
       // Fallback: notify clients immediately
-      notifyClientsSync();
+      notifyClientsSync()
     }
-    return;
+    return
   }
-});
+})
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Background Sync — يُطلَق عند عودة الإنترنت تلقائياً
@@ -142,21 +140,24 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('sync', (event) => {
   if (event.tag === 'najat-session-sync') {
-    event.waitUntil(handleSessionSync());
+    event.waitUntil(handleSessionSync())
   }
-});
+})
 
 async function handleSessionSync() {
   // Notify all open windows to re-sync their session with the server
-  await notifyClientsSync();
+  await notifyClientsSync()
 }
 
 async function notifyClientsSync() {
   try {
-    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const clients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    })
     clients.forEach((client) => {
-      client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGERED' });
-    });
+      client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGERED' })
+    })
   } catch {
     // ignore
   }
@@ -175,65 +176,58 @@ function isStaticAsset(url) {
     url.href.includes('unpkg.com') ||
     url.href.includes('gstatic.com') ||
     url.href.includes('google-fonts')
-  );
+  )
 }
 
 function fallbackDocument(pathname) {
-  if (pathname.startsWith('/register')) return '/register';
-  if (pathname.startsWith('/admin')) return '/admin';
-  if (pathname.startsWith('/volunteer')) return '/volunteer';
-  if (pathname.startsWith('/dashboard')) return '/dashboard';
-  if (pathname.startsWith('/logout')) return '/logout';
-  return '/login';
+  if (pathname.startsWith('/register')) return '/register'
+  if (pathname.startsWith('/admin')) return '/admin'
+  if (pathname.startsWith('/volunteer')) return '/volunteer'
+  if (pathname.startsWith('/dashboard')) return '/dashboard'
+  if (pathname.startsWith('/logout')) return '/logout'
+  return '/login'
 }
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const { request } = event
+  const url = new URL(request.url)
 
-  if (request.method !== 'GET') return;
+  if (request.method !== 'GET') return
   if (url.origin !== self.location.origin) {
     if (!url.href.includes('unpkg.com') && !url.href.includes('gstatic.com')) {
-      return;
+      return
     }
   }
 
   // Never intercept API calls — let them go to the network
   if (url.pathname.startsWith('/v1/') || url.pathname.startsWith('/api/')) {
-    return;
+    return
   }
 
   // Navigation requests (HTML pages)
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        const networkFetch = fetch(request)
-          .then((response) => {
-            if (response && response.status === 200) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, clone);
-                cachePageAssets(cache, url.pathname);
-              });
-            }
-            return response;
-          })
-          .catch(() => null);
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clone)
+              cachePageAssets(cache, url.pathname)
+            })
+          }
+          return response
+        })
+        .catch(async () => {
+          const cachedResponse =
+            (await caches.match(request)) ||
+            (await caches.match(fallbackDocument(url.pathname))) ||
+            (await caches.match('/login'))
 
-        if (cachedResponse) {
-          networkFetch.catch(() => undefined);
-          return cachedResponse;
-        }
-
-        return networkFetch.then(
-          (response) =>
-            response ||
-            caches.match(fallbackDocument(url.pathname)) ||
-            caches.match('/login'),
-        );
-      }),
-    );
-    return;
+          return cachedResponse
+        }),
+    )
+    return
   }
 
   // Static assets (cache-first with background update)
@@ -243,24 +237,24 @@ self.addEventListener('fetch', (event) => {
         const networkFetch = fetch(request)
           .then((networkResponse) => {
             if (networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
+              const responseClone = networkResponse.clone()
               caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, responseClone);
-              });
+                cache.put(request, responseClone)
+              })
             }
-            return networkResponse;
+            return networkResponse
           })
-          .catch(() => null);
+          .catch(() => null)
 
         if (cachedResponse) {
-          networkFetch.catch(() => undefined);
-          return cachedResponse;
+          networkFetch.catch(() => undefined)
+          return cachedResponse
         }
 
-        return networkFetch.then((response) => response || cachedResponse);
+        return networkFetch.then((response) => response || cachedResponse)
       }),
-    );
-    return;
+    )
+    return
   }
 
   // _next/* chunks
@@ -272,15 +266,17 @@ self.addEventListener('fetch', (event) => {
           fetch(request)
             .then((response) => {
               if (response.status === 200) {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                const clone = response.clone()
+                caches
+                  .open(CACHE_NAME)
+                  .then((cache) => cache.put(request, clone))
               }
-              return response;
+              return response
             })
             .catch(() => caches.match('/login')),
       ),
-    );
-    return;
+    )
+    return
   }
 
   // Everything else
@@ -291,12 +287,12 @@ self.addEventListener('fetch', (event) => {
         fetch(request)
           .then((response) => {
             if (response.status === 200) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+              const clone = response.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
             }
-            return response;
+            return response
           })
           .catch(() => undefined),
     ),
-  );
-});
+  )
+})

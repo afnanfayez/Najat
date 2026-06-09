@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import TanStackProvider from "@/components/providers/TanStackProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -17,6 +17,12 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "نجاة",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
