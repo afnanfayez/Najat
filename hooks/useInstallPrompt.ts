@@ -21,29 +21,20 @@ export function useInstallPrompt() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const isMobile =
-      window.matchMedia('(max-width: 768px)').matches ||
-      /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
-
     // 1. Check if already running in standalone (installed) mode
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as NavigatorWithStandalone).standalone === true
 
-    // 2. Check if the user previously skipped the installation
-    const isSkipped = localStorage.getItem('najat_pwa_install_skipped') === 'true'
-
-    if (!isMobile || isStandalone || isSkipped) {
+    if (isStandalone) {
       return
     }
 
     const triggerToast = (event: BeforeInstallPromptEvent | null) => {
-      if (promptShownRef.current) return
+      if (promptShownRef.current && !event) return
       promptShownRef.current = true
 
-      showInstallToast(event, () => {
-        localStorage.setItem('najat_pwa_install_skipped', 'true')
-      })
+      showInstallToast(event)
     }
 
     // Capture native install prompt event
@@ -56,7 +47,6 @@ export function useInstallPrompt() {
     }
 
     const handleAppInstalled = () => {
-      localStorage.setItem('najat_pwa_install_skipped', 'true')
       deferredPromptRef.current = null
       delete (window as WindowWithDeferredPrompt).deferredNajatPrompt
     }

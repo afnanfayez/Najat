@@ -11,10 +11,7 @@ type WindowWithDeferredPrompt = Window & {
   deferredNajatPrompt?: BeforeInstallPromptEvent
 }
 
-export function showInstallToast(
-  event: BeforeInstallPromptEvent | null,
-  onDismiss: () => void,
-) {
+export function showInstallToast(event: BeforeInstallPromptEvent | null) {
   const canPrompt = Boolean(event)
 
   toast.custom(
@@ -26,12 +23,12 @@ export function showInstallToast(
 
         <div className="install-prompt-card__text">
           <div className="install-prompt-card__title">
-            إضافة نجاة للشاشة الرئيسية
+            تثبيت تطبيق نجاة على جهازك
           </div>
           <div className="install-prompt-card__subtitle">
             {canPrompt
-              ? 'ثبّت التطبيق لاستخدام أسرع من الجوال.'
-              : 'من قائمة المتصفح اختر إضافة إلى الشاشة الرئيسية.'}
+              ? 'ثبّت التطبيق على جهازك لاستخدام أسرع والوصول للخدمات حتى بدون إنترنت.'
+              : 'ثبّت التطبيق من قائمة المتصفح لاستخدام أسرع والوصول للخدمات حتى بدون إنترنت.'}
           </div>
         </div>
 
@@ -48,7 +45,6 @@ export function showInstallToast(
                   : null)
 
               if (!activePrompt) {
-                onDismiss()
                 return
               }
 
@@ -60,14 +56,13 @@ export function showInstallToast(
               }
             }}
           >
-            {canPrompt ? 'تثبيت الآن' : 'حسناً'}
+            تثبيت
           </button>
           <button
             type="button"
             className="install-prompt-card__skip-btn"
             onClick={() => {
               toast.dismiss(toastId)
-              onDismiss()
             }}
           >
             تخطي
