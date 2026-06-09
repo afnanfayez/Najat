@@ -19,10 +19,10 @@ export default function LogoutPage() {
     performSessionCleanup()
     resetLogin()
     const timer = setTimeout(() => {
-      router.push('/login')
+      window.location.replace('/login')
     }, 3000)
     return () => clearTimeout(timer)
-  }, [router, resetLogin, performSessionCleanup])
+  }, [resetLogin, performSessionCleanup])
 
   return (
     <div

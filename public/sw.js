@@ -1,8 +1,18 @@
-const CACHE_NAME = 'najat-pwa-cache-v6';
-const AUTH_ROUTES = ['/login', '/register', '/dashboard', '/admin', '/volunteer'];
+/**
+ * sw.js — Najat PWA Service Worker
+ *
+ * يدعم:
+ *  • Cache-first للأصول الثابتة والصفحات
+ *  • تسجيل الدخول أوفلاين (بيانات محفوظة في IndexedDB)
+ *  • Background Sync عند عودة الإنترنت
+ */
+
+const CACHE_NAME = 'najat-pwa-cache-v8';
+const AUTH_ROUTES = ['/login', '/logout', '/register', '/dashboard', '/admin', '/volunteer'];
 const ASSETS_TO_CACHE = [
   '/',
   '/login',
+  '/logout',
   '/register',
   '/dashboard',
   '/admin',
@@ -16,6 +26,10 @@ const ASSETS_TO_CACHE = [
   'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css',
   'https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2',
 ];
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
 
 async function cachePageAssets(cache, pagePath) {
   try {
@@ -50,6 +64,10 @@ async function precacheAuthPages(cache) {
   await Promise.all(AUTH_ROUTES.map((route) => cachePageAssets(cache, route)));
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Install
+// ──────────────────────────────────────────────────────────────────────────────
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -64,15 +82,9 @@ self.addEventListener('install', (event) => {
   );
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data?.type !== 'PRECACHE_ROUTE') return
-  const path = event.data.path
-  if (typeof path !== 'string' || !path.startsWith('/')) return
-
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cachePageAssets(cache, path)),
-  )
-})
+// ──────────────────────────────────────────────────────────────────────────────
+// Activate
+// ──────────────────────────────────────────────────────────────────────────────
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -91,6 +103,69 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Messages from client
+// ──────────────────────────────────────────────────────────────────────────────
+
+self.addEventListener('message', (event) => {
+  const { type, path } = event.data ?? {};
+
+  // Precache a specific route (called after login)
+  if (type === 'PRECACHE_ROUTE') {
+    if (typeof path !== 'string' || !path.startsWith('/')) return;
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) => cachePageAssets(cache, path)),
+    );
+    return;
+  }
+
+  // Client requests a background sync registration
+  if (type === 'REGISTER_BACKGROUND_SYNC') {
+    if (self.registration && 'sync' in self.registration) {
+      event.waitUntil(
+        self.registration.sync.register('najat-session-sync').catch(() => {
+          // Background Sync API not supported → notify client directly
+          notifyClientsSync();
+        }),
+      );
+    } else {
+      // Fallback: notify clients immediately
+      notifyClientsSync();
+    }
+    return;
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Background Sync — يُطلَق عند عودة الإنترنت تلقائياً
+// ──────────────────────────────────────────────────────────────────────────────
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'najat-session-sync') {
+    event.waitUntil(handleSessionSync());
+  }
+});
+
+async function handleSessionSync() {
+  // Notify all open windows to re-sync their session with the server
+  await notifyClientsSync();
+}
+
+async function notifyClientsSync() {
+  try {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    clients.forEach((client) => {
+      client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGERED' });
+    });
+  } catch {
+    // ignore
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Fetch — Cache Strategy
+// ──────────────────────────────────────────────────────────────────────────────
+
 function isStaticAsset(url) {
   return (
     url.pathname.startsWith('/_next/static/') ||
@@ -108,6 +183,7 @@ function fallbackDocument(pathname) {
   if (pathname.startsWith('/admin')) return '/admin';
   if (pathname.startsWith('/volunteer')) return '/volunteer';
   if (pathname.startsWith('/dashboard')) return '/dashboard';
+  if (pathname.startsWith('/logout')) return '/logout';
   return '/login';
 }
 
@@ -122,10 +198,12 @@ self.addEventListener('fetch', (event) => {
     }
   }
 
+  // Never intercept API calls — let them go to the network
   if (url.pathname.startsWith('/v1/') || url.pathname.startsWith('/api/')) {
     return;
   }
 
+  // Navigation requests (HTML pages)
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
@@ -158,6 +236,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Static assets (cache-first with background update)
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
@@ -184,6 +263,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // _next/* chunks
   if (url.pathname.startsWith('/_next/')) {
     event.respondWith(
       caches.match(request).then(
@@ -203,6 +283,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Everything else
   event.respondWith(
     caches.match(request).then(
       (cached) =>

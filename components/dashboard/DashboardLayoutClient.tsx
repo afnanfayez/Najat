@@ -53,6 +53,7 @@ export default function DashboardLayoutClient({
     }
 
     if (isOffline) {
+      // هذه الصفحات تحتاج بيانات حية من السيرفر — لا تعمل أوفلاين
       const isOnlineOnlyRoute =
         pathname.startsWith('/hospitals') ||
         pathname.startsWith('/clinics') ||
@@ -61,9 +62,8 @@ export default function DashboardLayoutClient({
         pathname.startsWith('/pharmacies') ||
         pathname.startsWith('/humanitarian-aid') ||
         pathname.startsWith('/health-guide') ||
-        pathname.startsWith('/maps') ||
-        pathname.startsWith('/volunteer') ||
-        pathname.startsWith('/admin')
+        pathname.startsWith('/maps')
+        // ملاحظة: /admin و /volunteer مدعومان أوفلاين بعد تسجيل الدخول
 
       if (isOnlineOnlyRoute) {
         toast.error('هذه الصفحة تتطلب اتصالاً بالإنترنت')
@@ -72,11 +72,12 @@ export default function DashboardLayoutClient({
     }
   }, [isHydrated, isLoading, isOffline, pathname, router])
 
-  const setNav = useCallback(
+    const setNav = useCallback(
     (id: string) => {
       setIsMobileMenuOpen(false)
       if (isOffline) {
-        const isOnlineOnly = ['health', 'humanaid', 'guide', 'maps', 'admin'].includes(id)
+        // هذه الخدمات تحتاج بيانات حية — /admin و /volunteer مدعومان أوفلاين
+        const isOnlineOnly = ['health', 'humanaid', 'guide', 'maps'].includes(id)
         if (isOnlineOnly) {
           toast.error('هذه الخدمة تتطلب اتصالاً بالإنترنت')
           return

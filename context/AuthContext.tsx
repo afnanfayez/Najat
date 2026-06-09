@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      const cachedProfile = getOfflineCachedProfile()
+      const cachedProfile = await getOfflineCachedProfile()
       if (cachedProfile) {
         setUser(cachedProfile)
         saveUserRole(cachedProfile.role)
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(profile)
       saveUserRole(profile.role)
-      updateOfflineLoginProfile(profile)
+      await updateOfflineLoginProfile(profile)
     } catch (err: unknown) {
       if (seq !== refreshSeqRef.current) return
       if (getToken() !== tokenAtStart) return
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (status === 401) {
         logout()
       } else {
-        const cachedProfile = getOfflineCachedProfile()
+        const cachedProfile = await getOfflineCachedProfile()
         if (cachedProfile) {
           setUser(cachedProfile)
           saveUserRole(cachedProfile.role)
@@ -157,11 +157,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser().catch(() => {})
     }
 
+    // Background Sync: يُطلَق من PWARegister عندما يُبلّغ SW بعودة الإنترنت
+    const onBackgroundSync = () => {
+      const token = getToken()
+      if (!token) return // لا جلسة نشطة — لا حاجة للمزامنة
+      refreshUser().catch(() => {})
+    }
+
     window.addEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
     window.addEventListener('storage', onStorage)
+    window.addEventListener('najat:session-refresh', onBackgroundSync)
     return () => {
       window.removeEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
       window.removeEventListener('storage', onStorage)
+      window.removeEventListener('najat:session-refresh', onBackgroundSync)
     }
   }, [queryClient, refreshUser])
 
