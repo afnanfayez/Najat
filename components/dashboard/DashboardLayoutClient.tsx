@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext'
 import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import { DashboardShellContext } from './DashboardShellContext'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { toast } from 'sonner'
 
 function activeNavFromRoute(pathname: string, tab: string | null): string {
   if (isHealthFacilityPath(pathname)) return 'health'
@@ -39,19 +41,48 @@ export default function DashboardLayoutClient({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const { user, role, isLoading, isHydrated, logout } = useAuth()
+  const { isOffline } = useOnlineStatus()
 
-  // Auth guard — only redirect after hydration is complete AND loading is done
+  // Auth guard & Offline guard — only redirect after hydration is complete AND loading is done
   useEffect(() => {
     if (!isHydrated) return      // wait for client-side hydration
     if (isLoading) return        // wait for auth check to finish
     if (!getToken()) {
       router.replace('/login')
+      return
     }
-  }, [isHydrated, isLoading, router])
+
+    if (isOffline) {
+      const isOnlineOnlyRoute =
+        pathname.startsWith('/hospitals') ||
+        pathname.startsWith('/clinics') ||
+        pathname.startsWith('/dental-clinics') ||
+        pathname.startsWith('/labs') ||
+        pathname.startsWith('/pharmacies') ||
+        pathname.startsWith('/humanitarian-aid') ||
+        pathname.startsWith('/health-guide') ||
+        pathname.startsWith('/maps') ||
+        pathname.startsWith('/volunteer') ||
+        pathname.startsWith('/admin')
+
+      if (isOnlineOnlyRoute) {
+        toast.error('هذه الصفحة تتطلب اتصالاً بالإنترنت')
+        router.replace('/dashboard')
+      }
+    }
+  }, [isHydrated, isLoading, isOffline, pathname, router])
 
   const setNav = useCallback(
     (id: string) => {
       setIsMobileMenuOpen(false)
+      if (isOffline) {
+        const isOnlineOnly = ['health', 'humanaid', 'guide', 'maps', 'admin'].includes(id)
+        if (isOnlineOnly) {
+          toast.error('هذه الخدمة تتطلب اتصالاً بالإنترنت')
+          return
+        }
+      }
+
       if (id === 'home') {
         router.replace('/dashboard', { scroll: false })
         return
@@ -88,7 +119,7 @@ export default function DashboardLayoutClient({
         scroll: false,
       })
     },
-    [router],
+    [router, isOffline],
   )
 
   const handleLogout = useCallback(() => {

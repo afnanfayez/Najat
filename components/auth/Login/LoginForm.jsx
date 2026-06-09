@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, EyeOff, LogIn, CheckCircle2, WifiOff } from 'lucide-react'
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Card } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 import LoginSuccess from './LoginSuccess'
 import LoginError from './LoginError'
@@ -68,6 +69,15 @@ const LoginForm = () => {
 
   const { isOffline } = useOnlineStatus()
   useInstallPrompt()
+
+  useEffect(() => {
+    if (isOffline && (isForgot || isCodeSent || isResetting)) {
+      setIsForgot(false)
+      setIsCodeSent(false)
+      setIsResetting(false)
+      toast.error('تمت العودة لصفحة تسجيل الدخول لعدم وجود اتصال بالإنترنت')
+    }
+  }, [isOffline, isForgot, isCodeSent, isResetting, setIsForgot, setIsCodeSent, setIsResetting])
 
   const handleSubmit = (e) => {
     e.preventDefault()

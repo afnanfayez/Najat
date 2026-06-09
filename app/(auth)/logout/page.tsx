@@ -8,17 +8,21 @@ import { CheckCircle2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
 
+import { useAuth } from '@/context/AuthContext'
+
 export default function LogoutPage() {
   const router = useRouter()
   const resetLogin = useLoginStore((s) => s.resetLogin)
+  const { performSessionCleanup } = useAuth()
 
   useEffect(() => {
+    performSessionCleanup()
     resetLogin()
     const timer = setTimeout(() => {
       router.push('/login')
     }, 3000)
     return () => clearTimeout(timer)
-  }, [router, resetLogin])
+  }, [router, resetLogin, performSessionCleanup])
 
   return (
     <div

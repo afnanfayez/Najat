@@ -11,6 +11,8 @@ import { useRegisterStore } from '@/store/useRegisterStore'
 import { registerStepOneSchema } from '@/schemas/registerStepOne'
 import { showRegisterOfflineToast } from '@/lib/auth/offlineToasts'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { probeRegisterStepOne } from '@/lib/auth/probeRegisterStepOne'
+import { toast } from 'sonner'
 
 const StepOne = () => {
   const { formData, updateFormData, nextStep, fieldErrors } = useRegisterStore()
@@ -47,18 +49,39 @@ const StepOne = () => {
     return null
   }
 
-  const onValid = (values) => {
+  const onValid = async (values) => {
     if (isOffline) {
       showRegisterOfflineToast()
       return
     }
 
-    updateFormData({
-      name: values.name.trim(),
-      phone: values.phone.trim(),
-      email: values.email.trim(),
-    })
-    nextStep()
+    try {
+      const res = await probeRegisterStepOne({
+        name: values.name.trim(),
+        phone: values.phone.trim(),
+        email: values.email.trim(),
+      })
+
+      if (!res.ok) {
+        toast.error(res.message || 'هذا البريد أو الجوال مستخدم بالفعل')
+        if (res.clearEmail) {
+          reset({ ...values, email: '' })
+        }
+        if (res.clearPhone) {
+          reset({ ...values, phone: '' })
+        }
+        return
+      }
+
+      updateFormData({
+        name: values.name.trim(),
+        phone: values.phone.trim(),
+        email: values.email.trim(),
+      })
+      nextStep()
+    } catch {
+      // ignore
+    }
   }
 
   return (

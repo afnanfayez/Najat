@@ -9,12 +9,14 @@ import { Card } from '@/components/ui/card'
 import { useRegisterStore } from '@/store/useRegisterStore'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 const VerifyForm = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState(false)
   const inputs = useRef([])
   const router = useRouter()
+  const { isOffline } = useOnlineStatus()
   const {
     formData,
     verifyAccount,
@@ -29,6 +31,13 @@ const VerifyForm = () => {
       router.push('/register')
     }
   }, [formData.email, router])
+
+  useEffect(() => {
+    if (isOffline) {
+      toast.error('التحقق من الحساب يتطلب اتصالاً بالإنترنت')
+      router.replace('/login')
+    }
+  }, [isOffline, router])
 
   useEffect(() => {
     if (inputs.current[0]) {

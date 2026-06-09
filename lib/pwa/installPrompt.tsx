@@ -8,7 +8,7 @@ export type BeforeInstallPromptEvent = Event & {
 }
 
 export function showInstallToast(
-  event: BeforeInstallPromptEvent,
+  event: BeforeInstallPromptEvent | null,
   onDismiss: () => void,
 ) {
   toast.custom(
@@ -31,8 +31,25 @@ export function showInstallToast(
             className="install-prompt-card__install-btn"
             onClick={async () => {
               toast.dismiss(toastId)
-              await event.prompt()
-              await event.userChoice
+              if (event) {
+                await event.prompt()
+                await event.userChoice
+              } else {
+                const isIOS =
+                  /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+                  !(window as any).MSStream
+                if (isIOS) {
+                  toast.info(
+                    'لتثبيت التطبيق على iOS: اضغط على زر المشاركة ⎋ في Safari ثم اختر "إضافة إلى الصفحة الرئيسية" ⊞',
+                    { position: 'top-center', duration: 8000 },
+                  )
+                } else {
+                  toast.info(
+                    'لتثبيت التطبيق: اضغط على قائمة المتصفح (⋮) ثم اختر "تثبيت" أو "إضافة إلى الشاشة الرئيسية"',
+                    { position: 'top-center', duration: 8000 },
+                  )
+                }
+              }
             }}
           >
             تثبيت الآن

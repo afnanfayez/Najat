@@ -21,36 +21,35 @@ const LoginSuccess = () => {
   const postLoginRole = useLoginStore((s) => s.postLoginRole)
   const { refreshUser } = useAuth()
   const queryClient = useQueryClient()
-  const didRedirect = useRef(false)
+  const destinationRef = useRef(null)
 
   useEffect(() => {
-    if (didRedirect.current) return
-    didRedirect.current = true
-
-    async function redirectAfterLogin() {
-      // Determine destination immediately — don't wait for refreshUser to avoid blocking
+    if (!destinationRef.current) {
       const savedPath = consumeLoginRedirect()
       const role = postLoginRole ?? getCurrentAuthRole()
-      const destination = savedPath ?? routeForRole(role)
-
-      void precacheAppRoute(destination)
-
-      // Fire refreshUser in background to update AuthContext cache
-      // but don't await it — redirect happens regardless
-      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
-      if (!isOffline) {
-        clearUserSessionCache(queryClient)
-        refreshUser().catch(() => {/* ignore — token is already saved */})
-      }
-
-      resetLogin()
-
-      // Small delay to allow AuthContext to pick up the new token before navigation
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      window.location.assign(destination)
+      destinationRef.current = savedPath ?? routeForRole(role)
     }
 
-    redirectAfterLogin()
+    const destination = destinationRef.current
+
+    void precacheAppRoute(destination)
+
+    // Fire refreshUser in background to update AuthContext cache
+    // but don't await it — redirect happens regardless.
+    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+    if (!isOffline) {
+      clearUserSessionCache(queryClient)
+      refreshUser().catch(() => {/* ignore — token is already saved */})
+    }
+
+    const timer = window.setTimeout(() => {
+      resetLogin()
+      window.location.assign(destination)
+    }, 3000)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
   }, [postLoginRole, queryClient, refreshUser, resetLogin])
 
   return (
@@ -87,7 +86,7 @@ const LoginSuccess = () => {
                 تم تسجيل دخولك بنجاح
               </h2>
               <p className="text-[16px] font-bold text-white/90 sm:text-[18px]">
-                مرحباً بك في منصة نجاة جاري تحويلك إلى لوحة التحكم...
+                جاري تحويلك إلى لوحة التحكم...
               </p>
             </div>
 

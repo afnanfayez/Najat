@@ -32,6 +32,7 @@ type AuthContextValue = {
   isLoading: boolean
   isHydrated: boolean
   logout: () => void
+  performSessionCleanup: () => void
   refreshUser: () => Promise<void>
 }
 
@@ -41,6 +42,7 @@ const AuthContext = createContext<AuthContextValue>({
   isLoading: true,
   isHydrated: false,
   logout: () => {},
+  performSessionCleanup: () => {},
   refreshUser: async () => {},
 })
 
@@ -52,12 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false)
   const refreshSeqRef = useRef(0)
 
-  const logout = useCallback(() => {
+  const performSessionCleanup = useCallback(() => {
     resetBrowserSession()
     setUser(null)
     clearUserSessionCache(queryClient)
+  }, [queryClient])
+
+  const logout = useCallback(() => {
     router.replace('/logout')
-  }, [router, queryClient])
+  }, [router])
 
   const refreshUser = useCallback(async () => {
     const token = getToken()
@@ -172,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: !isHydrated || isLoading,
         isHydrated,
         logout,
+        performSessionCleanup,
         refreshUser,
       }}
     >

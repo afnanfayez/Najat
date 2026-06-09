@@ -12,6 +12,9 @@ import StepFour from './StepFour'
 import TermsStep from './TermsStep'
 import SuccessStep from './SuccessStep'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { useRouter } from 'next/navigation'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { toast } from 'sonner'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -30,6 +33,15 @@ const AppleAppStoreIcon = ({ size = 24 }) => (
 
 const RegisterForm = () => {
   const { step, goToStep, resetRegister, formData } = useRegisterStore()
+  const { isOffline } = useOnlineStatus()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isOffline) {
+      toast.error('لا يمكنك إنشاء حساب جديد وأنت غير متصل بالإنترنت')
+      router.replace('/login')
+    }
+  }, [isOffline, router])
 
   useEffect(() => {
     // If the user is on step 5 or 6 but hasn't even started (no name), reset to step 1

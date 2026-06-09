@@ -1,25 +1,60 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import {
   showInstallToast,
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa/installPrompt'
 
-let dismissedThisLoad = false
-
 export function useInstallPrompt() {
+  const promptShownRef = useRef(false)
+  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
+
   useEffect(() => {
-    const handler = (e: Event) => {
-      const event = e as BeforeInstallPromptEvent
-      event.preventDefault()
-      if (dismissedThisLoad) return
+    if (typeof window === 'undefined') return
+
+    // 1. Check if already running in standalone (installed) mode
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+
+    // 2. Check if the user previously skipped the installation
+    const isSkipped = localStorage.getItem('najat_pwa_install_skipped') === 'true'
+
+    if (isStandalone || isSkipped) {
+      return
+    }
+
+    const triggerToast = (event: BeforeInstallPromptEvent | null) => {
+      if (promptShownRef.current) return
+      promptShownRef.current = true
+
       showInstallToast(event, () => {
-        dismissedThisLoad = true
+        localStorage.setItem('najat_pwa_install_skipped', 'true')
       })
     }
 
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+    // Capture native install prompt event
+    const handleBeforeInstallPrompt = (e: Event) => {
+      const event = e as BeforeInstallPromptEvent
+      event.preventDefault()
+      deferredPromptRef.current = event
+      triggerToast(event)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    // Fallback: If beforeinstallprompt hasn't fired in 1.5s (e.g. iOS/Safari or other browsers),
+    // show the toast anyway with instructions fallback
+    const timer = setTimeout(() => {
+      if (!promptShownRef.current) {
+        triggerToast(null)
+      }
+    }, 1500)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      clearTimeout(timer)
+    }
   }, [])
 }
