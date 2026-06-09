@@ -11,13 +11,19 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#2496FF',
     icons: [
       {
-        src: '/assets/Logo1_cropped.png',
-        sizes: '192x192 200x200 512x512',
+        src: '/assets/najat-icon-192.png',
+        sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/assets/Logo1_cropped.png',
+        src: '/assets/najat-icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/assets/najat-icon-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

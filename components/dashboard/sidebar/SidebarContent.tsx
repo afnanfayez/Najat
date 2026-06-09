@@ -34,9 +34,19 @@ export default function SidebarContent({
   const badge = roleBadgeStyle(role)
 
   return (
-    <>
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0 30px',
+        boxSizing: 'border-box',
+      }}
+    >
       {/* Logo */}
-      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
         <Image
           src="/assets/Logo2.png"
           alt="شعار نجاة"
@@ -55,7 +65,7 @@ export default function SidebarContent({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '16px',
+          gap: '12px',
         }}
       >
         {visibleNavItems.map((item) => {
@@ -71,15 +81,13 @@ export default function SidebarContent({
               onMouseLeave={() => setHoveredNav(null)}
               style={{
                 width: '260px',
-                height: '51px',
+                maxWidth: '100%',
+                minHeight: '48px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                gap: '12px',
-                paddingTop: '2px',
-                paddingRight: '12px',
-                paddingBottom: '2px',
-                paddingLeft: '8px',
+                gap: '10px',
+                padding: '6px 10px 6px 8px',
                 background: isActive
                   ? '#FFFFFF80'
                   : isHovered
@@ -90,9 +98,9 @@ export default function SidebarContent({
                 cursor: 'pointer',
                 color: '#fff',
                 fontFamily: "'Cairo', sans-serif",
-                fontSize: '20px',
+                fontSize: '18px',
                 fontWeight: isActive ? '600' : '500',
-                lineHeight: '100%',
+                lineHeight: '1.25',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 outline: 'none',
                 textAlign: 'right',
@@ -105,7 +113,8 @@ export default function SidebarContent({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '32px',
+                  width: '28px',
+                  flexShrink: 0,
                 }}
               >
                 {item.sos ? (
@@ -121,7 +130,7 @@ export default function SidebarContent({
                   <item.icon size={24} strokeWidth={2} />
                 )}
               </div>
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1, lineHeight: '1.3' }}>{item.label}</span>
             </button>
           )
         })}
@@ -131,10 +140,12 @@ export default function SidebarContent({
       <div
         style={{
           width: '260px',
+          maxWidth: '100%',
           background: 'rgba(255,255,255,0.12)',
           borderRadius: '12px',
           padding: '12px 14px',
-          marginBottom: '12px',
+          marginTop: '20px',
+          marginBottom: '10px',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -202,6 +213,8 @@ export default function SidebarContent({
           id="logout-btn"
           onClick={handleLogout}
           style={{
+            width: '260px',
+            maxWidth: '100%',
             marginTop: '4px',
             display: 'flex',
             alignItems: 'center',
@@ -215,6 +228,7 @@ export default function SidebarContent({
             cursor: 'pointer',
             fontSize: '0.9rem',
             fontWeight: '600',
+            fontFamily: "'Cairo', sans-serif",
             transition: 'background 0.2s',
             boxSizing: 'border-box',
           }}
@@ -231,6 +245,6 @@ export default function SidebarContent({
           تسجيل الخروج
         </button>
       </div>
-    </>
+    </div>
   )
 }

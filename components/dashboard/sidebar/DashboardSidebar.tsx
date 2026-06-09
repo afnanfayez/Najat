@@ -26,7 +26,17 @@ export default function DashboardSidebar({
       <div className="overlay" onClick={() => setIsMobileMenuOpen(false)} />
 
       {/* Mobile sidebar drawer */}
-      <div className="mobile-sidebar">
+      <div
+        className="mobile-sidebar"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          boxSizing: 'border-box',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}
+      >
         <div
           style={{
             padding: '25px 25px 10px',
@@ -66,6 +76,8 @@ export default function DashboardSidebar({
           top: '-0.58px',
           zIndex: 10,
           boxSizing: 'border-box',
+          overflowY: 'auto',
+          overflowX: 'hidden',
         }}
       >
         <SidebarContent {...sidebarContentProps} user={user} role={role} />

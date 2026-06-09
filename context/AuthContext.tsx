@@ -55,14 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshSeqRef = useRef(0)
 
   const performSessionCleanup = useCallback(() => {
+    refreshSeqRef.current += 1
     resetBrowserSession()
     setUser(null)
+    setIsLoading(false)
     clearUserSessionCache(queryClient)
   }, [queryClient])
 
   const logout = useCallback(() => {
-    router.replace('/logout')
-  }, [router])
+    refreshSeqRef.current += 1
+    resetBrowserSession()
+    setUser(null)
+    setIsLoading(false)
+    clearUserSessionCache(queryClient)
+    router.replace('/login')
+  }, [queryClient, router])
 
   const refreshUser = useCallback(async () => {
     const token = getToken()

@@ -7,10 +7,16 @@ export type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+type WindowWithDeferredPrompt = Window & {
+  deferredNajatPrompt?: BeforeInstallPromptEvent
+}
+
 export function showInstallToast(
   event: BeforeInstallPromptEvent | null,
   onDismiss: () => void,
 ) {
+  const canPrompt = Boolean(event)
+
   toast.custom(
     (toastId) => (
       <div className="install-prompt-card">
@@ -19,9 +25,13 @@ export function showInstallToast(
         </div>
 
         <div className="install-prompt-card__text">
-          <div className="install-prompt-card__title">تنزيل تطبيق نجاة</div>
+          <div className="install-prompt-card__title">
+            إضافة نجاة للشاشة الرئيسية
+          </div>
           <div className="install-prompt-card__subtitle">
-            ثبّت التطبيق لاستخدام أسرع وبدون إنترنت.
+            {canPrompt
+              ? 'ثبّت التطبيق لاستخدام أسرع من الجوال.'
+              : 'من قائمة المتصفح اختر إضافة إلى الشاشة الرئيسية.'}
           </div>
         </div>
 
@@ -31,33 +41,26 @@ export function showInstallToast(
             className="install-prompt-card__install-btn"
             onClick={async () => {
               toast.dismiss(toastId)
-              const activePrompt = event || (typeof window !== 'undefined' ? (window as any).deferredNajatPrompt : null)
-              if (activePrompt) {
-                try {
-                  await activePrompt.prompt()
-                  await activePrompt.userChoice
-                } catch (err) {
-                  console.error('[PWA Install] Failed to prompt:', err)
-                }
-              } else {
-                const isIOS =
-                  /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-                  !(window as any).MSStream
-                if (isIOS) {
-                  toast.info(
-                    'لتثبيت التطبيق على iOS: اضغط على زر المشاركة ⎋ في Safari ثم اختر "إضافة إلى الصفحة الرئيسية" ⊞',
-                    { position: 'top-center', duration: 8000 },
-                  )
-                } else {
-                  toast.info(
-                    'لتثبيت التطبيق: اضغط على قائمة المتصفح (⋮) ثم اختر "تثبيت" أو "إضافة إلى الشاشة الرئيسية"',
-                    { position: 'top-center', duration: 8000 },
-                  )
-                }
+              const activePrompt =
+                event ||
+                (typeof window !== 'undefined'
+                  ? (window as WindowWithDeferredPrompt).deferredNajatPrompt
+                  : null)
+
+              if (!activePrompt) {
+                onDismiss()
+                return
+              }
+
+              try {
+                await activePrompt.prompt()
+                await activePrompt.userChoice
+              } catch (err) {
+                console.error('[PWA Install] Failed to prompt:', err)
               }
             }}
           >
-            تثبيت الآن
+            {canPrompt ? 'تثبيت الآن' : 'حسناً'}
           </button>
           <button
             type="button"

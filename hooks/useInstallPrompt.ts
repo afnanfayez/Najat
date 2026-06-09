@@ -6,6 +6,14 @@ import {
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa/installPrompt'
 
+type NavigatorWithStandalone = Navigator & {
+  standalone?: boolean
+}
+
+type WindowWithDeferredPrompt = Window & {
+  deferredNajatPrompt?: BeforeInstallPromptEvent
+}
+
 export function useInstallPrompt() {
   const promptShownRef = useRef(false)
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
@@ -13,15 +21,19 @@ export function useInstallPrompt() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    const isMobile =
+      window.matchMedia('(max-width: 768px)').matches ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent)
+
     // 1. Check if already running in standalone (installed) mode
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
+      (window.navigator as NavigatorWithStandalone).standalone === true
 
     // 2. Check if the user previously skipped the installation
     const isSkipped = localStorage.getItem('najat_pwa_install_skipped') === 'true'
 
-    if (isStandalone || isSkipped) {
+    if (!isMobile || isStandalone || isSkipped) {
       return
     }
 
@@ -39,25 +51,29 @@ export function useInstallPrompt() {
       const event = e as BeforeInstallPromptEvent
       event.preventDefault()
       deferredPromptRef.current = event
-      if (typeof window !== 'undefined') {
-        ;(window as any).deferredNajatPrompt = event
-      }
+      ;(window as WindowWithDeferredPrompt).deferredNajatPrompt = event
       triggerToast(event)
     }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    const handleAppInstalled = () => {
+      localStorage.setItem('najat_pwa_install_skipped', 'true')
+      deferredPromptRef.current = null
+      delete (window as WindowWithDeferredPrompt).deferredNajatPrompt
+    }
 
-    // Fallback: If beforeinstallprompt hasn't fired in 3.5s (e.g. iOS/Safari or other browsers),
-    // show the toast anyway with instructions fallback
-    const timer = setTimeout(() => {
-      if (!promptShownRef.current) {
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    const fallbackTimer = window.setTimeout(() => {
+      if (!deferredPromptRef.current) {
         triggerToast(null)
       }
-    }, 3500)
+    }, 1500)
 
     return () => {
+      window.clearTimeout(fallbackTimer)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      clearTimeout(timer)
+      window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
 }
