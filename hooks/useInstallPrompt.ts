@@ -39,18 +39,21 @@ export function useInstallPrompt() {
       const event = e as BeforeInstallPromptEvent
       event.preventDefault()
       deferredPromptRef.current = event
+      if (typeof window !== 'undefined') {
+        ;(window as any).deferredNajatPrompt = event
+      }
       triggerToast(event)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
-    // Fallback: If beforeinstallprompt hasn't fired in 1.5s (e.g. iOS/Safari or other browsers),
+    // Fallback: If beforeinstallprompt hasn't fired in 3.5s (e.g. iOS/Safari or other browsers),
     // show the toast anyway with instructions fallback
     const timer = setTimeout(() => {
       if (!promptShownRef.current) {
         triggerToast(null)
       }
-    }, 1500)
+    }, 3500)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)

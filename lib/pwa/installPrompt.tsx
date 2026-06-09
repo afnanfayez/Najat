@@ -31,9 +31,14 @@ export function showInstallToast(
             className="install-prompt-card__install-btn"
             onClick={async () => {
               toast.dismiss(toastId)
-              if (event) {
-                await event.prompt()
-                await event.userChoice
+              const activePrompt = event || (typeof window !== 'undefined' ? (window as any).deferredNajatPrompt : null)
+              if (activePrompt) {
+                try {
+                  await activePrompt.prompt()
+                  await activePrompt.userChoice
+                } catch (err) {
+                  console.error('[PWA Install] Failed to prompt:', err)
+                }
               } else {
                 const isIOS =
                   /iPad|iPhone|iPod/.test(navigator.userAgent) &&
