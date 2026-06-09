@@ -1,31 +1,20 @@
 'use client'
+/* eslint-disable react/no-unescaped-entities */
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useRegisterStore } from '@/store/useRegisterStore'
-
+import { showRegisterOfflineToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 const TermsStep = () => {
   const [accepted, setAccepted] = useState(false)
   const { submitRegistration, isSubmitting, error, clearErrors, fieldErrors, prevStep } = useRegisterStore()
   const router = useRouter()
-  const [isOffline, setIsOffline] = useState(false)
-
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsOffline(!navigator.onLine)
-      const handleOnline = () => setIsOffline(false)
-      const handleOffline = () => setIsOffline(true)
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
-    }
-  }, [])
+  const { isOffline } = useOnlineStatus()
 
   React.useEffect(() => {
     clearErrors()
@@ -38,14 +27,7 @@ const TermsStep = () => {
     clearErrors()
     if (accepted) {
       if (isOffline) {
-        import('sonner').then(({ toast }) => {
-          toast.success('تم إنشاء الحساب محلياً (وضع عدم الاتصال)')
-        })
-        if (typeof window !== 'undefined' && !navigator.onLine) {
-          window.location.href = '/verify'
-        } else {
-          router.push('/verify')
-        }
+        showRegisterOfflineToast()
         return
       }
 
@@ -158,19 +140,34 @@ const TermsStep = () => {
           </div>
         )}
 
-        <div className="flex flex-col gap-2 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-3">
+        <div
+          className="flex flex-col gap-2 sm:flex-row-reverse sm:items-center sm:justify-center sm:gap-3"
+          onClick={(e) => {
+            if (isOffline && !isSubmitting) {
+              e.preventDefault()
+              showRegisterOfflineToast()
+            }
+          }}
+        >
           <Button
             type="submit"
+            aria-disabled={isOffline}
             disabled={!accepted || isSubmitting}
-            className={`flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${isOffline
-                ? 'bg-red-600 shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-[0.98]'
+            className={`relative flex h-10 w-full items-center justify-center rounded-[10px] text-[16px] font-bold text-white transition-all sm:h-[45px] sm:w-[200px] sm:text-[18px] ${isOffline
+                ? 'cursor-not-allowed bg-red-600 text-transparent opacity-95 shadow-lg shadow-red-600/20'
                 : accepted && !isSubmitting
                   ? 'bg-[#2496FF] shadow-lg shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
                   : 'cursor-not-allowed bg-[#D9D9D9] text-[#707070] opacity-80'
               }`}
             style={{ lineHeight: '100%' }}
           >
-            {isSubmitting ? 'جاري إنشاء الحساب...' : isOffline ? 'دخول (أوفلاين)' : 'دخول'}
+            {isOffline && (
+              <span className="absolute inset-0 flex items-center justify-center gap-2 text-white">
+                بانتظار الإنترنت
+                <WifiOff className="h-5 w-5 sm:h-6 sm:w-6" />
+              </span>
+            )}
+            {isSubmitting ? 'جاري إنشاء الحساب...' : isOffline ? 'بانتظار الإنترنت' : 'إنشاء الحساب'}
           </Button>
 
           <Button

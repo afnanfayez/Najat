@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { Phone } from 'lucide-react'
+import { Phone, WifiOff } from 'lucide-react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -9,9 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useRegisterStore } from '@/store/useRegisterStore'
 import { registerStepOneSchema } from '@/schemas/registerStepOne'
+import { showRegisterOfflineToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 const StepOne = () => {
   const { formData, updateFormData, nextStep, fieldErrors } = useRegisterStore()
+  const { isOffline } = useOnlineStatus()
 
   const {
     control,
@@ -45,6 +48,11 @@ const StepOne = () => {
   }
 
   const onValid = (values) => {
+    if (isOffline) {
+      showRegisterOfflineToast()
+      return
+    }
+
     updateFormData({
       name: values.name.trim(),
       phone: values.phone.trim(),
@@ -55,7 +63,14 @@ const StepOne = () => {
 
   return (
     <form
-      onSubmit={handleSubmit(onValid)}
+      onSubmit={(e) => {
+        if (isOffline) {
+          e.preventDefault()
+          showRegisterOfflineToast()
+          return
+        }
+        handleSubmit(onValid)(e)
+      }}
       noValidate
       className="mx-auto w-full max-w-[580px] space-y-3 sm:space-y-4"
     >
@@ -161,14 +176,31 @@ const StepOne = () => {
         )}
       </div>
 
+      <div
+        onClick={() => {
+          if (isOffline) showRegisterOfflineToast()
+        }}
+      >
       <Button
         type="submit"
+        aria-disabled={isOffline}
         disabled={isSubmitting}
-        className="mx-auto mt-2 flex h-11 w-full items-center justify-center rounded-[10px] bg-[#2496FF] text-[18px] font-bold text-white shadow-lg shadow-[#2496FF]/10 transition-all hover:bg-[#1C7ED6] active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px]"
+        className={`relative mx-auto mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] text-[18px] font-bold text-white shadow-lg transition-all sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
+          isOffline
+            ? 'cursor-not-allowed bg-red-600 text-transparent shadow-red-600/20'
+            : 'bg-[#2496FF] shadow-[#2496FF]/10 hover:bg-[#1C7ED6] active:scale-[0.98]'
+        }`}
         style={{ lineHeight: '100%' }}
       >
+        {isOffline && (
+          <span className="absolute inset-0 flex items-center justify-center gap-2 text-white">
+            بانتظار الإنترنت
+            <WifiOff className="h-5 w-5 sm:h-6 sm:w-6" />
+          </span>
+        )}
         التالي
       </Button>
+      </div>
     </form>
   )
 }

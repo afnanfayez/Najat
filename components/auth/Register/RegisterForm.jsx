@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -12,7 +12,6 @@ import StepFour from './StepFour'
 import TermsStep from './TermsStep'
 import SuccessStep from './SuccessStep'
 import { useRegisterStore } from '@/store/useRegisterStore'
-import { toast } from 'sonner'
 
 const AppleAppStoreIcon = ({ size = 24 }) => (
   <svg
@@ -31,83 +30,6 @@ const AppleAppStoreIcon = ({ size = 24 }) => (
 
 const RegisterForm = () => {
   const { step, goToStep, resetRegister, formData } = useRegisterStore()
-  const [isOffline, setIsOffline] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const offline = !navigator.onLine
-      setIsOffline(offline)
-
-      const handleOnline = () => setIsOffline(false)
-      const handleOffline = () => {
-        setIsOffline(true)
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-
-      if (offline) {
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
-    }
-  }, [])
 
   useEffect(() => {
     // If the user is on step 5 or 6 but hasn't even started (no name), reset to step 1
@@ -237,14 +159,13 @@ const RegisterForm = () => {
                 >
                   هل تمتلك فعلاً حساب؟{' '}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => window.location.href = '/login'}
+                <Link
+                  href="/login"
                   className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                   style={{ color: '#FDB022', lineHeight: '100%' }}
                 >
                   تسجيل الدخول
-                </button>
+                </Link>
               </div>
 
               <div className="mx-auto flex w-full max-w-[580px] items-center gap-3 py-1 sm:gap-4">

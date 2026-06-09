@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { showNoInternetToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 const EnterCode = () => {
   const [code, setCode] = useState(['', '', '', '', '', ''])
@@ -15,6 +17,16 @@ const EnterCode = () => {
   const inputs = useRef([])
   const { verifyForgotCode, setIsCodeSent, isSubmitting, forgotError } = useLoginStore()
   const { resetRegister } = useRegisterStore()
+  const { isOffline } = useOnlineStatus()
+
+  const handleRegisterClick = (e) => {
+    if (isOffline) {
+      e.preventDefault()
+      showNoInternetToast()
+      return
+    }
+    resetRegister()
+  }
 
   useEffect(() => {
     if (inputs.current[0]) {
@@ -213,7 +225,7 @@ const EnterCode = () => {
                 </span>
                 <Link
                   href="/register"
-                  onClick={() => resetRegister()}
+                  onClick={handleRegisterClick}
                   className="text-[14px] font-bold transition-opacity hover:opacity-80 sm:text-[15px]"
                   style={{ color: '#FDB022', lineHeight: '100%' }}
                 >

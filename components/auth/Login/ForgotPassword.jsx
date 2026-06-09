@@ -3,103 +3,30 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Mail, ArrowRight } from 'lucide-react'
+import { Mail, ArrowRight, WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
-import { toast } from 'sonner'
+import { showNoInternetToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
-  const [isOffline, setIsOffline] = useState(false)
+  const { isOffline } = useOnlineStatus()
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const offline = !navigator.onLine
-      setIsOffline(offline)
-
-      const handleOnline = () => setIsOffline(false)
-      const handleOffline = () => {
-        setIsOffline(true)
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-
-      if (offline) {
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
-    }
-  }, [])
-
-  const { sendForgotPasswordCode, isSubmitting, forgotError, setIsForgot } =
-    useLoginStore()
+  const { sendForgotPasswordCode, isSubmitting, setIsForgot } = useLoginStore()
   const { resetRegister } = useRegisterStore()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (isOffline) return
+    if (isOffline) {
+      showNoInternetToast()
+      return
+    }
     const isEmailValid = email.includes('@') && email.includes('.')
     if (!isEmailValid) {
       setEmailError(true)
@@ -107,13 +34,16 @@ const ForgotPassword = () => {
     }
     setEmailError(false)
 
-    const success = await sendForgotPasswordCode(email)
-    // We don't need to show toast here because it's handled in the store
-    // if (success) {
-    //   toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
-    // } else {
-    //   toast.error(forgotError || 'حدث خطأ أثناء إرسال الرمز')
-    // }
+    await sendForgotPasswordCode(email)
+  }
+
+  const handleRegisterClick = (e) => {
+    if (isOffline) {
+      e.preventDefault()
+      showNoInternetToast()
+      return
+    }
+    resetRegister()
   }
 
   return (
@@ -214,23 +144,24 @@ const ForgotPassword = () => {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || isOffline}
+                disabled={isSubmitting}
                 className={`mx-auto flex h-11 w-full items-center justify-center rounded-[10px] text-[18px] font-bold text-white shadow-lg transition-all active:scale-[0.98] sm:h-[50px] sm:w-[350px] sm:text-[20px] ${
                   isOffline
-                    ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700 cursor-not-allowed'
+                    ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700'
                     : 'bg-[#2496FF] shadow-[#2496FF]/10 hover:bg-[#1C7ED6]'
                 }`}
                 style={{ lineHeight: '100%' }}
+                onClick={isOffline ? showNoInternetToast : undefined}
               >
                 {isOffline ? (
                   <>
-                    لا يوجد اتصال بالإنترنت
-                    <i className="bx bx-wifi-off mr-2 text-[20px]" />
+                    بانتظار الإنترنت
+                    <WifiOff className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                   </>
                 ) : isSubmitting ? (
                   'جاري الإرسال...'
                 ) : (
-                  'ارسال'
+                  'إرسال'
                 )}
               </Button>
             </form>
@@ -243,17 +174,14 @@ const ForgotPassword = () => {
                 >
                   ليس لديك حساب؟{' '}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetRegister()
-                    window.location.href = '/register'
-                  }}
+                <Link
+                  href="/register"
+                  onClick={handleRegisterClick}
                   className="text-[14px] font-bold transition-opacity hover:opacity-80 sm:text-[15px]"
                   style={{ color: '#FDB022', lineHeight: '100%' }}
                 >
                   إنشاء حساب جديد
-                </button>
+                </Link>
               </div>
 
               <button

@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
@@ -15,9 +14,9 @@ import {
   getCurrentAuthRole,
   routeForRole,
 } from '@/lib/auth/currentAuthRole'
+import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
 
 const LoginSuccess = () => {
-  const router = useRouter()
   const resetLogin = useLoginStore((s) => s.resetLogin)
   const postLoginRole = useLoginStore((s) => s.postLoginRole)
   const { refreshUser } = useAuth()
@@ -29,24 +28,30 @@ const LoginSuccess = () => {
     didRedirect.current = true
 
     async function redirectAfterLogin() {
-      clearUserSessionCache(queryClient)
-      await refreshUser()
-
+      // Determine destination immediately — don't wait for refreshUser to avoid blocking
       const savedPath = consumeLoginRedirect()
-      const role =
-        postLoginRole ?? getCurrentAuthRole()
+      const role = postLoginRole ?? getCurrentAuthRole()
       const destination = savedPath ?? routeForRole(role)
 
-      resetLogin()
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        window.location.href = destination
-      } else {
-        router.replace(destination)
+      void precacheAppRoute(destination)
+
+      // Fire refreshUser in background to update AuthContext cache
+      // but don't await it — redirect happens regardless
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+      if (!isOffline) {
+        clearUserSessionCache(queryClient)
+        refreshUser().catch(() => {/* ignore — token is already saved */})
       }
+
+      resetLogin()
+
+      // Small delay to allow AuthContext to pick up the new token before navigation
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      window.location.assign(destination)
     }
 
     redirectAfterLogin()
-  }, [postLoginRole, queryClient, refreshUser, resetLogin, router])
+  }, [postLoginRole, queryClient, refreshUser, resetLogin])
 
   return (
     <div

@@ -17,6 +17,10 @@ import { saveUserRole, SESSION_ROLE_KEY } from '@/lib/auth/sessionRole'
 import { profileAPI } from '@/lib/api/profile'
 import { clearUserSessionCache } from '@/lib/auth/clearSessionCache'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
+import {
+  getOfflineCachedProfile,
+  updateOfflineLoginProfile,
+} from '@/lib/auth/offlineLogin'
 import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import type { UserRole } from '@/lib/auth/roleUtils'
 
@@ -67,6 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const tokenAtStart = token
 
     setIsLoading(true)
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const cachedProfile = getOfflineCachedProfile()
+      if (cachedProfile) {
+        setUser(cachedProfile)
+        saveUserRole(cachedProfile.role)
+        setIsLoading(false)
+        return
+      }
+    }
+
     clearUserSessionCache(queryClient)
 
     try {
@@ -77,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(profile)
       saveUserRole(profile.role)
+      updateOfflineLoginProfile(profile)
     } catch (err: unknown) {
       if (seq !== refreshSeqRef.current) return
       if (getToken() !== tokenAtStart) return
@@ -88,7 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (status === 401) {
         logout()
       } else {
-        setUser(null)
+        const cachedProfile = getOfflineCachedProfile()
+        if (cachedProfile) {
+          setUser(cachedProfile)
+          saveUserRole(cachedProfile.role)
+        } else {
+          setUser(null)
+        }
       }
     } finally {
       if (seq === refreshSeqRef.current) {

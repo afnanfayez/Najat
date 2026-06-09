@@ -8,6 +8,12 @@ import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import { saveUserRole } from '@/lib/auth/sessionRole'
 import { getRoleFromJwt, normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
 import { saveLoginRedirect, routeForRole } from '@/lib/auth/currentAuthRole'
+import {
+  saveOfflineLoginSnapshot,
+  tryOfflineLogin,
+} from '@/lib/auth/offlineLogin'
+import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
+import { profileAPI } from '@/lib/api/profile'
 import { toast } from 'sonner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -136,20 +142,35 @@ export const useLoginStore = create<LoginState>()(
           passwordError: false,
         })
 
-        // MOCK OFFLINE LOGIN
         if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          setTimeout(() => {
-            resetBrowserSession({ keepLoginEmail: true })
-            const fakeRole = 'citizen'
-            saveUserRole(fakeRole)
+          try {
+            const restored = await tryOfflineLogin(email, password)
+            if (!restored) {
+              set({
+                isError: true,
+                emailError: true,
+                passwordError: true,
+                isSubmitting: false,
+              })
+              return
+            }
             notifyAuthSessionChanged()
-            saveLoginRedirect(routeForRole(fakeRole))
+            const destination = routeForRole(restored.role)
+            saveLoginRedirect(destination)
+            void precacheAppRoute(destination)
             set({
               isSuccess: true,
               isSubmitting: false,
-              postLoginRole: fakeRole,
+              postLoginRole: restored.role,
             })
-          }, 1000)
+          } catch {
+            set({
+              isSubmitting: false,
+              isError: true,
+              emailError: true,
+              passwordError: true,
+            })
+          }
           return
         }
 
@@ -167,13 +188,46 @@ export const useLoginStore = create<LoginState>()(
             saveUserRole(resolvedRole)
           }
           notifyAuthSessionChanged()
-          saveLoginRedirect(routeForRole(resolvedRole))
+
+          const profile = await profileAPI.me().catch(() => null)
+          await saveOfflineLoginSnapshot(
+            email,
+            password,
+            token,
+            resolvedRole,
+            profile,
+          )
+
+          const destination = routeForRole(resolvedRole)
+          void precacheAppRoute(destination)
+          saveLoginRedirect(destination)
           set({
             isSuccess: true,
             isSubmitting: false,
             postLoginRole: resolvedRole ?? null,
           })
         } catch (err: any) {
+          // ── Network error → try offline credentials as fallback ────────────
+          if (!err?.status || err.status === 0) {
+            try {
+              const restored = await tryOfflineLogin(email, password)
+              if (restored) {
+                notifyAuthSessionChanged()
+                const destination = routeForRole(restored.role)
+                saveLoginRedirect(destination)
+                void precacheAppRoute(destination)
+                set({
+                  isSuccess: true,
+                  isSubmitting: false,
+                  postLoginRole: restored.role,
+                })
+                return
+              }
+            } catch {
+              // offline snapshot not found – fall through to error state
+            }
+          }
+
           const msg = err?.message ?? 'تعذّر الاتصال بالخادم، حاول مرة أخرى'
           toast.error(msg)
           set({
@@ -201,6 +255,13 @@ export const useLoginStore = create<LoginState>()(
        * POST /v1/auth/forgot-password { email }
        */
       sendForgotPasswordCode: async (email: string) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          const msg = 'استعادة كلمة المرور تحتاج اتصالاً بالإنترنت. يرجى الانتظار حتى يعود الاتصال ثم المحاولة مرة أخرى.'
+          set({ isSubmitting: false, forgotError: msg })
+          toast.error(msg, { id: 'forgot-offline-action', position: 'top-center' })
+          return false
+        }
+
         set({ isSubmitting: true, forgotError: null })
         try {
           await authAPI.forgotPassword({ email })
@@ -244,6 +305,13 @@ export const useLoginStore = create<LoginState>()(
        * POST /v1/auth/reset-password { email, code, newPassword }
        */
       resetPasswordWithCode: async (newPassword: string) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          const msg = 'تعيين كلمة مرور جديدة يحتاج اتصالاً بالإنترنت. يرجى المحاولة بعد عودة الاتصال.'
+          set({ isSubmitting: false, forgotError: msg })
+          toast.error(msg, { id: 'forgot-offline-action', position: 'top-center' })
+          return false
+        }
+
         const { forgotEmail, forgotCode } = get()
         set({ isSubmitting: true, forgotError: null })
         try {

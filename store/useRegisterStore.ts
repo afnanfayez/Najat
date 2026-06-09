@@ -313,6 +313,13 @@ export const useRegisterStore = create<RegisterState>()(
 
       // Step 1: Submit registration with all user data and send verification code
       submitRegistration: async () => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          const msg = 'إنشاء الحساب غير متاح حالياً بدون إنترنت. يرجى الانتظار حتى يعود الاتصال.'
+          set({ isSubmitting: false, error: msg })
+          toast.error(msg, { id: 'register-offline-action', position: 'top-center' })
+          return false
+        }
+
         set({ isSubmitting: true, error: null, fieldErrors: {} })
         try {
           const state = get()

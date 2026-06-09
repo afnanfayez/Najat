@@ -1,4 +1,5 @@
 import { removeToken, getToken } from '@/lib/api/auth'
+import { clearOfflineLoginSnapshot } from '@/lib/auth/offlineLogin'
 import { removeUserRole } from '@/lib/auth/sessionRole'
 import { LOGIN_REDIRECT_KEY } from '@/lib/auth/currentAuthRole'
 import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
@@ -22,6 +23,7 @@ export function resetBrowserSession(options?: { keepLoginEmail?: boolean }) {
 
   removeToken()
   removeUserRole()
+  clearOfflineLoginSnapshot()
   sessionStorage.removeItem(LOGIN_REDIRECT_KEY)
 
   // Get all stored user IDs

@@ -38,14 +38,16 @@ export default function DashboardLayoutClient({
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const { user, role, isLoading, logout } = useAuth()
+  const { user, role, isLoading, isHydrated, logout } = useAuth()
 
-  // Auth guard — redirect to /login if no token and not still loading
+  // Auth guard — only redirect after hydration is complete AND loading is done
   useEffect(() => {
-    if (!isLoading && !getToken()) {
+    if (!isHydrated) return      // wait for client-side hydration
+    if (isLoading) return        // wait for auth check to finish
+    if (!getToken()) {
       router.replace('/login')
     }
-  }, [isLoading, router])
+  }, [isHydrated, isLoading, router])
 
   const setNav = useCallback(
     (id: string) => {

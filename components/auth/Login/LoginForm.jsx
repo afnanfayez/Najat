@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Mail, KeyRound, Eye, EyeOff, LogIn, CheckCircle2 } from 'lucide-react'
+import { Eye, EyeOff, LogIn, CheckCircle2, WifiOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -19,8 +19,9 @@ import ResetPasswordForm from './ResetPasswordForm'
 
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
-import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
-import { toast } from 'sonner'
+import { showNoInternetToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -65,186 +66,8 @@ const LoginForm = () => {
   } = useLoginStore()
   const { resetRegister } = useRegisterStore()
 
-  const [isOffline, setIsOffline] = useState(false)
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const offline = !navigator.onLine
-      setIsOffline(offline)
-
-      const handleOnline = () => {
-        setIsOffline(false)
-      }
-      const handleOffline = () => {
-        setIsOffline(true)
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-
-      if (offline) {
-        toast.custom((t) => (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            background: '#DC2626',
-            color: '#FFFFFF',
-            borderRadius: '10px',
-            padding: '12px 20px',
-            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2)',
-            width: 'max-content',
-            maxWidth: '90vw',
-            fontFamily: 'Cairo, sans-serif',
-            direction: 'rtl',
-          }}>
-            <i className="bx bx-wifi-off" style={{ fontSize: '20px', color: '#FFFFFF' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', whiteSpace: 'nowrap' }}>
-              أنت تعمل حالياً بدون اتصال بالإنترنت
-            </span>
-          </div>
-        ), {
-          id: 'offline-status',
-          duration: 4000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-
-      const handleBeforeInstallPrompt = (e) => {
-        e.preventDefault()
-        setDeferredPrompt(e)
-
-        // Only show once per page session
-        if (sessionStorage.getItem('install-prompt-dismissed')) return
-
-        toast.custom((toastId) => (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'white',
-              border: '1px solid rgba(0,0,0,0.08)',
-              borderRadius: '12px',
-              padding: '14px 16px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-              width: 'min(420px, 92vw)',
-              fontFamily: 'Cairo, sans-serif',
-            }}
-          >
-            {/* Left: Icon */}
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              background: '#EFF6FF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <i className="bx bx-download" style={{ fontSize: '22px', color: '#2496FF' }}></i>
-            </div>
-
-            {/* Middle: Text */}
-            <div style={{ flex: 1, minWidth: 0, direction: 'rtl' }}>
-              <div style={{ fontWeight: '700', fontSize: '14px', color: '#111' }}>يمكنك الآن تنزيل تطبيق نجاة</div>
-              <div style={{ fontSize: '12px', color: '#777', marginTop: '3px' }}>تجربة أسرع وإمكانية الاستخدام بدون إنترنت!</div>
-            </div>
-
-            {/* Right: Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flexShrink: 0 }}>
-              <button
-                onClick={async () => {
-                  toast.dismiss(toastId)
-                  e.prompt()
-                  const { outcome } = await e.userChoice
-                  if (outcome === 'accepted') {
-                    console.log('User accepted install')
-                  }
-                  setDeferredPrompt(null)
-                }}
-                style={{
-                  background: '#2496FF',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '7px 14px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  whiteSpace: 'nowrap',
-                  fontFamily: 'Cairo, sans-serif',
-                }}
-              >
-                تثبيت الآن
-              </button>
-              <button
-                onClick={() => {
-                  toast.dismiss(toastId)
-                  sessionStorage.setItem('install-prompt-dismissed', '1')
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#aaa',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  fontFamily: 'Cairo, sans-serif',
-                  padding: '2px 0',
-                }}
-              >
-                تخطي
-              </button>
-            </div>
-          </div>
-        ), {
-          id: 'install-prompt',
-          duration: 120000,
-          position: 'top-center',
-          unstyled: true,
-        })
-      }
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      }
-    }
-  }, [])
+  const { isOffline } = useOnlineStatus()
+  useInstallPrompt()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -255,6 +78,23 @@ const LoginForm = () => {
       const isPasswordValid = password.length >= 8
       handleLoginFailure(!isEmailValid, !isPasswordValid)
     }
+  }
+
+  const handleForgotPasswordClick = () => {
+    if (isOffline) {
+      showNoInternetToast()
+      return
+    }
+    handleForgotClick()
+  }
+
+  const handleRegisterClick = (e) => {
+    if (isOffline) {
+      e.preventDefault()
+      showNoInternetToast()
+      return
+    }
+    resetRegister()
   }
 
   if (isSuccess) {
@@ -277,7 +117,7 @@ const LoginForm = () => {
     return (
       <ResetPassword
         onBack={() => setIsCodeSent(false)}
-        onSubmit={(code) => {
+        onSubmit={() => {
           setIsResetting(true)
         }}
       />
@@ -288,7 +128,7 @@ const LoginForm = () => {
     return (
       <ForgotPassword
         onBack={() => setIsForgot(false)}
-        onSubmit={(submittedEmail) => {
+        onSubmit={() => {
           setIsCodeSent(true)
         }}
       />
@@ -452,7 +292,7 @@ const LoginForm = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={handleForgotClick}
+                  onClick={handleForgotPasswordClick}
                   className="text-[12px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                   style={{ color: '#E8B006', lineHeight: '100%' }}
                 >
@@ -479,8 +319,8 @@ const LoginForm = () => {
                   />
                 ) : isOffline ? (
                   <>
-                    دخول (وضع الأوفلاين)
-                    <i className="bx bx-wifi-off text-[20px]" />
+                    دخول (لا يوجد اتصال بالانترنت)
+                    <WifiOff className="h-5 w-5 sm:h-6 sm:w-6" />
                   </>
                 ) : (
                   <>
@@ -498,21 +338,14 @@ const LoginForm = () => {
               >
                 ليس لديك حساب؟{' '}
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  resetRegister()
-                  if (typeof navigator !== 'undefined' && !navigator.onLine) {
-                    window.location.href = '/register'
-                  } else {
-                    window.location.href = '/register'
-                  }
-                }}
+              <Link
+                href="/register"
+                onClick={handleRegisterClick}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >
                 إنشاء حساب جديد
-              </button>
+              </Link>
             </div>
 
             <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">

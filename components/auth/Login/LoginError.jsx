@@ -13,6 +13,8 @@ import { Card } from '@/components/ui/card'
 
 import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
+import { showNoInternetToast } from '@/lib/auth/offlineToasts'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -49,6 +51,7 @@ const LoginError = () => {
     handleForgotClick,
   } = useLoginStore()
   const { resetRegister } = useRegisterStore()
+  const { isOffline } = useOnlineStatus()
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -59,6 +62,23 @@ const LoginError = () => {
       const isPasswordValid = password.length >= 8
       handleLoginFailure(!isEmailValid, !isPasswordValid)
     }
+  }
+
+  const handleForgotPasswordClick = () => {
+    if (isOffline) {
+      showNoInternetToast()
+      return
+    }
+    handleForgotClick()
+  }
+
+  const handleRegisterClick = (e) => {
+    if (isOffline) {
+      e.preventDefault()
+      showNoInternetToast()
+      return
+    }
+    resetRegister()
   }
 
   return (
@@ -232,7 +252,7 @@ const LoginError = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={handleForgotClick}
+                  onClick={handleForgotPasswordClick}
                   className="text-[12px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                   style={{ color: '#E8B006', lineHeight: '100%' }}
                 >
@@ -257,17 +277,14 @@ const LoginError = () => {
               >
                 ليس لديك حساب؟{' '}
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  resetRegister()
-                  window.location.href = '/register'
-                }}
+              <Link
+                href="/register"
+                onClick={handleRegisterClick}
                 className="text-[13px] font-bold transition-opacity hover:opacity-80 sm:text-[14px]"
                 style={{ color: '#FDB022', lineHeight: '100%' }}
               >
                 إنشاء حساب جديد
-              </button>
+              </Link>
             </div>
 
             <div className="mx-auto flex w-full max-w-[300px] items-center gap-3 py-2 sm:gap-4">
