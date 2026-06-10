@@ -73,7 +73,10 @@ export async function downloadAdminDataReviewReportFromApi(id: string): Promise<
       ? (await import('@/lib/api/auth')).getToken()
       : null
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL || ''
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    ''
   const res = await fetch(`${base}${V1}/requests/${id}/report`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
@@ -95,7 +98,10 @@ export async function exportAdminDataSyncCsvFromApi(): Promise<Blob> {
       ? (await import('@/lib/api/auth')).getToken()
       : null
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL || ''
+  const base =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    ''
   const res = await fetch(`${base}${V1}/sync/export`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })

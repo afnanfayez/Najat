@@ -1,5 +1,7 @@
 import { profileAPI } from '@/lib/api/profile'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
+import { updateOfflineLoginProfile } from '@/lib/auth/offlineLogin'
+import { clearLocalOverrides } from '@/lib/profile/localProfileStorage'
 import {
   idbGetPendingSyncItems,
   idbMarkSyncDone,
@@ -15,7 +17,13 @@ async function processItem(item: SyncQueueItem): Promise<boolean> {
   }
 
   if (item.type === 'PROFILE_SYNC') {
-    await profileAPI.update(item.payload as UpdateUserProfileBody)
+    const body = item.payload as UpdateUserProfileBody
+    const result = await profileAPI.update(body)
+    await updateOfflineLoginProfile(result.profile)
+    clearLocalOverrides(
+      result.profile.id,
+      Object.keys(body) as (keyof UpdateUserProfileBody)[],
+    )
     return true
   }
 

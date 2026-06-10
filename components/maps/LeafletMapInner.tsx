@@ -1,7 +1,9 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { precacheMainMapArea } from '@/lib/pwa/mapTileCache'
+import { syncMapAssetsForOffline } from '@/lib/offline/sync'
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 
 import { MAP_CENTER } from '@/lib/mocks/mapsMockData'
@@ -80,6 +82,14 @@ export default function LeafletMapInner({
   resourcePoints,
 }: LeafletMapInnerProps) {
   const anyLayerActive = showSafeRoutes || showDangerZones || showResourceActivity
+  const warmedTilesRef = useRef(false)
+
+  useEffect(() => {
+    if (warmedTilesRef.current) return
+    warmedTilesRef.current = true
+    void precacheMainMapArea()
+    void syncMapAssetsForOffline()
+  }, [])
 
   return (
     <MapContainer
@@ -95,6 +105,8 @@ export default function LeafletMapInner({
         subdomains="abcd"
         maxZoom={19}
         maxNativeZoom={19}
+        keepBuffer={4}
+        updateWhenIdle
       />
 
       <MapResizeController />

@@ -62,6 +62,8 @@ export default function FacilityLocationMapInner({
         subdomains="abcd"
         maxZoom={19}
         maxNativeZoom={19}
+        keepBuffer={3}
+        updateWhenIdle
       />
       <MapResizeController />
       <TilePrefetchController />

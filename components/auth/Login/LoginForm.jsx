@@ -168,10 +168,9 @@ const LoginForm = () => {
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
-          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8"
+          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-6 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8 max-h-[92vh] lg:h-[700px] lg:max-h-none"
           style={{
             fontFamily: 'Cairo, sans-serif',
-            height: '700px',
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">

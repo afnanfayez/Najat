@@ -20,11 +20,14 @@ import {
   getAllFacilities,
   getAllAid,
   getAllArticles,
+  getLastSyncTime,
   type LocalPlace,
 } from './db'
 import type { HealthFacility } from '@/schemas/healthFacility'
-import { syncAllFacilityDetails } from './syncFacilityDetails'
 import { warmOfflineImages } from './warmImageCache'
+
+const SYNC_COOLDOWN_MS = 10 * 60 * 1000
+const HEAVY_SYNC_SESSION_KEY = 'najat-heavy-sync-done'
 
 let isSyncing = false
 let isHeavySyncing = false
@@ -43,17 +46,18 @@ function facilitiesToLocalPlaces(facilities: HealthFacility[], type: LocalPlace[
     }))
 }
 
-function scheduleHeavySync(): void {
+function scheduleHeavyAssetsSync(): void {
   if (typeof window === 'undefined') return
+  if (sessionStorage.getItem(HEAVY_SYNC_SESSION_KEY) === '1') return
 
   const run = () => {
     if (isHeavySyncing || !navigator.onLine) return
     isHeavySyncing = true
     void (async () => {
       try {
-        await syncAllFacilityDetails()
         await syncMapTiles()
         await warmCachedImages()
+        sessionStorage.setItem(HEAVY_SYNC_SESSION_KEY, '1')
       } finally {
         isHeavySyncing = false
       }
@@ -61,9 +65,9 @@ function scheduleHeavySync(): void {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(run, { timeout: 15_000 })
+    requestIdleCallback(run, { timeout: 60_000 })
   } else {
-    setTimeout(run, 3_000)
+    setTimeout(run, 45_000)
   }
 }
 
@@ -182,9 +186,9 @@ async function syncMapTiles(): Promise<void> {
     const facilities = await getAllFacilities()
     const aid = await getAllAid()
     await precacheMainMapArea()
-    await precacheAllFacilityMapTiles(facilities)
+    await precacheAllFacilityMapTiles(facilities.slice(0, 25))
     await precacheAllFacilityMapTiles(
-      aid.map((a) => {
+      aid.slice(0, 15).map((a) => {
         const anyA = a as unknown as { latitude?: number; longitude?: number }
         return { latitude: anyA.latitude, longitude: anyA.longitude }
       }),
@@ -199,16 +203,27 @@ async function warmCachedImages(): Promise<void> {
     const facilities = await getAllFacilities()
     const aid = await getAllAid()
     const articles = await getAllArticles()
-    await warmOfflineImages({ facilities, aid, articles })
+    await warmOfflineImages({
+      facilities: facilities.slice(0, 30),
+      aid: aid.slice(0, 15),
+      articles: articles.slice(0, 20),
+    })
   } catch {
     // fail silently
   }
 }
 
-export async function syncAllData(): Promise<void> {
+export async function syncAllData(force = false): Promise<void> {
   if (isSyncing) return
   if (typeof window === 'undefined') return
   if (!navigator.onLine) return
+
+  if (!force) {
+    const lastSync = await getLastSyncTime()
+    if (lastSync && Date.now() - lastSync < SYNC_COOLDOWN_MS) {
+      return
+    }
+  }
 
   isSyncing = true
   try {
@@ -223,9 +238,20 @@ export async function syncAllData(): Promise<void> {
       syncArticles(),
     ])
     await setSyncMeta('all')
-    scheduleHeavySync()
+    scheduleHeavyAssetsSync()
   } finally {
     isSyncing = false
+  }
+}
+
+/** Called from maps page — prefetch tiles without blocking API elsewhere. */
+export async function syncMapAssetsForOffline(): Promise<void> {
+  if (isHeavySyncing || !navigator.onLine) return
+  isHeavySyncing = true
+  try {
+    await syncMapTiles()
+  } finally {
+    isHeavySyncing = false
   }
 }
 
@@ -237,9 +263,9 @@ export function initOfflineSync(): () => void {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(startSync, { timeout: 5_000 })
+    requestIdleCallback(startSync, { timeout: 20_000 })
   } else {
-    setTimeout(startSync, 1_500)
+    setTimeout(startSync, 8_000)
   }
 
   const onOnline = () => syncAllData()

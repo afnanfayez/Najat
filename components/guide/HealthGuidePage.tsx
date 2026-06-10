@@ -5,8 +5,6 @@ import { Search } from 'lucide-react'
 import FirstAidTab from './FirstAidTab'
 import ArticlesTab from './ArticlesTab'
 import MentalHealthTab from './MentalHealthTab'
-import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
-
 const TABS = [
   { id: 'first-aid', label: 'الإسعافات الأولية' },
   { id: 'articles',  label: 'مقالات التوعية' },
@@ -22,8 +20,6 @@ export default function HealthGuidePage() {
       className="flex flex-col h-full overflow-y-auto no-scrollbar pb-10 px-2"
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
-      <MobileSimpleHeader />
-      
       {/* ── Header ── */}
       <div className="pt-0 text-right">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#1e293b] mb-2">

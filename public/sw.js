@@ -1,4 +1,5 @@
-const CACHE_NAME = 'najat-pwa-cache-v11'
+const CACHE_NAME = 'najat-pwa-cache-v12'
+const FETCH_TIMEOUT_MS = 4000
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 const AUTH_ROUTES = [
   '/login',
@@ -20,6 +21,7 @@ const RESIDENT_ROUTES = [
   '/maps',
   '/emergency',
   '/profile',
+  '/profile/edit',
 ]
 const ASSETS_TO_CACHE = [
   '/',
@@ -57,11 +59,55 @@ const EXTERNAL_CACHE_HOSTS = [
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
+function rscCacheKey(pathname) {
+  return `rsc-shell:${pathname}`
+}
+
+function isRscRequest(request, url) {
+  return (
+    url.searchParams.has('_rsc') ||
+    request.headers.get('RSC') === '1' ||
+    request.headers.get('Next-Router-Prefetch') === '1'
+  )
+}
+
+function fetchWithTimeout(request, timeoutMs = FETCH_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), timeoutMs)
+    fetch(request)
+      .then((response) => {
+        clearTimeout(timer)
+        resolve(response)
+      })
+      .catch((err) => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
+async function cacheRscPayload(cache, pagePath) {
+  try {
+    const response = await fetch(pagePath, {
+      headers: {
+        RSC: '1',
+        'Next-Router-Prefetch': '1',
+        'Next-Url': pagePath,
+      },
+    })
+    if (!response.ok) return
+    await cache.put(rscCacheKey(pagePath), response.clone())
+  } catch {
+    // ignore
+  }
+}
+
 async function cachePageAssets(cache, pagePath) {
   try {
     const response = await fetch(pagePath)
     if (!response.ok) return
     await cache.put(pagePath, response.clone())
+    await cacheRscPayload(cache, pagePath)
     const html = await response.text()
     const assetUrls = [
       ...html.matchAll(/(?:src|href)="([^"]*\/_next\/[^"]+)"/g),
@@ -296,28 +342,60 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (request.mode === 'navigate') {
+  if (
+    url.origin === self.location.origin &&
+    isRscRequest(request, url) &&
+    !url.pathname.startsWith('/_next/')
+  ) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, clone)
-              cachePageAssets(cache, url.pathname)
-            })
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const shellKey = rscCacheKey(url.pathname)
+        const cached =
+          (await cache.match(request)) || (await cache.match(shellKey))
+        if (cached) return cached
+
+        try {
+          const response = await fetchWithTimeout(request)
+          if (response.ok) {
+            await cache.put(shellKey, response.clone())
+            await cache.put(request, response.clone())
           }
           return response
-        })
-        .catch(async () => {
-          const cachedResponse =
-            (await caches.match(request)) ||
-            (await caches.match(fallbackDocument(url.pathname))) ||
-            (await caches.match('/dashboard')) ||
-            (await caches.match('/login'))
+        } catch {
+          const fallback =
+            (await cache.match(shellKey)) ||
+            (await cache.match(rscCacheKey(fallbackDocument(url.pathname)))) ||
+            (await cache.match(fallbackDocument(url.pathname)))
+          if (fallback) return fallback
+          throw new Error('offline-rsc-miss')
+        }
+      }),
+    )
+    return
+  }
 
-          return cachedResponse
-        }),
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        try {
+          const response = await fetchWithTimeout(request)
+          if (response && response.status === 200) {
+            const clone = response.clone()
+            await cache.put(request, clone)
+            cachePageAssets(cache, url.pathname)
+          }
+          return response
+        } catch {
+          const cachedResponse =
+            (await cache.match(request)) ||
+            (await cache.match(rscCacheKey(url.pathname))) ||
+            (await cache.match(fallbackDocument(url.pathname))) ||
+            (await cache.match('/dashboard')) ||
+            (await cache.match('/login'))
+          if (cachedResponse) return cachedResponse
+          throw new Error('offline-nav-miss')
+        }
+      }),
     )
     return
   }
@@ -329,21 +407,20 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname.startsWith('/_next/')) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request)
-            .then((response) => {
-              if (response.status === 200) {
-                const clone = response.clone()
-                caches
-                  .open(CACHE_NAME)
-                  .then((cache) => cache.put(request, clone))
-              }
-              return response
-            })
-            .catch(() => undefined),
-      ),
+      caches.match(request).then(async (cached) => {
+        if (cached) return cached
+        try {
+          const response = await fetchWithTimeout(request)
+          if (response.status === 200) {
+            const clone = response.clone()
+            const cache = await caches.open(CACHE_NAME)
+            await cache.put(request, clone)
+          }
+          return response
+        } catch {
+          return undefined
+        }
+      }),
     )
     return
   }
@@ -354,18 +431,19 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request)
-          .then((response) => {
-            if (response.status === 200) {
-              const clone = response.clone()
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-            }
-            return response
-          })
-          .catch(() => undefined),
-    ),
+    caches.match(request).then(async (cached) => {
+      if (cached) return cached
+      try {
+        const response = await fetchWithTimeout(request)
+        if (response.status === 200) {
+          const clone = response.clone()
+          const cache = await caches.open(CACHE_NAME)
+          await cache.put(request, clone)
+        }
+        return response
+      } catch {
+        return undefined
+      }
+    }),
   )
 })

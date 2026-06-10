@@ -1,13 +1,9 @@
 'use client'
 
-import { Menu } from 'lucide-react'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
 import SearchBar from './SearchBar'
 
 interface DashboardHeaderProps {
   isMobile: boolean
-  setIsMobileMenuOpen: (open: boolean) => void
   searchValue: string
   setSearchValue: (value: string) => void
   isSearchFocused: boolean
@@ -16,7 +12,6 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({
   isMobile,
-  setIsMobileMenuOpen,
   searchValue,
   setSearchValue,
   isSearchFocused,
@@ -32,36 +27,6 @@ export default function DashboardHeader({
         boxSizing: 'border-box',
       }}
     >
-      {/* ── Mobile Navbar ── */}
-      {isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 0',
-            borderBottom: '1px solid #e8eef5',
-            marginBottom: '20px',
-          }}
-        >
-          <div 
-            style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <Menu size={32} />
-          </div>
-          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-            <Image
-              src="/assets/Logo2.png"
-              alt="شعار نجاة"
-              fill
-              style={{ objectFit: 'contain' }}
-              priority
-            />
-          </div>
-        </div>
-      )}
-
       <div
         style={{
           position: 'relative',

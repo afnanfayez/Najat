@@ -2,14 +2,9 @@ import React from 'react'
 import SOSButton from './SOSButton'
 import EmergencyContacts from './EmergencyContacts'
 import EmergencyProcedures from './EmergencyProcedures'
-import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
-
 export default function EmergencyContent() {
   return (
     <>
-      <div className="w-full">
-        <MobileSimpleHeader />
-      </div>
       <div className="w-full flex flex-col gap-10 pb-12">
       
       {/* Header and SOS Section */}

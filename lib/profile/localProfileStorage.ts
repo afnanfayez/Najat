@@ -110,13 +110,22 @@ export function mergeProfileAvatarOnly(profile: UserProfile): UserProfile {
   const local = readRaw(profile.id)
   return {
     ...profile,
-    // ✅ Local image takes precedence (pending upload)
+    ...(local.overrides ?? {}),
     avatarUrl: local.avatarDataUrl ?? profile.avatarUrl ?? null,
-    // ✅ Local assistance settings
     assistancePreferences: local.assistancePreferences ?? profile.assistancePreferences ?? null,
     assistanceLocation: local.assistanceLocation ?? profile.assistanceLocation ?? null,
     assistanceRadius: local.assistanceRadius ?? profile.assistanceRadius ?? null,
   }
+}
+
+export function clearLocalOverrides(userId: string, keys: (keyof UpdateUserProfileBody)[]) {
+  const current = readRaw(userId)
+  if (!current.overrides) return
+  const next = { ...current.overrides }
+  for (const key of keys) {
+    delete next[key]
+  }
+  writeRaw(userId, { ...current, overrides: next })
 }
 
 /** @deprecated Use mergeProfileAvatarOnly — kept for emergency contacts UI. */

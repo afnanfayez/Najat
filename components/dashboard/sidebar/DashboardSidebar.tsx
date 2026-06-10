@@ -22,26 +22,27 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   return (
     <>
-      {/* Mobile overlay */}
-      <div className="overlay" onClick={() => setIsMobileMenuOpen(false)} />
+      <div className="overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden={!isMobileMenuOpen} />
 
-      {/* Mobile sidebar drawer */}
       <div
         className="mobile-sidebar"
         style={{
+          right: isMobileMenuOpen ? '0' : '-320px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           boxSizing: 'border-box',
-          overflowY: 'auto',
-          overflowX: 'hidden',
         }}
       >
         <div
           style={{
+            width: '100%',
             padding: '25px 25px 10px',
             display: 'flex',
             justifyContent: 'flex-start',
+            direction: 'rtl',
+            boxSizing: 'border-box',
+            flexShrink: 0,
           }}
         >
           <Button
@@ -53,6 +54,7 @@ export default function DashboardSidebar({
               color: '#fff',
               borderRadius: '50%',
             }}
+            aria-label="إغلاق القائمة"
           >
             <X size={24} />
           </Button>
@@ -60,7 +62,6 @@ export default function DashboardSidebar({
         <SidebarContent {...sidebarContentProps} user={user} role={role} />
       </div>
 
-      {/* Desktop sidebar */}
       <aside
         className="desktop-sidebar"
         style={{
@@ -71,9 +72,8 @@ export default function DashboardSidebar({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: '30px 0 20px',
+          padding: '30px 0 16px',
           position: 'relative',
-          top: '-0.58px',
           zIndex: 10,
           boxSizing: 'border-box',
           overflowY: 'auto',

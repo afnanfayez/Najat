@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback, FormEvent, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { Lock, MapPin, Search, Loader2, Navigation, X } from 'lucide-react'
-import MobileSimpleHeader from '@/components/dashboard/header/MobileSimpleHeader'
 import { useSafetyCheck, useSafetyMapData } from '@/hooks/useSafetyMapData'
 import type { LeafletMapInnerProps, SearchResult } from './LeafletMapInner'
 
@@ -490,11 +489,6 @@ export default function MapsContent() {
           }
         }
       `}</style>
-
-      {/* ── Mobile burger header ── */}
-      <div style={{ background: '#fff', padding: '0 16px', flexShrink: 0 }}>
-        <MobileSimpleHeader />
-      </div>
 
       {/* ── Map area — fills remaining height ── */}
       <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>

@@ -92,11 +92,9 @@ const RegisterForm = () => {
 
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center">
         <Card
-          className="scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-hidden rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-4 shadow-2xl backdrop-blur-md sm:px-8 sm:py-6"
+          className={`scrollbar-hide flex w-full max-w-[750px] flex-col items-center justify-center overflow-y-auto rounded-[25px] border-white/[0.1] bg-white/[0.01] px-5 py-4 shadow-2xl backdrop-blur-md sm:px-8 sm:py-6 max-h-[92vh] lg:max-h-none ${step === 5 ? '' : 'lg:h-[700px]'}`}
           style={{
             fontFamily: 'Cairo, sans-serif',
-            height: step === 5 ? 'auto' : '700px',
-            minHeight: step === 5 ? '950px' : '700px',
           }}
         >
           <div className="flex h-full w-full flex-col items-center justify-between">

@@ -15,7 +15,7 @@ import {
 /**
  * OpenAPI paths are `/api/v1/hospitals` from the server root.
  * When `NEXT_PUBLIC_BASE_URL` includes the `/api` prefix (e.g. Railway:
- * `https://najat-api.up.railway.app/api`), this must be `/v1` only so the
+ * `https://graduation-project-api-production-8251.up.railway.app/api`), this must be `/v1` only so the
  * final URL is `{BASE}/v1/hospitals` → `.../api/v1/hospitals`.
  * If `NEXT_PUBLIC_BASE_URL` is the origin only, set `NEXT_PUBLIC_API_V1_ROOT=/api/v1`.
  */

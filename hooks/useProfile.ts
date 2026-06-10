@@ -5,13 +5,30 @@ import { toast } from 'sonner'
 import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
-import { saveLocalAvatar, saveLocalProfileData, type LocalProfileData } from '@/lib/profile/localProfileStorage'
+import {
+  mergeProfileAvatarOnly,
+  saveLocalProfileData,
+  saveLocalOverrides,
+  type LocalProfileData,
+} from '@/lib/profile/localProfileStorage'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
 import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
+import {
+  getOfflineCachedProfile,
+  updateOfflineLoginProfile,
+} from '@/lib/auth/offlineLogin'
 
 export type ProfileSavePayload = UpdateUserProfileBody & {
   avatarDataUrl?: string
+}
+
+async function loadProfileOffline() {
+  const cached = await getOfflineCachedProfile()
+  if (!cached) {
+    throw { status: 0, message: 'الملف الشخصي غير متوفر دون اتصال' }
+  }
+  return mergeProfileAvatarOnly(cached)
 }
 
 export function useProfile() {
@@ -19,13 +36,33 @@ export function useProfile() {
   const queryClient = useQueryClient()
   const token = getToken()
   const queryKey = getProfileQueryKey(token)
-
   const query = useQuery({
     queryKey,
-    queryFn: () => profileAPI.me(),
+    queryFn: async () => {
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine
+      if (offline) {
+        return loadProfileOffline()
+      }
+
+      try {
+        const profile = await profileAPI.me()
+        await updateOfflineLoginProfile(profile)
+        return mergeProfileAvatarOnly(profile)
+      } catch (err) {
+        try {
+          return await loadProfileOffline()
+        } catch {
+          throw err
+        }
+      }
+    },
     enabled: isHydrated && Boolean(token),
-    staleTime: 0,
-    retry: 1,
+    staleTime: 60_000,
+    retry: (count) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return false
+      return count < 1
+    },
+    gcTime: 5 * 60_000,
   })
 
   const mutation = useMutation({
@@ -60,27 +97,36 @@ export function useProfile() {
       }
 
       if (Object.keys(backendBody).length === 0) {
-        const profile = await profileAPI.me()
-        return { profile, syncedWithServer: false }
+        const current = query.data ?? (await loadProfileOffline().catch(() => null))
+        if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
+        return { profile: mergeProfileAvatarOnly(current), syncedWithServer: false }
       }
 
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const current = query.data ?? (await loadProfileOffline().catch(() => null))
+      if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
+
+      const merged = mergeProfileAvatarOnly({
+        ...current,
+        ...backendBody,
+      })
+
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine
+      if (offline) {
+        saveLocalOverrides(id, backendBody)
+        await updateOfflineLoginProfile(merged)
         await idbEnqueueSync({
           type: 'PROFILE_SYNC',
           status: 'pending',
           payload: backendBody as Record<string, unknown>,
           createdAt: Date.now(),
         })
-        toast.success('تم حفظ التعديلات وسيتم مزامنتها عند عودة الاتصال')
-        const current = query.data
-        if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
-        return {
-          profile: { ...current, ...backendBody },
-          syncedWithServer: false,
-        }
+        toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
+        return { profile: merged, syncedWithServer: false }
       }
 
-      return profileAPI.update(backendBody)
+      const result = await profileAPI.update(backendBody)
+      await updateOfflineLoginProfile(result.profile)
+      return result
     },
     onSuccess: async ({ profile }) => {
       queryClient.setQueryData(getProfileQueryKey(token), profile)
@@ -88,12 +134,12 @@ export function useProfile() {
     },
   })
 
-  const isLoading = !isHydrated || query.isLoading
+  const isLoading = !isHydrated || (query.isLoading && !query.data)
 
   return {
     profile: query.data,
     isLoading,
-    isError: query.isError,
+    isError: query.isError && !query.data,
     error: query.error,
     refetch: query.refetch,
     saveProfile: mutation.mutateAsync,

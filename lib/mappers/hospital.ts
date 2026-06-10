@@ -93,7 +93,7 @@ function stableHash(input: string): number {
 
 /**
  * نسبة ثابتة لكل مستشفى ضمن نطاق يلائم حالة الاستيعاب من الـ API (مثل المخطط في
- * [Najat API](https://najat-api.up.railway.app/api/docs#)).
+ * [Najat API](https://graduation-project-api-production-8251.up.railway.app/api/docs)).
  * تُمزج مع نسبة `currentMedications` عند توفرها.
  */
 export function hospitalMedicineAvailabilityPercent(

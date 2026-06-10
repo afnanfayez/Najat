@@ -80,5 +80,10 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
       }
     },
     staleTime: 1000 * 60 * 2,
+    retry: (count) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return false
+      return count < 1
+    },
+    refetchOnWindowFocus: false,
   })
 }

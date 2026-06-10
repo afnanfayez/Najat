@@ -53,7 +53,6 @@ export default function DashboardHomeContent() {
     <>
       <DashboardHeader
         isMobile={isMobile}
-        setIsMobileMenuOpen={shell?.setIsMobileMenuOpen ?? (() => {})}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
         isSearchFocused={isSearchFocused}
@@ -64,7 +63,7 @@ export default function DashboardHomeContent() {
         style={{
           flex: 1,
           padding: '15px 35px',
-          overflowY: isMobile ? 'auto' : 'hidden',
+          overflowY: 'auto',
           overflowX: 'hidden',
           display: 'flex',
           flexDirection: 'column',

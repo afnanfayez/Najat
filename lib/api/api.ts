@@ -1,6 +1,10 @@
 import { getToken } from '@/lib/api/auth'
+import { fetchWithTimeout } from '@/lib/api/fetchWithTimeout'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || ''
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  ''
 const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
 
 function extractMessage(msg: unknown): string | undefined {
@@ -68,7 +72,7 @@ export async function request(endpoint: string, options: RequestInit = {}) {
   }
 
   try {
-    const res = await fetch(url, config)
+    const res = await fetchWithTimeout(url, config)
 
     let data: any = {}
     const contentType = res.headers.get('content-type')

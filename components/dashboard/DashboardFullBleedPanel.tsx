@@ -11,7 +11,7 @@ export default function DashboardFullBleedPanel({
       style={{
         flex: 1,
         padding: '24px 32px',
-        overflowY: 'hidden',
+        overflowY: 'auto',
         overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',

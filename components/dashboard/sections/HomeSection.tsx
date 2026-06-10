@@ -53,26 +53,18 @@ export default function HomeSection({
         </p>
       </div>
 
-      <div
-        className="services-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '24px',
-          flex: 1,
-          minHeight: 0,
-          paddingBottom: '100px',
-        }}
-      >
-        {serviceCards.map((card) => (
-          <ServiceCard
-            key={card.id}
-            card={card}
-            hoveredServiceCard={hoveredServiceCard}
-            setHoveredServiceCard={setHoveredServiceCard}
-            onCardClick={onCardClick}
-          />
-        ))}
+      <div className="services-grid-scroll custom-scrollbar">
+        <div className="services-grid">
+          {serviceCards.map((card) => (
+            <ServiceCard
+              key={card.id}
+              card={card}
+              hoveredServiceCard={hoveredServiceCard}
+              setHoveredServiceCard={setHoveredServiceCard}
+              onCardClick={onCardClick}
+            />
+          ))}
+        </div>
       </div>
     </>
   )

@@ -7,14 +7,9 @@ import RequestsTable from './view/RequestsTable'
 import NotificationPreferences from './view/NotificationPreferences'
 import SettingsSupportRow from './view/SettingsSupportRow'
 import ProfileSidebar from './view/ProfileSidebar'
-import MobileSimpleHeader from '../dashboard/header/MobileSimpleHeader'
-
 export default function ProfileContent() {
   return (
     <>
-      <div className="w-full lg:hidden mb-4">
-        <MobileSimpleHeader />
-      </div>
       <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6" dir="rtl">
       
       {/* Right Column (Main Content) */}

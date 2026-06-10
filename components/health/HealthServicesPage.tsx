@@ -1,6 +1,5 @@
 'use client'
 
-import { Menu } from 'lucide-react'
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -11,7 +10,6 @@ import {
   sortHealthFacilitiesStable,
 } from '@/lib/health/healthFacilityRoutes'
 import { useDashboardShell } from '@/components/dashboard/DashboardShellContext'
-import Image from 'next/image'
 import { useHealthFacilities } from '@/hooks/useHealthFacilities'
 import { useHealthFacilityLiveDetail } from '@/hooks/useHealthFacilityLiveDetail'
 import {
@@ -69,7 +67,6 @@ export default function HealthServicesPage({
   }, [urlSearch])
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
-  const [isMobile, setIsMobile] = useState(false)
 
   const [view, setView] = useState<
     'list' | 'detail' | 'map' | 'doctors' | 'medicines'
@@ -77,13 +74,6 @@ export default function HealthServicesPage({
   const [prevView, setPrevView] = useState<'list' | 'detail' | 'doctors' | 'medicines'>('detail')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   const listQueryParams = useMemo(
     () => ({
@@ -374,36 +364,6 @@ export default function HealthServicesPage({
 
   return (
     <div className="health-page-container">
-      {isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 0',
-            borderBottom: '1px solid #e8eef5',
-            marginBottom: '20px',
-            flexShrink: 0,
-          }}
-        >
-          <div 
-            style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => openMobileMenu?.(true)}
-          >
-            <Menu size={32} />
-          </div>
-          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-            <Image
-              src="/assets/Logo2.png"
-              alt="شعار نجاة"
-              fill
-              style={{ objectFit: 'contain' }}
-              priority
-            />
-          </div>
-        </div>
-      )}
-
       <HealthHeader onShowMap={handleHealthHeaderMap} />
 
       <HealthFilter 

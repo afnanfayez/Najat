@@ -37,7 +37,6 @@ export default function SidebarContent({
     <div
       style={{
         width: '100%',
-        minHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -45,19 +44,23 @@ export default function SidebarContent({
         boxSizing: 'border-box',
       }}
     >
-      {/* Logo */}
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+      <div
+        style={{
+          marginBottom: '24px',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
         <Image
           src="/assets/Logo2.png"
           alt="شعار نجاة"
           width={100}
           height={100}
-          style={{ objectFit: 'contain' }}
+          style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxWidth: 100, maxHeight: 100 }}
           priority
         />
       </div>
 
-      {/* Nav Links */}
       <nav
         style={{
           width: '100%',
@@ -75,6 +78,7 @@ export default function SidebarContent({
           return (
             <button
               key={item.id}
+              type="button"
               id={`nav-${item.id}`}
               onClick={() => setActiveNav(item.id)}
               onMouseEnter={() => setHoveredNav(item.id)}
@@ -136,7 +140,6 @@ export default function SidebarContent({
         })}
       </nav>
 
-      {/* User Info Block */}
       <div
         style={{
           width: '260px',
@@ -149,6 +152,7 @@ export default function SidebarContent({
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
+          boxSizing: 'border-box',
         }}
       >
         <div
@@ -200,7 +204,6 @@ export default function SidebarContent({
         </div>
       </div>
 
-      {/* Logout */}
       <div
         style={{
           paddingBottom: '20px',
@@ -210,6 +213,7 @@ export default function SidebarContent({
         }}
       >
         <button
+          type="button"
           id="logout-btn"
           onClick={handleLogout}
           style={{

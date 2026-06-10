@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Search, Filter, Menu } from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
@@ -197,37 +196,6 @@ export default function HumanitarianAidPage({
           `,
         }}
       />
-
-
-      {isMobile && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '12px 0',
-            borderBottom: '1px solid #e8eef5',
-            marginBottom: '20px',
-            flexShrink: 0,
-          }}
-        >
-          <div 
-            style={{ color: '#2196F3', cursor: 'pointer' }}
-            onClick={() => openMobileMenu?.(true)}
-          >
-            <Menu size={32} />
-          </div>
-          <div style={{ position: 'relative', width: '40px', height: '40px' }}>
-            <Image
-              src="/assets/Logo2.png"
-              alt="شعار نجاة"
-              fill
-              style={{ objectFit: 'contain' }}
-              priority
-            />
-          </div>
-        </div>
-      )}
 
 
       <div

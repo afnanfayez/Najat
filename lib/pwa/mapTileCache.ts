@@ -80,7 +80,7 @@ export async function precacheAllFacilityMapTiles(
   )
   for (let i = 0; i < coords.length; i++) {
     const f = coords[i]
-    await precacheTilesForPoint(f.latitude!, f.longitude!, [14, 15], 1)
+    await precacheTilesForPoint(f.latitude!, f.longitude!, [13, 14, 15, 16], 1)
     if (i > 0 && i % 5 === 0) {
       await new Promise((r) => setTimeout(r, 100))
     }
@@ -89,7 +89,7 @@ export async function precacheAllFacilityMapTiles(
 
 export async function precacheMainMapArea(): Promise<void> {
   const [lat, lng] = MAP_CENTER
-  await precacheTilesForPoint(lat, lng, [13, 14, 15], 1)
+  await precacheTilesForPoint(lat, lng, [12, 13, 14, 15, 16], 2)
 }
 
 export async function precacheTilesFromMapView(

@@ -90,7 +90,9 @@ export default function EditHeader() {
         avatarDataUrl: pendingAvatar,
       })
 
-      toast.success('تم حفظ التعديلات بنجاح')
+      if (navigator.onLine) {
+        toast.success('تم حفظ التعديلات بنجاح')
+      }
       setPendingAvatar(undefined)
       router.push('/profile')
     } catch (err: unknown) {

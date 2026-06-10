@@ -1,6 +1,6 @@
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
 
-/** مسارات أمامية بمسمّيات قريبة من الـ API (مثل `/api/v1/dental-clinics`)، انظر [Najat API](https://najat-api.up.railway.app/api/docs#). */
+/** مسارات أمامية بمسمّيات قريبة من الـ API (مثل `/api/v1/dental-clinics`)، انظر [Najat API](https://graduation-project-api-production-8251.up.railway.app/api/docs). */
 export const HEALTH_ROUTE: Record<FacilityCategory, string> = {
   hospitals: '/hospitals',
   pharmacies: '/pharmacies',

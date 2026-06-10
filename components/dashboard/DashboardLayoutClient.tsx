@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { getToken } from '@/lib/api/auth'
 import { useAuth } from '@/context/AuthContext'
 import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
+import AdminMobileHeader from '@/components/admin/dashboard/AdminMobileHeader'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import { DashboardShellContext } from './DashboardShellContext'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -154,15 +155,49 @@ export default function DashboardLayoutClient({
             * { box-sizing: border-box; }
             body { margin: 0; padding: 0; overflow: hidden; width: 100%; max-width: 100%; }
 
+            .services-grid-scroll {
+              flex: 1;
+              min-height: 0;
+              width: 100%;
+              overflow-y: auto;
+              overflow-x: hidden;
+              -webkit-overflow-scrolling: touch;
+            }
+
+            .services-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 16px;
+              width: 100%;
+              padding: 4px 2px 12px;
+            }
+
+            .services-grid > * {
+              width: 100%;
+            }
+
+            @media (max-width: 639px) {
+              .services-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+              }
+            }
+
+            @media (min-width: 1400px) {
+              .services-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+                padding-bottom: 24px;
+              }
+            }
+
             @media (max-width: 1024px) {
               .desktop-sidebar { display: none !important; }
               .main-container  { width: 100% !important; padding-right: 0 !important; }
-              .services-grid   { grid-template-columns: repeat(2, 1fr) !important; padding: 10px !important; padding-bottom: 60px !important; }
               .content-body    { padding: 15px !important; overflow-y: auto !important; }
             }
 
             @media (max-width: 768px) {
-              .services-grid    { grid-template-columns: 1fr !important; gap: 12px !important; padding-bottom: 20px !important; }
               .header-title     { font-size: 20px !important; }
               .header-desc      { font-size: 13px !important; margin-bottom: 12px !important; }
               .search-container { gap: 6px; padding: 2px 10px !important; margin-bottom: 8px !important; overflow: hidden; }
@@ -176,7 +211,6 @@ export default function DashboardLayoutClient({
             .mobile-sidebar {
               position: fixed;
               top: 0;
-              right: ${isMobileMenuOpen ? '0' : '-320px'};
               width: 320px;
               height: 100vh;
               background: #2196F3;
@@ -184,6 +218,18 @@ export default function DashboardLayoutClient({
               transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
               box-shadow: -10px 0 30px rgba(0,0,0,0.15);
               overflow-y: auto;
+              overflow-x: hidden;
+            }
+            .desktop-sidebar::-webkit-scrollbar,
+            .mobile-sidebar::-webkit-scrollbar { width: 6px; }
+            .desktop-sidebar::-webkit-scrollbar-track,
+            .mobile-sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+            .desktop-sidebar::-webkit-scrollbar-thumb,
+            .mobile-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.35); border-radius: 10px; }
+
+            @media (min-width: 1025px) {
+              .mobile-sidebar { display: none !important; }
+              .overlay { display: none !important; }
             }
 
             .overlay {
@@ -252,14 +298,23 @@ export default function DashboardLayoutClient({
             </div>
           )}
           <div
+            className="custom-scrollbar"
             style={{
               flex: 1,
               minHeight: 0,
               display: 'flex',
               flexDirection: 'column',
               width: '100%',
+              overflowY: 'auto',
+              overflowX: 'hidden',
             }}
           >
+            {!isAdminRoute && (
+              <AdminMobileHeader
+                onMenuOpen={() => setIsMobileMenuOpen(true)}
+                className="shrink-0 px-4 sm:px-6 lg:hidden"
+              />
+            )}
             {children}
           </div>
         </main>
