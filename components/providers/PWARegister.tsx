@@ -17,6 +17,16 @@ export default function PWARegister() {
       !('serviceWorker' in navigator)
     ) return
 
+    // في وضع التطوير: أزل أي SW قديم — Turbopack يغيّر مسارات الأصول وكاش SW يكسر الصفحات
+    if (process.env.NODE_ENV === 'development') {
+      void navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          void registration.unregister()
+        })
+      })
+      return
+    }
+
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
     const registerSW = async () => {
       try {

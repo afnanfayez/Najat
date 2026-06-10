@@ -93,21 +93,15 @@ export default function HealthServicesPage({
     [router, category, openMobileMenu],
   )
 
-  const { data, isLoading, isError, error, refetch } =
+  const { data, catalog, isLoading, isError, error, refetch } =
     useHealthFacilities(listQueryParams)
-
-  const { data: indexData, isLoading: indexLoading } = useHealthFacilities({
-    category,
-    search: '',
-    region: null,
-  })
 
   const routeOrdinal = facilityId ? parseOrdinalRouteParam(facilityId) : null
 
   const routeFacility = useMemo(() => {
-    if (routeOrdinal == null || !data?.facilities?.length) return null
-    return resolveFacilityByOrdinal(data.facilities, routeOrdinal)
-  }, [routeOrdinal, data])
+    if (routeOrdinal == null || !catalog?.facilities?.length) return null
+    return resolveFacilityByOrdinal(catalog.facilities, routeOrdinal)
+  }, [routeOrdinal, catalog])
 
   const effectiveFacility = routeFacility ?? selectedFacility
 
@@ -144,14 +138,19 @@ export default function HealthServicesPage({
     }, 350)
   }, [])
 
-  const handleNavigate = (facility: HealthFacility) => {
-    const base = indexData?.facilities?.length
-      ? sortHealthFacilitiesStable(indexData.facilities)
-      : []
-    const idx = base.findIndex((f) => f.id === facility.id)
-    if (idx < 0) return
-    router.push(healthFacilityOrdinalPath(category, idx + 1))
-  }
+  const handleNavigate = useCallback(
+    (facility: HealthFacility) => {
+      const base = catalog?.facilities?.length
+        ? sortHealthFacilitiesStable(catalog.facilities)
+        : data?.facilities?.length
+          ? sortHealthFacilitiesStable(data.facilities)
+          : []
+      const idx = base.findIndex((f) => f.id === facility.id)
+      if (idx < 0) return
+      router.push(healthFacilityOrdinalPath(category, idx + 1))
+    },
+    [catalog, data, category, router],
+  )
 
   const handleCall = (facility: HealthFacility) => {
     const n = facility.phone?.replace(/\s/g, '')
@@ -199,7 +198,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (facilityId && (isLoading || data === undefined)) {
+  if (facilityId && (isLoading || catalog === undefined)) {
     return (
       <div
         className="health-page-container p-10 text-center text-gray-500"
@@ -210,7 +209,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (facilityId && data && !routeFacility) {
+  if (facilityId && catalog && !routeFacility) {
     return (
       <div className="health-page-container p-10 text-center" dir="rtl">
         <p style={{ fontWeight: 700, marginBottom: 16 }}>
@@ -379,7 +378,7 @@ export default function HealthServicesPage({
       />
 
       <FacilityGrid 
-        isLoading={isLoading || indexLoading}
+        isLoading={isLoading}
         facilities={data?.facilities}
         queryError={isError ? error : undefined}
         onRetry={() => refetch()}

@@ -83,22 +83,17 @@ export default function HumanitarianAidPage({
 
   const {
     data: filteredAid = [],
+    catalog: aidCatalog = [],
     isLoading: isAidLoading,
     isError: isAidError,
   } = useAid(aidQueryParams)
-
-  const { data: aidOrdinalList = [] } = useAid({
-    category: 'all',
-    search: '',
-    region: undefined,
-  })
 
   const routeOrdinal = aidId ? parseOrdinalRouteParam(aidId) : null
 
   const resolvedDetailAid = useMemo(() => {
     if (routeOrdinal == null) return null
-    return resolveAidByOrdinal(filteredAid, routeOrdinal)
-  }, [routeOrdinal, filteredAid])
+    return resolveAidByOrdinal(aidCatalog, routeOrdinal)
+  }, [routeOrdinal, aidCatalog])
 
   if (aidId) {
     if (routeOrdinal === null) {
@@ -133,7 +128,7 @@ export default function HumanitarianAidPage({
         </div>
       )
     }
-    if (isAidLoading) {
+    if (isAidLoading && aidCatalog.length === 0) {
       return (
         <div
           dir="rtl"
@@ -415,7 +410,7 @@ export default function HumanitarianAidPage({
               key={aid.id}
               aid={aid}
               onClick={() => {
-                const sorted = sortAidByStableId(aidOrdinalList)
+                const sorted = sortAidByStableId(aidCatalog)
                 const idx = sorted.findIndex((a) => a.id === aid.id)
                 if (idx < 0) return
                 router.push(humanitarianAidOrdinalPath(idx + 1))

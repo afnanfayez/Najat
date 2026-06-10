@@ -1,4 +1,4 @@
-const CACHE_NAME = 'najat-pwa-cache-v12'
+const CACHE_NAME = 'najat-pwa-cache-v14'
 const FETCH_TIMEOUT_MS = 4000
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 const AUTH_ROUTES = [
@@ -288,6 +288,14 @@ async function notifyClientsSync() {
 // Fetch — Cache Strategy
 // ──────────────────────────────────────────────────────────────────────────────
 
+function isDevBundlerAsset(url) {
+  return (
+    url.pathname.includes('turbopack') ||
+    url.search.includes('turbopack') ||
+    url.pathname.startsWith('/_next/webpack-hmr')
+  )
+}
+
 function isStaticAsset(url) {
   return (
     url.pathname.startsWith('/_next/static/') ||
@@ -298,21 +306,33 @@ function isStaticAsset(url) {
   )
 }
 
+function networkFirstWithCache(request, cacheName) {
+  return caches.open(cacheName).then(async (cache) => {
+    try {
+      const response = await fetchWithTimeout(request)
+      if (response.status === 200) {
+        await cache.put(request, response.clone())
+      }
+      return response
+    } catch {
+      const cached = await cache.match(request)
+      if (cached) return cached
+      throw new Error('network-first-miss')
+    }
+  })
+}
+
 function fallbackDocument(pathname) {
   if (pathname.startsWith('/register')) return '/register'
   if (pathname.startsWith('/admin')) return '/admin'
   if (pathname.startsWith('/volunteer')) return '/volunteer'
   if (pathname.startsWith('/dashboard')) return '/dashboard'
   if (pathname.startsWith('/logout')) return '/logout'
-  if (
-    pathname.startsWith('/hospitals') ||
-    pathname.startsWith('/pharmacies') ||
-    pathname.startsWith('/clinics') ||
-    pathname.startsWith('/labs') ||
-    pathname.startsWith('/dental-clinics')
-  ) {
-    return '/hospitals'
-  }
+  if (pathname.startsWith('/hospitals')) return '/hospitals'
+  if (pathname.startsWith('/pharmacies')) return '/pharmacies'
+  if (pathname.startsWith('/clinics')) return '/clinics'
+  if (pathname.startsWith('/labs')) return '/labs'
+  if (pathname.startsWith('/dental-clinics')) return '/dental-clinics'
   if (pathname.startsWith('/humanitarian-aid')) return '/humanitarian-aid'
   if (pathname.startsWith('/health-guide')) return '/health-guide'
   if (pathname.startsWith('/maps')) return '/maps'
@@ -326,6 +346,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   if (request.method !== 'GET') return
+
+  if (isDevBundlerAsset(url)) return
 
   if (url.origin !== self.location.origin) {
     if (!isExternalCacheable(url) && !isMapTileUrl(url)) {
@@ -400,28 +422,21 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  if (
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/_next/image')
+  ) {
+    event.respondWith(networkFirstWithCache(request, CACHE_NAME))
+    return
+  }
+
   if (isStaticAsset(url)) {
     event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
     return
   }
 
   if (url.pathname.startsWith('/_next/')) {
-    event.respondWith(
-      caches.match(request).then(async (cached) => {
-        if (cached) return cached
-        try {
-          const response = await fetchWithTimeout(request)
-          if (response.status === 200) {
-            const clone = response.clone()
-            const cache = await caches.open(CACHE_NAME)
-            await cache.put(request, clone)
-          }
-          return response
-        } catch {
-          return undefined
-        }
-      }),
-    )
+    event.respondWith(networkFirstWithCache(request, CACHE_NAME))
     return
   }
 

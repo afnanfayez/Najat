@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
 import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
@@ -42,43 +43,43 @@ async function fetchFromIndexedDB(category?: FacilityCategory): Promise<HealthFa
   return getFacilitiesByCategory(category)
 }
 
+async function fetchCategoryFacilities(
+  category?: FacilityCategory,
+): Promise<{ facilities: HealthFacility[]; total: number }> {
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+  if (isOffline) {
+    const facilities = await fetchFromIndexedDB(category)
+    return { facilities, total: facilities.length }
+  }
+
+  try {
+    let facilities: HealthFacility[] = []
+    if (category === 'hospitals') {
+      facilities = await fetchAllHospitalPages()
+    } else {
+      const res = await fetchLiveNonHospitalFacilities({ category })
+      facilities = res.facilities
+    }
+
+    if (facilities.length > 0) {
+      putFacilities(facilities).catch(() => {})
+    }
+
+    return { facilities, total: facilities.length }
+  } catch (e) {
+    console.warn('Network request failed, falling back to offline DB', e)
+    const facilities = await fetchFromIndexedDB(category)
+    return { facilities, total: facilities.length }
+  }
+}
+
 export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
-  return useQuery({
-    queryKey: ['health-facilities', params],
-    queryFn: async (): Promise<{ facilities: HealthFacility[]; total: number }> => {
-      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+  const category = params?.category
 
-      if (isOffline) {
-        let facilities = await fetchFromIndexedDB(params?.category)
-        facilities = applyRegionFilter(facilities, params?.region)
-        facilities = filterBySearch(facilities, params?.search)
-        return { facilities, total: facilities.length }
-      }
-
-      try {
-        let facilities: HealthFacility[] = []
-        if (params?.category === 'hospitals') {
-          facilities = await fetchAllHospitalPages()
-        } else {
-          const res = await fetchLiveNonHospitalFacilities({ category: params?.category })
-          facilities = res.facilities
-        }
-        
-        if (facilities.length > 0) {
-          putFacilities(facilities).catch(() => {})
-        }
-
-        facilities = applyRegionFilter(facilities, params?.region)
-        facilities = filterBySearch(facilities, params?.search)
-        return { facilities, total: facilities.length }
-      } catch (e) {
-        console.warn('Network request failed, falling back to offline DB', e)
-        let facilities = await fetchFromIndexedDB(params?.category)
-        facilities = applyRegionFilter(facilities, params?.region)
-        facilities = filterBySearch(facilities, params?.search)
-        return { facilities, total: facilities.length }
-      }
-    },
+  const baseQuery = useQuery({
+    queryKey: ['health-facilities', category],
+    queryFn: () => fetchCategoryFacilities(category),
     staleTime: 1000 * 60 * 2,
     retry: (count) => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) return false
@@ -86,4 +87,19 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
     },
     refetchOnWindowFocus: false,
   })
+
+  const data = useMemo(() => {
+    if (!baseQuery.data) return undefined
+    let facilities = baseQuery.data.facilities
+    facilities = applyRegionFilter(facilities, params?.region)
+    facilities = filterBySearch(facilities, params?.search)
+    return { facilities, total: facilities.length }
+  }, [baseQuery.data, params?.region, params?.search])
+
+  return {
+    ...baseQuery,
+    data,
+    /** القائمة الكاملة قبل فلترة البحث/المنطقة — لحساب أرقام المسارات */
+    catalog: baseQuery.data,
+  }
 }
