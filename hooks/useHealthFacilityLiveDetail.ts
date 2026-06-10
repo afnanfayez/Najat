@@ -18,7 +18,7 @@ import type { HospitalDto } from '@/schemas/hospitalApi'
 import type { LabDto } from '@/schemas/labApi'
 import type { PharmacyDto } from '@/schemas/pharmacyApi'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
-import { USE_MOCK_HEALTH_FACILITIES } from '@/lib/mocks/healthFacilitiesMockData'
+import { getFacilityDetail, putFacilityDetail } from '@/lib/offline/db'
 
 function mergePreferringListProximity(
   listItem: HealthFacility,
@@ -87,11 +87,27 @@ export function useHealthFacilityLiveDetail(
 
   const query = useQuery({
     queryKey: ['health-facility-live-detail', category, id],
-    queryFn: () => fetchDetailDto(category, id),
-    enabled:
-      opts.enabled &&
-      !!id &&
-      !USE_MOCK_HEALTH_FACILITIES,
+    queryFn: async (): Promise<HealthFacility> => {
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+      if (isOffline) {
+        const cached = await getFacilityDetail(id)
+        if (cached) return cached
+        throw new Error('No offline data available')
+      }
+
+      try {
+        const dto = await fetchDetailDto(category, id)
+        const mapped = mapDtoToFacility(category, dto)
+        await putFacilityDetail(mapped).catch(() => {})
+        return mapped
+      } catch (e) {
+        const cached = await getFacilityDetail(id)
+        if (cached) return cached
+        throw e
+      }
+    },
+    enabled: opts.enabled && !!id,
     staleTime: 60 * 1000,
   })
 
@@ -100,16 +116,17 @@ export function useHealthFacilityLiveDetail(
     if (!opts.enabled) return facility
     if (!query.data) return facility
     try {
-      const mapped = mapDtoToFacility(category, query.data)
-      return mergePreferringListProximity(facility, mapped)
+      return mergePreferringListProximity(facility, query.data)
     } catch {
       return facility
     }
-  }, [facility, query.data, category, opts.enabled])
+  }, [facility, query.data, opts.enabled])
+
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
   return {
     facility: mergedFacility,
-    isLoading: query.isFetching,
-    error: query.error,
+    isLoading: isOffline && query.isPending ? false : query.isFetching,
+    error: isOffline && !query.data ? null : query.error,
   }
 }

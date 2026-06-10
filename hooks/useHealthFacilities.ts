@@ -3,13 +3,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
 import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
-import {
-  facilityMatchesHealthSearch,
-  getMockHealthFacilitiesResult,
-  USE_MOCK_HEALTH_FACILITIES,
-} from '@/lib/mocks/healthFacilitiesMockData'
-import { USE_MOCK_HEALTH_API_FALLBACK } from '@/lib/mocks/mockConfig'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
+import { getFacilitiesByCategory, getAllFacilities, putFacilities } from '@/lib/offline/db'
 
 export type HealthFacilitiesQueryParams = {
   category?: FacilityCategory
@@ -17,9 +12,19 @@ export type HealthFacilitiesQueryParams = {
   region?: 'north' | 'south' | null
 }
 
+function facilityMatchesSearch(f: HealthFacility, search: string): boolean {
+  const q = search.toLowerCase()
+  if (f.name.toLowerCase().includes(q)) return true
+  if (f.address?.toLowerCase().includes(q)) return true
+  if (f.detail?.facilityKindLabel?.toLowerCase().includes(q)) return true
+  const srv = f.detail?.hospitalServices?.map((s) => s.label.toLowerCase()) || []
+  if (srv.some((s) => s.includes(q))) return true
+  return false
+}
+
 function filterBySearch(list: HealthFacility[], search?: string) {
   if (!search?.trim()) return list
-  return list.filter((f) => facilityMatchesHealthSearch(f, search))
+  return list.filter((f) => facilityMatchesSearch(f, search))
 }
 
 function applyRegionFilter(
@@ -32,57 +37,48 @@ function applyRegionFilter(
   return list.filter((f) => f.region === region)
 }
 
+async function fetchFromIndexedDB(category?: FacilityCategory): Promise<HealthFacility[]> {
+  if (!category) return getAllFacilities()
+  return getFacilitiesByCategory(category)
+}
+
 export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
-  const query = useQuery({
+  return useQuery({
     queryKey: ['health-facilities', params],
     queryFn: async (): Promise<{ facilities: HealthFacility[]; total: number }> => {
-      if (USE_MOCK_HEALTH_FACILITIES) {
-        return getMockHealthFacilitiesResult({
-          category: params?.category,
-          search: params?.search,
-          region: params?.region ?? null,
-        })
-      }
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
-      if (params?.category === 'hospitals') {
-        try {
-          let facilities = await fetchAllHospitalPages()
-          facilities = applyRegionFilter(facilities, params.region)
-          facilities = filterBySearch(facilities, params.search)
-          return { facilities, total: facilities.length }
-        } catch (e) {
-          if (USE_MOCK_HEALTH_API_FALLBACK) {
-            return getMockHealthFacilitiesResult({
-              category: 'hospitals',
-              search: params?.search,
-              region: params?.region ?? null,
-            })
-          }
-          throw e
-        }
+      if (isOffline) {
+        let facilities = await fetchFromIndexedDB(params?.category)
+        facilities = applyRegionFilter(facilities, params?.region)
+        facilities = filterBySearch(facilities, params?.search)
+        return { facilities, total: facilities.length }
       }
 
       try {
-        const response = await fetchLiveNonHospitalFacilities({
-          category: params?.category,
-        })
-        let facilities = response.facilities
+        let facilities: HealthFacility[] = []
+        if (params?.category === 'hospitals') {
+          facilities = await fetchAllHospitalPages()
+        } else {
+          const res = await fetchLiveNonHospitalFacilities({ category: params?.category })
+          facilities = res.facilities
+        }
+        
+        if (facilities.length > 0) {
+          putFacilities(facilities).catch(() => {})
+        }
+
         facilities = applyRegionFilter(facilities, params?.region)
         facilities = filterBySearch(facilities, params?.search)
         return { facilities, total: facilities.length }
       } catch (e) {
-        if (USE_MOCK_HEALTH_API_FALLBACK) {
-          return getMockHealthFacilitiesResult({
-            category: params?.category,
-            search: params?.search,
-            region: params?.region ?? null,
-          })
-        }
-        throw e
+        console.warn('Network request failed, falling back to offline DB', e)
+        let facilities = await fetchFromIndexedDB(params?.category)
+        facilities = applyRegionFilter(facilities, params?.region)
+        facilities = filterBySearch(facilities, params?.search)
+        return { facilities, total: facilities.length }
       }
     },
     staleTime: 1000 * 60 * 2,
   })
-
-  return query
 }

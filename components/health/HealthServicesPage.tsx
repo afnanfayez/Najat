@@ -2,7 +2,7 @@
 
 import { Menu } from 'lucide-react'
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   HEALTH_ROUTE,
   healthFacilityOrdinalPath,
@@ -54,10 +54,18 @@ export default function HealthServicesPage({
   setIsMobileMenuOpen,
 }: HealthServicesPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlSearch = searchParams ? (searchParams.get('search') || '') : ''
+
   const shell = useDashboardShell()
   const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
-  const [searchValue, setSearchValue] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [searchValue, setSearchValue] = useState(urlSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(urlSearch)
+
+  useEffect(() => {
+    setSearchValue(urlSearch)
+    setDebouncedSearch(urlSearch)
+  }, [urlSearch])
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
   const [isMobile, setIsMobile] = useState(false)

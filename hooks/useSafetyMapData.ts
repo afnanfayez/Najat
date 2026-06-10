@@ -4,13 +4,49 @@ import { useQuery } from '@tanstack/react-query'
 import { getToken } from '@/lib/api/auth'
 import { safetyAPI } from '@/lib/api/safety'
 import { useAuth } from '@/context/AuthContext'
+import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
+import { getSafetyMapLayers, putSafetyMapLayers } from '@/lib/offline/db'
+
+function getEmptyLayers(): SafetyMapLayers {
+  return { safeRoads: [], dangerZones: [], resourcePoints: [] }
+}
+
+function isPointInPolygon(point: [number, number], polygon: [number, number][]) {
+  const [x, y] = point
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1]
+    const xj = polygon[j][0], yj = polygon[j][1]
+    const intersect = ((yi > y) !== (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+    if (intersect) inside = !inside
+  }
+  return inside
+}
 
 export function useSafetyMapData() {
   const { isHydrated } = useAuth()
 
   return useQuery({
     queryKey: ['safety', 'map-data'],
-    queryFn: () => safetyAPI.getMapData({ limit: 100 }),
+    queryFn: async (): Promise<SafetyMapLayers> => {
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+      
+      if (isOffline) {
+        return (await getSafetyMapLayers()) ?? getEmptyLayers()
+      }
+      
+      try {
+        const data = await safetyAPI.getMapData({ limit: 100 })
+        if (data) {
+          putSafetyMapLayers(data).catch(() => {})
+        }
+        return data
+      } catch (e) {
+        console.warn('Network request failed, falling back to offline DB', e)
+        return (await getSafetyMapLayers()) ?? getEmptyLayers()
+      }
+    },
     enabled: isHydrated && Boolean(getToken()),
     staleTime: 1000 * 60 * 5,
     retry: 1,
@@ -22,7 +58,40 @@ export function useSafetyCheck(lat: number | null, lng: number | null) {
 
   return useQuery({
     queryKey: ['safety', 'check', lat, lng],
-    queryFn: () => safetyAPI.check({ lat: lat!, lng: lng! }),
+    queryFn: async () => {
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+      
+      if (isOffline && lat != null && lng != null) {
+        const layers = await getSafetyMapLayers()
+        if (layers) {
+          const matchingZone = layers.dangerZones.find((zone) => {
+            return zone.rings.some((ring) => isPointInPolygon([lat, lng], ring))
+          })
+          if (matchingZone) {
+            return { safe: false, zones: [{ description: matchingZone.description, dangerLevel: matchingZone.dangerLevel }] }
+          }
+        }
+        return { safe: true, zones: [] }
+      }
+
+      try {
+        return await safetyAPI.check({ lat: lat!, lng: lng! })
+      } catch (e) {
+        console.warn('Failed to fetch safety check, falling back to local check', e)
+        if (lat != null && lng != null) {
+          const layers = await getSafetyMapLayers()
+          if (layers) {
+            const matchingZone = layers.dangerZones.find((zone) => {
+              return zone.rings.some((ring) => isPointInPolygon([lat, lng], ring))
+            })
+            if (matchingZone) {
+              return { safe: false, zones: [{ description: matchingZone.description, dangerLevel: matchingZone.dangerLevel }] }
+            }
+          }
+        }
+        return { safe: true, zones: [] }
+      }
+    },
     enabled: isHydrated && Boolean(getToken()) && lat != null && lng != null,
     staleTime: 1000 * 60,
     retry: 1,

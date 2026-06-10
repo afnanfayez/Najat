@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { searchSuggestions } from '../data/dashboardConstants'
+import { useRouter } from 'next/navigation'
 
 interface SearchBarProps {
   searchValue: string
@@ -18,6 +19,31 @@ export default function SearchBar({
   isSearchFocused,
   setIsSearchFocused,
 }: SearchBarProps) {
+  const router = useRouter()
+
+  const handleSearchSubmit = (queryStr?: string) => {
+    const target = (queryStr || searchValue).trim().toLowerCase()
+    if (!target) return
+
+    if (target.includes('مستشف') || target.includes('صحة') || target.includes('طبيب') || target.includes('دكتور') || target.includes('علاج')) {
+      router.push(`/hospitals?search=${encodeURIComponent(queryStr || searchValue)}`)
+    } else if (target.includes('صيدل') || target.includes('دواء')) {
+      router.push(`/pharmacies?search=${encodeURIComponent(queryStr || searchValue)}`)
+    } else if (target.includes('عياد') || target.includes('مستوصف')) {
+      router.push(`/clinics?search=${encodeURIComponent(queryStr || searchValue)}`)
+    } else if (target.includes('مساعد') || target.includes('طعام') || target.includes('غذاء') || target.includes('إيواء') || target.includes('كساء') || target.includes('ماء') || target.includes('تموين') || target.includes('معونات')) {
+      router.push(`/humanitarian-aid?search=${encodeURIComponent(queryStr || searchValue)}`)
+    } else if (target.includes('طوارئ') || target.includes('نجدة') || target.includes('إسعاف') || target.includes('اسعاف')) {
+      router.push('/emergency')
+    } else if (target.includes('خريط') || target.includes('خرائط') || target.includes('ممر') || target.includes('موقع')) {
+      router.push('/maps')
+    } else if (target.includes('دليل') || target.includes('نصائح') || target.includes('إسعافات')) {
+      router.push('/health-guide')
+    } else {
+      router.push(`/hospitals?search=${encodeURIComponent(queryStr || searchValue)}`)
+    }
+  }
+
   return (
     <div style={{ position: 'relative', width: '100%', marginRight: 'auto' }}>
       <div
@@ -44,6 +70,11 @@ export default function SearchBar({
           onChange={(e) => setSearchValue(e.target.value)}
           onFocus={() => setIsSearchFocused(true)}
           onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearchSubmit()
+            }
+          }}
           style={{
             flex: 1,
             minWidth: 0,
@@ -61,6 +92,7 @@ export default function SearchBar({
         <Button
           id="search-btn"
           className="search-btn"
+          onClick={() => handleSearchSubmit()}
           style={{
             background: 'linear-gradient(135deg, #2196f3, #1565c0)',
             color: '#fff',
@@ -107,6 +139,7 @@ export default function SearchBar({
               onClick={() => {
                 setSearchValue(item.label)
                 setIsSearchFocused(false)
+                handleSearchSubmit(item.label)
               }}
               style={{
                 padding: '16px 20px',

@@ -8,7 +8,7 @@ import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
 import DashboardSidebar from './sidebar/DashboardSidebar'
 import { DashboardShellContext } from './DashboardShellContext'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
-import { toast } from 'sonner'
+import { initOfflineSync } from '@/lib/offline/sync'
 
 function activeNavFromRoute(pathname: string, tab: string | null): string {
   if (isHealthFacilityPath(pathname)) return 'health'
@@ -43,7 +43,15 @@ export default function DashboardLayoutClient({
   const { user, role, isLoading, isHydrated, logout } = useAuth()
   const { isOffline } = useOnlineStatus()
 
-  // Auth guard & Offline guard — only redirect after hydration is complete AND loading is done
+  // Initialize background data sync
+  useEffect(() => {
+    if (!isHydrated || isLoading) return
+    if (!getToken()) return
+    const cleanup = initOfflineSync()
+    return cleanup
+  }, [isHydrated, isLoading])
+
+  // Auth guard
   useEffect(() => {
     if (!isHydrated) return      // wait for client-side hydration
     if (isLoading) return        // wait for auth check to finish
@@ -51,39 +59,11 @@ export default function DashboardLayoutClient({
       router.replace('/login')
       return
     }
+  }, [isHydrated, isLoading, pathname, router])
 
-    if (isOffline) {
-      // هذه الصفحات تحتاج بيانات حية من السيرفر — لا تعمل أوفلاين
-      const isOnlineOnlyRoute =
-        pathname.startsWith('/hospitals') ||
-        pathname.startsWith('/clinics') ||
-        pathname.startsWith('/dental-clinics') ||
-        pathname.startsWith('/labs') ||
-        pathname.startsWith('/pharmacies') ||
-        pathname.startsWith('/humanitarian-aid') ||
-        pathname.startsWith('/health-guide') ||
-        pathname.startsWith('/maps')
-        // ملاحظة: /admin و /volunteer مدعومان أوفلاين بعد تسجيل الدخول
-
-      if (isOnlineOnlyRoute) {
-        toast.error('هذه الصفحة تتطلب اتصالاً بالإنترنت')
-        router.replace('/dashboard')
-      }
-    }
-  }, [isHydrated, isLoading, isOffline, pathname, router])
-
-    const setNav = useCallback(
+  const setNav = useCallback(
     (id: string) => {
       setIsMobileMenuOpen(false)
-      if (isOffline) {
-        // هذه الخدمات تحتاج بيانات حية — /admin و /volunteer مدعومان أوفلاين
-        const isOnlineOnly = ['health', 'humanaid', 'guide', 'maps'].includes(id)
-        if (isOnlineOnly) {
-          toast.error('هذه الخدمة تتطلب اتصالاً بالإنترنت')
-          return
-        }
-      }
-
       if (id === 'home') {
         router.replace('/dashboard', { scroll: false })
         return
@@ -120,7 +100,7 @@ export default function DashboardLayoutClient({
         scroll: false,
       })
     },
-    [router, isOffline],
+    [router],
   )
 
   const handleLogout = useCallback(() => {
@@ -250,3 +230,4 @@ export default function DashboardLayoutClient({
     </DashboardShellContext.Provider>
   )
 }
+

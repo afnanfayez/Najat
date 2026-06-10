@@ -59,21 +59,49 @@ function shortLabel(item: NominatimItem): string {
 
 async function fetchSuggestions(query: string): Promise<NominatimItem[]> {
   if (!query.trim()) return []
-  const params = new URLSearchParams({
-    q: query,
-    format: 'json',
-    limit: '6',
-    'accept-language': 'ar',
-    viewbox: GAZA_VIEWBOX,
-    bounded: '0',
-    addressdetails: '0',
-  })
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-    headers: { 'Accept-Language': 'ar' },
-  })
-  if (!res.ok) return []
-  return res.json()
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+  async function getLocalSuggestions(q: string) {
+    try {
+      const { searchLocalPlaces } = await import('@/lib/offline/db')
+      const locals = await searchLocalPlaces(q)
+      return locals.map((l) => ({
+        lat: String(l.lat),
+        lon: String(l.lng),
+        display_name: l.display_name,
+        name: l.name,
+        type: l.type,
+      }))
+    } catch {
+      return []
+    }
+  }
+
+  if (isOffline) {
+    return getLocalSuggestions(query)
+  }
+
+  try {
+    const params = new URLSearchParams({
+      q: query,
+      format: 'json',
+      limit: '6',
+      'accept-language': 'ar',
+      viewbox: '34.20,31.60,34.60,31.20',
+      bounded: '0',
+      addressdetails: '0',
+    })
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+      headers: { 'Accept-Language': 'ar' },
+    })
+    if (!res.ok) return []
+    return res.json()
+  } catch (e) {
+    console.warn('Failed to fetch map suggestions, using offline locations', e)
+    return getLocalSuggestions(query)
+  }
 }
+
 
 function ToggleSwitch({
   checked,

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchAllAidPages } from '@/lib/health/aidBackend'
-import { MOCK_AID, USE_MOCK_AID } from '@/lib/mocks/aidMockData'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
+import { getAllAid, putAid } from '@/lib/offline/db'
 
 export type AidQueryParams = {
   search?: string
@@ -27,9 +27,22 @@ export function useAid(params?: AidQueryParams) {
   return useQuery({
     queryKey: ['aid', params?.category, debouncedSearch, params?.region],
     queryFn: async (): Promise<HumanitarianAid[]> => {
-      const base: HumanitarianAid[] = USE_MOCK_AID
-        ? MOCK_AID
-        : await fetchAllAidPages()
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+      let base: HumanitarianAid[] = []
+
+      if (isOffline) {
+        base = await getAllAid()
+      } else {
+        try {
+          base = await fetchAllAidPages()
+          if (base.length > 0) {
+            putAid(base).catch(() => {})
+          }
+        } catch (e) {
+          console.warn('Network fetch failed, falling back to offline DB', e)
+          base = await getAllAid()
+        }
+      }
 
       let result = base
 

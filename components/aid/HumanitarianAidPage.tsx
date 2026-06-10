@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
 import { useAid } from '@/hooks/useAid'
@@ -43,11 +43,18 @@ export default function HumanitarianAidPage({
   aidId,
 }: HumanitarianAidPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlSearch = searchParams ? (searchParams.get('search') || '') : ''
+
   const shell = useDashboardShell()
   const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
   const [activeCategory, setActiveCategory] = useState('all')
   const [isMobile, setIsMobile] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
+  const [searchValue, setSearchValue] = useState(urlSearch)
+
+  useEffect(() => {
+    setSearchValue(urlSearch)
+  }, [urlSearch])
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
 
   const aidQueryParams = useMemo(
