@@ -182,7 +182,7 @@ export async function idbDeleteAuthSnapshot(email: string): Promise<void> {
 
 export type SyncQueueItem = {
   id?: number
-  type: 'SESSION_REFRESH' | 'PROFILE_SYNC'
+  type: 'SESSION_REFRESH' | 'PROFILE_SYNC' | 'AID_REQUEST'
   status: 'pending' | 'done' | 'failed'
   payload: Record<string, unknown>
   createdAt: number

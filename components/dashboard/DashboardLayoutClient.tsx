@@ -9,6 +9,8 @@ import DashboardSidebar from './sidebar/DashboardSidebar'
 import { DashboardShellContext } from './DashboardShellContext'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { initOfflineSync } from '@/lib/offline/sync'
+import { getLastSyncTime } from '@/lib/offline/db'
+import { precacheResidentRoutes } from '@/lib/pwa/precacheRoute'
 
 function activeNavFromRoute(pathname: string, tab: string | null): string {
   if (isHealthFacilityPath(pathname)) return 'health'
@@ -39,17 +41,32 @@ export default function DashboardLayoutClient({
 
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [lastSyncAt, setLastSyncAt] = useState<number | null>(null)
 
   const { user, role, isLoading, isHydrated, logout } = useAuth()
   const { isOffline } = useOnlineStatus()
 
-  // Initialize background data sync
+  // Initialize background data sync + route precache for residents
   useEffect(() => {
     if (!isHydrated || isLoading) return
     if (!getToken()) return
+    if (
+      role === 'resident' &&
+      !sessionStorage.getItem('najat-routes-precached')
+    ) {
+      sessionStorage.setItem('najat-routes-precached', '1')
+      void precacheResidentRoutes()
+    }
     const cleanup = initOfflineSync()
+    void getLastSyncTime().then(setLastSyncAt)
     return cleanup
-  }, [isHydrated, isLoading])
+  }, [isHydrated, isLoading, role])
+
+  useEffect(() => {
+    if (!isOffline) {
+      void getLastSyncTime().then(setLastSyncAt)
+    }
+  }, [isOffline, pathname])
 
   // Auth guard
   useEffect(() => {
@@ -214,6 +231,26 @@ export default function DashboardLayoutClient({
             position: 'relative',
           }}
         >
+          {isOffline && (
+            <div
+              role="status"
+              style={{
+                flexShrink: 0,
+                padding: '8px 16px',
+                background: '#fff3e0',
+                color: '#e65100',
+                fontSize: 13,
+                fontWeight: 700,
+                textAlign: 'center',
+                borderBottom: '1px solid #ffcc80',
+              }}
+            >
+              أنت غير متصل بالإنترنت — يتم عرض البيانات المحفوظة محلياً
+              {lastSyncAt
+                ? ` · آخر مزامنة: ${new Date(lastSyncAt).toLocaleString('ar-EG')}`
+                : ''}
+            </div>
+          )}
           <div
             style={{
               flex: 1,

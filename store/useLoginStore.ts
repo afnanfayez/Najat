@@ -12,7 +12,7 @@ import {
   saveOfflineLoginSnapshot,
   tryOfflineLogin,
 } from '@/lib/auth/offlineLogin'
-import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
+import { precacheAppRoute, precacheResidentRoutes } from '@/lib/pwa/precacheRoute'
 import { profileAPI } from '@/lib/api/profile'
 import { toast } from 'sonner'
 
@@ -158,6 +158,7 @@ export const useLoginStore = create<LoginState>()(
             const destination = routeForRole(restored.role)
             saveLoginRedirect(destination)
             void precacheAppRoute(destination)
+            if (restored.role === 'resident') void precacheResidentRoutes()
             set({
               isSuccess: true,
               isSubmitting: false,
@@ -200,6 +201,7 @@ export const useLoginStore = create<LoginState>()(
 
           const destination = routeForRole(resolvedRole)
           void precacheAppRoute(destination)
+          if (resolvedRole === 'resident') void precacheResidentRoutes()
           saveLoginRedirect(destination)
           set({
             isSuccess: true,
@@ -216,6 +218,7 @@ export const useLoginStore = create<LoginState>()(
                 const destination = routeForRole(restored.role)
                 saveLoginRedirect(destination)
                 void precacheAppRoute(destination)
+                if (restored.role === 'resident') void precacheResidentRoutes()
                 set({
                   isSuccess: true,
                   isSubmitting: false,

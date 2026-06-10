@@ -5,6 +5,7 @@ import { getToken } from '@/lib/api/auth'
 import { fetchAllArticlePages } from '@/lib/api/articles'
 import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import type { Article, ArticleUiCategory } from '@/schemas/healthGuide'
+import { getAllArticles, putArticles } from '@/lib/offline/db'
 import { useAuth } from '@/context/AuthContext'
 
 export type HealthGuideArticlesParams = {
@@ -34,8 +35,23 @@ export function useHealthGuideArticles(params?: HealthGuideArticlesParams) {
   const query = useQuery({
     queryKey: ['health-guide', 'articles'],
     queryFn: async (): Promise<Article[]> => {
-      const dtos = await fetchAllArticlePages()
-      return dtos.map(mapArticleDtoToUi)
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+      if (isOffline) {
+        return getAllArticles()
+      }
+
+      try {
+        const dtos = await fetchAllArticlePages()
+        const articles = dtos.map(mapArticleDtoToUi)
+        if (articles.length > 0) {
+          putArticles(articles).catch(() => {})
+        }
+        return articles
+      } catch (e) {
+        console.warn('Articles fetch failed, falling back to offline DB', e)
+        return getAllArticles()
+      }
     },
     select: (articles) =>
       filterBySearch(filterByCategory(articles, params?.category), params?.search),

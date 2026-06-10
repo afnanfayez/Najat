@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'منصة نجاة للطوارئ',
     short_name: 'نجاة',
     description: 'منصة نجاة للخدمات الإنسانية والطوارئ - تطبيق تسجيل الدخول والتسجيل للطوارئ',
-    start_url: '/login',
+    start_url: '/dashboard',
     display: 'standalone',
     background_color: '#000000',
     theme_color: '#2496FF',

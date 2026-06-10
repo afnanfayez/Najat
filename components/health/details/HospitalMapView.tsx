@@ -3,22 +3,12 @@
 import React, { useMemo } from 'react'
 import { AlertCircle, ChevronLeft, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
+import FacilityLocationMap from '@/components/maps/FacilityLocationMap'
 import { CAPACITY_STATUS_LABEL } from '@/lib/mappers/hospital'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
 const DEFAULT_LAT = 31.5
 const DEFAULT_LON = 34.47
-
-function osmEmbedSrc(lat: number, lon: number): string {
-  const d = 0.04
-  const left = lon - d
-  const bottom = lat - d
-  const right = lon + d
-  const top = lat + d
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
-    `${left},${bottom},${right},${top}`,
-  )}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lon}`)}`
-}
 
 function googleMapsUrl(lat: number, lon: number): string {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`
@@ -33,7 +23,6 @@ export default function HospitalMapView({
 }) {
   const lat = hospital.latitude ?? DEFAULT_LAT
   const lon = hospital.longitude ?? DEFAULT_LON
-  const src = useMemo(() => osmEmbedSrc(lat, lon), [lat, lon])
   const mapsHref = useMemo(() => googleMapsUrl(lat, lon), [lat, lon])
   const cap = hospital.capacityStatus
   const heroSrc = hospital.imageUrl || '/assets/health5.jpg'
@@ -44,11 +33,7 @@ export default function HospitalMapView({
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
       <div className="relative min-h-[45%] flex-1 bg-[#e5e7eb]">
-        <iframe
-          title={`خريطة — ${hospital.name}`}
-          src={src}
-          className="absolute inset-0 h-full w-full border-0 grayscale-[0.15]"
-        />
+        <FacilityLocationMap lat={lat} lng={lon} />
 
         <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2 sm:top-6 sm:right-6">
           <button

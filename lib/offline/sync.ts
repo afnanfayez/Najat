@@ -1,20 +1,33 @@
-import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
-import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
+import { fetchAllArticlePages } from '@/lib/api/articles'
 import { fetchAllAidPages } from '@/lib/health/aidBackend'
+import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
+import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
+import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import { safetyAPI } from '@/lib/api/safety'
 import { getToken } from '@/lib/api/auth'
+import {
+  precacheAllFacilityMapTiles,
+  precacheMainMapArea,
+} from '@/lib/pwa/mapTileCache'
 import {
   putFacilities,
   putAid,
   putSafetyMapLayers,
   putLocalPlaces,
+  putArticles,
   setSyncMeta,
   getOfflineDB,
+  getAllFacilities,
+  getAllAid,
+  getAllArticles,
   type LocalPlace,
 } from './db'
 import type { HealthFacility } from '@/schemas/healthFacility'
+import { syncAllFacilityDetails } from './syncFacilityDetails'
+import { warmOfflineImages } from './warmImageCache'
 
 let isSyncing = false
+let isHeavySyncing = false
 let syncTimer: ReturnType<typeof setInterval> | null = null
 
 function facilitiesToLocalPlaces(facilities: HealthFacility[], type: LocalPlace['type']): LocalPlace[] {
@@ -28,6 +41,30 @@ function facilitiesToLocalPlaces(facilities: HealthFacility[], type: LocalPlace[
       display_name: `${f.name}، ${f.address}`,
       type,
     }))
+}
+
+function scheduleHeavySync(): void {
+  if (typeof window === 'undefined') return
+
+  const run = () => {
+    if (isHeavySyncing || !navigator.onLine) return
+    isHeavySyncing = true
+    void (async () => {
+      try {
+        await syncAllFacilityDetails()
+        await syncMapTiles()
+        await warmCachedImages()
+      } finally {
+        isHeavySyncing = false
+      }
+    })()
+  }
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 15_000 })
+  } else {
+    setTimeout(run, 3_000)
+  }
 }
 
 async function syncHospitals(): Promise<void> {
@@ -128,6 +165,46 @@ async function syncSafetyMap(): Promise<void> {
   }
 }
 
+async function syncArticles(): Promise<void> {
+  try {
+    const dtos = await fetchAllArticlePages()
+    if (dtos.length > 0) {
+      const articles = dtos.map(mapArticleDtoToUi)
+      await putArticles(articles)
+    }
+  } catch {
+    // fail silently
+  }
+}
+
+async function syncMapTiles(): Promise<void> {
+  try {
+    const facilities = await getAllFacilities()
+    const aid = await getAllAid()
+    await precacheMainMapArea()
+    await precacheAllFacilityMapTiles(facilities)
+    await precacheAllFacilityMapTiles(
+      aid.map((a) => {
+        const anyA = a as unknown as { latitude?: number; longitude?: number }
+        return { latitude: anyA.latitude, longitude: anyA.longitude }
+      }),
+    )
+  } catch {
+    // fail silently
+  }
+}
+
+async function warmCachedImages(): Promise<void> {
+  try {
+    const facilities = await getAllFacilities()
+    const aid = await getAllAid()
+    const articles = await getAllArticles()
+    await warmOfflineImages({ facilities, aid, articles })
+  } catch {
+    // fail silently
+  }
+}
+
 export async function syncAllData(): Promise<void> {
   if (isSyncing) return
   if (typeof window === 'undefined') return
@@ -143,8 +220,10 @@ export async function syncAllData(): Promise<void> {
       syncDental(),
       syncAid(),
       syncSafetyMap(),
+      syncArticles(),
     ])
     await setSyncMeta('all')
+    scheduleHeavySync()
   } finally {
     isSyncing = false
   }
@@ -153,7 +232,15 @@ export async function syncAllData(): Promise<void> {
 export function initOfflineSync(): () => void {
   if (typeof window === 'undefined') return () => {}
 
-  syncAllData()
+  const startSync = () => {
+    void syncAllData()
+  }
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(startSync, { timeout: 5_000 })
+  } else {
+    setTimeout(startSync, 1_500)
+  }
 
   const onOnline = () => syncAllData()
   window.addEventListener('online', onOnline)

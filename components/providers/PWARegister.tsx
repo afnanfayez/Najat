@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { toast } from 'sonner'
+import { processSyncQueue } from '@/lib/offline/processSyncQueue'
 
 /**
  * PWARegister — يسجّل الـ Service Worker ويُدير:
@@ -34,6 +35,7 @@ export default function PWARegister() {
 
     // ── 2. عند عودة الإنترنت → طلب Background Sync من SW ────────────────────
     const handleOnline = async () => {
+      void processSyncQueue()
       try {
         const reg = await navigator.serviceWorker.ready
 
@@ -58,6 +60,8 @@ export default function PWARegister() {
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data?.type !== 'BACKGROUND_SYNC_TRIGGERED') return
       console.log('[PWA] Background sync triggered by SW — refreshing session')
+
+      void processSyncQueue()
 
       // أطلق حدث داخلي تستمع إليه AuthContext لإعادة جلب بيانات المستخدم
       window.dispatchEvent(new Event('najat:session-refresh'))

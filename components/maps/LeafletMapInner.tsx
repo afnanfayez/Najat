@@ -1,33 +1,18 @@
 'use client'
 
 import 'leaflet/dist/leaflet.css'
-import L from 'leaflet'
-import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { useEffect } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 
 import { MAP_CENTER } from '@/lib/mocks/mapsMockData'
+import { blueMarkerIcon, CARTO_ATTRIBUTION, CARTO_TILE_URL } from '@/lib/maps/leafletIcons'
+import { precacheTilesFromMapView } from '@/lib/pwa/mapTileCache'
 import SafetyMapLayersOverlay from './SafetyMapLayersOverlay'
 import type {
   MapDangerZone,
   MapResourcePoint,
   MapSafeRoad,
 } from '@/lib/maps/safetyMapTransforms'
-
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
-
-const blueIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
 
 export interface SearchResult {
   coords: [number, number]
@@ -63,6 +48,28 @@ function MapResizeController() {
   return null
 }
 
+function TilePrefetchController() {
+  const map = useMap()
+
+  useMapEvents({
+    moveend: () => {
+      const center = map.getCenter()
+      void precacheTilesFromMapView([center.lat, center.lng], map.getZoom())
+    },
+    zoomend: () => {
+      const center = map.getCenter()
+      void precacheTilesFromMapView([center.lat, center.lng], map.getZoom())
+    },
+  })
+
+  useEffect(() => {
+    const center = map.getCenter()
+    void precacheTilesFromMapView([center.lat, center.lng], map.getZoom())
+  }, [map])
+
+  return null
+}
+
 export default function LeafletMapInner({
   showSafeRoutes,
   showDangerZones,
@@ -73,56 +80,25 @@ export default function LeafletMapInner({
   resourcePoints,
 }: LeafletMapInnerProps) {
   const anyLayerActive = showSafeRoutes || showDangerZones || showResourceActivity
-  const [isOffline, setIsOffline] = useState(false)
-
-  useEffect(() => {
-    setIsOffline(!navigator.onLine)
-    const onOnline = () => setIsOffline(false)
-    const onOffline = () => setIsOffline(true)
-    window.addEventListener('online', onOnline)
-    window.addEventListener('offline', onOffline)
-    return () => {
-      window.removeEventListener('online', onOnline)
-      window.removeEventListener('offline', onOffline)
-    }
-  }, [])
 
   return (
     <MapContainer
       center={MAP_CENTER}
       zoom={14}
       maxZoom={19}
-      style={{ width: '100%', height: '100%', background: isOffline ? '#eef2f5' : undefined }}
+      style={{ width: '100%', height: '100%' }}
       zoomControl={false}
     >
-      {!isOffline && (
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={19}
-          maxNativeZoom={19}
-        />
-      )}
-
-      {isOffline && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 400,
-          opacity: 0.5,
-          fontFamily: "'Cairo', sans-serif",
-          fontSize: '24px',
-          color: '#607D8B',
-          pointerEvents: 'none'
-        }}>
-          وضع عدم الاتصال - شبكة الخريطة غير متوفرة
-        </div>
-      )}
+      <TileLayer
+        attribution={CARTO_ATTRIBUTION}
+        url={CARTO_TILE_URL}
+        subdomains="abcd"
+        maxZoom={19}
+        maxNativeZoom={19}
+      />
 
       <MapResizeController />
+      <TilePrefetchController />
       <FlyController flyTo={flyTo} />
 
       <SafetyMapLayersOverlay
@@ -136,7 +112,7 @@ export default function LeafletMapInner({
       />
 
       {flyTo && (
-        <Marker position={flyTo.coords} icon={blueIcon}>
+        <Marker position={flyTo.coords} icon={blueMarkerIcon}>
           <Popup>
             <span style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 700, fontSize: 14 }}>
               {flyTo.label}

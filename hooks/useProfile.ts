@@ -1,12 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
 import { saveLocalAvatar, saveLocalProfileData, type LocalProfileData } from '@/lib/profile/localProfileStorage'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
+import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
 
 export type ProfileSavePayload = UpdateUserProfileBody & {
   avatarDataUrl?: string
@@ -57,10 +59,25 @@ export function useProfile() {
         saveLocalProfileData(id, localDataToSave)
       }
 
-      // If only local fields were updated, skip backend API call
       if (Object.keys(backendBody).length === 0) {
         const profile = await profileAPI.me()
         return { profile, syncedWithServer: false }
+      }
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        await idbEnqueueSync({
+          type: 'PROFILE_SYNC',
+          status: 'pending',
+          payload: backendBody as Record<string, unknown>,
+          createdAt: Date.now(),
+        })
+        toast.success('تم حفظ التعديلات وسيتم مزامنتها عند عودة الاتصال')
+        const current = query.data
+        if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
+        return {
+          profile: { ...current, ...backendBody },
+          syncedWithServer: false,
+        }
       }
 
       return profileAPI.update(backendBody)

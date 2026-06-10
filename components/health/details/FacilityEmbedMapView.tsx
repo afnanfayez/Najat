@@ -3,11 +3,11 @@
 import React, { useMemo } from 'react'
 import { ChevronLeft, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
+import FacilityLocationMap from '@/components/maps/FacilityLocationMap'
 import {
   DEFAULT_HEALTH_MAP_LAT,
   DEFAULT_HEALTH_MAP_LON,
   googleMapsSearchUrl,
-  openStreetMapEmbedUrl,
 } from '@/lib/health/mapEmbed'
 import type { HealthFacility } from '@/schemas/healthFacility'
 
@@ -20,7 +20,6 @@ export default function FacilityEmbedMapView({
 }) {
   const lat = facility.latitude ?? DEFAULT_HEALTH_MAP_LAT
   const lon = facility.longitude ?? DEFAULT_HEALTH_MAP_LON
-  const src = useMemo(() => openStreetMapEmbedUrl(lat, lon), [lat, lon])
   const mapsHref = useMemo(() => googleMapsSearchUrl(lat, lon), [lat, lon])
   const heroSrc = facility.imageUrl ?? '/assets/health5.jpg'
   const open = facility.isOpen
@@ -32,11 +31,7 @@ export default function FacilityEmbedMapView({
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
       <div className="relative min-h-[45%] flex-1 bg-[#e5e7eb]">
-        <iframe
-          title={`خريطة — ${facility.name}`}
-          src={src}
-          className="absolute inset-0 h-full w-full border-0 grayscale-[0.15]"
-        />
+        <FacilityLocationMap lat={lat} lng={lon} />
 
         <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2 sm:top-6 sm:right-6">
           <button

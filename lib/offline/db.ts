@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { HealthFacility } from '@/schemas/healthFacility'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
+import type { Article } from '@/schemas/healthGuide'
 import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
 
 export interface CachedFacilityDetail {
@@ -44,6 +45,13 @@ export interface CachedFacility {
   cachedAt: number
 }
 
+export interface CachedArticle {
+  id: string
+  category: string
+  article: Article
+  cachedAt: number
+}
+
 class NajatOfflineDB extends Dexie {
   facilities!: Table<CachedFacility, string>
   facilityDetails!: Table<CachedFacilityDetail, string>
@@ -51,6 +59,7 @@ class NajatOfflineDB extends Dexie {
   safetyMap!: Table<CachedSafetyMap, 'layers'>
   localPlaces!: Table<LocalPlace, string>
   syncMeta!: Table<SyncMeta, string>
+  articles!: Table<CachedArticle, string>
 
   constructor() {
     super('najat-offline-v2')
@@ -61,6 +70,15 @@ class NajatOfflineDB extends Dexie {
       safetyMap: 'id',
       localPlaces: 'id, name, type',
       syncMeta: 'key',
+    })
+    this.version(2).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
     })
   }
 }
@@ -173,4 +191,29 @@ export async function getLastSyncTime(): Promise<number | null> {
   } catch {
     return null
   }
+}
+
+export async function getAllArticles(): Promise<Article[]> {
+  const db = getOfflineDB()
+  const rows = await db.articles.toArray()
+  return rows.map((r) => r.article)
+}
+
+export async function getArticleById(id: string): Promise<Article | null> {
+  const db = getOfflineDB()
+  const row = await db.articles.get(id)
+  return row?.article ?? null
+}
+
+export async function putArticles(articles: Article[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.articles.bulkPut(
+    articles.map((a) => ({
+      id: a.id,
+      category: a.category,
+      article: a,
+      cachedAt: now,
+    })),
+  )
 }

@@ -13,6 +13,7 @@ import {
 import { useDashboardShell } from '@/components/dashboard/DashboardShellContext'
 import Image from 'next/image'
 import { useHealthFacilities } from '@/hooks/useHealthFacilities'
+import { useHealthFacilityLiveDetail } from '@/hooks/useHealthFacilityLiveDetail'
 import {
   CATEGORY_LABELS,
   type FacilityCategory,
@@ -120,6 +121,18 @@ export default function HealthServicesPage({
 
   const effectiveFacility = routeFacility ?? selectedFacility
 
+  const showLiveDetail =
+    Boolean(effectiveFacility) &&
+    (view === 'detail' || view === 'map' || view === 'doctors' || view === 'medicines')
+
+  const { facility: liveFacility } = useHealthFacilityLiveDetail(
+    category,
+    effectiveFacility,
+    { enabled: showLiveDetail },
+  )
+
+  const displayFacility = liveFacility ?? effectiveFacility
+
   const goToFacilityList = useCallback(() => {
     router.push(HEALTH_ROUTE[category])
   }, [router, category])
@@ -224,16 +237,16 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'detail' && effectiveFacility) {
+  if (view === 'detail' && displayFacility) {
     if (category === 'hospitals') {
       return (
         <HospitalDetailView 
-          hospital={effectiveFacility} 
+          hospital={displayFacility} 
           onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
           onShowAllDoctors={() => setView('doctors')}
           onShowAllMedicines={() => setView('medicines')}
-          onCall={() => handleCall(effectiveFacility)}
+          onCall={() => handleCall(displayFacility)}
         />
       )
     }
@@ -241,7 +254,7 @@ export default function HealthServicesPage({
     if (category === 'pharmacies') {
       return (
         <PharmacyDetailView 
-          pharmacy={effectiveFacility} 
+          pharmacy={displayFacility} 
           onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
@@ -251,7 +264,7 @@ export default function HealthServicesPage({
     if (category === 'labs') {
       return (
         <LabDetailView 
-          lab={effectiveFacility} 
+          lab={displayFacility} 
           onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
@@ -261,7 +274,7 @@ export default function HealthServicesPage({
     if (category === 'dental') {
       return (
         <DentalDetailView 
-          clinic={effectiveFacility} 
+          clinic={displayFacility} 
           onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
         />
@@ -271,7 +284,7 @@ export default function HealthServicesPage({
     if (category === 'clinics') {
       return (
         <ClinicDetailView 
-          clinic={effectiveFacility} 
+          clinic={displayFacility} 
           onBack={goToFacilityList} 
           onShowMap={() => { setPrevView('detail'); setView('map'); }}
           onShowAllMedicines={() => setView('medicines')}
@@ -287,11 +300,11 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'map' && effectiveFacility) {
+  if (view === 'map' && displayFacility) {
     if (category === 'pharmacies') {
       return (
         <PharmacyMapView 
-          pharmacy={effectiveFacility} 
+          pharmacy={displayFacility} 
           onBack={() => setView(prevView)} 
         />
       )
@@ -299,7 +312,7 @@ export default function HealthServicesPage({
     if (category === 'labs') {
       return (
         <LabMapView 
-          lab={effectiveFacility} 
+          lab={displayFacility} 
           onBack={() => setView(prevView)} 
         />
       )
@@ -307,7 +320,7 @@ export default function HealthServicesPage({
     if (category === 'dental') {
       return (
         <DentalMapView 
-          clinic={effectiveFacility} 
+          clinic={displayFacility} 
           onBack={() => setView(prevView)} 
         />
       )
@@ -316,7 +329,7 @@ export default function HealthServicesPage({
     if (category === 'clinics') {
       return (
         <ClinicMapView 
-          clinic={effectiveFacility} 
+          clinic={displayFacility} 
           onBack={() => setView(prevView)} 
         />
       )
@@ -324,27 +337,27 @@ export default function HealthServicesPage({
 
     return (
       <HospitalMapView 
-        hospital={effectiveFacility} 
+        hospital={displayFacility} 
         onBack={() => setView(prevView)} 
       />
     )
   }
 
-  if (view === 'doctors' && effectiveFacility) {
+  if (view === 'doctors' && displayFacility) {
     return (
       <AllDoctorsView 
-        hospital={effectiveFacility} 
+        hospital={displayFacility} 
         onBack={() => setView('detail')}
         onShowMap={() => { setPrevView('doctors'); setView('map'); }}
       />
     )
   }
 
-  if (view === 'medicines' && effectiveFacility) {
+  if (view === 'medicines' && displayFacility) {
     if (category === 'clinics') {
       return (
         <ClinicAllMedicinesView 
-          clinic={effectiveFacility} 
+          clinic={displayFacility} 
           onBack={() => setView('detail')}
           onShowMap={() => { setPrevView('medicines'); setView('map'); }}
         />
@@ -352,7 +365,7 @@ export default function HealthServicesPage({
     }
     return (
       <AllMedicinesView 
-        hospital={effectiveFacility} 
+        hospital={displayFacility} 
         onBack={() => setView('detail')}
         onShowMap={() => { setPrevView('medicines'); setView('map'); }}
       />

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { aidAPI } from '@/lib/api/aid'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
+import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
 import { metersToKmLabel } from '@/lib/mappers/hospital'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import {
@@ -159,6 +160,34 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     formState: { errors },
   } = form
 
+  const onSubmit = useCallback(
+    async (data: AidHelpRequestForm) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        await idbEnqueueSync({
+          type: 'AID_REQUEST',
+          status: 'pending',
+          payload: data as unknown as Record<string, unknown>,
+          createdAt: Date.now(),
+        })
+        toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
+        form.reset({
+          aidOrganizationId: aid.id,
+          husbandName: '',
+          husbandNationalId: '',
+          wifeName: '',
+          wifeNationalId: '',
+          daughtersCount: 0,
+          sonsCount: 0,
+          phone: '',
+          currentLocation: '',
+        })
+        return
+      }
+      mutation.mutate(data)
+    },
+    [aid.id, form, mutation],
+  )
+
   return (
     <div
       style={{
@@ -263,7 +292,7 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
           }}
         >
           <form
-            onSubmit={handleSubmit((data) => mutation.mutate(data))}
+            onSubmit={handleSubmit(onSubmit)}
             style={{ margin: 0 }}
           >
             <div style={{ textAlign: 'right', marginBottom: '32px' }}>
