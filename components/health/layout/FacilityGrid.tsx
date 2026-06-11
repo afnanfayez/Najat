@@ -30,6 +30,7 @@ interface FacilityGridProps {
   onCall: (facility: HealthFacility) => void
   queryError?: unknown
   onRetry?: () => void
+  isBackgroundRefreshing?: boolean
 }
 
 export default function FacilityGrid({
@@ -39,6 +40,7 @@ export default function FacilityGrid({
   onCall,
   queryError,
   onRetry,
+  isBackgroundRefreshing,
 }: FacilityGridProps) {
   if (isLoading) {
     return (
@@ -121,15 +123,40 @@ export default function FacilityGrid({
         style={{
           flex: 1,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: 12,
           color: '#9E9E9E',
           fontFamily: "'Cairo', sans-serif",
           fontWeight: 600,
           fontSize: '15px',
+          textAlign: 'center',
         }}
       >
-        لا توجد نتائج
+        <span>
+          {isBackgroundRefreshing
+            ? 'الاتصال بطيء، سنحدّث البيانات تلقائياً عند توفرها'
+            : 'لا توجد نتائج'}
+        </span>
+        {isBackgroundRefreshing && onRetry ? (
+          <button
+            type="button"
+            onClick={() => onRetry()}
+            style={{
+              padding: '10px 20px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#2196F3',
+              color: '#fff',
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            إعادة المحاولة
+          </button>
+        ) : null}
       </div>
     )
   }

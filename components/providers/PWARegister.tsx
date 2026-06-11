@@ -8,6 +8,25 @@ import { getToken } from '@/lib/api/auth'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
 import { precacheRoutesForRole } from '@/lib/pwa/precacheRoute'
 
+type SyncServiceWorkerRegistration = ServiceWorkerRegistration & {
+  sync?: {
+    register: (tag: string) => Promise<void>
+  }
+}
+
+function scheduleDataSync(force = false): void {
+  if (typeof window === 'undefined') return
+  const run = () => {
+    void syncAllData(force)
+  }
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run, { timeout: 15_000 })
+  } else {
+    window.setTimeout(run, 3_000)
+  }
+}
+
 /**
  * PWARegister — يسجّل الـ Service Worker ويُدير:
  *  1. تسجيل SW عند تحميل الصفحة
@@ -30,7 +49,7 @@ export default function PWARegister() {
         await navigator.serviceWorker.register(swUrl)
         if (getToken()) {
           void precacheRoutesForRole(getCurrentAuthRole())
-          void syncAllData(true)
+          scheduleDataSync(true)
         }
         console.log('[PWA] Service Worker registered ✓')
       } catch (err) {
@@ -51,13 +70,13 @@ export default function PWARegister() {
         duration: 3000,
       })
       void processSyncQueue()
-      void syncAllData(true)
+      scheduleDataSync(true)
       try {
-        const reg = await navigator.serviceWorker.ready
+        const reg = (await navigator.serviceWorker.ready) as SyncServiceWorkerRegistration
 
-        if ('sync' in reg) {
+        if (reg.sync) {
           // Background Sync API مدعوم — الـ SW سيُطلق sync event تلقائياً
-          await (reg as any).sync.register('najat-session-sync')
+          await reg.sync.register('najat-session-sync')
           console.log('[PWA] Background Sync registered ✓')
         } else {
           // Fallback: أرسل رسالة مباشرة للـ SW ليُبلّغ باقي النوافذ

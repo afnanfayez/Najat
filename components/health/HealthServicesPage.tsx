@@ -41,6 +41,16 @@ import './health.css'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
+function numericRouteId(value?: string | null): string | undefined {
+  return value && /^\d+$/.test(value) ? value : undefined
+}
+
+function pathnameFacilityId(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  const segments = window.location.pathname.split('/').filter(Boolean)
+  return numericRouteId(segments[segments.length - 1])
+}
+
 interface HealthServicesPageProps {
   category: FacilityCategory
   /** رقم ترتيبي 1…n في المسار (مثل `/hospitals/3`)، وليس UUID */
@@ -58,44 +68,31 @@ export default function HealthServicesPage({
   const routeParams = useParams<{ id?: string }>()
   const urlSearch = searchParams ? (searchParams.get('search') || '') : ''
 
-  // الـ fallback للـ facilityId من الـ URL عند الأوفلاين (حين لا تصل server props)
-  const [urlFacilityId, setUrlFacilityId] = useState<string | undefined>(undefined)
-  useEffect(() => {
-    if (facilityId) return
-    const paramId = routeParams?.id
-    if (paramId && /^\d+$/.test(paramId)) {
-      setUrlFacilityId(paramId)
-      setView('detail')
-      return
-    }
-    const segments = window.location.pathname.split('/').filter(Boolean)
-    const last = segments[segments.length - 1]
-    if (last && /^\d+$/.test(last)) {
-      setUrlFacilityId(last)
-      setView('detail')
-    }
-  }, [facilityId, routeParams?.id])
-
-  const effectiveFacilityId = facilityId ?? urlFacilityId
+  const effectiveFacilityId = useMemo(
+    () => facilityId ?? numericRouteId(routeParams?.id) ?? pathnameFacilityId(),
+    [facilityId, routeParams?.id],
+  )
 
   const shell = useDashboardShell()
   const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
   const [searchValue, setSearchValue] = useState(urlSearch)
   const [debouncedSearch, setDebouncedSearch] = useState(urlSearch)
-
-  useEffect(() => {
-    setSearchValue(urlSearch)
-    setDebouncedSearch(urlSearch)
-  }, [urlSearch])
   const [showFilterDropdown, setShowFilterDropdown] = useState(false)
   const [selectedRegion, setSelectedRegion] = useState<'north' | 'south' | null>(null)
 
   const [view, setView] = useState<
     'list' | 'detail' | 'map' | 'doctors' | 'medicines'
-  >(() => (facilityId ? 'detail' : 'list'))
+  >(() => (effectiveFacilityId ? 'detail' : 'list'))
+  const currentView = effectiveFacilityId && view === 'list' ? 'detail' : view
   const [prevView, setPrevView] = useState<'list' | 'detail' | 'doctors' | 'medicines'>('detail')
   const [selectedFacility, setSelectedFacility] = useState<HealthFacility | null>(null)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
 
   const listQueryParams = useMemo(
     () => ({
@@ -115,7 +112,7 @@ export default function HealthServicesPage({
     [router, category, openMobileMenu],
   )
 
-  const { data, catalog, isLoading, isError, error, refetch } =
+  const { data, catalog, isLoading, isError, error, refetch, isBackgroundRefreshing } =
     useHealthFacilities(listQueryParams)
 
   const routeOrdinal = effectiveFacilityId ? parseOrdinalRouteParam(effectiveFacilityId) : null
@@ -129,7 +126,10 @@ export default function HealthServicesPage({
 
   const showLiveDetail =
     Boolean(effectiveFacility) &&
-    (view === 'detail' || view === 'map' || view === 'doctors' || view === 'medicines')
+    (currentView === 'detail' ||
+      currentView === 'map' ||
+      currentView === 'doctors' ||
+      currentView === 'medicines')
 
   const { facility: liveFacility } = useHealthFacilityLiveDetail(
     category,
@@ -146,7 +146,7 @@ export default function HealthServicesPage({
       return
     }
     router.push(HEALTH_ROUTE[category])
-  }, [router, category, effectiveFacilityId])
+  }, [router, category, effectiveFacilityId, setSelectedFacility, setView])
 
   const handleHealthHeaderMap = useCallback(() => {
     const first = data?.facilities?.[0]
@@ -154,16 +154,19 @@ export default function HealthServicesPage({
     setSelectedFacility(first)
     setPrevView('list')
     setView('map')
-  }, [data?.facilities])
+  }, [data?.facilities, setSelectedFacility, setPrevView, setView])
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value)
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
-    searchDebounceRef.current = setTimeout(() => {
-      searchDebounceRef.current = null
-      setDebouncedSearch(value)
-    }, 350)
-  }, [])
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+      searchDebounceRef.current = setTimeout(() => {
+        searchDebounceRef.current = null
+        setDebouncedSearch(value)
+      }, 350)
+    },
+    [setSearchValue, setDebouncedSearch],
+  )
 
   const handleNavigate = useCallback(
     (facility: HealthFacility) => {
@@ -184,7 +187,15 @@ export default function HealthServicesPage({
       if (idx < 0) return
       router.push(healthFacilityOrdinalPath(category, idx + 1))
     },
-    [catalog, data, category, router],
+    [
+      catalog,
+      data,
+      category,
+      router,
+      setSelectedFacility,
+      setPrevView,
+      setView,
+    ],
   )
 
   const handleCall = (facility: HealthFacility) => {
@@ -244,6 +255,30 @@ export default function HealthServicesPage({
     )
   }
 
+  if (effectiveFacilityId && catalog && !routeFacility && isBackgroundRefreshing) {
+    return (
+      <div className="health-page-container p-10 text-center" dir="rtl">
+        <p style={{ color: '#64748b', marginBottom: 16, fontWeight: 600 }}>
+          الاتصال بطيء، نحاول تحميل بيانات المنشأة...
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="text-blue-600 underline"
+        >
+          إعادة المحاولة
+        </button>
+        <button
+          type="button"
+          onClick={goToFacilityList}
+          className="block mx-auto mt-4 text-blue-600 underline"
+        >
+          رجوع للقائمة
+        </button>
+      </div>
+    )
+  }
+
   if (effectiveFacilityId && catalog && !routeFacility) {
     return (
       <div className="health-page-container p-10 text-center" dir="rtl">
@@ -261,7 +296,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'detail' && displayFacility) {
+  if (currentView === 'detail' && displayFacility) {
     if (category === 'hospitals') {
       return (
         <HospitalDetailView 
@@ -324,7 +359,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'map' && displayFacility) {
+  if (currentView === 'map' && displayFacility) {
     if (category === 'pharmacies') {
       return (
         <PharmacyMapView 
@@ -367,7 +402,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'doctors' && displayFacility) {
+  if (currentView === 'doctors' && displayFacility) {
     return (
       <AllDoctorsView 
         hospital={displayFacility} 
@@ -377,7 +412,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (view === 'medicines' && displayFacility) {
+  if (currentView === 'medicines' && displayFacility) {
     if (category === 'clinics') {
       return (
         <ClinicAllMedicinesView 
@@ -417,6 +452,7 @@ export default function HealthServicesPage({
         facilities={data?.facilities}
         queryError={isError ? error : undefined}
         onRetry={() => refetch()}
+        isBackgroundRefreshing={isBackgroundRefreshing}
         onNavigate={handleNavigate}
         onCall={handleCall}
       />

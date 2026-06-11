@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
 import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
@@ -12,6 +12,15 @@ export type HealthFacilitiesQueryParams = {
   search?: string
   region?: 'north' | 'south' | null
 }
+
+type HealthFacilitiesResult = {
+  facilities: HealthFacility[]
+  total: number
+  source: 'cache' | 'network' | 'empty'
+  refreshing?: boolean
+}
+
+const INITIAL_NETWORK_WAIT_MS = 4_500
 
 function facilityMatchesSearch(f: HealthFacility, search: string): boolean {
   const q = search.toLowerCase()
@@ -43,62 +52,99 @@ async function fetchFromIndexedDB(category?: FacilityCategory): Promise<HealthFa
   return getFacilitiesByCategory(category)
 }
 
+function timeout<T>(ms: number): Promise<T> {
+  return new Promise((_, reject) => {
+    globalThis.setTimeout(() => reject(new Error('slow-network')), ms)
+  })
+}
+
+async function fetchLiveFacilities(category?: FacilityCategory): Promise<HealthFacility[]> {
+  if (category === 'hospitals') {
+    return fetchAllHospitalPages()
+  }
+
+  const res = await fetchLiveNonHospitalFacilities({ category })
+  return res.facilities
+}
+
 async function fetchCategoryFacilities(
   category?: FacilityCategory,
-): Promise<{ facilities: HealthFacility[]; total: number }> {
+  onFreshData?: (facilities: HealthFacility[]) => void,
+): Promise<HealthFacilitiesResult> {
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
   if (isOffline) {
     const facilities = await fetchFromIndexedDB(category)
-    return { facilities, total: facilities.length }
+    return { facilities, total: facilities.length, source: 'cache' }
   }
 
   const cached = await fetchFromIndexedDB(category)
+  const livePromise = fetchLiveFacilities(category)
+
+  const saveFresh = (fresh: HealthFacility[]) => {
+    if (fresh.length > 0) {
+      putFacilities(fresh).catch(() => {})
+      onFreshData?.(fresh)
+    }
+  }
+
   if (cached.length > 0) {
-    ;(async () => {
-      try {
-        let fresh: HealthFacility[] = []
-        if (category === 'hospitals') {
-          fresh = await fetchAllHospitalPages()
-        } else {
-          const res = await fetchLiveNonHospitalFacilities({ category })
-          fresh = res.facilities
-        }
-        if (fresh.length > 0) putFacilities(fresh).catch(() => {})
-      } catch {
+    livePromise
+      .then(saveFresh)
+      .catch(() => {
         // keep cached data visible
-      }
-    })()
-    return { facilities: cached, total: cached.length }
+      })
+    return {
+      facilities: cached,
+      total: cached.length,
+      source: 'cache',
+      refreshing: true,
+    }
   }
 
   try {
-    let facilities: HealthFacility[] = []
-    if (category === 'hospitals') {
-      facilities = await fetchAllHospitalPages()
-    } else {
-      const res = await fetchLiveNonHospitalFacilities({ category })
-      facilities = res.facilities
-    }
+    const facilities = await Promise.race([
+      livePromise,
+      timeout<HealthFacility[]>(INITIAL_NETWORK_WAIT_MS),
+    ])
 
-    if (facilities.length > 0) {
-      putFacilities(facilities).catch(() => {})
-    }
-
-    return { facilities, total: facilities.length }
+    saveFresh(facilities)
+    return { facilities, total: facilities.length, source: 'network' }
   } catch (e) {
+    if (e instanceof Error && e.message === 'slow-network') {
+      livePromise
+        .then(saveFresh)
+        .catch(() => {
+          // keep the non-blocking slow state visible until the user retries
+        })
+      return { facilities: [], total: 0, source: 'empty', refreshing: true }
+    }
+
     console.warn('Network request failed, falling back to offline DB', e)
-    const facilities = await fetchFromIndexedDB(category)
-    return { facilities, total: facilities.length }
+    const fallback = await fetchFromIndexedDB(category)
+    return {
+      facilities: fallback,
+      total: fallback.length,
+      source: fallback.length > 0 ? 'cache' : 'empty',
+    }
   }
 }
 
 export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
   const category = params?.category
+  const queryClient = useQueryClient()
+  const queryKey = useMemo(() => ['health-facilities', category] as const, [category])
 
   const baseQuery = useQuery({
-    queryKey: ['health-facilities', category],
-    queryFn: () => fetchCategoryFacilities(category),
+    queryKey,
+    queryFn: () =>
+      fetchCategoryFacilities(category, (fresh) => {
+        queryClient.setQueryData<HealthFacilitiesResult>(queryKey, {
+          facilities: fresh,
+          total: fresh.length,
+          source: 'network',
+        })
+      }),
     staleTime: 1000 * 60 * 2,
     retry: (count) => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) return false
@@ -118,6 +164,8 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
   return {
     ...baseQuery,
     data,
+    isLoading: baseQuery.isLoading && !baseQuery.data,
+    isBackgroundRefreshing: baseQuery.data?.refreshing === true,
     /** القائمة الكاملة قبل فلترة البحث/المنطقة — لحساب أرقام المسارات */
     catalog: baseQuery.data,
   }

@@ -16,7 +16,6 @@ import {
   putLocalPlaces,
   putArticles,
   setSyncMeta,
-  getOfflineDB,
   getAllFacilities,
   getAllAid,
   getAllArticles,
@@ -28,6 +27,7 @@ import { warmOfflineImages } from './warmImageCache'
 
 const SYNC_COOLDOWN_MS = 30 * 60 * 1000
 const HEAVY_SYNC_SESSION_KEY = 'najat-heavy-sync-done'
+const SYNC_BATCH_SIZE = 2
 
 let isSyncing = false
 let isHeavySyncing = false
@@ -137,7 +137,6 @@ async function syncAid(): Promise<void> {
     const aid = await fetchAllAidPages()
     if (aid.length > 0) {
       await putAid(aid)
-      const db = getOfflineDB()
       const aidPlaces: LocalPlace[] = aid
         .filter((a) => (a as unknown as { latitude?: number }).latitude != null)
         .map((a) => {
@@ -213,6 +212,13 @@ async function warmCachedImages(): Promise<void> {
   }
 }
 
+async function runSyncTasksInBatches(tasks: Array<() => Promise<void>>): Promise<void> {
+  for (let i = 0; i < tasks.length; i += SYNC_BATCH_SIZE) {
+    const batch = tasks.slice(i, i + SYNC_BATCH_SIZE)
+    await Promise.allSettled(batch.map((task) => task()))
+  }
+}
+
 export async function syncAllData(force = false): Promise<void> {
   if (isSyncing) return
   if (typeof window === 'undefined') return
@@ -227,15 +233,15 @@ export async function syncAllData(force = false): Promise<void> {
 
   isSyncing = true
   try {
-    await Promise.allSettled([
-      syncHospitals(),
-      syncPharmacies(),
-      syncClinics(),
-      syncLabs(),
-      syncDental(),
-      syncAid(),
-      syncSafetyMap(),
-      syncArticles(),
+    await runSyncTasksInBatches([
+      syncHospitals,
+      syncPharmacies,
+      syncClinics,
+      syncLabs,
+      syncDental,
+      syncAid,
+      syncSafetyMap,
+      syncArticles,
     ])
     await setSyncMeta('all')
     scheduleHeavyAssetsSync()
