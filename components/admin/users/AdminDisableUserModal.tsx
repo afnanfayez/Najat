@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { AlertTriangle, Lock } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useSetAdminUserActive } from '@/hooks/useAdminUsers'
+import { verifyAdminPassword } from '@/lib/api/adminUsers'
+import { useAuth } from '@/context/AuthContext'
 import { ADMIN_USERS_FONT } from './adminUsersStyles'
 
 const FONT = { fontFamily: ADMIN_USERS_FONT }
@@ -30,6 +32,7 @@ export default function AdminDisableUserModal({
   onClose,
   onConfirmed,
 }: AdminDisableUserModalProps) {
+  const { user } = useAuth()
   const setActiveMutation = useSetAdminUserActive()
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState(false)
@@ -56,6 +59,10 @@ export default function AdminDisableUserModal({
     setLoading(true)
     setApiError(null)
     try {
+      if (!user?.email) {
+        throw { status: 401, message: 'تعذّر تحديد حساب المسؤول الحالي' }
+      }
+      await verifyAdminPassword(user.email, password)
       await setActiveMutation.mutateAsync({ id: userId, isActive: false })
       onConfirmed(userId)
       setPassword('')

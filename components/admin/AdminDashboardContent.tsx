@@ -1,5 +1,6 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import AdminShell from './AdminShell'
 import AdminDashboardHeader from './dashboard/AdminDashboardHeader'
@@ -9,11 +10,17 @@ import InformationAccuracy from './dashboard/InformationAccuracy'
 import RecentActivity from './dashboard/RecentActivity'
 import QuickActions from './dashboard/QuickActions'
 import UrgentAlerts from './dashboard/UrgentAlerts'
-import { getAdminDashboardData } from './data/adminDashboardService'
+import {
+  fetchAdminDashboardData,
+  getAdminDashboardData,
+} from './data/adminDashboardService'
 
 function AdminDashboardMain() {
   const { user } = useAuth()
-  const dashboardData = getAdminDashboardData()
+  const { data: dashboardData = getAdminDashboardData() } = useQuery({
+    queryKey: ['admin-dashboard'],
+    queryFn: fetchAdminDashboardData,
+  })
 
   return (
     <>

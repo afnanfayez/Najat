@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/api'
+import { extractAuthPayload } from '@/lib/api/extractAuth'
 import {
   getMockAdminUsersList,
   updateMockAdminUser,
@@ -312,6 +313,24 @@ export async function createAdminVolunteer(
   })
   const created = getEnvelopeData<AdminBackendUserDto>(response)
   return created ? mapBackendAdminUser(created) : null
+}
+
+export async function verifyAdminPassword(
+  email: string,
+  password: string,
+): Promise<void> {
+  try {
+    const response = await request(`${V1_ROOT}/auth/login`, {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+    const { role } = extractAuthPayload(response)
+    if (role !== 'admin') {
+      throw { status: 403, message: 'كلمة مرور المسؤول غير صحيحة' }
+    }
+  } catch {
+    throw { status: 401, message: 'كلمة مرور المسؤول غير صحيحة' }
+  }
 }
 
 export { getMockAdminUsersList }

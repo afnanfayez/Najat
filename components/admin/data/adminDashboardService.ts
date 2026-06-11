@@ -19,6 +19,8 @@ import {
   type AdminStatMock,
   type AdminUrgentAlertMock,
 } from '@/lib/mocks/adminDashboardMockData'
+import { fetchAdminUsersStatsFromApi } from '@/lib/api/adminUsers'
+import type { AdminUsersStatsDto } from '@/schemas/adminUser'
 
 const ADMIN_ICONS: Record<AdminIconKey, LucideIcon> = {
   users: Users,
@@ -90,6 +92,38 @@ export function getAdminDashboardData(): AdminDashboardData {
   return mapAdminDashboardMock(ADMIN_DASHBOARD_MOCK)
 }
 
+function formatDashboardNumber(value: number): string {
+  return value.toLocaleString('en-US')
+}
+
+function mergeUserStats(
+  dashboard: AdminDashboardData,
+  userStats: AdminUsersStatsDto,
+): AdminDashboardData {
+  return {
+    ...dashboard,
+    stats: dashboard.stats.map((stat) => {
+      if (stat.id === 'users') {
+        return { ...stat, value: formatDashboardNumber(userStats.totalUsers) }
+      }
+      if (stat.id === 'volunteers') {
+        return {
+          ...stat,
+          value: formatDashboardNumber(userStats.roleBreakdown?.volunteer ?? 0),
+        }
+      }
+      return stat
+    }),
+  }
+}
+
 export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
-  return getAdminDashboardData()
+  const dashboard = getAdminDashboardData()
+
+  try {
+    const userStats = await fetchAdminUsersStatsFromApi()
+    return mergeUserStats(dashboard, userStats)
+  } catch {
+    return dashboard
+  }
 }

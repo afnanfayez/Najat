@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import AdminShell from '@/components/admin/AdminShell'
-import { createVolunteerFromForm } from '@/components/admin/data/adminVolunteerService'
+import {
+  createVolunteerFromForm,
+  getVolunteerCreateErrorMessage,
+  validateVolunteerFormForApi,
+} from '@/components/admin/data/adminVolunteerService'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -66,6 +70,13 @@ export default function AddVolunteerContent() {
         return false
       }
     }
+    if (currentStep === 1 || currentStep === 4) {
+      const apiError = validateVolunteerFormForApi(formData)
+      if (apiError) {
+        setValidationError(apiError)
+        return false
+      }
+    }
     return true
   }
 
@@ -101,8 +112,10 @@ export default function AddVolunteerContent() {
       clearDraft()
       setSubmitted(true)
       toast.success(`تم إنشاء حساب المتطوع. كلمة المرور المؤقتة: ${result.temporaryPassword}`)
-    } catch {
-      toast.error('تعذّر إرسال الطلب')
+    } catch (err: unknown) {
+      const message = getVolunteerCreateErrorMessage(err)
+      setValidationError(message)
+      toast.error(message)
     } finally {
       setSubmitting(false)
     }

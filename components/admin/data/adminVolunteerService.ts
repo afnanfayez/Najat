@@ -10,8 +10,33 @@ export type CreateVolunteerResult = {
   temporaryPassword: string
 }
 
+const NATIONAL_ID_PATTERN = /^\d{9}$/
+
+type BackendValidationError = {
+  field?: unknown
+  message?: unknown
+}
+
+type ApiErrorLike = {
+  message?: unknown
+  errors?: unknown
+  fullData?: {
+    errors?: unknown
+  }
+}
+
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, '')
+}
+
+function extractMessage(value: unknown): string | null {
+  if (typeof value === 'string') return value
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    if (typeof obj.ar === 'string') return obj.ar
+    if (typeof obj.en === 'string') return obj.en
+  }
+  return null
 }
 
 function inferAgeGroup(birthDate: string): CreateAdminVolunteerBody['ageGroup'] {
@@ -32,6 +57,43 @@ function buildTemporaryPassword(data: VolunteerFormData): string {
   return `Najat@${suffix}`
 }
 
+export function validateVolunteerFormForApi(data: VolunteerFormData): string | null {
+  const nationalId = data.idNumber.trim()
+  if (!NATIONAL_ID_PATTERN.test(nationalId)) {
+    return 'رقم الهوية يجب أن يتكون من 9 أرقام'
+  }
+  return null
+}
+
+export function getVolunteerCreateErrorMessage(error: unknown): string {
+  const err = error as ApiErrorLike
+  const errors =
+    Array.isArray(err?.errors)
+      ? err.errors
+      : Array.isArray(err?.fullData?.errors)
+        ? err.fullData.errors
+        : []
+
+  const nationalIdError = errors.find((item: unknown) => {
+    if (!item || typeof item !== 'object') return false
+    return (item as BackendValidationError).field === 'nationalId'
+  }) as BackendValidationError | undefined
+
+  if (nationalIdError) {
+    return 'رقم الهوية يجب أن يتكون من 9 أرقام'
+  }
+
+  const firstError = errors.find(
+    (item: unknown) => item && typeof item === 'object',
+  ) as BackendValidationError | undefined
+  const firstMessage = extractMessage(firstError?.message)
+  if (firstMessage && firstMessage !== 'validation.IS_LENGTH') {
+    return firstMessage
+  }
+
+  return extractMessage(err?.message) ?? 'تعذّر إرسال الطلب'
+}
+
 export function mapVolunteerFormToCreateBody(
   data: VolunteerFormData,
 ): CreateAdminVolunteerBody {
@@ -47,7 +109,7 @@ export function mapVolunteerFormToCreateBody(
     phoneNumber: data.primaryPhone.trim() || undefined,
     ageGroup: inferAgeGroup(data.birthDate),
     healthStatus: 'Healthy',
-    nationalId: data.idNumber.trim() || undefined,
+    nationalId: data.idNumber.trim(),
     region: region || undefined,
   }
 }
