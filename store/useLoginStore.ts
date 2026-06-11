@@ -12,8 +12,9 @@ import {
   saveOfflineLoginSnapshot,
   tryOfflineLogin,
 } from '@/lib/auth/offlineLogin'
-import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
+import { precacheAppRoute, precacheRoutesForRole } from '@/lib/pwa/precacheRoute'
 import { profileAPI } from '@/lib/api/profile'
+import { syncAllData } from '@/lib/offline/sync'
 import { toast } from 'sonner'
 
 async function restoreOfflineSession(email: string, password: string) {
@@ -24,6 +25,7 @@ async function restoreOfflineSession(email: string, password: string) {
   const destination = routeForRole(restored.role)
   saveLoginRedirect(destination)
   void precacheAppRoute(destination)
+  void precacheRoutesForRole(restored.role)
 
   return restored
 }
@@ -214,6 +216,8 @@ export const useLoginStore = create<LoginState>()(
 
           const destination = routeForRole(resolvedRole)
           void precacheAppRoute(destination)
+          void precacheRoutesForRole(resolvedRole)
+          void syncAllData(true)
           saveLoginRedirect(destination)
           set({
             isSuccess: true,

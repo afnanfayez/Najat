@@ -1,7 +1,9 @@
-const CACHE_NAME = 'najat-pwa-cache-v20'
+const CACHE_NAME = 'najat-pwa-cache-v22'
 const API_CACHE_NAME = 'najat-api-cache-v2'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 const FETCH_TIMEOUT_MS = 8000
+// في وضع التطوير نتجنب تخزين ملفات /_next/ حتى لا تتأثر آلية HMR
+const IS_DEV = self.location.search.includes('dev=1')
 
 const CORE_ASSETS = [
   '/',
@@ -54,11 +56,22 @@ function rscCacheKey(pathname) {
   return `rsc-shell:${pathname}`
 }
 
+function pageCacheKey(pathname) {
+  return `page-shell:${pathname}`
+}
+
+function normalizePathname(pathname) {
+  if (!pathname || pathname === '/') return '/'
+  return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+}
+
 function isRscRequest(request, url) {
+  const accept = request.headers.get('Accept') || ''
   return (
     url.searchParams.has('_rsc') ||
     request.headers.get('RSC') === '1' ||
-    request.headers.get('Next-Router-Prefetch') === '1'
+    request.headers.get('Next-Router-Prefetch') === '1' ||
+    accept.includes('text/x-component')
   )
 }
 
@@ -83,22 +96,41 @@ function isStaticAsset(url) {
   )
 }
 
+function isAppRouteRequest(request, url) {
+  if (url.origin !== self.location.origin) return false
+  if (url.pathname.startsWith('/_next/')) return false
+  if (url.pathname.startsWith('/api/')) return false
+  if (url.pathname.startsWith('/v1/')) return false
+  if (isStaticAsset(url)) return false
+  if (request.mode === 'navigate') return true
+  if (isRscRequest(request, url)) return true
+
+  const accept = request.headers.get('Accept') || ''
+  const destination = request.destination
+  return (
+    destination === '' &&
+    (accept.includes('text/html') || accept.includes('*/*')) &&
+    fallbackDocument(url.pathname) === normalizePathname(url.pathname)
+  )
+}
+
 function fallbackDocument(pathname) {
-  if (pathname.startsWith('/register')) return '/register'
-  if (pathname.startsWith('/admin')) return '/admin'
-  if (pathname.startsWith('/volunteer')) return '/volunteer'
-  if (pathname.startsWith('/dashboard')) return '/dashboard'
-  if (pathname.startsWith('/logout')) return '/logout'
-  if (pathname.startsWith('/hospitals')) return '/hospitals'
-  if (pathname.startsWith('/pharmacies')) return '/pharmacies'
-  if (pathname.startsWith('/clinics')) return '/clinics'
-  if (pathname.startsWith('/labs')) return '/labs'
-  if (pathname.startsWith('/dental-clinics')) return '/dental-clinics'
-  if (pathname.startsWith('/humanitarian-aid')) return '/humanitarian-aid'
-  if (pathname.startsWith('/health-guide')) return '/health-guide'
-  if (pathname.startsWith('/maps')) return '/maps'
-  if (pathname.startsWith('/emergency')) return '/emergency'
-  if (pathname.startsWith('/profile')) return '/profile'
+  const normalized = normalizePathname(pathname)
+  if (normalized.startsWith('/register')) return '/register'
+  if (normalized.startsWith('/admin')) return '/admin'
+  if (normalized.startsWith('/volunteer')) return '/volunteer'
+  if (normalized.startsWith('/dashboard')) return '/dashboard'
+  if (normalized.startsWith('/logout')) return '/logout'
+  if (normalized.startsWith('/hospitals')) return '/hospitals'
+  if (normalized.startsWith('/pharmacies')) return '/pharmacies'
+  if (normalized.startsWith('/clinics')) return '/clinics'
+  if (normalized.startsWith('/labs')) return '/labs'
+  if (normalized.startsWith('/dental-clinics')) return '/dental-clinics'
+  if (normalized.startsWith('/humanitarian-aid')) return '/humanitarian-aid'
+  if (normalized.startsWith('/health-guide')) return '/health-guide'
+  if (normalized.startsWith('/maps')) return '/maps'
+  if (normalized.startsWith('/emergency')) return '/emergency'
+  if (normalized.startsWith('/profile')) return '/profile'
   return '/dashboard'
 }
 
@@ -119,15 +151,16 @@ function fetchWithTimeout(request, timeoutMs = FETCH_TIMEOUT_MS) {
 
 async function cacheRscPayload(cache, pagePath) {
   if (!self.navigator.onLine) return
+  const normalizedPath = normalizePathname(pagePath)
   try {
-    const response = await fetch(pagePath, {
+    const response = await fetch(normalizedPath, {
       headers: {
         RSC: '1',
         'Next-Router-Prefetch': '1',
-        'Next-Url': pagePath,
+        'Next-Url': normalizedPath,
       },
     })
-    if (response.ok) await cache.put(rscCacheKey(pagePath), response.clone())
+    if (response.ok) await cache.put(rscCacheKey(normalizedPath), response.clone())
   } catch {
     // ignore
   }
@@ -135,15 +168,39 @@ async function cacheRscPayload(cache, pagePath) {
 
 async function cacheDocument(cache, path) {
   if (!self.navigator.onLine) return
+  const normalizedPath = normalizePathname(path)
   try {
-    const response = await fetch(path)
+    const response = await fetch(normalizedPath)
     if (response.ok) {
-      await cache.put(path, response.clone())
-      await cacheRscPayload(cache, path)
+      await cache.put(normalizedPath, response.clone())
+      await cache.put(pageCacheKey(normalizedPath), response.clone())
+      await cacheRscPayload(cache, normalizedPath)
     }
   } catch {
     // ignore
   }
+}
+
+async function serveCachedDocument(cache, request, url) {
+  const pathname = normalizePathname(url.pathname)
+  const fallbackPath = fallbackDocument(pathname)
+
+  return (
+    (await cache.match(request)) ||
+    (await cache.match(url.pathname)) ||
+    (await cache.match(pathname)) ||
+    (await cache.match(pageCacheKey(pathname))) ||
+    (await cache.match(fallbackPath)) ||
+    (await cache.match(pageCacheKey(fallbackPath))) ||
+    (await cache.match('/dashboard')) ||
+    (await cache.match(pageCacheKey('/dashboard'))) ||
+    (await cache.match('/login')) ||
+    (await cache.match(pageCacheKey('/login'))) ||
+    new Response(OFFLINE_FALLBACK_HTML, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
+  )
 }
 
 async function cacheFirstWithUpdate(request, cacheName) {
@@ -222,6 +279,14 @@ self.addEventListener('message', (event) => {
   }
 
   if (type === 'PRECACHE_ROUTES') {
+    const paths = Array.isArray(event.data?.paths) ? event.data.paths : []
+    const safePaths = paths.filter((item) => typeof item === 'string' && item.startsWith('/'))
+    if (safePaths.length === 0) return
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) =>
+        Promise.all(safePaths.map((routePath) => cacheDocument(cache, routePath))),
+      ),
+    )
     return
   }
 
@@ -282,6 +347,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isStaticAsset(url)) {
+    // في وضع التطوير: تجاوز تخزين ملفات /_next/ لضمان عمل HMR بشكل سليم
+    if (IS_DEV && url.pathname.startsWith('/_next/')) return
     event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
     return
   }
@@ -293,17 +360,24 @@ self.addEventListener('fetch', (event) => {
   ) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
-        const shellKey = rscCacheKey(url.pathname)
+        const pathname = normalizePathname(url.pathname)
+        const shellKey = rscCacheKey(pathname)
+        const fallbackPath = fallbackDocument(pathname)
+
+        // للروابط الديناميكية (مثل /hospitals/5) لا نستخدم RSC الصفحة الأساسية
+        // كـ fallback — نُرجع RSC فارغاً حتى تتولى مكوّنات العميل التحميل من URL
+        const isSubRoute = fallbackPath !== pathname
+        const emptyRsc = new Response('', {
+          status: 200,
+          headers: { 'Content-Type': 'text/x-component' },
+        })
 
         if (!self.navigator.onLine) {
           return (
             (await cache.match(request)) ||
             (await cache.match(shellKey)) ||
-            (await cache.match(rscCacheKey(fallbackDocument(url.pathname)))) ||
-            new Response('', {
-              status: 200,
-              headers: { 'Content-Type': 'text/x-component' },
-            })
+            (!isSubRoute ? await cache.match(rscCacheKey(fallbackPath)) : null) ||
+            emptyRsc
           )
         }
 
@@ -318,11 +392,8 @@ self.addEventListener('fetch', (event) => {
           return (
             (await cache.match(request)) ||
             (await cache.match(shellKey)) ||
-            (await cache.match(rscCacheKey(fallbackDocument(url.pathname)))) ||
-            new Response('', {
-              status: 200,
-              headers: { 'Content-Type': 'text/x-component' },
-            })
+            (!isSubRoute ? await cache.match(rscCacheKey(fallbackPath)) : null) ||
+            emptyRsc
           )
         }
       }),
@@ -330,35 +401,24 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (request.mode === 'navigate') {
+  if (isAppRouteRequest(request, url)) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
-        async function serveCached() {
-          return (
-            (await cache.match(request)) ||
-            (await cache.match(url.pathname)) ||
-            (await cache.match(fallbackDocument(url.pathname))) ||
-            (await cache.match('/dashboard')) ||
-            (await cache.match('/login')) ||
-            new Response(OFFLINE_FALLBACK_HTML, {
-              status: 200,
-              headers: { 'Content-Type': 'text/html; charset=utf-8' },
-            })
-          )
-        }
+        const pathname = normalizePathname(url.pathname)
 
-        if (!self.navigator.onLine) return serveCached()
+        if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
 
         try {
           const response = await fetchWithTimeout(request)
           if (response.status === 200) {
             await cache.put(request, response.clone())
-            await cache.put(url.pathname, response.clone())
-            cacheRscPayload(cache, url.pathname)
+            await cache.put(pathname, response.clone())
+            await cache.put(pageCacheKey(pathname), response.clone())
+            cacheRscPayload(cache, pathname)
           }
           return response
         } catch {
-          return serveCached()
+          return serveCachedDocument(cache, request, url)
         }
       }),
     )

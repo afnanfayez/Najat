@@ -82,7 +82,7 @@ export function OfflineSyncBanner() {
         justifyContent: 'space-between',
         gap: '12px',
         padding: '9px 16px',
-        background: '#B42318',
+        background: '#C2413A',
         color: '#fff',
         fontSize: '13px',
         fontFamily: "'Cairo', sans-serif",

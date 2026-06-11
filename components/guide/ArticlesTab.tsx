@@ -6,6 +6,7 @@ import { Share2, Download, Bookmark } from 'lucide-react'
 import GuideQueryState, { buildArticlePrintHtml } from './GuideQueryState'
 import { useHealthGuideArticles } from '@/hooks/useHealthGuideArticles'
 import type { Article } from '@/schemas/healthGuide'
+import ArticleDetailPage from './ArticleDetailPage'
 
 interface Props {
   query: string
@@ -22,6 +23,7 @@ export default function ArticlesTab({ query }: Props) {
   } = useHealthGuideArticles({ category: 'articles', search: query })
 
   const [savedArticles, setSavedArticles] = useState<string[]>([])
+  const [offlineArticle, setOfflineArticle] = useState<Article | null>(null)
 
   useEffect(() => {
     setSavedArticles(JSON.parse(localStorage.getItem('saved-articles') || '[]'))
@@ -62,6 +64,24 @@ export default function ArticlesTab({ query }: Props) {
 
   const isSaved = (id: string) => savedArticles.includes(id)
 
+  const openArticle = (article: Article) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setOfflineArticle(article)
+      return
+    }
+    router.push(`/health-guide/article/${article.id}`)
+  }
+
+  if (offlineArticle) {
+    return (
+      <ArticleDetailPage
+        articleId={offlineArticle.id}
+        initialArticle={offlineArticle}
+        onBack={() => setOfflineArticle(null)}
+      />
+    )
+  }
+
   return (
     <GuideQueryState
       isLoading={isLoading}
@@ -79,7 +99,7 @@ export default function ArticlesTab({ query }: Props) {
           >
             <div
               className="flex flex-col gap-1.5 text-right"
-              onClick={() => router.push(`/health-guide/article/${article.id}`)}
+              onClick={() => openArticle(article)}
             >
               <h3 className="text-[15px] sm:text-[17px] font-black text-black group-hover:text-[#2196F3] transition-colors leading-snug">
                 {article.title}
@@ -126,9 +146,7 @@ export default function ArticlesTab({ query }: Props) {
               </div>
               <button
                 type="button"
-                onClick={() =>
-                  router.push(`/health-guide/article/${article.id}`)
-                }
+                onClick={() => openArticle(article)}
                 className="bg-[#2196F3] text-white text-[12px] sm:text-[13px] font-black px-8 py-2 rounded-xl hover:bg-blue-600 transition-all shadow-sm min-w-[120px] text-center"
               >
                 انتقل الآن

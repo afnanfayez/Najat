@@ -128,9 +128,11 @@ export function useProfile() {
       await updateOfflineLoginProfile(result.profile)
       return result
     },
-    onSuccess: async ({ profile }) => {
+    onSuccess: async ({ profile, syncedWithServer }) => {
       queryClient.setQueryData(getProfileQueryKey(token), profile)
-      await refreshUser()
+      if (syncedWithServer !== false) {
+        await refreshUser()
+      }
     },
   })
 

@@ -1,12 +1,14 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Phone, ChevronLeft, Eye, Clock } from 'lucide-react'
 import Image from 'next/image'
 import GuideQueryState from './GuideQueryState'
 import { useHealthGuideArticles } from '@/hooks/useHealthGuideArticles'
 import { MENTAL_TOOLS } from '@/lib/guide/mentalHealthContent'
+import ArticleDetailPage from './ArticleDetailPage'
+import type { Article } from '@/schemas/healthGuide'
 import {
   formatReadTimeLabel,
   formatViewsCount,
@@ -18,6 +20,7 @@ interface Props {
 
 export default function FirstAidTab({ query }: Props) {
   const router = useRouter()
+  const [offlineArticle, setOfflineArticle] = useState<Article | null>(null)
   const {
     data: firstAidCards = [],
     isLoading,
@@ -33,6 +36,24 @@ export default function FirstAidTab({ query }: Props) {
     error: awarenessErr,
     refetch: refetchAwareness,
   } = useHealthGuideArticles({ category: 'articles' })
+
+  const openArticle = (article: Article) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setOfflineArticle(article)
+      return
+    }
+    router.push(`/health-guide/article/${article.id}`)
+  }
+
+  if (offlineArticle) {
+    return (
+      <ArticleDetailPage
+        articleId={offlineArticle.id}
+        initialArticle={offlineArticle}
+        onBack={() => setOfflineArticle(null)}
+      />
+    )
+  }
 
   return (
     <>
@@ -50,7 +71,7 @@ export default function FirstAidTab({ query }: Props) {
               <div
                 key={card.id}
                 className="group relative h-[220px] sm:h-[280px] rounded-[24px] overflow-hidden shadow-lg shadow-blue-900/5 transition-transform hover:-translate-y-1 cursor-pointer"
-                onClick={() => router.push(`/health-guide/article/${card.id}`)}
+                onClick={() => openArticle(card)}
               >
                 <Image
                   src={card.image ?? '/assets/healthcare1.jpg'}
@@ -72,7 +93,7 @@ export default function FirstAidTab({ query }: Props) {
                     className="bg-[#2196F3] text-white py-2.5 rounded-xl font-black text-[12px] sm:text-[13px] hover:bg-blue-600 transition-all shadow-md w-full"
                     onClick={(e) => {
                       e.stopPropagation()
-                      router.push(`/health-guide/article/${card.id}`)
+                      openArticle(card)
                     }}
                   >
                     انتقل الآن
@@ -149,9 +170,7 @@ export default function FirstAidTab({ query }: Props) {
             {awarenessArticles.slice(0, 6).map((article) => (
               <div
                 key={article.id}
-                onClick={() =>
-                  router.push(`/health-guide/article/${article.id}`)
-                }
+                onClick={() => openArticle(article)}
                 className="bg-white rounded-[20px] border-2 border-slate-50 p-3 sm:p-4 flex items-center gap-4 group cursor-pointer hover:border-blue-100 transition-all shadow-sm"
               >
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0">

@@ -8,7 +8,7 @@ import type { Article } from '@/schemas/healthGuide'
 import { getArticleById, putArticles } from '@/lib/offline/db'
 import { useAuth } from '@/context/AuthContext'
 
-export function useArticle(id: string) {
+export function useArticle(id: string, initialArticle?: Article | null) {
   const { isHydrated } = useAuth()
 
   const query = useQuery({
@@ -34,6 +34,7 @@ export function useArticle(id: string) {
       }
     },
     enabled: isHydrated && Boolean(getToken()) && Boolean(id),
+    initialData: initialArticle ?? undefined,
     staleTime: 1000 * 60 * 2,
     retry: 1,
   })

@@ -3,6 +3,10 @@
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { processSyncQueue } from '@/lib/offline/processSyncQueue'
+import { syncAllData } from '@/lib/offline/sync'
+import { getToken } from '@/lib/api/auth'
+import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
+import { precacheRoutesForRole } from '@/lib/pwa/precacheRoute'
 
 /**
  * PWARegister — يسجّل الـ Service Worker ويُدير:
@@ -17,25 +21,17 @@ export default function PWARegister() {
       !('serviceWorker' in navigator)
     ) return
 
-    if (process.env.NODE_ENV !== 'production') {
-      navigator.serviceWorker
-        .getRegistrations()
-        .then((registrations) =>
-          Promise.all(registrations.map((registration) => registration.unregister())),
-        )
-        .then(() => {
-          console.log('[PWA] Service Worker disabled in development')
-        })
-        .catch((err) => {
-          console.warn('[PWA] Failed to disable Service Worker in development:', err)
-        })
-      return
-    }
-
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
     const registerSW = async () => {
       try {
-        await navigator.serviceWorker.register('/sw.js')
+        // في وضع التطوير نُمرّر ?dev=1 حتى يتجنب SW تخزين ملفات /_next/ الديناميكية
+        const swUrl =
+          process.env.NODE_ENV !== 'production' ? '/sw.js?dev=1' : '/sw.js'
+        await navigator.serviceWorker.register(swUrl)
+        if (getToken()) {
+          void precacheRoutesForRole(getCurrentAuthRole())
+          void syncAllData(true)
+        }
         console.log('[PWA] Service Worker registered ✓')
       } catch (err) {
         console.error('[PWA] Service Worker registration failed:', err)
@@ -55,6 +51,7 @@ export default function PWARegister() {
         duration: 3000,
       })
       void processSyncQueue()
+      void syncAllData(true)
       try {
         const reg = await navigator.serviceWorker.ready
 

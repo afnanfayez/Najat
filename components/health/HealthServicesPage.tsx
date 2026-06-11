@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import { toast } from 'sonner'
 import {
   HEALTH_ROUTE,
   healthFacilityOrdinalPath,
@@ -54,7 +55,28 @@ export default function HealthServicesPage({
 }: HealthServicesPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const routeParams = useParams<{ id?: string }>()
   const urlSearch = searchParams ? (searchParams.get('search') || '') : ''
+
+  // الـ fallback للـ facilityId من الـ URL عند الأوفلاين (حين لا تصل server props)
+  const [urlFacilityId, setUrlFacilityId] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (facilityId) return
+    const paramId = routeParams?.id
+    if (paramId && /^\d+$/.test(paramId)) {
+      setUrlFacilityId(paramId)
+      setView('detail')
+      return
+    }
+    const segments = window.location.pathname.split('/').filter(Boolean)
+    const last = segments[segments.length - 1]
+    if (last && /^\d+$/.test(last)) {
+      setUrlFacilityId(last)
+      setView('detail')
+    }
+  }, [facilityId, routeParams?.id])
+
+  const effectiveFacilityId = facilityId ?? urlFacilityId
 
   const shell = useDashboardShell()
   const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
@@ -78,10 +100,10 @@ export default function HealthServicesPage({
   const listQueryParams = useMemo(
     () => ({
       category,
-      search: facilityId ? '' : debouncedSearch,
-      region: facilityId ? null : selectedRegion,
+      search: effectiveFacilityId ? '' : debouncedSearch,
+      region: effectiveFacilityId ? null : selectedRegion,
     }),
-    [category, facilityId, debouncedSearch, selectedRegion],
+    [category, effectiveFacilityId, debouncedSearch, selectedRegion],
   )
 
   const handleCategoryChange = useCallback(
@@ -96,7 +118,7 @@ export default function HealthServicesPage({
   const { data, catalog, isLoading, isError, error, refetch } =
     useHealthFacilities(listQueryParams)
 
-  const routeOrdinal = facilityId ? parseOrdinalRouteParam(facilityId) : null
+  const routeOrdinal = effectiveFacilityId ? parseOrdinalRouteParam(effectiveFacilityId) : null
 
   const routeFacility = useMemo(() => {
     if (routeOrdinal == null || !catalog?.facilities?.length) return null
@@ -118,8 +140,13 @@ export default function HealthServicesPage({
   const displayFacility = liveFacility ?? effectiveFacility
 
   const goToFacilityList = useCallback(() => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine && !effectiveFacilityId) {
+      setSelectedFacility(null)
+      setView('list')
+      return
+    }
     router.push(HEALTH_ROUTE[category])
-  }, [router, category])
+  }, [router, category, effectiveFacilityId])
 
   const handleHealthHeaderMap = useCallback(() => {
     const first = data?.facilities?.[0]
@@ -140,6 +167,14 @@ export default function HealthServicesPage({
 
   const handleNavigate = useCallback(
     (facility: HealthFacility) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setSelectedFacility(facility)
+        setPrevView('list')
+        setView('detail')
+        toast.info('تم فتح التفاصيل من البيانات المحفوظة على الجهاز')
+        return
+      }
+
       const base = catalog?.facilities?.length
         ? sortHealthFacilitiesStable(catalog.facilities)
         : data?.facilities?.length
@@ -157,7 +192,7 @@ export default function HealthServicesPage({
     if (n) window.location.href = `tel:${n}`
   }
 
-  if (facilityId && routeOrdinal === null) {
+  if (effectiveFacilityId && routeOrdinal === null) {
     return (
       <div className="health-page-container p-10 text-center" dir="rtl">
         <p style={{ fontWeight: 700, marginBottom: 16 }}>
@@ -174,7 +209,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (facilityId && isError) {
+  if (effectiveFacilityId && isError) {
     return (
       <div className="health-page-container p-10 text-center" dir="rtl">
         <p style={{ color: '#f44336', marginBottom: 16, fontWeight: 600 }}>
@@ -198,7 +233,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (facilityId && (isLoading || catalog === undefined)) {
+  if (effectiveFacilityId && (isLoading || catalog === undefined)) {
     return (
       <div
         className="health-page-container p-10 text-center text-gray-500"
@@ -209,7 +244,7 @@ export default function HealthServicesPage({
     )
   }
 
-  if (facilityId && catalog && !routeFacility) {
+  if (effectiveFacilityId && catalog && !routeFacility) {
     return (
       <div className="health-page-container p-10 text-center" dir="rtl">
         <p style={{ fontWeight: 700, marginBottom: 16 }}>

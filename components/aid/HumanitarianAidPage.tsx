@@ -10,7 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import { toast } from 'sonner'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
 import { useAid } from '@/hooks/useAid'
@@ -22,6 +23,7 @@ import {
   resolveAidByOrdinal,
   sortAidByStableId,
 } from '@/lib/health/healthFacilityRoutes'
+import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 
 const CATEGORIES = [
   { id: 'all', label: 'الكل' },
@@ -43,13 +45,33 @@ export default function HumanitarianAidPage({
 }: HumanitarianAidPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const routeParams = useParams<{ id?: string }>()
   const urlSearch = searchParams ? (searchParams.get('search') || '') : ''
+
+  // fallback لـ aidId من الـ URL عند الأوفلاين (حين لا تصل server props)
+  const [urlAidId, setUrlAidId] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (aidId) return
+    const paramId = routeParams?.id
+    if (paramId && /^\d+$/.test(paramId)) {
+      setUrlAidId(paramId)
+      return
+    }
+    const segments = window.location.pathname.split('/').filter(Boolean)
+    const last = segments[segments.length - 1]
+    if (last && /^\d+$/.test(last)) {
+      setUrlAidId(last)
+    }
+  }, [aidId, routeParams?.id])
+
+  const effectiveAidId = aidId ?? urlAidId
 
   const shell = useDashboardShell()
   const openMobileMenu = setIsMobileMenuOpen ?? shell?.setIsMobileMenuOpen
   const [activeCategory, setActiveCategory] = useState('all')
   const [isMobile, setIsMobile] = useState(false)
   const [searchValue, setSearchValue] = useState(urlSearch)
+  const [offlineDetailAid, setOfflineDetailAid] = useState<HumanitarianAid | null>(null)
 
   useEffect(() => {
     setSearchValue(urlSearch)
@@ -58,14 +80,14 @@ export default function HumanitarianAidPage({
 
   const aidQueryParams = useMemo(
     () =>
-      aidId
+      effectiveAidId
         ? { category: 'all' as const, search: '', region: undefined }
         : {
             category: activeCategory,
             search: searchValue,
             region: selectedRegion ?? undefined,
           },
-    [aidId, activeCategory, searchValue, selectedRegion],
+    [effectiveAidId, activeCategory, searchValue, selectedRegion],
   )
 
   const REGIONS = [
@@ -88,14 +110,23 @@ export default function HumanitarianAidPage({
     isError: isAidError,
   } = useAid(aidQueryParams)
 
-  const routeOrdinal = aidId ? parseOrdinalRouteParam(aidId) : null
+  const routeOrdinal = effectiveAidId ? parseOrdinalRouteParam(effectiveAidId) : null
 
   const resolvedDetailAid = useMemo(() => {
     if (routeOrdinal == null) return null
     return resolveAidByOrdinal(aidCatalog, routeOrdinal)
   }, [routeOrdinal, aidCatalog])
 
-  if (aidId) {
+  if (offlineDetailAid) {
+    return (
+      <AidDetailView
+        aid={offlineDetailAid}
+        onBack={() => setOfflineDetailAid(null)}
+      />
+    )
+  }
+
+  if (effectiveAidId) {
     if (routeOrdinal === null) {
       return (
         <div dir="rtl" style={{ padding: 40, textAlign: 'center' }}>
@@ -406,10 +437,15 @@ export default function HumanitarianAidPage({
           </div>
         ) : (
           filteredAid.map((aid) => (
-            <AidCard
+          <AidCard
               key={aid.id}
               aid={aid}
               onClick={() => {
+                if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                  setOfflineDetailAid(aid)
+                  toast.info('تم فتح تفاصيل المساعدة من البيانات المحفوظة')
+                  return
+                }
                 const sorted = sortAidByStableId(aidCatalog)
                 const idx = sorted.findIndex((a) => a.id === aid.id)
                 if (idx < 0) return

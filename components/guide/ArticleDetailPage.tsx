@@ -14,15 +14,18 @@ import {
 import GuideQueryState, { buildArticlePrintHtml } from './GuideQueryState'
 import { useArticle } from '@/hooks/useArticle'
 import { getCategoryLabel, formatViewsCount } from '@/lib/mappers/article'
+import type { Article } from '@/schemas/healthGuide'
 
 interface Props {
   articleId: string
+  initialArticle?: Article | null
+  onBack?: () => void
 }
 
-export default function ArticleDetailPage({ articleId }: Props) {
+export default function ArticleDetailPage({ articleId, initialArticle = null, onBack }: Props) {
   const router = useRouter()
   const { data: article, isLoading, isError, error, refetch } =
-    useArticle(articleId)
+    useArticle(articleId, initialArticle)
 
   const [isSaved, setIsSaved] = useState(false)
 
@@ -96,7 +99,13 @@ export default function ArticleDetailPage({ articleId }: Props) {
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-4 sm:px-8 py-3 flex items-center justify-between">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (onBack) {
+              onBack()
+              return
+            }
+            router.back()
+          }}
           className="flex items-center gap-2 text-[#2196F3] font-black text-[14px] hover:gap-3 transition-all"
         >
           <ArrowRight size={18} />
@@ -199,7 +208,13 @@ export default function ArticleDetailPage({ articleId }: Props) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => router.back()}
+                    onClick={() => {
+                      if (onBack) {
+                        onBack()
+                        return
+                      }
+                      router.back()
+                    }}
                     className="border border-white/50 text-white font-black text-[13px] px-6 py-2.5 rounded-xl hover:bg-white/10 transition-all"
                   >
                     عودة للدليل

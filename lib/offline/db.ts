@@ -170,16 +170,20 @@ export async function getFacilityDetail(id: string): Promise<HealthFacility | nu
 export async function putFacilities(facilities: HealthFacility[]): Promise<void> {
   const db = getOfflineDB()
   const now = Date.now()
-  await db.facilities.bulkPut(
-    facilities.map((f) => ({
-      id: f.id,
-      category: f.category,
-      facility: f,
-      cachedAt: now,
-      updatedAt: now,
-      version: 1,
-    }))
-  )
+  const rows = facilities.map((f) => ({
+    id: f.id,
+    category: f.category,
+    facility: f,
+    cachedAt: now,
+    updatedAt: now,
+    version: 1,
+  }))
+  await db.transaction('rw', db.facilities, db.facilityDetails, async () => {
+    await db.facilities.bulkPut(rows)
+    await db.facilityDetails.bulkPut(
+      rows.map(({ version, ...row }) => row),
+    )
+  })
 }
 
 export async function putFacilityDetail(facility: HealthFacility): Promise<void> {

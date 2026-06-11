@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect, useCallback, FormEvent, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { Lock, MapPin, Search, Loader2, Navigation, X } from 'lucide-react'
+import { toast } from 'sonner'
 import { useSafetyCheck, useSafetyMapData } from '@/hooks/useSafetyMapData'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import type { LeafletMapInnerProps, SearchResult } from './LeafletMapInner'
 
 const LeafletMap = dynamic<LeafletMapInnerProps>(
@@ -201,6 +203,7 @@ function placeIcon(item: NominatimItem): string {
 }
 
 export default function MapsContent() {
+  const { isOffline } = useOnlineStatus()
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>({
     safeRoutes: false,
     dangerZones: false,
@@ -246,6 +249,9 @@ export default function MapsContent() {
         : 'تحذير: أنت في منطقة خطر — يرجى مغادرة المنطقة فوراً'
     }
     if (anyLayerActive) {
+      if (isOffline) {
+        return 'وضع أوفلاين: يتم عرض الطرق والمناطق المحفوظة على الجهاز'
+      }
       if (mapDataQuery.isLoading) {
         return 'جاري تحميل بيانات الطبقة...'
       }
@@ -262,6 +268,9 @@ export default function MapsContent() {
         return 'لا توجد نقاط موارد مسجلة حالياً'
       }
       return 'يرجى تتبع خط السير من أجل سلامتكم'
+    }
+    if (isOffline) {
+      return 'وضع أوفلاين: فعّل طبقات الخريطة لعرض المسارات ونقاط الموارد المحفوظة'
     }
     if (mapDataQuery.isLoading) {
       return 'جاري تحميل بيانات الخريطة...'
@@ -280,6 +289,7 @@ export default function MapsContent() {
     anyLayerActive,
     mapDataQuery.isLoading,
     mapDataQuery.isError,
+    isOffline,
     layers.safeRoutes,
     layers.dangerZones,
     layers.resourceActivity,
@@ -398,6 +408,19 @@ export default function MapsContent() {
         setSearchError('تعذّر الحصول على الموقع')
       },
       { timeout: 8000 },
+    )
+  }
+
+  const handleOfflineNavigation = () => {
+    setLayers({
+      safeRoutes: true,
+      dangerZones: true,
+      resourceActivity: true,
+    })
+    toast.info(
+      isOffline
+        ? 'تم تفعيل الملاحة من البيانات المحفوظة على الجهاز'
+        : 'تم تفعيل طبقات الأمان والملاحة',
     )
   }
 
@@ -594,6 +617,7 @@ export default function MapsContent() {
               </button>
               <button
                 type="button"
+                onClick={handleOfflineNavigation}
                 style={{
                   background: '#2196F3',
                   border: 'none',

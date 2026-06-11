@@ -6,9 +6,48 @@ import { safetyAPI } from '@/lib/api/safety'
 import { useAuth } from '@/context/AuthContext'
 import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
 import { getSafetyMapLayers, putSafetyMapLayers } from '@/lib/offline/db'
+import {
+  MAP_DANGER_ORANGE,
+  MAP_DANGER_RED,
+  MAP_RESOURCE_MARKERS,
+  MAP_SAFE_ROUTE,
+} from '@/lib/mocks/mapsMockData'
 
 function getEmptyLayers(): SafetyMapLayers {
-  return { safeRoads: [], dangerZones: [], resourcePoints: [] }
+  return {
+    safeRoads: [
+      {
+        id: 'offline-safe-route',
+        name: 'مسار آمن محفوظ',
+        description: 'مسار إرشادي متاح بدون اتصال',
+        positions: MAP_SAFE_ROUTE,
+        isActive: true,
+      },
+    ],
+    dangerZones: [
+      {
+        id: 'offline-danger-red',
+        description: 'منطقة خطر محفوظة',
+        dangerLevel: 'high',
+        rings: [MAP_DANGER_RED],
+        isActive: true,
+      },
+      {
+        id: 'offline-danger-orange',
+        description: 'منطقة تحذير محفوظة',
+        dangerLevel: 'medium',
+        rings: [MAP_DANGER_ORANGE],
+        isActive: true,
+      },
+    ],
+    resourcePoints: MAP_RESOURCE_MARKERS.map((point, index) => ({
+      id: `offline-resource-${index}`,
+      name: point.name,
+      type: 'aid',
+      position: [point.lat, point.lng],
+      isActive: true,
+    })),
+  }
 }
 
 function isPointInPolygon(point: [number, number], polygon: [number, number][]) {
