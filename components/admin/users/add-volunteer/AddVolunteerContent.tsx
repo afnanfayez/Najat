@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import AdminShell from '@/components/admin/AdminShell'
+import { createVolunteerFromForm } from '@/components/admin/data/adminVolunteerService'
 import {
   ADMIN_PAGE_SUBTITLE_STYLE,
   ADMIN_PAGE_TITLE_STYLE,
@@ -32,8 +34,12 @@ const REQUIRED: Record<number, (keyof VolunteerFormData)[]> = {
 
 export default function AddVolunteerContent() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [formData, setFormData] = useState<VolunteerFormData>(INITIAL_FORM_DATA)
+  const queryClient = useQueryClient()
+  const [initialDraft] = useState(() => loadDraft())
+  const [step, setStep] = useState(() => initialDraft?.step ?? 1)
+  const [formData, setFormData] = useState<VolunteerFormData>(
+    () => initialDraft?.data ?? INITIAL_FORM_DATA,
+  )
   const [validationError, setValidationError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
@@ -41,13 +47,10 @@ export default function AddVolunteerContent() {
 
   // Restore draft on mount
   useEffect(() => {
-    const draft = loadDraft()
-    if (draft) {
-      setFormData(draft.data)
-      setStep(draft.step)
+    if (initialDraft) {
       toast.info('تم استعادة المسودة المحفوظة مسبقاً')
     }
-  }, [])
+  }, [initialDraft])
 
   const updateField: UpdateField = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
@@ -93,11 +96,11 @@ export default function AddVolunteerContent() {
     if (!validate(4)) return
     setSubmitting(true)
     try {
-      // TODO: call real API — POST /v1/admin/volunteers
-      // await request('/v1/admin/volunteers', { method: 'POST', body: JSON.stringify(formData) })
-      await new Promise((res) => setTimeout(res, 800))
+      const result = await createVolunteerFromForm(formData)
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
       clearDraft()
       setSubmitted(true)
+      toast.success(`تم إنشاء حساب المتطوع. كلمة المرور المؤقتة: ${result.temporaryPassword}`)
     } catch {
       toast.error('تعذّر إرسال الطلب')
     } finally {

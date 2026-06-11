@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,7 @@ import {
   ADMIN_USER_REGION_OPTIONS,
   ADMIN_USER_ROLE_OPTIONS,
 } from '@/lib/mocks/adminUsersMockData'
-import { updateAdminUser } from '@/lib/api/adminUsers'
+import { useUpdateAdminUser } from '@/hooks/useAdminUsers'
 import type { AdminManagedUser, AdminUserRole, AdminUserStatus } from '@/schemas/adminUser'
 import {
   ADMIN_USERS_BLUE,
@@ -34,27 +33,24 @@ const STATUS_OPTIONS: { value: AdminUserStatus; label: string }[] = [
   { value: 'pending_review', label: 'قيد المراجعة' },
 ]
 
-export default function AdminUserEditModal({ user, open, onClose }: AdminUserEditModalProps) {
-  const queryClient = useQueryClient()
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === 'string') return message
+  }
+  return fallback
+}
 
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState<AdminUserRole>('volunteer')
-  const [region, setRegion] = useState('')
-  const [status, setStatus] = useState<AdminUserStatus>('active')
+export default function AdminUserEditModal({ user, open, onClose }: AdminUserEditModalProps) {
+  const updateUserMutation = useUpdateAdminUser()
+
+  const [name, setName] = useState(() => user?.name ?? '')
+  const [email, setEmail] = useState(() => user?.email ?? '')
+  const [role, setRole] = useState<AdminUserRole>(() => user?.role ?? 'volunteer')
+  const [region, setRegion] = useState(() => user?.region ?? '')
+  const [status, setStatus] = useState<AdminUserStatus>(() => user?.status ?? 'active')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (open && user) {
-      setName(user.name)
-      setEmail(user.email)
-      setRole(user.role)
-      setRegion(user.region)
-      setStatus(user.status)
-      setError(null)
-    }
-  }, [open, user])
 
   function handleOpenChange(next: boolean) {
     if (!next) onClose()
@@ -65,12 +61,13 @@ export default function AdminUserEditModal({ user, open, onClose }: AdminUserEdi
     setSaving(true)
     setError(null)
     try {
-      await updateAdminUser(user.id, { name, email, role, region, status })
-      // Invalidate so React Query refetches fresh data from the source
-      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      await updateUserMutation.mutateAsync({
+        id: user.id,
+        body: { name, email, role, region, status },
+      })
       onClose()
-    } catch (err: any) {
-      setError(err?.message ?? 'حدث خطأ أثناء الحفظ')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'حدث خطأ أثناء الحفظ'))
     } finally {
       setSaving(false)
     }

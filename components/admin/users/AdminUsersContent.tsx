@@ -9,7 +9,7 @@ import AdminUsersTable from './AdminUsersTable'
 import AdminUsersPagination from './AdminUsersPagination'
 import AdminUserEditModal from './AdminUserEditModal'
 import AdminDisableUserModal from './AdminDisableUserModal'
-import { useAdminUsers } from '@/hooks/useAdminUsers'
+import { useAdminUsers, useSetAdminUserActive } from '@/hooks/useAdminUsers'
 import type { AdminManagedUser, AdminUserRegionFilter, AdminUserRoleFilter } from '@/schemas/adminUser'
 
 const PAGE_SIZE = 4
@@ -20,7 +20,6 @@ export default function AdminUsersContent() {
   const [role, setRole] = useState<AdminUserRoleFilter>('all')
   const [region, setRegion] = useState<AdminUserRegionFilter>('all')
   const [page, setPage] = useState(1)
-  const [enabledOverrides, setEnabledOverrides] = useState<Record<string, boolean>>({})
 
   const [editingUser, setEditingUser] = useState<AdminManagedUser | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -33,8 +32,6 @@ export default function AdminUsersContent() {
     return () => window.clearTimeout(timer)
   }, [search])
 
-  useEffect(() => { setPage(1) }, [debouncedSearch, role, region])
-
   const { users, stats, total, page: currentPage, isLoading, isError } = useAdminUsers({
     search: debouncedSearch,
     role,
@@ -42,6 +39,7 @@ export default function AdminUsersContent() {
     page,
     pageSize: PAGE_SIZE,
   })
+  const setActiveMutation = useSetAdminUserActive()
 
   function handleToggleUser(userId: string, enabled: boolean, userName: string) {
     if (!enabled) {
@@ -49,12 +47,11 @@ export default function AdminUsersContent() {
       setDisableTarget({ userId, userName })
     } else {
       // Re-enabling → apply immediately without confirmation
-      setEnabledOverrides((prev) => ({ ...prev, [userId]: true }))
+      setActiveMutation.mutate({ id: userId, isActive: true })
     }
   }
 
-  function handleDisableConfirmed(userId: string) {
-    setEnabledOverrides((prev) => ({ ...prev, [userId]: false }))
+  function handleDisableConfirmed() {
     setDisableTarget(null)
   }
 
@@ -81,7 +78,7 @@ export default function AdminUsersContent() {
         search={search}
         role={role}
         region={region}
-        onSearchChange={setSearch}
+        onSearchChange={(value) => { setSearch(value); setPage(1) }}
         onRoleChange={(v) => { setRole(v); setPage(1) }}
         onRegionChange={(v) => { setRegion(v); setPage(1) }}
       />
@@ -107,7 +104,7 @@ export default function AdminUsersContent() {
       {!isLoading && !isError && (
         <AdminUsersTable
           users={users}
-          enabledOverrides={enabledOverrides}
+          enabledOverrides={{}}
           onToggleUser={handleToggleUser}
           onEditUser={handleEditUser}
           pagination={
@@ -122,6 +119,7 @@ export default function AdminUsersContent() {
       )}
 
       <AdminUserEditModal
+        key={editingUser?.id ?? 'no-user'}
         user={editingUser}
         open={editModalOpen}
         onClose={handleEditClose}

@@ -1,14 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Lock } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { updateAdminUser } from '@/lib/api/adminUsers'
-import { USE_MOCK_ADMIN_USERS } from '@/lib/mocks/adminUsersMockData'
+import { useSetAdminUserActive } from '@/hooks/useAdminUsers'
 import { ADMIN_USERS_FONT } from './adminUsersStyles'
 
 const FONT = { fontFamily: ADMIN_USERS_FONT }
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === 'string') return message
+  }
+  return fallback
+}
 
 interface AdminDisableUserModalProps {
   userId: string
@@ -20,12 +26,11 @@ interface AdminDisableUserModalProps {
 
 export default function AdminDisableUserModal({
   userId,
-  userName,
   open,
   onClose,
   onConfirmed,
 }: AdminDisableUserModalProps) {
-  const queryClient = useQueryClient()
+  const setActiveMutation = useSetAdminUserActive()
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -51,18 +56,12 @@ export default function AdminDisableUserModal({
     setLoading(true)
     setApiError(null)
     try {
-      if (!USE_MOCK_ADMIN_USERS) {
-        await updateAdminUser(userId, { enabled: false })
-      } else {
-        await new Promise((r) => setTimeout(r, 400))
-        await updateAdminUser(userId, { enabled: false })
-      }
-      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      await setActiveMutation.mutateAsync({ id: userId, isActive: false })
       onConfirmed(userId)
       setPassword('')
       onClose()
-    } catch (err: any) {
-      setApiError(err?.message ?? 'تعذّر تعطيل الحساب')
+    } catch (err: unknown) {
+      setApiError(getErrorMessage(err, 'تعذّر تعطيل الحساب'))
     } finally {
       setLoading(false)
     }

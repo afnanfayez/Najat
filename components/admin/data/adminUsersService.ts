@@ -38,7 +38,7 @@ export function mapAdminUserDto(user: AdminUserDto): AdminManagedUser {
   const statusMeta = ADMIN_USER_STATUS_META[user.status]
   return {
     ...user,
-    roleLabel: ROLE_LABELS[user.role],
+    roleLabel: ROLE_LABELS[user.role] ?? user.role,
     statusLabel: statusMeta.label,
     statusColor: statusMeta.color,
   }
@@ -73,6 +73,32 @@ function filterMockUsers(
   })
 }
 
+function normalizeRegion(value?: string) {
+  return value?.trim().toLowerCase() ?? ''
+}
+
+function matchesRegionFilter(user: AdminUserDto, region?: AdminUserRegionFilter): boolean {
+  if (!region || region === 'all') return true
+
+  const normalizedUserRegion = normalizeRegion(user.region)
+  const normalizedFilter = normalizeRegion(region)
+  if (!normalizedUserRegion || !normalizedFilter) return false
+
+  if (normalizedUserRegion.includes(normalizedFilter)) return true
+
+  const broadRegionAliases: Record<string, string[]> = {
+    'شمال القطاع': ['شمال', 'north', 'جباليا', 'بيت لاهيا'],
+    الوسطى: ['الوسطى', 'دير البلح', 'البريج', 'alburij', 'burij'],
+    غزة: ['غزة', 'gaza', 'مدينة غزة'],
+    خانيونس: ['خانيونس', 'خان يونس', 'khanyounes', 'khan'],
+    رفح: ['رفح', 'rafah'],
+  }
+
+  return (broadRegionAliases[region] ?? []).some((alias) =>
+    normalizedUserRegion.includes(normalizeRegion(alias)),
+  )
+}
+
 function paginateUsers(
   users: AdminUserDto[],
   page: number,
@@ -103,10 +129,33 @@ export async function fetchAdminUsers(
     return getMockAdminUsersResult(params)
   }
 
+  if (params.region && params.region !== 'all') {
+    const apiResult = await fetchAdminUsersFromApi({
+      search: params.search,
+      role: params.role,
+      page: 1,
+      pageSize: 100,
+    })
+    const page = params.page ?? 1
+    const pageSize = params.pageSize ?? 4
+    const filtered = apiResult.users.filter((user) =>
+      matchesRegionFilter(user, params.region),
+    )
+
+    return {
+      ...apiResult,
+      users: paginateUsers(filtered, page, pageSize),
+      total: filtered.length,
+      page,
+      pageSize,
+    }
+  }
+
   return fetchAdminUsersFromApi({
     search: params.search,
     role: params.role,
-    region: params.region,
+    isActive: params.isActive,
+    isVerified: params.isVerified,
     page: params.page,
     pageSize: params.pageSize,
   })
