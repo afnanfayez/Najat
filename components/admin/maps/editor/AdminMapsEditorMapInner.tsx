@@ -24,10 +24,28 @@ export interface AdminMapsEditorMapInnerProps {
   flyTo: [number, number] | null
 }
 
+function isMapMounted(map: ReturnType<typeof useMap>) {
+  return map.getContainer()?.isConnected === true
+}
+
+function ignoreDetachedLeafletError(err: unknown) {
+  return (
+    err instanceof TypeError &&
+    String(err.message).includes('_leaflet_pos')
+  )
+}
+
 function MapResizeController() {
   const map = useMap()
   useEffect(() => {
-    const timer = window.setTimeout(() => map.invalidateSize(), 120)
+    const timer = window.setTimeout(() => {
+      if (!isMapMounted(map)) return
+      try {
+        map.invalidateSize()
+      } catch (err) {
+        if (!ignoreDetachedLeafletError(err)) throw err
+      }
+    }, 120)
     return () => window.clearTimeout(timer)
   }, [map])
   return null
@@ -36,7 +54,13 @@ function MapResizeController() {
 function FlyController({ flyTo }: { flyTo: [number, number] | null }) {
   const map = useMap()
   useEffect(() => {
-    if (flyTo) map.flyTo(flyTo, 15, { duration: 1.2 })
+    if (!flyTo || !isMapMounted(map)) return
+    try {
+      map.stop()
+      map.flyTo(flyTo, 15, { duration: 1.2 })
+    } catch (err) {
+      if (!ignoreDetachedLeafletError(err)) throw err
+    }
   }, [flyTo, map])
   return null
 }

@@ -25,6 +25,24 @@ const facilityMarkerIcon = new L.Icon({
   shadowSize: [41, 41],
 })
 
+function isMapMounted(map: L.Map) {
+  return map.getContainer()?.isConnected === true
+}
+
+function runLeafletSafely(action: () => void) {
+  try {
+    action()
+  } catch (err) {
+    if (
+      err instanceof TypeError &&
+      String(err.message).includes('_leaflet_pos')
+    ) {
+      return
+    }
+    throw err
+  }
+}
+
 export interface FacilityLocationMapInnerProps {
   latitude: number | null
   longitude: number | null
@@ -34,7 +52,10 @@ export interface FacilityLocationMapInnerProps {
 function MapResizeController() {
   const map = useMap()
   useEffect(() => {
-    const timer = window.setTimeout(() => map.invalidateSize(), 120)
+    const timer = window.setTimeout(() => {
+      if (!isMapMounted(map)) return
+      runLeafletSafely(() => map.invalidateSize())
+    }, 120)
     return () => window.clearTimeout(timer)
   }, [map])
   return null
@@ -67,7 +88,11 @@ function MapViewSync({
 
   useEffect(() => {
     if (latitude != null && longitude != null) {
-      map.flyTo([latitude, longitude], map.getZoom(), { duration: 0.6 })
+      if (!isMapMounted(map)) return
+      runLeafletSafely(() => {
+        map.stop()
+        map.flyTo([latitude, longitude], map.getZoom(), { duration: 0.6 })
+      })
     }
   }, [latitude, longitude, map])
 

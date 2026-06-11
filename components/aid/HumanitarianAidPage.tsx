@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { toast } from 'sonner'
 import AidCard from './AidCard'
 import AidDetailView from './AidDetailView'
 import { useAid } from '@/hooks/useAid'
@@ -443,7 +442,6 @@ export default function HumanitarianAidPage({
               onClick={() => {
                 if (typeof navigator !== 'undefined' && !navigator.onLine) {
                   setOfflineDetailAid(aid)
-                  toast.info('تم فتح تفاصيل المساعدة من البيانات المحفوظة')
                   return
                 }
                 const sorted = sortAidByStableId(aidCatalog)

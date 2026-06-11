@@ -36,6 +36,17 @@ export interface SafetyMapLayersOverlayProps {
   fitToLayers: boolean
 }
 
+function isMapMounted(map: L.Map) {
+  return map.getContainer()?.isConnected === true
+}
+
+function ignoreDetachedLeafletError(err: unknown) {
+  return (
+    err instanceof TypeError &&
+    String(err.message).includes('_leaflet_pos')
+  )
+}
+
 export default function SafetyMapLayersOverlay({
   showSafeRoutes,
   showDangerZones,
@@ -48,11 +59,17 @@ export default function SafetyMapLayersOverlay({
   const map = useMap()
 
   useEffect(() => {
-    map.invalidateSize()
+    if (!isMapMounted(map)) return
+    try {
+      map.invalidateSize()
+    } catch (err) {
+      if (!ignoreDetachedLeafletError(err)) throw err
+    }
   }, [map])
 
   useEffect(() => {
     const group = L.layerGroup()
+    let frame = 0
 
     if (showSafeRoutes) {
       safeRoads.forEach((road) => {
@@ -105,15 +122,27 @@ export default function SafetyMapLayersOverlay({
       }
 
       if (points.length > 0) {
-        window.requestAnimationFrame(() => {
-          map.invalidateSize()
-          map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 })
+        frame = window.requestAnimationFrame(() => {
+          if (!isMapMounted(map)) return
+          try {
+            map.invalidateSize()
+            map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 })
+          } catch (err) {
+            if (!ignoreDetachedLeafletError(err)) throw err
+          }
         })
       }
     }
 
     return () => {
-      map.removeLayer(group)
+      if (frame) window.cancelAnimationFrame(frame)
+      if (isMapMounted(map)) {
+        try {
+          map.removeLayer(group)
+        } catch (err) {
+          if (!ignoreDetachedLeafletError(err)) throw err
+        }
+      }
     }
   }, [
     map,

@@ -12,6 +12,8 @@ type WindowWithDeferredPrompt = Window & {
 }
 
 export function showInstallToast(event: BeforeInstallPromptEvent | null) {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return
+
   const canPrompt = Boolean(event)
 
   toast.custom(

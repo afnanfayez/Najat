@@ -12,10 +12,28 @@ export interface FacilityLocationMapInnerProps {
   zoom?: number
 }
 
+function isMapMounted(map: ReturnType<typeof useMap>) {
+  return map.getContainer()?.isConnected === true
+}
+
+function ignoreDetachedLeafletError(err: unknown) {
+  return (
+    err instanceof TypeError &&
+    String(err.message).includes('_leaflet_pos')
+  )
+}
+
 function MapResizeController() {
   const map = useMap()
   useEffect(() => {
-    const timer = window.setTimeout(() => map.invalidateSize(), 100)
+    const timer = window.setTimeout(() => {
+      if (!isMapMounted(map)) return
+      try {
+        map.invalidateSize()
+      } catch (err) {
+        if (!ignoreDetachedLeafletError(err)) throw err
+      }
+    }, 100)
     return () => window.clearTimeout(timer)
   }, [map])
   return null

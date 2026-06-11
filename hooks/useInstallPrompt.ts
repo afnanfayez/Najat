@@ -20,6 +20,7 @@ export function useInstallPrompt() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return
 
     // 1. Check if already running in standalone (installed) mode
     const isStandalone =
@@ -31,6 +32,7 @@ export function useInstallPrompt() {
     }
 
     const triggerToast = (event: BeforeInstallPromptEvent | null) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return
       if (promptShownRef.current && !event) return
       promptShownRef.current = true
 
