@@ -26,7 +26,7 @@ import {
 import type { HealthFacility } from '@/schemas/healthFacility'
 import { warmOfflineImages } from './warmImageCache'
 
-const SYNC_COOLDOWN_MS = 10 * 60 * 1000
+const SYNC_COOLDOWN_MS = 30 * 60 * 1000
 const HEAVY_SYNC_SESSION_KEY = 'najat-heavy-sync-done'
 
 let isSyncing = false
@@ -65,9 +65,9 @@ function scheduleHeavyAssetsSync(): void {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(run, { timeout: 60_000 })
+    requestIdleCallback(run, { timeout: 5 * 60_000 })
   } else {
-    setTimeout(run, 45_000)
+    setTimeout(run, 5 * 60_000)
   }
 }
 
@@ -263,9 +263,9 @@ export function initOfflineSync(): () => void {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(startSync, { timeout: 20_000 })
+    requestIdleCallback(startSync, { timeout: 2 * 60_000 })
   } else {
-    setTimeout(startSync, 8_000)
+    setTimeout(startSync, 2 * 60_000)
   }
 
   const onOnline = () => syncAllData()
@@ -274,7 +274,7 @@ export function initOfflineSync(): () => void {
   if (!syncTimer) {
     syncTimer = setInterval(() => {
       if (navigator.onLine) syncAllData()
-    }, 30 * 60 * 1000)
+    }, 60 * 60 * 1000)
   }
 
   return () => {

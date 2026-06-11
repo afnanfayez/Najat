@@ -65,6 +65,16 @@ async function fetchAidCatalog(): Promise<HumanitarianAid[]> {
     return getAllAid()
   }
 
+  const cached = await getAllAid()
+  if (cached.length > 0) {
+    fetchAllAidPages()
+      .then((fresh) => {
+        if (fresh.length > 0) putAid(fresh).catch(() => {})
+      })
+      .catch(() => {})
+    return cached
+  }
+
   try {
     const base = await fetchAllAidPages()
     if (base.length > 0) {

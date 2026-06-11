@@ -12,9 +12,27 @@ import {
   saveOfflineLoginSnapshot,
   tryOfflineLogin,
 } from '@/lib/auth/offlineLogin'
-import { precacheAppRoute, precacheResidentRoutes } from '@/lib/pwa/precacheRoute'
+import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
 import { profileAPI } from '@/lib/api/profile'
 import { toast } from 'sonner'
+
+async function restoreOfflineSession(email: string, password: string) {
+  const restored = await tryOfflineLogin(email, password)
+  if (!restored) return null
+
+  notifyAuthSessionChanged()
+  const destination = routeForRole(restored.role)
+  saveLoginRedirect(destination)
+  void precacheAppRoute(destination)
+
+  return restored
+}
+
+function canUseOfflineLoginFallback(err: any): boolean {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return true
+  if (!err?.status || err.status === 0) return true
+  return err.status >= 500
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +162,7 @@ export const useLoginStore = create<LoginState>()(
 
         if (typeof navigator !== 'undefined' && !navigator.onLine) {
           try {
-            const restored = await tryOfflineLogin(email, password)
+            const restored = await restoreOfflineSession(email, password)
             if (!restored) {
               set({
                 isError: true,
@@ -154,11 +172,6 @@ export const useLoginStore = create<LoginState>()(
               })
               return
             }
-            notifyAuthSessionChanged()
-            const destination = routeForRole(restored.role)
-            saveLoginRedirect(destination)
-            void precacheAppRoute(destination)
-            if (restored.role === 'resident') void precacheResidentRoutes()
             set({
               isSuccess: true,
               isSubmitting: false,
@@ -201,7 +214,6 @@ export const useLoginStore = create<LoginState>()(
 
           const destination = routeForRole(resolvedRole)
           void precacheAppRoute(destination)
-          if (resolvedRole === 'resident') void precacheResidentRoutes()
           saveLoginRedirect(destination)
           set({
             isSuccess: true,
@@ -210,15 +222,10 @@ export const useLoginStore = create<LoginState>()(
           })
         } catch (err: any) {
           // ── Network error → try offline credentials as fallback ────────────
-          if (!err?.status || err.status === 0) {
+          if (canUseOfflineLoginFallback(err)) {
             try {
-              const restored = await tryOfflineLogin(email, password)
+              const restored = await restoreOfflineSession(email, password)
               if (restored) {
-                notifyAuthSessionChanged()
-                const destination = routeForRole(restored.role)
-                saveLoginRedirect(destination)
-                void precacheAppRoute(destination)
-                if (restored.role === 'resident') void precacheResidentRoutes()
                 set({
                   isSuccess: true,
                   isSubmitting: false,

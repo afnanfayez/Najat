@@ -1,50 +1,23 @@
-const CACHE_NAME = 'najat-pwa-cache-v14'
-const FETCH_TIMEOUT_MS = 4000
+const CACHE_NAME = 'najat-pwa-cache-v20'
+const API_CACHE_NAME = 'najat-api-cache-v2'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
-const AUTH_ROUTES = [
-  '/login',
-  '/logout',
-  '/register',
-  '/dashboard',
-  '/admin',
-  '/volunteer',
-]
-const RESIDENT_ROUTES = [
-  '/dashboard',
-  '/hospitals',
-  '/pharmacies',
-  '/clinics',
-  '/labs',
-  '/dental-clinics',
-  '/humanitarian-aid',
-  '/health-guide',
-  '/maps',
-  '/emergency',
-  '/profile',
-  '/profile/edit',
-]
-const ASSETS_TO_CACHE = [
+const FETCH_TIMEOUT_MS = 8000
+
+const CORE_ASSETS = [
   '/',
   '/login',
   '/logout',
-  '/register',
   '/dashboard',
-  '/admin',
-  '/volunteer',
   '/favicon.ico',
-  '/assets/Logo1.png',
-  '/assets/Logo1_cropped.png',
-  '/assets/Logo2.png',
   '/assets/Photo1.png',
-  '/assets/Photo2.jpg',
+  '/assets/Logo1.png',
+  '/assets/Logo2.png',
   '/assets/najat-icon-192.png',
   '/assets/najat-icon-512.png',
   '/assets/leaflet/marker-icon.png',
   '/assets/leaflet/marker-icon-2x.png',
   '/assets/leaflet/marker-shadow.png',
   '/assets/leaflet/marker-icon-blue-2x.png',
-  'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css',
-  'https://unpkg.com/boxicons@2.1.4/fonts/boxicons.woff2',
 ]
 
 const EXTERNAL_CACHE_HOSTS = [
@@ -55,9 +28,27 @@ const EXTERNAL_CACHE_HOSTS = [
   'raw.githubusercontent.com',
 ]
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────────────────────────────────────
+const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>غير متصل</title>
+  <style>
+    body{font-family:'Cairo',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f4f7fb;direction:rtl}
+    .box{text-align:center;padding:32px;background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.08);max-width:360px;width:90%}
+    h2{color:#1a2d4a;margin:0 0 12px}p{color:#555;margin:0 0 20px}
+    a{color:#2196F3;text-decoration:none;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>أنت غير متصل بالإنترنت</h2>
+    <p>افتح صفحة سبق تحميلها أو سجّل الدخول بالبيانات المحفوظة.</p>
+    <a href="/login">صفحة تسجيل الدخول</a>
+  </div>
+</body>
+</html>`
 
 function rscCacheKey(pathname) {
   return `rsc-shell:${pathname}`
@@ -71,79 +62,6 @@ function isRscRequest(request, url) {
   )
 }
 
-function fetchWithTimeout(request, timeoutMs = FETCH_TIMEOUT_MS) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timeout')), timeoutMs)
-    fetch(request)
-      .then((response) => {
-        clearTimeout(timer)
-        resolve(response)
-      })
-      .catch((err) => {
-        clearTimeout(timer)
-        reject(err)
-      })
-  })
-}
-
-async function cacheRscPayload(cache, pagePath) {
-  try {
-    const response = await fetch(pagePath, {
-      headers: {
-        RSC: '1',
-        'Next-Router-Prefetch': '1',
-        'Next-Url': pagePath,
-      },
-    })
-    if (!response.ok) return
-    await cache.put(rscCacheKey(pagePath), response.clone())
-  } catch {
-    // ignore
-  }
-}
-
-async function cachePageAssets(cache, pagePath) {
-  try {
-    const response = await fetch(pagePath)
-    if (!response.ok) return
-    await cache.put(pagePath, response.clone())
-    await cacheRscPayload(cache, pagePath)
-    const html = await response.text()
-    const assetUrls = [
-      ...html.matchAll(/(?:src|href)="([^"]*\/_next\/[^"]+)"/g),
-      ...html.matchAll(/(?:src|href)="(\/_next\/[^"]+)"/g),
-    ]
-      .map((match) => {
-        try {
-          return new URL(match[1], self.location.origin).toString()
-        } catch {
-          return null
-        }
-      })
-      .filter(Boolean)
-
-    await Promise.all(
-      [...new Set(assetUrls)].map((assetUrl) =>
-        cache.add(assetUrl).catch(() => undefined),
-      ),
-    )
-  } catch {
-    // ignore precache failures for individual pages
-  }
-}
-
-async function precacheRoutes(cache, routes) {
-  await Promise.all(routes.map((route) => cachePageAssets(cache, route)))
-}
-
-async function precacheAuthPages(cache) {
-  await precacheRoutes(cache, AUTH_ROUTES)
-}
-
-async function precacheResidentPages(cache) {
-  await precacheRoutes(cache, RESIDENT_ROUTES)
-}
-
 function isMapTileUrl(url) {
   return (
     url.href.includes('basemaps.cartocdn.com') ||
@@ -155,147 +73,6 @@ function isExternalCacheable(url) {
   return EXTERNAL_CACHE_HOSTS.some((host) => url.href.includes(host))
 }
 
-function cacheFirstWithUpdate(request, cacheName) {
-  return caches.open(cacheName).then((cache) =>
-    cache.match(request).then((cachedResponse) => {
-      const networkFetch = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            cache.put(request, networkResponse.clone())
-          }
-          return networkResponse
-        })
-        .catch(() => null)
-
-      if (cachedResponse) {
-        networkFetch.catch(() => undefined)
-        return cachedResponse
-      }
-
-      return networkFetch.then((response) => response || cachedResponse)
-    }),
-  )
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Install
-// ──────────────────────────────────────────────────────────────────────────────
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) =>
-        cache
-          .addAll(ASSETS_TO_CACHE)
-          .catch(() => undefined)
-          .then(() => precacheAuthPages(cache)),
-      )
-      .then(() => self.skipWaiting()),
-  )
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Activate
-// ──────────────────────────────────────────────────────────────────────────────
-
-self.addEventListener('activate', (event) => {
-  const keepCaches = new Set([CACHE_NAME, MAP_TILES_CACHE])
-  event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) =>
-        Promise.all(
-          cacheNames.map((cache) => {
-            if (!keepCaches.has(cache)) {
-              return caches.delete(cache)
-            }
-          }),
-        ),
-      )
-      .then(() => self.clients.claim()),
-  )
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Messages from client
-// ──────────────────────────────────────────────────────────────────────────────
-
-self.addEventListener('message', (event) => {
-  const { type, path, paths } = event.data ?? {}
-
-  if (type === 'PRECACHE_ROUTE') {
-    if (typeof path !== 'string' || !path.startsWith('/')) return
-    event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => cachePageAssets(cache, path)),
-    )
-    return
-  }
-
-  if (type === 'PRECACHE_ROUTES') {
-    const routes = Array.isArray(paths)
-      ? paths.filter((p) => typeof p === 'string' && p.startsWith('/'))
-      : RESIDENT_ROUTES
-    event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) => precacheRoutes(cache, routes)),
-    )
-    return
-  }
-
-  if (type === 'REGISTER_BACKGROUND_SYNC') {
-    if (self.registration && 'sync' in self.registration) {
-      event.waitUntil(
-        self.registration.sync.register('najat-session-sync').catch(() => {
-          notifyClientsSync()
-        }),
-      )
-    } else {
-      notifyClientsSync()
-    }
-    return
-  }
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Background Sync
-// ──────────────────────────────────────────────────────────────────────────────
-
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'najat-session-sync') {
-    event.waitUntil(handleSessionSync())
-  }
-})
-
-async function handleSessionSync() {
-  await notifyClientsSync()
-}
-
-async function notifyClientsSync() {
-  try {
-    const clients = await self.clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true,
-    })
-    clients.forEach((client) => {
-      client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGERED' })
-    })
-  } catch {
-    // ignore
-  }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Fetch — Cache Strategy
-// ──────────────────────────────────────────────────────────────────────────────
-
-function isDevBundlerAsset(url) {
-  return (
-    url.pathname.includes('turbopack') ||
-    url.search.includes('turbopack') ||
-    url.pathname.startsWith('/_next/webpack-hmr')
-  )
-}
-
 function isStaticAsset(url) {
   return (
     url.pathname.startsWith('/_next/static/') ||
@@ -304,22 +81,6 @@ function isStaticAsset(url) {
     url.pathname === '/favicon.ico' ||
     isExternalCacheable(url)
   )
-}
-
-function networkFirstWithCache(request, cacheName) {
-  return caches.open(cacheName).then(async (cache) => {
-    try {
-      const response = await fetchWithTimeout(request)
-      if (response.status === 200) {
-        await cache.put(request, response.clone())
-      }
-      return response
-    } catch {
-      const cached = await cache.match(request)
-      if (cached) return cached
-      throw new Error('network-first-miss')
-    }
-  })
 }
 
 function fallbackDocument(pathname) {
@@ -341,26 +102,187 @@ function fallbackDocument(pathname) {
   return '/dashboard'
 }
 
+function fetchWithTimeout(request, timeoutMs = FETCH_TIMEOUT_MS) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), timeoutMs)
+    fetch(request)
+      .then((response) => {
+        clearTimeout(timer)
+        resolve(response)
+      })
+      .catch((err) => {
+        clearTimeout(timer)
+        reject(err)
+      })
+  })
+}
+
+async function cacheRscPayload(cache, pagePath) {
+  if (!self.navigator.onLine) return
+  try {
+    const response = await fetch(pagePath, {
+      headers: {
+        RSC: '1',
+        'Next-Router-Prefetch': '1',
+        'Next-Url': pagePath,
+      },
+    })
+    if (response.ok) await cache.put(rscCacheKey(pagePath), response.clone())
+  } catch {
+    // ignore
+  }
+}
+
+async function cacheDocument(cache, path) {
+  if (!self.navigator.onLine) return
+  try {
+    const response = await fetch(path)
+    if (response.ok) {
+      await cache.put(path, response.clone())
+      await cacheRscPayload(cache, path)
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function cacheFirstWithUpdate(request, cacheName) {
+  const cache = await caches.open(cacheName)
+  const cached = await cache.match(request)
+
+  if (!self.navigator.onLine) {
+    return cached || new Response('', { status: 503, statusText: 'Offline' })
+  }
+
+  const update = fetch(request)
+    .then((response) => {
+      if (response.status === 200) cache.put(request, response.clone())
+      return response
+    })
+    .catch(() => null)
+
+  if (cached) {
+    update.catch(() => undefined)
+    return cached
+  }
+
+  return (await update) || new Response('', { status: 503, statusText: 'Offline' })
+}
+
+async function networkFirstWithCache(request, cacheName) {
+  const cache = await caches.open(cacheName)
+
+  if (!self.navigator.onLine) {
+    return (await cache.match(request)) || new Response('', { status: 503, statusText: 'Offline' })
+  }
+
+  try {
+    const response = await fetchWithTimeout(request)
+    if (response.status === 200) await cache.put(request, response.clone())
+    return response
+  } catch {
+    return (await cache.match(request)) || new Response('', { status: 503, statusText: 'Service Unavailable' })
+  }
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        Promise.all(CORE_ASSETS.map((url) => cache.add(url).catch(() => undefined))),
+      )
+      .then(() => self.skipWaiting()),
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  const keepCaches = new Set([CACHE_NAME, API_CACHE_NAME, MAP_TILES_CACHE])
+  event.waitUntil(
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((cacheName) => {
+            if (!keepCaches.has(cacheName)) return caches.delete(cacheName)
+          }),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  )
+})
+
+self.addEventListener('message', (event) => {
+  const { type, path } = event.data ?? {}
+
+  if (type === 'PRECACHE_ROUTE') {
+    if (typeof path !== 'string' || !path.startsWith('/')) return
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cacheDocument(cache, path)))
+    return
+  }
+
+  if (type === 'PRECACHE_ROUTES') {
+    return
+  }
+
+  if (type === 'REGISTER_BACKGROUND_SYNC') {
+    if (self.registration && 'sync' in self.registration) {
+      event.waitUntil(
+        self.registration.sync.register('najat-session-sync').catch(() => {
+          notifyClientsSync()
+        }),
+      )
+    } else {
+      notifyClientsSync()
+    }
+  }
+})
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'najat-session-sync') {
+    event.waitUntil(notifyClientsSync())
+  }
+})
+
+async function notifyClientsSync() {
+  try {
+    const clients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    })
+    clients.forEach((client) => {
+      client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGERED' })
+    })
+  } catch {
+    // ignore
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
 
   if (request.method !== 'GET') return
-
-  if (isDevBundlerAsset(url)) return
+  if (url.pathname.startsWith('/_next/webpack-hmr')) return
 
   if (url.origin !== self.location.origin) {
-    if (!isExternalCacheable(url) && !isMapTileUrl(url)) {
-      return
-    }
+    if (!isExternalCacheable(url) && !isMapTileUrl(url)) return
   }
 
-  if (url.pathname.startsWith('/v1/') || url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith('/api/')) return
+
+  if (url.pathname.startsWith('/v1/')) {
+    event.respondWith(networkFirstWithCache(request, API_CACHE_NAME))
     return
   }
 
   if (isMapTileUrl(url)) {
     event.respondWith(cacheFirstWithUpdate(request, MAP_TILES_CACHE))
+    return
+  }
+
+  if (isStaticAsset(url)) {
+    event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
     return
   }
 
@@ -372,9 +294,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const shellKey = rscCacheKey(url.pathname)
-        const cached =
-          (await cache.match(request)) || (await cache.match(shellKey))
-        if (cached) return cached
+
+        if (!self.navigator.onLine) {
+          return (
+            (await cache.match(request)) ||
+            (await cache.match(shellKey)) ||
+            (await cache.match(rscCacheKey(fallbackDocument(url.pathname)))) ||
+            new Response('', {
+              status: 200,
+              headers: { 'Content-Type': 'text/x-component' },
+            })
+          )
+        }
 
         try {
           const response = await fetchWithTimeout(request)
@@ -384,12 +315,15 @@ self.addEventListener('fetch', (event) => {
           }
           return response
         } catch {
-          const fallback =
+          return (
+            (await cache.match(request)) ||
             (await cache.match(shellKey)) ||
             (await cache.match(rscCacheKey(fallbackDocument(url.pathname)))) ||
-            (await cache.match(fallbackDocument(url.pathname)))
-          if (fallback) return fallback
-          throw new Error('offline-rsc-miss')
+            new Response('', {
+              status: 200,
+              headers: { 'Content-Type': 'text/x-component' },
+            })
+          )
         }
       }),
     )
@@ -399,66 +333,37 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
+        async function serveCached() {
+          return (
+            (await cache.match(request)) ||
+            (await cache.match(url.pathname)) ||
+            (await cache.match(fallbackDocument(url.pathname))) ||
+            (await cache.match('/dashboard')) ||
+            (await cache.match('/login')) ||
+            new Response(OFFLINE_FALLBACK_HTML, {
+              status: 200,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            })
+          )
+        }
+
+        if (!self.navigator.onLine) return serveCached()
+
         try {
           const response = await fetchWithTimeout(request)
-          if (response && response.status === 200) {
-            const clone = response.clone()
-            await cache.put(request, clone)
-            cachePageAssets(cache, url.pathname)
+          if (response.status === 200) {
+            await cache.put(request, response.clone())
+            await cache.put(url.pathname, response.clone())
+            cacheRscPayload(cache, url.pathname)
           }
           return response
         } catch {
-          const cachedResponse =
-            (await cache.match(request)) ||
-            (await cache.match(rscCacheKey(url.pathname))) ||
-            (await cache.match(fallbackDocument(url.pathname))) ||
-            (await cache.match('/dashboard')) ||
-            (await cache.match('/login'))
-          if (cachedResponse) return cachedResponse
-          throw new Error('offline-nav-miss')
+          return serveCached()
         }
       }),
     )
     return
   }
 
-  if (
-    url.pathname.startsWith('/_next/static/') ||
-    url.pathname.startsWith('/_next/image')
-  ) {
-    event.respondWith(networkFirstWithCache(request, CACHE_NAME))
-    return
-  }
-
-  if (isStaticAsset(url)) {
-    event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
-    return
-  }
-
-  if (url.pathname.startsWith('/_next/')) {
-    event.respondWith(networkFirstWithCache(request, CACHE_NAME))
-    return
-  }
-
-  if (url.origin !== self.location.origin && isExternalCacheable(url)) {
-    event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
-    return
-  }
-
-  event.respondWith(
-    caches.match(request).then(async (cached) => {
-      if (cached) return cached
-      try {
-        const response = await fetchWithTimeout(request)
-        if (response.status === 200) {
-          const clone = response.clone()
-          const cache = await caches.open(CACHE_NAME)
-          await cache.put(request, clone)
-        }
-        return response
-      } catch {
-        return undefined
-      }
-    }),
-  )
+  event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
 })

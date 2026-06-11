@@ -1,3 +1,4 @@
+// 8s online gives slow paginated endpoints room while still failing fast offline.
 const DEFAULT_TIMEOUT_MS = 8_000
 const OFFLINE_TIMEOUT_MS = 1_500
 

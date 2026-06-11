@@ -14,17 +14,31 @@ const MAX_PAGES = 20
 async function fetchAllPages<T>(
   fetchPage: (
     page: number,
-  ) => Promise<{ data: T[]; meta: { hasNextPage?: boolean } }>,
+  ) => Promise<{ data: T[]; meta: { hasNextPage?: boolean; totalPages?: number } }>,
 ): Promise<T[]> {
-  const all: T[] = []
-  let page = 1
-  while (page <= MAX_PAGES) {
-    const res = await fetchPage(page)
-    all.push(...res.data)
-    if (!res.meta?.hasNextPage) break
-    page += 1
+  const first = await fetchPage(1)
+
+  if (typeof first.meta.totalPages !== 'number') {
+    const all = [...first.data]
+    let page = 2
+    while (first.meta?.hasNextPage && page <= MAX_PAGES) {
+      const res = await fetchPage(page)
+      all.push(...res.data)
+      if (!res.meta?.hasNextPage) break
+      page += 1
+    }
+    return all
   }
-  return all
+
+  const totalPages = Math.min(first.meta.totalPages, MAX_PAGES)
+
+  if (totalPages <= 1) return first.data
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 2)),
+  )
+
+  return [first, ...rest].flatMap((res) => res.data)
 }
 
 export async function fetchLiveNonHospitalFacilities(params?: {

@@ -14,7 +14,7 @@ import {
   getCurrentAuthRole,
   routeForRole,
 } from '@/lib/auth/currentAuthRole'
-import { precacheAppRoute, precacheResidentRoutes } from '@/lib/pwa/precacheRoute'
+import { precacheAppRoute } from '@/lib/pwa/precacheRoute'
 
 const LoginSuccess = () => {
   const resetLogin = useLoginStore((s) => s.resetLogin)
@@ -33,8 +33,6 @@ const LoginSuccess = () => {
     const destination = destinationRef.current
 
     void precacheAppRoute(destination)
-    const role = postLoginRole ?? getCurrentAuthRole()
-    if (role === 'resident') void precacheResidentRoutes()
 
     // Fire refreshUser in background to update AuthContext cache
     // but don't await it — redirect happens regardless.

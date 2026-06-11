@@ -48,15 +48,7 @@ export async function precacheAppRoute(path: string): Promise<void> {
 }
 
 export async function precacheResidentRoutes(): Promise<void> {
-  try {
-    await postToServiceWorker({
-      type: 'PRECACHE_ROUTES',
-      paths: [...RESIDENT_ROUTES],
-    })
-    if (navigator.onLine) {
-      await Promise.allSettled(RESIDENT_ROUTES.map((path) => warmRscRoute(path)))
-    }
-  } catch {
-    // ignore precache failures
-  }
+  // Keep this intentionally light. Full-route precaching made online browsing
+  // noticeably slower; pages are cached on first visit instead.
+  return Promise.resolve()
 }

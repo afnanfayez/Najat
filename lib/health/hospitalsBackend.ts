@@ -6,16 +6,22 @@ const HOSPITAL_LIST_PAGE_SIZE = 50
 const MAX_HOSPITAL_PAGES = 25
 
 export async function fetchAllHospitalPages(): Promise<HealthFacility[]> {
-  const all: HealthFacility[] = []
-  let page = 1
-  while (page <= MAX_HOSPITAL_PAGES) {
-    const res = await hospitalsAPI.list({
-      page,
-      limit: HOSPITAL_LIST_PAGE_SIZE,
-    })
-    all.push(...res.data.map(mapHospitalDtoToFacility))
-    if (!res.meta?.hasNextPage) break
-    page += 1
-  }
-  return all
+  const first = await hospitalsAPI.list({
+    page: 1,
+    limit: HOSPITAL_LIST_PAGE_SIZE,
+  })
+  const totalPages = Math.min(first.meta.totalPages ?? 1, MAX_HOSPITAL_PAGES)
+
+  if (totalPages <= 1) return first.data.map(mapHospitalDtoToFacility)
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      hospitalsAPI.list({
+        page: i + 2,
+        limit: HOSPITAL_LIST_PAGE_SIZE,
+      }),
+    ),
+  )
+
+  return [first, ...rest].flatMap((res) => res.data.map(mapHospitalDtoToFacility))
 }

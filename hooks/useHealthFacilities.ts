@@ -53,6 +53,25 @@ async function fetchCategoryFacilities(
     return { facilities, total: facilities.length }
   }
 
+  const cached = await fetchFromIndexedDB(category)
+  if (cached.length > 0) {
+    ;(async () => {
+      try {
+        let fresh: HealthFacility[] = []
+        if (category === 'hospitals') {
+          fresh = await fetchAllHospitalPages()
+        } else {
+          const res = await fetchLiveNonHospitalFacilities({ category })
+          fresh = res.facilities
+        }
+        if (fresh.length > 0) putFacilities(fresh).catch(() => {})
+      } catch {
+        // keep cached data visible
+      }
+    })()
+    return { facilities: cached, total: cached.length }
+  }
+
   try {
     let facilities: HealthFacility[] = []
     if (category === 'hospitals') {

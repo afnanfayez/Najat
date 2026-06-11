@@ -39,7 +39,7 @@ export default function AdminSidebarContent({
           alt="شعار نجاة"
           width={100}
           height={100}
-          style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxWidth: 100, maxHeight: 100 }}
+          style={{ objectFit: 'contain' }}
           priority
         />
       </div>

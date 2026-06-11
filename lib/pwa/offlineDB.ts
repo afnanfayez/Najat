@@ -182,10 +182,22 @@ export async function idbDeleteAuthSnapshot(email: string): Promise<void> {
 
 export type SyncQueueItem = {
   id?: number
-  type: 'SESSION_REFRESH' | 'PROFILE_SYNC' | 'AID_REQUEST'
+  type:
+    | 'SESSION_REFRESH'
+    | 'PROFILE_SYNC'
+    | 'AID_REQUEST'
+    | 'UPDATE_FACILITY_STATUS'
+    | 'DELETE_FACILITY'
+    | 'CREATE_AID_POINT'
+    | 'UPDATE_AID_POINT'
+    | 'DELETE_AID_POINT'
+    | 'UPDATE_AID_STATUS'
   status: 'pending' | 'done' | 'failed'
   payload: Record<string, unknown>
   createdAt: number
+  retries?: number
+  errorMsg?: string
+  updatedAt?: number
 }
 
 /** Add a task to the sync queue (executed when internet returns). */
@@ -235,5 +247,60 @@ export async function idbMarkSyncDone(id: number): Promise<void> {
     })
   } catch {
     // ignore
+  }
+}
+
+/** Mark a sync item as failed with an error message. */
+export async function idbMarkSyncFailed(id: number, errorMsg: string): Promise<void> {
+  try {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_SYNC_QUEUE, 'readwrite')
+      const store = tx.objectStore(STORE_SYNC_QUEUE)
+      const req = store.get(id)
+      req.onsuccess = () => {
+        const item = req.result
+        if (item) { item.status = 'failed'; item.errorMsg = errorMsg; store.put(item) }
+      }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch {
+    // ignore
+  }
+}
+
+/** Increment the retry counter for a sync item. */
+export async function idbIncrementSyncRetry(id: number): Promise<void> {
+  try {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_SYNC_QUEUE, 'readwrite')
+      const store = tx.objectStore(STORE_SYNC_QUEUE)
+      const req = store.get(id)
+      req.onsuccess = () => {
+        const item = req.result
+        if (item) { item.retries = (item.retries ?? 0) + 1; store.put(item) }
+      }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch {
+    // ignore
+  }
+}
+
+/** Get count of pending sync items (for badge display). */
+export async function idbGetPendingSyncCount(): Promise<number> {
+  try {
+    const db = await openDB()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_SYNC_QUEUE, 'readonly')
+      const req = tx.objectStore(STORE_SYNC_QUEUE).index('status').count(IDBKeyRange.only('pending'))
+      req.onsuccess = () => resolve(req.result ?? 0)
+      req.onerror = () => reject(req.error)
+    })
+  } catch {
+    return 0
   }
 }
