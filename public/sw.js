@@ -1,4 +1,4 @@
-const CACHE_NAME = 'najat-pwa-cache-v22'
+const CACHE_NAME = 'najat-pwa-cache-v23'
 const API_CACHE_NAME = 'najat-api-cache-v2'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 const FETCH_TIMEOUT_MS = 8000
@@ -11,15 +11,43 @@ const CORE_ASSETS = [
   '/logout',
   '/dashboard',
   '/favicon.ico',
+  '/manifest.webmanifest',
   '/assets/Photo1.png',
+  '/assets/Photo2.jpg',
   '/assets/Logo1.png',
+  '/assets/Logo1_cropped.png',
   '/assets/Logo2.png',
+  '/assets/Logo3.png',
   '/assets/najat-icon-192.png',
   '/assets/najat-icon-512.png',
+  '/assets/profile.png',
+  '/assets/profile_avatar.png',
+  '/assets/doctor.png',
+  '/assets/artical.png',
+  '/assets/health1.jpg',
+  '/assets/health2.jpg',
+  '/assets/health3.jpg',
+  '/assets/health4.png',
+  '/assets/health5.jpg',
+  '/assets/health6.jpg',
+  '/assets/health7.jpg',
+  '/assets/health8.jpg',
+  '/assets/health9.jpg',
+  '/assets/healthcare1.jpg',
+  '/assets/healthcare2.jpg',
+  '/assets/healthcare3.jpg',
+  '/assets/الطاقم1.png',
+  '/assets/الطاقم 2.jpg',
   '/assets/leaflet/marker-icon.png',
   '/assets/leaflet/marker-icon-2x.png',
   '/assets/leaflet/marker-shadow.png',
   '/assets/leaflet/marker-icon-blue-2x.png',
+]
+
+const IMAGE_FALLBACK_ASSETS = [
+  '/assets/Logo1.png',
+  '/assets/najat-icon-512.png',
+  '/favicon.ico',
 ]
 
 const EXTERNAL_CACHE_HOSTS = [
@@ -93,6 +121,33 @@ function isStaticAsset(url) {
     url.pathname.startsWith('/assets/') ||
     url.pathname === '/favicon.ico' ||
     isExternalCacheable(url)
+  )
+}
+
+function isImageRequest(request, url) {
+  const accept = request.headers.get('Accept') || ''
+  return (
+    request.destination === 'image' ||
+    accept.includes('image/') ||
+    /\.(avif|gif|ico|jpe?g|png|svg|webp)$/i.test(url.pathname)
+  )
+}
+
+async function imageFallbackResponse(cache) {
+  for (const asset of IMAGE_FALLBACK_ASSETS) {
+    const response = await cache.match(asset)
+    if (response) return response
+  }
+
+  return new Response(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#f4f7fb"/><circle cx="256" cy="256" r="96" fill="#2496ff" opacity=".16"/><path fill="#2496ff" d="M256 144c61.9 0 112 50.1 112 112s-50.1 112-112 112-112-50.1-112-112 50.1-112 112-112Zm0 48a64 64 0 1 0 0 128 64 64 0 0 0 0-128Z"/></svg>',
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'no-store',
+      },
+    },
   )
 }
 
@@ -206,9 +261,14 @@ async function serveCachedDocument(cache, request, url) {
 async function cacheFirstWithUpdate(request, cacheName) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
+  const url = new URL(request.url)
 
   if (!self.navigator.onLine) {
-    return cached || new Response('', { status: 503, statusText: 'Offline' })
+    return (
+      cached ||
+      (isImageRequest(request, url) ? await imageFallbackResponse(cache) : null) ||
+      new Response('', { status: 503, statusText: 'Offline' })
+    )
   }
 
   const update = fetch(request)
@@ -223,7 +283,11 @@ async function cacheFirstWithUpdate(request, cacheName) {
     return cached
   }
 
-  return (await update) || new Response('', { status: 503, statusText: 'Offline' })
+  return (
+    (await update) ||
+    (isImageRequest(request, url) ? await imageFallbackResponse(cache) : null) ||
+    new Response('', { status: 503, statusText: 'Offline' })
+  )
 }
 
 async function networkFirstWithCache(request, cacheName) {

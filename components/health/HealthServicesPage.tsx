@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { toast } from 'sonner'
 import {
   HEALTH_ROUTE,
   healthFacilityOrdinalPath,
@@ -174,7 +173,6 @@ export default function HealthServicesPage({
         setSelectedFacility(facility)
         setPrevView('list')
         setView('detail')
-        toast.info('تم فتح التفاصيل من البيانات المحفوظة على الجهاز')
         return
       }
 

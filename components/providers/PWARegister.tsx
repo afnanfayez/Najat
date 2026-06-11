@@ -8,6 +8,8 @@ import { getToken } from '@/lib/api/auth'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
 import { precacheRoutesForRole } from '@/lib/pwa/precacheRoute'
 
+const SYNC_SIGNAL_THROTTLE_MS = 10_000
+
 type SyncServiceWorkerRegistration = ServiceWorkerRegistration & {
   sync?: {
     register: (tag: string) => Promise<void>
@@ -27,6 +29,26 @@ function scheduleDataSync(force = false): void {
   }
 }
 
+async function unregisterDevServiceWorkers(): Promise<void> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations()
+    await Promise.all(registrations.map((registration) => registration.unregister()))
+
+    if ('caches' in window) {
+      const cacheNames = await caches.keys()
+      await Promise.all(
+        cacheNames
+          .filter((cacheName) => cacheName.startsWith('najat-'))
+          .map((cacheName) => caches.delete(cacheName)),
+      )
+    }
+  } catch (err) {
+    console.warn('[PWA] Failed to unregister dev service workers:', err)
+  }
+}
+
 /**
  * PWARegister — يسجّل الـ Service Worker ويُدير:
  *  1. تسجيل SW عند تحميل الصفحة
@@ -40,13 +62,24 @@ export default function PWARegister() {
       !('serviceWorker' in navigator)
     ) return
 
+    if (process.env.NODE_ENV !== 'production') {
+      void unregisterDevServiceWorkers()
+      return
+    }
+
+    let lastSyncSignalAt = 0
+    const shouldHandleSyncSignal = () => {
+      const now = Date.now()
+      if (now - lastSyncSignalAt < SYNC_SIGNAL_THROTTLE_MS) return false
+      lastSyncSignalAt = now
+      return true
+    }
+
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
     const registerSW = async () => {
       try {
         // في وضع التطوير نُمرّر ?dev=1 حتى يتجنب SW تخزين ملفات /_next/ الديناميكية
-        const swUrl =
-          process.env.NODE_ENV !== 'production' ? '/sw.js?dev=1' : '/sw.js'
-        await navigator.serviceWorker.register(swUrl)
+        await navigator.serviceWorker.register('/sw.js')
         if (getToken()) {
           void precacheRoutesForRole(getCurrentAuthRole())
           scheduleDataSync(true)
@@ -65,6 +98,8 @@ export default function PWARegister() {
 
     // ── 2. عند عودة الإنترنت → طلب Background Sync من SW ────────────────────
     const handleOnline = async () => {
+      if (!shouldHandleSyncSignal()) return
+
       toast.success('تمت استعادة الاتصال بالإنترنت', {
         id: 'pwa-online',
         duration: 3000,
@@ -80,7 +115,7 @@ export default function PWARegister() {
           console.log('[PWA] Background Sync registered ✓')
         } else {
           // Fallback: أرسل رسالة مباشرة للـ SW ليُبلّغ باقي النوافذ
-          reg.active?.postMessage({ type: 'REGISTER_BACKGROUND_SYNC' })
+          window.dispatchEvent(new Event('najat:session-refresh'))
         }
       } catch (err) {
         console.warn('[PWA] Background Sync registration failed:', err)
@@ -94,6 +129,7 @@ export default function PWARegister() {
     // ── 3. استقبال رسالة BACKGROUND_SYNC_TRIGGERED من SW ────────────────────
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data?.type !== 'BACKGROUND_SYNC_TRIGGERED') return
+      if (!shouldHandleSyncSignal()) return
       console.log('[PWA] Background sync triggered by SW — refreshing session')
 
       void processSyncQueue()

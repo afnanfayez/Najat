@@ -2,11 +2,6 @@
 
 import dynamic from 'next/dynamic'
 import SetupSectionCard from './SetupSectionCard'
-import {
-  formatCoordinates,
-  LocationHint,
-  type FacilityLocationMapInnerProps,
-} from './FacilityLocationMapInner'
 import { SETUP_FONT } from './setupStyles'
 
 const FacilityLocationMapInner = dynamic(
@@ -24,8 +19,31 @@ const FacilityLocationMapInner = dynamic(
   },
 )
 
+interface FacilityLocationMapInnerProps {
+  latitude: number | null
+  longitude: number | null
+  onLocationChange: (location: { latitude: number; longitude: number }) => void
+}
+
 interface FacilityLocationMapProps extends FacilityLocationMapInnerProps {
   className?: string
+}
+
+function formatCoordinates(lat: number, lng: number) {
+  return `${lat.toFixed(5)}, ${lng.toFixed(5)}`
+}
+
+function LocationHint({ hasLocation }: { hasLocation: boolean }) {
+  return (
+    <p
+      className="mt-2 text-right text-xs text-[#64748B]"
+      style={{ fontFamily: SETUP_FONT }}
+    >
+      {hasLocation
+        ? 'اسحب الدبوس لضبط الموقع بدقة، أو انقر على الخريطة لتغييره'
+        : 'انقر على الخريطة لتحديد موقع المنشأة'}
+    </p>
+  )
 }
 
 export default function FacilityLocationMap({
