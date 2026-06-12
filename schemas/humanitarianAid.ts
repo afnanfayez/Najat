@@ -9,6 +9,8 @@ export const humanitarianAidSchema = z.object({
   tags: z.array(z.string()),
   category: z.string(),
   regions: z.array(z.string()).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 
 export type HumanitarianAid = z.infer<typeof humanitarianAidSchema>

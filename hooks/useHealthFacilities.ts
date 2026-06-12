@@ -20,7 +20,7 @@ type HealthFacilitiesResult = {
   refreshing?: boolean
 }
 
-const INITIAL_NETWORK_WAIT_MS = 4_500
+const INITIAL_NETWORK_WAIT_MS = 1_500
 
 function facilityMatchesSearch(f: HealthFacility, search: string): boolean {
   const q = search.toLowerCase()

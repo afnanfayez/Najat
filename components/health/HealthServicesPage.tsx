@@ -12,6 +12,7 @@ import {
 import { useDashboardShell } from '@/components/dashboard/DashboardShellContext'
 import { useHealthFacilities } from '@/hooks/useHealthFacilities'
 import { useHealthFacilityLiveDetail } from '@/hooks/useHealthFacilityLiveDetail'
+import { precacheTilesForPoint } from '@/lib/pwa/mapTileCache'
 import {
   CATEGORY_LABELS,
   type FacilityCategory,
@@ -137,6 +138,18 @@ export default function HealthServicesPage({
   )
 
   const displayFacility = liveFacility ?? effectiveFacility
+
+  useEffect(() => {
+    if (displayFacility?.latitude == null || displayFacility.longitude == null) return
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return
+
+    void precacheTilesForPoint(
+      displayFacility.latitude,
+      displayFacility.longitude,
+      [14, 15, 16],
+      1,
+    )
+  }, [displayFacility?.latitude, displayFacility?.longitude])
 
   const goToFacilityList = useCallback(() => {
     if (typeof navigator !== 'undefined' && !navigator.onLine && !effectiveFacilityId) {

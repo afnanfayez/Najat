@@ -12,7 +12,7 @@ export type AidQueryParams = {
   region?: string
 }
 
-const INITIAL_NETWORK_WAIT_MS = 4_500
+const INITIAL_NETWORK_WAIT_MS = 1_500
 
 function timeout<T>(ms: number): Promise<T> {
   return new Promise((_, reject) => {

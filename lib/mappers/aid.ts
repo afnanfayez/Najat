@@ -80,5 +80,7 @@ export function mapAidDtoToHumanitarianAid(dto: AidDto): HumanitarianAid {
     tags: supplies.slice(0, 4),
     category: inferCategory(dto.type, supplies),
     regions: inferRegions(combinedName),
+    latitude: dto.latitude,
+    longitude: dto.longitude,
   }
 }

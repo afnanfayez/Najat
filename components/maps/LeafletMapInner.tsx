@@ -107,7 +107,6 @@ export default function LeafletMapInner({
 }: LeafletMapInnerProps) {
   const anyLayerActive = showSafeRoutes || showDangerZones || showResourceActivity
   const warmedTilesRef = useRef(false)
-
   useEffect(() => {
     if (warmedTilesRef.current) return
     warmedTilesRef.current = true

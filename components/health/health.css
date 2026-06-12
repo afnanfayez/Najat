@@ -179,6 +179,14 @@
   order: 2;
 }
 
+.location-map-preview .leaflet-control-attribution {
+  display: none;
+}
+
+.location-map-preview .leaflet-control-container {
+  font-size: 10px;
+}
+
 @media (max-width: 900px) {
   .hdv-services-card {
     height: auto;
@@ -416,5 +424,4 @@
     border-radius: 20px;
   }
 }
-
 

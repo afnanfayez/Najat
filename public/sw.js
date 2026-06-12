@@ -1,7 +1,8 @@
-const CACHE_NAME = 'najat-pwa-cache-v23'
+const CACHE_NAME = 'najat-pwa-cache-v24'
 const API_CACHE_NAME = 'najat-api-cache-v2'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 const FETCH_TIMEOUT_MS = 8000
+const APP_SHELL_TIMEOUT_MS = 2500
 // في وضع التطوير نتجنب تخزين ملفات /_next/ حتى لا تتأثر آلية HMR
 const IS_DEV = self.location.search.includes('dev=1')
 
@@ -446,7 +447,7 @@ self.addEventListener('fetch', (event) => {
         }
 
         try {
-          const response = await fetchWithTimeout(request)
+          const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
           if (response.ok) {
             await cache.put(shellKey, response.clone())
             await cache.put(request, response.clone())
@@ -473,7 +474,7 @@ self.addEventListener('fetch', (event) => {
         if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
 
         try {
-          const response = await fetchWithTimeout(request)
+          const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
           if (response.status === 200) {
             await cache.put(request, response.clone())
             await cache.put(pathname, response.clone())

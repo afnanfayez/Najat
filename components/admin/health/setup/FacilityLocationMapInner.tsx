@@ -108,7 +108,6 @@ export default function FacilityLocationMapInner({
   const center: [number, number] = hasMarker
     ? [latitude, longitude]
     : DEFAULT_FACILITY_MAP_CENTER
-
   return (
     <MapContainer
       center={center}

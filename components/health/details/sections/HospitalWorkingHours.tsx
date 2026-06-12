@@ -9,10 +9,63 @@ interface HospitalWorkingHoursProps {
   workingHours?: WorkingHoursBlock
 }
 
+const WEEK_DAYS = [
+  'الإثنين',
+  'الثلاثاء',
+  'الأربعاء',
+  'الخميس',
+  'الجمعة',
+  'السبت',
+  'الأحد',
+]
+
+function isAlwaysOpenTime(value: string): boolean {
+  const normalized = value.trim().toLowerCase()
+  return (
+    normalized === '24/7' ||
+    normalized.includes('24') ||
+    normalized.includes('على مدار') ||
+    normalized.includes('مدار الساعة')
+  )
+}
+
+function normalizeWorkingHours(block: WorkingHoursBlock): WorkingHoursBlock {
+  const alwaysOpenRow = block.rows.find((row) => isAlwaysOpenTime(row.time))
+  if (block.bannerText || alwaysOpenRow) {
+    const time = alwaysOpenRow?.time.includes('24') ? alwaysOpenRow.time : '24 ساعة'
+    return {
+      ...block,
+      rows: WEEK_DAYS.map((day) => ({ label: day, time })),
+    }
+  }
+
+  if (block.rows.length === 1) {
+    const [row] = block.rows
+    const label = row.label.trim()
+    const coversWholeWeek =
+      label.includes('يوم') ||
+      WEEK_DAYS.every((day) => label.includes(day))
+
+    if (coversWholeWeek) {
+      return {
+        ...block,
+        rows: WEEK_DAYS.map((day) => ({
+          label: day,
+          time: row.time,
+          danger: row.danger,
+        })),
+      }
+    }
+  }
+
+  return block
+}
+
 export default function HospitalWorkingHours({
   workingHours,
 }: HospitalWorkingHoursProps) {
-  const block = workingHours?.rows?.length ? workingHours : MOCK_HOSPITAL_WORKING_HOURS
+  const baseBlock = workingHours?.rows?.length ? workingHours : MOCK_HOSPITAL_WORKING_HOURS
+  const block = normalizeWorkingHours(baseBlock)
 
   return (
     <Card className="p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-md bg-white">
