@@ -9,6 +9,7 @@ import {
   fetchAdminHealthFacilityById,
   updateAdminHealthFacility,
 } from '../data/adminHealthService'
+import type { AdminHealthFacilityType } from '@/schemas/adminHealth'
 import AdminShell from '../../AdminShell'
 import AddFacilityHeader from './AddFacilityHeader'
 import BasicInfoSection from './BasicInfoSection'
@@ -20,6 +21,7 @@ import MedicalStaffSection from './MedicalStaffSection'
 import FacilityLocationMap from './FacilityLocationMap'
 import WorkingDaysSection from './WorkingDaysSection'
 import { reverseGeocodeLocation } from './geocode'
+import { latToFormRegion } from '../data/facilitySetupMapper'
 import {
   INITIAL_FACILITY_SETUP,
   type DrugStatus,
@@ -65,9 +67,10 @@ function SetupCol({
 
 interface AddFacilityContentProps {
   facilityId?: string
+  facilityType?: AdminHealthFacilityType
 }
 
-export default function AddFacilityContent({ facilityId }: AddFacilityContentProps) {
+export default function AddFacilityContent({ facilityId, facilityType }: AddFacilityContentProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const isEdit = Boolean(facilityId)
@@ -83,7 +86,7 @@ export default function AddFacilityContent({ facilityId }: AddFacilityContentPro
     async function loadFacility() {
       setLoading(true)
       try {
-        const data = await fetchAdminHealthFacilityById(facilityId!)
+        const data = await fetchAdminHealthFacilityById(facilityId!, facilityType)
         if (!cancelled) setForm(data)
       } catch {
         if (!cancelled) {
@@ -199,6 +202,7 @@ export default function AddFacilityContent({ facilityId }: AddFacilityContentPro
       ...prev,
       latitude: location.latitude,
       longitude: location.longitude,
+      region: latToFormRegion(location.latitude),
       address: prev.address.trim() ? prev.address : (address ?? prev.address),
     }))
   }
@@ -228,10 +232,10 @@ export default function AddFacilityContent({ facilityId }: AddFacilityContentPro
     setSaving(true)
     try {
       if (isEdit && facilityId) {
-        await updateAdminHealthFacility(facilityId, form)
+        await updateAdminHealthFacility(facilityId, form, facilityType)
         toast.success('تم تحديث المنشأة بنجاح')
       } else {
-        await createAdminHealthFacility(form)
+        await createAdminHealthFacility(form, facilityType)
         toast.success('تم حفظ المنشأة بنجاح')
       }
       await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })

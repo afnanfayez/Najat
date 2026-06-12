@@ -3,10 +3,9 @@
 import { useState, useCallback } from 'react'
 import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { idbEnqueueSync, type SyncQueueItem } from '@/lib/pwa/offlineDB'
 import { enqueueOfflineOp, type OfflineSyncType } from '@/lib/offline/db'
 
-type SyncType = SyncQueueItem['type'] | OfflineSyncType
+type SyncType = OfflineSyncType
 
 export interface UseOfflineMutationOptions<TInput, TOutput> {
   /** الدالة الأصلية التي تتصل بالـ API */
@@ -61,23 +60,10 @@ export function useOfflineMutation<TInput, TOutput = unknown>(
   const queryClient = useQueryClient()
   const [isQueued, setIsQueued] = useState(false)
 
-  const isOfflineSyncType = (t: SyncType): t is OfflineSyncType =>
-    ['UPDATE_FACILITY_STATUS', 'DELETE_FACILITY', 'CREATE_AID_POINT',
-      'UPDATE_AID_POINT', 'DELETE_AID_POINT', 'UPDATE_AID_STATUS'].includes(t)
-
   const enqueueOperation = useCallback(
     async (input: TInput): Promise<void> => {
       const payload = serializePayload(input)
-      if (isOfflineSyncType(syncType)) {
-        await enqueueOfflineOp({ type: syncType, payload })
-      } else {
-        await idbEnqueueSync({
-          type: syncType as SyncQueueItem['type'],
-          status: 'pending',
-          payload,
-          createdAt: Date.now(),
-        })
-      }
+      await enqueueOfflineOp({ type: syncType, payload })
     },
     [syncType, serializePayload],
   )

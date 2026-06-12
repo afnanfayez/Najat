@@ -24,6 +24,7 @@ export function resetBrowserSession(options?: { keepLoginEmail?: boolean }) {
   const currentUserId = getUserIdFromToken(currentToken)
 
   removeToken()
+  new BroadcastChannel('najat-auth').postMessage('logout')
   removeUserRole()
   // ✅ We deliberately do NOT clear the offline login snapshot here.
   //    The snapshot (JWT + password hash + profile) must survive logout

@@ -65,17 +65,26 @@ export const pharmaciesAPI = {
     })
   },
 
-  create(formData: FormData): Promise<PharmacyDto> {
-    return request(`${V1_ROOT}/pharmacies`, { method: 'POST', body: formData }).then((raw) =>
-      pharmacyDtoSchema.parse(raw),
-    )
+  create(body: FormData | Record<string, unknown>): Promise<PharmacyDto> {
+    return request(`${V1_ROOT}/pharmacies`, {
+      method: 'POST',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return pharmacyDtoSchema.parse(data)
+    })
   },
 
   update(id: string, body: Record<string, unknown> | FormData): Promise<PharmacyDto> {
     return request(`${V1_ROOT}/pharmacies/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }).then((raw) => pharmacyDtoSchema.parse(raw))
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return pharmacyDtoSchema.parse(data)
+    })
   },
 
   softDelete(id: string): Promise<unknown> {

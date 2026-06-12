@@ -1,6 +1,20 @@
-const CACHE_NAME = 'najat-pwa-cache-v24'
-const API_CACHE_NAME = 'najat-api-cache-v2'
+/**
+ * Najat PWA — Service Worker
+ *
+ * Caching strategy:
+ *  - Static assets (/_next/static/, /assets/)  → cache-first, update in background
+ *  - Page shells / RSC payloads               → stale-while-revalidate (APP_SHELL_TIMEOUT_MS)
+ *  - Map tiles (CartoCDN, OSM)                → cache-first, update in background
+ *  - External cacheable assets (Leaflet etc.) → cache-first, update in background
+ *  - API responses (/v1/*)                    → NOT cached here; handled by IndexedDB (lib/offline/db.ts)
+ *
+ * BUMP CACHE_NAME ON EVERY DEPLOY so stale shells are evicted on activate.
+ */
+
+// BUMP THIS VERSION ON EVERY DEPLOY
+const CACHE_NAME = 'najat-pwa-cache-v25'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
+// API responses are NOT cached by the SW — they are handled by IndexedDB sync (lib/offline/db.ts)
 const FETCH_TIMEOUT_MS = 8000
 const APP_SHELL_TIMEOUT_MS = 2500
 // في وضع التطوير نتجنب تخزين ملفات /_next/ حتى لا تتأثر آلية HMR
@@ -11,6 +25,7 @@ const CORE_ASSETS = [
   '/login',
   '/logout',
   '/dashboard',
+  '/admin',
   '/favicon.ico',
   '/manifest.webmanifest',
   '/assets/Photo1.png',
@@ -37,8 +52,8 @@ const CORE_ASSETS = [
   '/assets/healthcare1.jpg',
   '/assets/healthcare2.jpg',
   '/assets/healthcare3.jpg',
-  '/assets/الطاقم1.png',
-  '/assets/الطاقم 2.jpg',
+  '/assets/staff1.png',
+  '/assets/staff2.jpg',
   '/assets/leaflet/marker-icon.png',
   '/assets/leaflet/marker-icon-2x.png',
   '/assets/leaflet/marker-shadow.png',
@@ -291,22 +306,6 @@ async function cacheFirstWithUpdate(request, cacheName) {
   )
 }
 
-async function networkFirstWithCache(request, cacheName) {
-  const cache = await caches.open(cacheName)
-
-  if (!self.navigator.onLine) {
-    return (await cache.match(request)) || new Response('', { status: 503, statusText: 'Offline' })
-  }
-
-  try {
-    const response = await fetchWithTimeout(request)
-    if (response.status === 200) await cache.put(request, response.clone())
-    return response
-  } catch {
-    return (await cache.match(request)) || new Response('', { status: 503, statusText: 'Service Unavailable' })
-  }
-}
-
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -319,7 +318,7 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  const keepCaches = new Set([CACHE_NAME, API_CACHE_NAME, MAP_TILES_CACHE])
+  const keepCaches = new Set([CACHE_NAME, MAP_TILES_CACHE])
   event.waitUntil(
     caches
       .keys()
@@ -336,6 +335,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   const { type, path } = event.data ?? {}
+
+  if (type === 'SKIP_WAITING') {
+    self.skipWaiting()
+    return
+  }
 
   if (type === 'PRECACHE_ROUTE') {
     if (typeof path !== 'string' || !path.startsWith('/')) return
@@ -400,11 +404,6 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/api/')) return
-
-  if (url.pathname.startsWith('/v1/')) {
-    event.respondWith(networkFirstWithCache(request, API_CACHE_NAME))
-    return
-  }
 
   if (isMapTileUrl(url)) {
     event.respondWith(cacheFirstWithUpdate(request, MAP_TILES_CACHE))

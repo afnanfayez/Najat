@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { aidAPI } from '@/lib/api/aid'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
-import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
+import { enqueueOfflineOp } from '@/lib/offline/db'
 import { metersToKmLabel } from '@/lib/mappers/hospital'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import {
@@ -163,11 +163,9 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
   const onSubmit = useCallback(
     async (data: AidHelpRequestForm) => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        await idbEnqueueSync({
+        await enqueueOfflineOp({
           type: 'AID_REQUEST',
-          status: 'pending',
           payload: data as unknown as Record<string, unknown>,
-          createdAt: Date.now(),
         })
         toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
         form.reset({

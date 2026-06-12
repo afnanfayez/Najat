@@ -1,5 +1,18 @@
 import { USE_MOCK_ADMIN_AID } from '@/lib/mocks/mockConfig'
 import {
+  getAdminAidPoints,
+  getAdminAidPointById,
+  putAdminAidPoints,
+} from '@/lib/offline/db'
+import {
+  createAdminAidPointFromApi,
+  deleteAdminAidPointFromApi,
+  fetchAdminAidPointByIdFromApi,
+  fetchAdminAidPointsFromApi,
+  fetchAdminAidStatsFromApi,
+  updateAdminAidPointFromApi,
+} from '@/lib/api/adminAid'
+import {
   ADMIN_AID_AREA_COVERAGE,
   ADMIN_AID_DISTRIBUTION_POINTS,
   ADMIN_AID_DISTRIBUTION_STATS,
@@ -43,7 +56,7 @@ export async function fetchAdminAidDistributionStats(): Promise<AdminAidDistribu
   if (USE_MOCK_ADMIN_AID) {
     return { ...ADMIN_AID_DISTRIBUTION_STATS }
   }
-  return { ...ADMIN_AID_DISTRIBUTION_STATS }
+  return fetchAdminAidStatsFromApi()
 }
 
 export async function fetchAdminAidAreaCoverage(): Promise<AdminAidAreaCoverage[]> {
@@ -70,12 +83,26 @@ export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistrib
       targetGroups: [...p.targetGroups],
     }))
   }
-  return getMockPoints()
+
+  try {
+    const result = await fetchAdminAidPointsFromApi()
+    putAdminAidPoints(result).catch(() => {})
+    return result
+  } catch {
+    return getAdminAidPoints()
+  }
 }
 
 export async function fetchAdminAidDistributionPointById(
   id: string,
 ): Promise<AdminAidDistributionPoint | null> {
+  if (!USE_MOCK_ADMIN_AID) {
+    try {
+      return await fetchAdminAidPointByIdFromApi(id)
+    } catch {
+      return getAdminAidPointById(id)
+    }
+  }
   const points = getMockPoints()
   const found = points.find((p) => p.id === id)
   if (!found) return null
@@ -91,6 +118,12 @@ export async function fetchAdminAidDistributionPointById(
 export async function saveAdminAidDistributionPoint(
   point: AdminAidDistributionPoint,
 ): Promise<AdminAidDistributionPoint> {
+  if (!USE_MOCK_ADMIN_AID) {
+    const isNew = point.id.startsWith('new-')
+    return isNew
+      ? createAdminAidPointFromApi(point)
+      : updateAdminAidPointFromApi(point)
+  }
   const points = getMockPoints()
   const index = points.findIndex((p) => p.id === point.id)
   const saved = {
@@ -112,6 +145,9 @@ export async function deleteAdminAidDistributionPoint(id: string): Promise<void>
   const points = getMockPoints()
   const index = points.findIndex((p) => p.id === id)
   if (index >= 0) points.splice(index, 1)
+  if (!USE_MOCK_ADMIN_AID) {
+    await deleteAdminAidPointFromApi(id)
+  }
 }
 
 export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
@@ -232,7 +268,7 @@ export function createEmptyDistributionPoint(): AdminAidDistributionPoint {
     manager: '',
     phone: '',
     status: 'open',
-    category: '',
+    category: 'food',
     remaining: 0,
     total: 100,
     lastUpdated: 'الآن',

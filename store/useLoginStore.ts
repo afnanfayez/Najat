@@ -198,6 +198,7 @@ export const useLoginStore = create<LoginState>()(
           }
           resetBrowserSession({ keepLoginEmail: true })
           saveToken(token)
+          new BroadcastChannel('najat-auth').postMessage('login')
           const resolvedRole =
             normalizeUserRole(role) ?? getRoleFromJwt(token)
           if (resolvedRole) {

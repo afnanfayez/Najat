@@ -78,6 +78,8 @@ export async function fetchAdminDataDashboard(
   params: AdminDataDashboardQueryParams = {}
 ): Promise<AdminDataDashboard> {
   if (!USE_MOCK_ADMIN_DATA) {
+    // TODO: Wire real API when backend adds /v1/admin/data/* endpoints.
+    // Remove NEXT_PUBLIC_ADMIN_DATA_MOCK=1 from .env when the endpoint is live.
     return fetchAdminDataDashboardFromApi(params)
   }
 

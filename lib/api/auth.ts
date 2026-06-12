@@ -1,23 +1,21 @@
-export const TOKEN_KEY = 'auth_token'
+const COOKIE_NAME = 'auth_token'
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
-/** Stored JWT is sent as Bearer on all `request()` calls (required for `/v1/hospitals`, etc.). */
 export function saveToken(token: string): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, token)
-  }
+  if (typeof document === 'undefined') return
+  const secure = location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(token)}; SameSite=Strict; path=/${secure}; Max-Age=${COOKIE_MAX_AGE}`
 }
 
 export function getToken(): string | null {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(TOKEN_KEY)
-  }
-  return null
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
 }
 
 export function removeToken(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(TOKEN_KEY)
-  }
+  if (typeof document === 'undefined') return
+  document.cookie = `${COOKIE_NAME}=; SameSite=Strict; path=/; Max-Age=0`
 }
 
 export function isAuthenticated(): boolean {

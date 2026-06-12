@@ -3,6 +3,9 @@ import type { HealthFacility } from '@/schemas/healthFacility'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import type { Article } from '@/schemas/healthGuide'
 import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
+import type { AdminHealthFacility, AdminHealthMedicalContent } from '@/schemas/adminHealth'
+import type { AdminAidDistributionPoint } from '@/schemas/adminAid'
+import type { AdminUserDto } from '@/schemas/adminUser'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Cached entity types
@@ -61,6 +64,30 @@ export interface CachedArticle {
   cachedAt: number
 }
 
+export interface CachedAdminFacility {
+  id: string
+  data: AdminHealthFacility
+  cachedAt: number
+}
+
+export interface CachedAdminAidPoint {
+  id: string
+  data: AdminAidDistributionPoint
+  cachedAt: number
+}
+
+export interface CachedAdminUser {
+  id: string
+  data: AdminUserDto
+  cachedAt: number
+}
+
+export interface CachedAdminHealthContent {
+  id: string
+  data: AdminHealthMedicalContent
+  cachedAt: number
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Offline Sync Queue (Dexie) — for admin mutations
 // ──────────────────────────────────────────────────────────────────────────────
@@ -72,6 +99,16 @@ export type OfflineSyncType =
   | 'UPDATE_AID_POINT'
   | 'DELETE_AID_POINT'
   | 'UPDATE_AID_STATUS'
+  | 'AID_REQUEST'
+  | 'PROFILE_SYNC'
+  | 'SESSION_REFRESH'
+  | 'CREATE_DANGER_ZONE'
+  | 'UPDATE_DANGER_ZONE'
+  | 'DELETE_DANGER_ZONE'
+  | 'CREATE_SAFE_ROAD'
+  | 'DELETE_SAFE_ROAD'
+  | 'CREATE_RESOURCE_POINT'
+  | 'DELETE_RESOURCE_POINT'
 
 export type OfflineSyncStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'conflict'
 
@@ -88,6 +125,19 @@ export interface OfflineSyncQueueItem {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Auth snapshot (replaces raw IDB najat-offline-db → auth-snapshots)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export interface AuthSnapshot {
+  email: string       // keyPath
+  passwordHash: string
+  token: string
+  role: string
+  profile: unknown | null
+  savedAt: number     // was _savedAt in the old raw IDB type
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Dexie class
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -100,6 +150,11 @@ class NajatOfflineDB extends Dexie {
   syncMeta!: Table<SyncMeta, string>
   articles!: Table<CachedArticle, string>
   offlineSyncQueue!: Table<OfflineSyncQueueItem, number>
+  authSnapshots!: Table<AuthSnapshot, string>
+  adminFacilities!: Table<CachedAdminFacility, string>
+  adminAidPoints!: Table<CachedAdminAidPoint, string>
+  adminUsers!: Table<CachedAdminUser, string>
+  adminHealthContent!: Table<CachedAdminHealthContent, string>
 
   constructor() {
     super('najat-offline-v2')
@@ -129,6 +184,75 @@ class NajatOfflineDB extends Dexie {
       syncMeta: 'key',
       articles: 'id, category, cachedAt',
       offlineSyncQueue: '++id, type, status, createdAt',
+    })
+    this.version(4).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+    })
+    this.version(5).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+    })
+    this.version(6).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+    })
+    // v7: safety CRUD offline queue types added (no schema change required)
+    this.version(7).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+    })
+    // v8: admin health medical content cache
+    this.version(8).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+      adminHealthContent: 'id, cachedAt',
     })
   }
 }
@@ -371,4 +495,119 @@ export async function incrementOfflineOpRetry(id: number): Promise<void> {
     retries: (item.retries ?? 0) + 1,
     updatedAt: Date.now(),
   })
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Auth snapshot helpers (replaces lib/pwa/offlineDB.ts raw IDB implementation)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putAuthSnapshot(snap: Omit<AuthSnapshot, 'savedAt'>): Promise<void> {
+  const db = getOfflineDB()
+  await db.authSnapshots.put({ ...snap, savedAt: Date.now() })
+}
+
+export async function getAuthSnapshot(email: string): Promise<AuthSnapshot | null> {
+  const db = getOfflineDB()
+  return (await db.authSnapshots.get(email.trim().toLowerCase())) ?? null
+}
+
+export async function getLatestAuthSnapshot(): Promise<AuthSnapshot | null> {
+  const db = getOfflineDB()
+  const all = await db.authSnapshots.toArray()
+  if (all.length === 0) return null
+  return all.sort((a, b) => (b.savedAt ?? 0) - (a.savedAt ?? 0))[0]
+}
+
+export async function updateAuthProfile(email: string, profile: unknown): Promise<void> {
+  const db = getOfflineDB()
+  const snap = await db.authSnapshots.get(email.trim().toLowerCase())
+  if (!snap) return
+  await db.authSnapshots.put({ ...snap, profile, savedAt: Date.now() })
+}
+
+export async function deleteAuthSnapshot(email: string): Promise<void> {
+  const db = getOfflineDB()
+  await db.authSnapshots.delete(email.trim().toLowerCase())
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin facility cache helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putAdminFacilities(items: AdminHealthFacility[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.adminFacilities.bulkPut(items.map((f) => ({ id: f.id, data: f, cachedAt: now })))
+}
+
+export async function getAdminFacilities(): Promise<AdminHealthFacility[]> {
+  const db = getOfflineDB()
+  const rows = await db.adminFacilities.toArray()
+  return rows.map((r) => r.data)
+}
+
+export async function getAdminFacilityById(id: string): Promise<AdminHealthFacility | null> {
+  const db = getOfflineDB()
+  const row = await db.adminFacilities.get(id)
+  return row?.data ?? null
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin aid point cache helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putAdminAidPoints(items: AdminAidDistributionPoint[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.adminAidPoints.bulkPut(items.map((p) => ({ id: p.id, data: p, cachedAt: now })))
+}
+
+export async function getAdminAidPoints(): Promise<AdminAidDistributionPoint[]> {
+  const db = getOfflineDB()
+  const rows = await db.adminAidPoints.toArray()
+  return rows.map((r) => r.data)
+}
+
+export async function getAdminAidPointById(id: string): Promise<AdminAidDistributionPoint | null> {
+  const db = getOfflineDB()
+  const row = await db.adminAidPoints.get(id)
+  return row?.data ?? null
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin user cache helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putAdminUsers(users: AdminUserDto[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.adminUsers.bulkPut(users.map((u) => ({ id: u.id, data: u, cachedAt: now })))
+}
+
+export async function getAdminUsers(): Promise<AdminUserDto[]> {
+  const db = getOfflineDB()
+  const rows = await db.adminUsers.toArray()
+  return rows.map((r) => r.data)
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Admin health content cache helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putAdminHealthContent(items: AdminHealthMedicalContent[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.adminHealthContent.bulkPut(items.map((c) => ({ id: c.id, data: c, cachedAt: now })))
+}
+
+export async function getAdminHealthContent(): Promise<AdminHealthMedicalContent[]> {
+  const db = getOfflineDB()
+  const rows = await db.adminHealthContent.toArray()
+  return rows.map((r) => r.data)
+}
+
+export async function getAdminHealthContentById(id: string): Promise<AdminHealthMedicalContent | null> {
+  const db = getOfflineDB()
+  const row = await db.adminHealthContent.get(id)
+  return row?.data ?? null
 }

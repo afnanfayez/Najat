@@ -1,4 +1,5 @@
 import { fetchAdminUsersFromApi } from '@/lib/api/adminUsers'
+import { putAdminUsers, getAdminUsers } from '@/lib/offline/db'
 import {
   ADMIN_USER_ROLE_OPTIONS,
   ADMIN_USERS_STATS_MOCK,
@@ -125,40 +126,56 @@ function getMockAdminUsersResult(params: AdminUsersQueryParams): AdminUsersListR
 export async function fetchAdminUsers(
   params: AdminUsersQueryParams = {},
 ): Promise<AdminUsersListResponse> {
-  if (USE_MOCK_ADMIN_USERS) {
-    return getMockAdminUsersResult(params)
-  }
+  if (USE_MOCK_ADMIN_USERS) return getMockAdminUsersResult(params)
 
-  if (params.region && params.region !== 'all') {
-    const apiResult = await fetchAdminUsersFromApi({
+  try {
+    let apiResult: AdminUsersListResponse
+
+    if (params.region && params.region !== 'all') {
+      apiResult = await fetchAdminUsersFromApi({
+        search: params.search,
+        role: params.role,
+        page: 1,
+        pageSize: 100,
+      })
+      const page = params.page ?? 1
+      const pageSize = params.pageSize ?? 4
+      const filtered = apiResult.users.filter((user) =>
+        matchesRegionFilter(user, params.region),
+      )
+      putAdminUsers(apiResult.users).catch(() => {})
+      return {
+        ...apiResult,
+        users: paginateUsers(filtered, page, pageSize),
+        total: filtered.length,
+        page,
+        pageSize,
+      }
+    }
+
+    apiResult = await fetchAdminUsersFromApi({
       search: params.search,
       role: params.role,
-      page: 1,
-      pageSize: 100,
+      isActive: params.isActive,
+      isVerified: params.isVerified,
+      page: params.page,
+      pageSize: params.pageSize,
     })
+    putAdminUsers(apiResult.users).catch(() => {})
+    return apiResult
+  } catch {
+    const cached = await getAdminUsers()
     const page = params.page ?? 1
     const pageSize = params.pageSize ?? 4
-    const filtered = apiResult.users.filter((user) =>
-      matchesRegionFilter(user, params.region),
-    )
-
+    const filtered = filterMockUsers(cached, params)
     return {
-      ...apiResult,
       users: paginateUsers(filtered, page, pageSize),
+      stats: ADMIN_USERS_STATS_MOCK,
       total: filtered.length,
       page,
       pageSize,
     }
   }
-
-  return fetchAdminUsersFromApi({
-    search: params.search,
-    role: params.role,
-    isActive: params.isActive,
-    isVerified: params.isVerified,
-    page: params.page,
-    pageSize: params.pageSize,
-  })
 }
 
 export function formatAdminUsersRange(

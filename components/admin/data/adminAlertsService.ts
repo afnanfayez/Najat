@@ -38,6 +38,9 @@ export function filterAdminAlerts(
 
 export async function fetchAdminAlerts(): Promise<AdminAlertsListResponse> {
   if (USE_MOCK_ADMIN_ALERTS) {
+    // TODO: Wire real API when backend adds /v1/admin/alerts endpoint.
+    // Real API layer is ready in lib/api/adminAlerts.ts (fetchAdminAlertsFromApi).
+    // Remove NEXT_PUBLIC_ADMIN_ALERTS_MOCK=1 from .env when the endpoint is live.
     return {
       alerts: getMockAdminAlertsList(),
       mapCenter: ADMIN_ALERTS_MAP_CENTER,

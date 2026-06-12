@@ -11,9 +11,9 @@ import {
 } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { getToken, TOKEN_KEY } from '@/lib/api/auth'
+import { getToken } from '@/lib/api/auth'
 import { AUTH_SESSION_CHANGED } from '@/lib/auth/authEvents'
-import { saveUserRole, SESSION_ROLE_KEY } from '@/lib/auth/sessionRole'
+import { saveUserRole } from '@/lib/auth/sessionRole'
 import { profileAPI } from '@/lib/api/profile'
 import { clearUserSessionCache } from '@/lib/auth/clearSessionCache'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
@@ -157,11 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser().catch(() => {})
     }
 
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== TOKEN_KEY && event.key !== SESSION_ROLE_KEY) return
-      setUser(null)
-      clearUserSessionCache(queryClient)
-      refreshUser().catch(() => {})
+    // Cross-tab auth sync via BroadcastChannel (cookies don't fire storage events)
+    const bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('najat-auth') : null
+    if (bc) {
+      bc.onmessage = () => {
+        setUser(null)
+        clearUserSessionCache(queryClient)
+        refreshUser().catch(() => {})
+      }
     }
 
     // Background Sync: يُطلَق من PWARegister عندما يُبلّغ SW بعودة الإنترنت
@@ -172,12 +175,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     window.addEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
-    window.addEventListener('storage', onStorage)
     window.addEventListener('najat:session-refresh', onBackgroundSync)
     return () => {
       window.removeEventListener(AUTH_SESSION_CHANGED, onSessionChanged)
-      window.removeEventListener('storage', onStorage)
       window.removeEventListener('najat:session-refresh', onBackgroundSync)
+      bc?.close()
     }
   }, [queryClient, refreshUser])
 

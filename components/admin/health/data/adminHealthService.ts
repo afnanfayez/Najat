@@ -10,6 +10,14 @@ import {
   updateAdminHealthFacilityFromApi,
   updateAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
+import {
+  getAdminFacilities,
+  getAdminFacilityById,
+  putAdminFacilities,
+  getAdminHealthContent,
+  getAdminHealthContentById,
+  putAdminHealthContent,
+} from '@/lib/offline/db'
 import { USE_MOCK_ADMIN_HEALTH } from '@/lib/mocks/mockConfig'
 import {
   ADMIN_HEALTH_FACILITIES,
@@ -22,6 +30,7 @@ import type {
   AdminHealthFacilitiesListResponse,
   AdminHealthFacilitiesQueryParams,
   AdminHealthFacility,
+  AdminHealthFacilityType,
   AdminHealthMedicalContent,
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
@@ -166,6 +175,27 @@ function filterMockFacilities(
   return { facilities, stats: computeMockStats(facilities) }
 }
 
+function filterCachedFacilities(
+  params: AdminHealthFacilitiesQueryParams,
+  facilities: AdminHealthFacility[],
+): AdminHealthFacilitiesListResponse {
+  const q = normalizeSearch(params.search)
+  const region = params.region ?? 'all'
+  const status = params.status ?? 'all'
+
+  const filtered = facilities.filter((facility) => {
+    if (region !== 'all' && facility.region !== region) return false
+    if (status !== 'all' && facility.status !== status) return false
+    if (!q) return true
+    return (
+      facility.name.toLowerCase().includes(q) ||
+      facility.address.toLowerCase().includes(q)
+    )
+  })
+
+  return { facilities: filtered, stats: computeMockStats(filtered) }
+}
+
 function filterMockContent(
   params: AdminHealthContentQueryParams,
 ): AdminHealthContentListResponse {
@@ -236,14 +266,15 @@ function deleteMockContent(id: string): void {
 export async function fetchAdminHealthFacilities(
   params: AdminHealthFacilitiesQueryParams = {},
 ): Promise<AdminHealthFacilitiesListResponse> {
-  if (USE_MOCK_ADMIN_HEALTH) {
-    return filterMockFacilities(params)
-  }
+  if (USE_MOCK_ADMIN_HEALTH) return filterMockFacilities(params)
 
   try {
-    return await fetchAdminHealthFacilitiesFromApi(params)
+    const result = await fetchAdminHealthFacilitiesFromApi(params)
+    putAdminFacilities(result.facilities).catch(() => {})
+    return result
   } catch {
-    return filterMockFacilities(params)
+    const cached = await getAdminFacilities()
+    return filterCachedFacilities(params, cached)
   }
 }
 
@@ -255,17 +286,38 @@ export async function fetchAdminHealthMedicalContent(
   }
 
   try {
-    return await fetchAdminHealthContentFromApi(params)
+    const result = await fetchAdminHealthContentFromApi(params)
+    putAdminHealthContent(result.items).catch(() => {})
+    return result
   } catch {
-    return filterMockContent(params)
+    const cached = await getAdminHealthContent()
+    const search = params.search?.toLowerCase() ?? ''
+    const items = search
+      ? cached.filter(
+          (c) =>
+            c.title.toLowerCase().includes(search) ||
+            c.description.toLowerCase().includes(search),
+        )
+      : cached
+    return { items }
   }
 }
 
 export async function fetchAdminHealthLatestContent(
   limit = 3,
 ): Promise<AdminHealthMedicalContent[]> {
-  const { items } = await fetchAdminHealthMedicalContent({ limit })
-  return items
+  if (USE_MOCK_ADMIN_HEALTH) {
+    return filterMockContent({ limit }).items
+  }
+
+  try {
+    const result = await fetchAdminHealthContentFromApi({ limit })
+    putAdminHealthContent(result.items).catch(() => {})
+    return result.items
+  } catch {
+    const cached = await getAdminHealthContent()
+    return cached.slice(0, limit)
+  }
 }
 
 export type AdminHealthFilterState = {
@@ -292,6 +344,7 @@ export function toContentQueryParams(search: string): AdminHealthContentQueryPar
 
 export async function createAdminHealthFacility(
   form: FacilitySetupForm,
+  facilityType?: AdminHealthFacilityType,
 ): Promise<AdminHealthFacility> {
   const hasImages = form.images.some((img) => img.file)
   const body = mapFacilityFormToCreateBody(form)
@@ -301,19 +354,15 @@ export async function createAdminHealthFacility(
     return createMockFacility(body, form)
   }
 
-  try {
-    const payload = hasImages ? buildFacilityFormData(form) : body
-    const facility = await createAdminHealthFacilityFromApi(payload)
-    mockFacilityFormsStore[facility.id] = form
-    return facility
-  } catch {
-    await new Promise((r) => setTimeout(r, 400))
-    return createMockFacility(body, form)
-  }
+  const payload = hasImages ? buildFacilityFormData(form) : body
+  const facility = await createAdminHealthFacilityFromApi(payload, facilityType)
+  mockFacilityFormsStore[facility.id] = form
+  return facility
 }
 
 export async function fetchAdminHealthFacilityById(
   id: string,
+  facilityType?: AdminHealthFacilityType,
 ): Promise<FacilitySetupForm> {
   if (USE_MOCK_ADMIN_HEALTH) {
     await new Promise((r) => setTimeout(r, 300))
@@ -323,18 +372,20 @@ export async function fetchAdminHealthFacilityById(
   }
 
   try {
-    const facility = await fetchAdminHealthFacilityByIdFromApi(id)
+    const facility = await fetchAdminHealthFacilityByIdFromApi(id, facilityType)
+    putAdminFacilities([facility]).catch(() => {})
     return mapFacilityToSetupForm(facility, mockFacilityFormsStore[id])
   } catch {
-    const form = fetchMockFacilityById(id)
-    if (!form) throw new Error('Facility not found')
-    return form
+    const facility = await getAdminFacilityById(id)
+    if (facility) return mapFacilityToSetupForm(facility)
+    throw new Error('المرفق غير متوفر في وضع عدم الاتصال')
   }
 }
 
 export async function updateAdminHealthFacility(
   id: string,
   form: FacilitySetupForm,
+  facilityType?: AdminHealthFacilityType,
 ): Promise<AdminHealthFacility> {
   const hasImages = form.images.some((img) => img.file)
   const body = mapFacilityFormToCreateBody(form)
@@ -344,18 +395,16 @@ export async function updateAdminHealthFacility(
     return updateMockFacility(id, body, form)
   }
 
-  try {
-    const payload = hasImages ? buildFacilityFormData(form) : body
-    const facility = await updateAdminHealthFacilityFromApi(id, payload)
-    mockFacilityFormsStore[id] = form
-    return facility
-  } catch {
-    await new Promise((r) => setTimeout(r, 400))
-    return updateMockFacility(id, body, form)
-  }
+  const payload = hasImages ? buildFacilityFormData(form) : body
+  const facility = await updateAdminHealthFacilityFromApi(id, payload, facilityType)
+  mockFacilityFormsStore[id] = form
+  return facility
 }
 
-export async function deleteAdminHealthFacility(id: string): Promise<void> {
+export async function deleteAdminHealthFacility(
+  id: string,
+  facilityType?: AdminHealthFacilityType,
+): Promise<void> {
   if (USE_MOCK_ADMIN_HEALTH) {
     await new Promise((r) => setTimeout(r, 400))
     const exists = getMockFacilities().some((f) => f.id === id)
@@ -364,13 +413,8 @@ export async function deleteAdminHealthFacility(id: string): Promise<void> {
     return
   }
 
-  try {
-    await deleteAdminHealthFacilityFromApi(id)
-    delete mockFacilityFormsStore[id]
-  } catch {
-    await new Promise((r) => setTimeout(r, 300))
-    deleteMockFacility(id)
-  }
+  await deleteAdminHealthFacilityFromApi(id, facilityType)
+  delete mockFacilityFormsStore[id]
 }
 
 export async function fetchAdminHealthContentById(
@@ -385,11 +429,12 @@ export async function fetchAdminHealthContentById(
 
   try {
     const item = await fetchAdminHealthContentByIdFromApi(id)
+    putAdminHealthContent([item]).catch(() => {})
     return mapContentToForm(item)
   } catch {
-    const item = fetchMockContentById(id)
-    if (!item) throw new Error('Content not found')
-    return mapContentToForm(item)
+    const cached = await getAdminHealthContentById(id)
+    if (!cached) throw new Error('Content not found')
+    return mapContentToForm(cached)
   }
 }
 
@@ -403,12 +448,7 @@ export async function createAdminHealthContent(
     return createMockContent(body)
   }
 
-  try {
-    return await createAdminHealthContentFromApi(body)
-  } catch {
-    await new Promise((r) => setTimeout(r, 400))
-    return createMockContent(body)
-  }
+  return createAdminHealthContentFromApi(body)
 }
 
 export async function updateAdminHealthContent(
@@ -422,12 +462,7 @@ export async function updateAdminHealthContent(
     return updateMockContent(id, body)
   }
 
-  try {
-    return await updateAdminHealthContentFromApi(id, body)
-  } catch {
-    await new Promise((r) => setTimeout(r, 400))
-    return updateMockContent(id, body)
-  }
+  return updateAdminHealthContentFromApi(id, body)
 }
 
 export async function deleteAdminHealthContent(id: string): Promise<void> {
@@ -439,10 +474,5 @@ export async function deleteAdminHealthContent(id: string): Promise<void> {
     return
   }
 
-  try {
-    await deleteAdminHealthContentFromApi(id)
-  } catch {
-    await new Promise((r) => setTimeout(r, 300))
-    deleteMockContent(id)
-  }
+  await deleteAdminHealthContentFromApi(id)
 }

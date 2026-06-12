@@ -46,8 +46,11 @@ export default function AdminAidResponseChart({
   const width = 560
   const height = 180
   const padding = 16
-  const linePath = buildChartPath(values, width, height, padding)
-  const areaPath = `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`
+  const hasData = values.length >= 2
+  const linePath = hasData ? buildChartPath(values, width, height, padding) : ''
+  const areaPath = hasData
+    ? `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`
+    : ''
 
   return (
     <div
@@ -85,7 +88,12 @@ export default function AdminAidResponseChart({
       </div>
 
       <div className="w-full flex-1 overflow-hidden">
-        <svg
+        {!hasData && (
+          <div className="flex h-full items-center justify-center text-sm text-[#94A3B8]">
+            لا توجد بيانات
+          </div>
+        )}
+        {hasData && <svg
           viewBox={`0 0 ${width} ${height + 28}`}
           className="h-auto w-full"
           preserveAspectRatio="xMidYMid meet"
@@ -120,7 +128,7 @@ export default function AdminAidResponseChart({
               </text>
             )
           })}
-        </svg>
+        </svg>}
       </div>
     </div>
   )

@@ -346,6 +346,7 @@ export const useRegisterStore = create<RegisterState>()(
           if (token) {
             resetBrowserSession()
             saveToken(token)
+            new BroadcastChannel('najat-auth').postMessage('login')
             notifyAuthSessionChanged()
           }
           const role = authRole ?? (res as { role?: string })?.role
@@ -382,6 +383,7 @@ export const useRegisterStore = create<RegisterState>()(
           if (token) {
             resetBrowserSession()
             saveToken(token)
+            new BroadcastChannel('najat-auth').postMessage('login')
             notifyAuthSessionChanged()
           }
           const role =

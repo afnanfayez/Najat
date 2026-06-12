@@ -25,7 +25,8 @@ import {
 import type { HealthFacility } from '@/schemas/healthFacility'
 import { warmOfflineImages } from './warmImageCache'
 
-const SYNC_COOLDOWN_MS = 30 * 60 * 1000
+const CRITICAL_SYNC_COOLDOWN_MS = 5 * 60 * 1000   // hospitals, aid — can change fast in an emergency
+const STANDARD_SYNC_COOLDOWN_MS = 30 * 60 * 1000  // articles, safety map, other facilities
 const HEAVY_SYNC_SESSION_KEY = 'najat-heavy-sync-done'
 const SYNC_BATCH_SIZE = 2
 
@@ -224,25 +225,20 @@ export async function syncAllData(force = false): Promise<void> {
   if (typeof window === 'undefined') return
   if (!navigator.onLine) return
 
-  if (!force) {
-    const lastSync = await getLastSyncTime()
-    if (lastSync && Date.now() - lastSync < SYNC_COOLDOWN_MS) {
-      return
-    }
-  }
+  const lastSync = await getLastSyncTime()
+  const sinceLastSync = lastSync ? Date.now() - lastSync : Infinity
+
+  const runCritical = force || sinceLastSync >= CRITICAL_SYNC_COOLDOWN_MS
+  const runStandard = force || sinceLastSync >= STANDARD_SYNC_COOLDOWN_MS
+
+  if (!runCritical && !runStandard) return
 
   isSyncing = true
   try {
-    await runSyncTasksInBatches([
-      syncHospitals,
-      syncPharmacies,
-      syncClinics,
-      syncLabs,
-      syncDental,
-      syncAid,
-      syncSafetyMap,
-      syncArticles,
-    ])
+    const tasks: Array<() => Promise<void>> = []
+    if (runCritical) tasks.push(syncHospitals, syncAid)
+    if (runStandard) tasks.push(syncPharmacies, syncClinics, syncLabs, syncDental, syncSafetyMap, syncArticles)
+    await runSyncTasksInBatches(tasks)
     await setSyncMeta('all')
     scheduleHeavyAssetsSync()
   } finally {
@@ -269,9 +265,9 @@ export function initOfflineSync(): () => void {
   }
 
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(startSync, { timeout: 2 * 60_000 })
+    requestIdleCallback(startSync, { timeout: 30_000 })
   } else {
-    setTimeout(startSync, 2 * 60_000)
+    setTimeout(startSync, 5_000)
   }
 
   const onOnline = () => syncAllData()

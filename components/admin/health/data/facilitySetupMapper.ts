@@ -1,10 +1,50 @@
-import type { AdminHealthFacility, CreateAdminHealthFacilityBody } from '@/schemas/adminHealth'
+import type {
+  AdminHealthFacility,
+  AdminHealthFacilityDoctor,
+  AdminHealthFacilityMedication,
+  CreateAdminHealthFacilityBody,
+} from '@/schemas/adminHealth'
 import {
   INITIAL_FACILITY_SETUP,
+  type DrugStatus,
   type FacilitySetupForm,
   type OperatingStatus,
 } from '@/components/admin/health/setup/types'
-import { DEFAULT_FACILITY_MAP_CENTER } from '@/components/admin/health/setup/setupConstants'
+import { DEFAULT_FACILITY_MAP_CENTER, FACILITY_SERVICES } from '@/components/admin/health/setup/setupConstants'
+
+// Mirrors latToRegion in lib/api/adminHealth.ts — north ≥ 31.40 | central ≥ 31.20 | south < 31.20
+export function latToFormRegion(lat: number): string {
+  if (lat >= 31.40) return 'north'
+  if (lat >= 31.20) return 'central'
+  return 'south'
+}
+
+// May 2026 starts on Friday → index 0 = الجمعة
+const ARABIC_DAY_NAMES = [
+  'الجمعة', 'السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
+]
+
+function datesToWeekdayNames(dates: number[]): string[] {
+  const seen = new Set<string>()
+  for (const d of dates) seen.add(ARABIC_DAY_NAMES[(d - 1) % 7])
+  return Array.from(seen)
+}
+
+function timesToWorkingHoursString(times: string[]): string {
+  if (times.length === 0) return 'على مدار 24 ساعة'
+  const sorted = [...times].sort()
+  return `${sorted[0]} - ${sorted[sorted.length - 1]}`
+}
+
+const DRUG_STATUS_TO_API: Record<DrugStatus, string> = {
+  available: 'available',
+  low: 'low_stock',
+  unavailable: 'out_of_stock',
+}
+
+const SERVICE_LABEL_MAP: Record<string, string> = Object.fromEntries(
+  FACILITY_SERVICES.map((s) => [s.id, s.label]),
+)
 
 const REGION_MAP: Record<string, CreateAdminHealthFacilityBody['region']> = {
   gaza: 'central',
@@ -46,6 +86,23 @@ export function mapFacilityFormToCreateBody(
   form: FacilitySetupForm,
 ): CreateAdminHealthFacilityBody {
   const { status, isOpen } = mapOperatingStatus(form.operatingStatus)
+  const weekdays = datesToWeekdayNames(form.selectedDates)
+  const workingHours = timesToWorkingHoursString(form.selectedTimes)
+
+  const workingDoctors: AdminHealthFacilityDoctor[] = form.staff.map(({ name, role, shift }) => ({
+    name,
+    specialty: role,
+    workingDays: weekdays,
+    workingHours: shift,
+  }))
+
+  const currentMedications: AdminHealthFacilityMedication[] = form.drugs.map(
+    ({ name, subtitle, status: drugStatus }) => ({
+      name,
+      type: subtitle || 'عام',
+      status: DRUG_STATUS_TO_API[drugStatus] ?? 'available',
+    }),
+  )
 
   return {
     name: form.name.trim(),
@@ -62,11 +119,16 @@ export function mapFacilityFormToCreateBody(
       status: drugStatus,
     })),
     staff: form.staff.map(({ name, role, shift }) => ({ name, role, shift })),
-    workingDays: form.selectedDates,
+    workingDays: weekdays,
     workingTimes: form.selectedTimes,
     operatingStatus: form.operatingStatus,
     latitude: form.latitude ?? undefined,
     longitude: form.longitude ?? undefined,
+    workingDoctors,
+    currentMedications,
+    workingHours,
+    medicalSupplies: form.drugs.map((d) => d.name),
+    healthcareCategories: form.selectedServices.map((id) => SERVICE_LABEL_MAP[id] ?? id),
   }
 }
 
@@ -94,10 +156,13 @@ export function mapFacilityToSetupForm(
   facility: AdminHealthFacility,
   details?: Partial<FacilitySetupForm> | null,
 ): FacilitySetupForm {
+  const lat = facility.latitude ?? DEFAULT_FACILITY_MAP_CENTER[0]
+  const lng = facility.longitude ?? DEFAULT_FACILITY_MAP_CENTER[1]
+
   const base: FacilitySetupForm = {
     ...INITIAL_FACILITY_SETUP,
     name: facility.name,
-    region: REVERSE_REGION_MAP[facility.region] ?? facility.region,
+    region: latToFormRegion(lat),
     address: facility.address,
     phone: facility.phone ?? '',
     operatingStatus: mapApiStatusToOperating(facility.status, facility.isOpen),
@@ -111,8 +176,8 @@ export function mapFacilityToSetupForm(
             },
           ]
         : [],
-    latitude: DEFAULT_FACILITY_MAP_CENTER[0],
-    longitude: DEFAULT_FACILITY_MAP_CENTER[1],
+    latitude: lat,
+    longitude: lng,
   }
 
   if (!details) return base

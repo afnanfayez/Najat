@@ -1,43 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminMapsPageHeader from './AdminMapsPageHeader'
 import AdminMapsPackageStats from './AdminMapsPackageStats'
 import AdminMapsIntegrityCard from './AdminMapsIntegrityCard'
 import AdminMapsPublishingTable from './AdminMapsPublishingTable'
 import AdminMapsInsightCards from './AdminMapsInsightCards'
-import { fetchAdminMapsDashboard } from './data/adminMapsService'
-import type { AdminMapsDashboard } from '@/schemas/adminMaps'
+import { buildDashboardFromSafetyData } from './data/adminMapsService'
+import { useSafetyMapData } from '@/hooks/useSafetyMapData'
 import { ADMIN_MAPS_FONT } from './adminMapsStyles'
 
 export default function AdminMapsContent() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [dashboard, setDashboard] = useState<AdminMapsDashboard | null>(null)
+  const mapDataQuery = useSafetyMapData()
 
-  useEffect(() => {
-    let cancelled = false
+  const dashboard = useMemo(() => {
+    if (!mapDataQuery.data) return null
+    return buildDashboardFromSafetyData(mapDataQuery.data)
+  }, [mapDataQuery.data])
 
-    async function load() {
-      setLoading(true)
-      try {
-        const data = await fetchAdminMapsDashboard()
-        if (!cancelled) setDashboard(data)
-      } catch {
-        if (!cancelled) toast.error('تعذّر تحميل بيانات الخرائط')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const isLoading = mapDataQuery.isLoading
 
   return (
     <AdminShell activeNav="maps">
@@ -45,7 +29,7 @@ export default function AdminMapsContent() {
         onCreatePackage={() => router.push('/admin/maps/new')}
       />
 
-      {loading ? (
+      {isLoading ? (
         <div
           className="flex min-h-[40vh] items-center justify-center"
           style={{ fontFamily: ADMIN_MAPS_FONT }}
@@ -70,7 +54,14 @@ export default function AdminMapsContent() {
 
           <AdminMapsInsightCards insights={dashboard.insights} />
         </>
-      ) : null}
+      ) : (
+        <div
+          className="flex min-h-[30vh] items-center justify-center"
+          style={{ fontFamily: ADMIN_MAPS_FONT }}
+        >
+          <p className="text-sm font-medium text-[#94A3B8]">لا توجد بيانات متاحة</p>
+        </div>
+      )}
     </AdminShell>
   )
 }

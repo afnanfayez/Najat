@@ -1,6 +1,12 @@
 import {
   mapDataLayersSchema,
+  dangerZoneDtoSchema,
+  safeRoadDtoSchema,
+  resourcePointDtoSchema,
   type MapDataLayers,
+  type DangerZoneDto,
+  type SafeRoadDto,
+  type ResourcePointDto,
 } from '@/schemas/safetyApi'
 import {
   transformMapDataLayers,
@@ -74,6 +80,49 @@ export type MapDataParams = {
   limit?: number
 }
 
+export type CreateDangerZoneBody = {
+  description: string
+  dangerLevel: string
+  area: object
+}
+
+export type UpdateDangerZoneBody = Partial<{
+  description: string
+  dangerLevel: string
+  area: object
+}>
+
+export type CreateSafeRoadBody = {
+  name: string
+  description?: string
+  path: object
+}
+
+export type CreateResourcePointBody = {
+  name: string
+  type: string
+  location: object
+}
+
+function unwrapEntity<T>(raw: unknown): T {
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    return (raw as { data: T }).data
+  }
+  return raw as T
+}
+
+function parseZone(raw: unknown): DangerZoneDto {
+  return dangerZoneDtoSchema.parse(unwrapEntity(raw))
+}
+
+function parseRoad(raw: unknown): SafeRoadDto {
+  return safeRoadDtoSchema.parse(unwrapEntity(raw))
+}
+
+function parsePoint(raw: unknown): ResourcePointDto {
+  return resourcePointDtoSchema.parse(unwrapEntity(raw))
+}
+
 export const safetyAPI = {
   async getMapData(params?: MapDataParams): Promise<SafetyMapLayers> {
     const qs = new URLSearchParams()
@@ -95,5 +144,76 @@ export const safetyAPI = {
     qs.set('lng', String(params.lng))
     const raw = await request(`${V1_ROOT}/safety/check?${qs}`)
     return unwrapSafetyCheck(raw)
+  },
+
+  // ── Danger Zones CRUD ─────────────────────────────────────────────────────
+
+  async listZones(params?: MapDataParams): Promise<DangerZoneDto[]> {
+    const qs = new URLSearchParams()
+    if (params?.page != null) qs.set('page', String(params.page))
+    if (params?.limit != null) qs.set('limit', String(params.limit))
+    if (params?.since) qs.set('since', params.since)
+    const query = qs.toString()
+    const raw = await request(`${V1_ROOT}/safety/zones${query ? `?${query}` : ''}`)
+    const envelope = raw as Record<string, unknown>
+    const items = Array.isArray(envelope?.data)
+      ? envelope.data
+      : Array.isArray(raw)
+        ? raw
+        : []
+    return (items as unknown[]).map(parseZone)
+  },
+
+  async getZoneById(id: string): Promise<DangerZoneDto> {
+    const raw = await request(`${V1_ROOT}/safety/zones/${encodeURIComponent(id)}`)
+    return parseZone(raw)
+  },
+
+  async createZone(body: CreateDangerZoneBody): Promise<DangerZoneDto> {
+    const raw = await request(`${V1_ROOT}/safety/zones`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    return parseZone(raw)
+  },
+
+  async updateZone(id: string, body: UpdateDangerZoneBody): Promise<DangerZoneDto> {
+    const raw = await request(`${V1_ROOT}/safety/zones/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+    return parseZone(raw)
+  },
+
+  async deleteZone(id: string): Promise<void> {
+    await request(`${V1_ROOT}/safety/zones/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
+
+  // ── Safe Roads CRUD ───────────────────────────────────────────────────────
+
+  async createSafeRoad(body: CreateSafeRoadBody): Promise<SafeRoadDto> {
+    const raw = await request(`${V1_ROOT}/safety/safe-roads`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    return parseRoad(raw)
+  },
+
+  async deleteSafeRoad(id: string): Promise<void> {
+    await request(`${V1_ROOT}/safety/safe-roads/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
+
+  // ── Resource Points CRUD ──────────────────────────────────────────────────
+
+  async createResourcePoint(body: CreateResourcePointBody): Promise<ResourcePointDto> {
+    const raw = await request(`${V1_ROOT}/safety/resource-points`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    return parsePoint(raw)
+  },
+
+  async deleteResourcePoint(id: string): Promise<void> {
+    await request(`${V1_ROOT}/safety/resource-points/${encodeURIComponent(id)}`, { method: 'DELETE' })
   },
 }

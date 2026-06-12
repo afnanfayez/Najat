@@ -18,6 +18,8 @@ let mockDashboard = structuredClone(ADMIN_SECURITY_DASHBOARD)
 
 export async function fetchAdminSecurityDashboard(): Promise<AdminSecurityDashboard> {
   if (!USE_MOCK_ADMIN_SECURITY) {
+    // TODO: Wire real API when backend adds /v1/admin/security/* endpoints.
+    // Remove NEXT_PUBLIC_ADMIN_SECURITY_MOCK=1 from .env when the endpoint is live.
     return fetchAdminSecurityDashboardFromApi()
   }
   await delay()

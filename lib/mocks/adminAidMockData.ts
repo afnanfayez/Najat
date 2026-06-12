@@ -336,6 +336,16 @@ export const ADMIN_AID_TYPE_OPTIONS = [
   'مياه صالحة للشرب',
 ]
 
+export const AID_POINT_TYPE_OPTIONS = [
+  { value: 'food', label: 'مواد غذائية' },
+  { value: 'water', label: 'مياه' },
+  { value: 'shelter', label: 'مأوى' },
+  { value: 'health', label: 'صحة' },
+  { value: 'clothing_blankets', label: 'ملابس وأغطية' },
+  { value: 'organizations', label: 'منظمات' },
+  { value: 'all', label: 'كل الأنواع' },
+]
+
 export const ADMIN_AID_TARGET_GROUPS = [
   'كبار السن',
   'الحوامل والمرضعات',

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Search } from 'lucide-react'
 import type { AdminMapsEditorLayer } from '@/schemas/adminMaps'
 import type { AdminMapsEditorMapInnerProps } from './AdminMapsEditorMapInner'
+import type { AdminMapsDrawTool } from './AdminMapsEditorToolsPanel'
 import { ADMIN_MAPS_FONT } from '../adminMapsStyles'
 
 const AdminMapsEditorMapInner = dynamic<AdminMapsEditorMapInnerProps>(
@@ -13,7 +14,7 @@ const AdminMapsEditorMapInner = dynamic<AdminMapsEditorMapInnerProps>(
     ssr: false,
     loading: () => (
       <div
-        className="flex h-full min-h-[320px] items-center justify-center bg-[#E8F4FD] text-sm font-bold text-[#2196F3]"
+        className="flex h-full min-h-80 items-center justify-center bg-[#E8F4FD] text-sm font-bold text-[#2196F3]"
         style={{ fontFamily: ADMIN_MAPS_FONT }}
       >
         جاري تحميل الخريطة...
@@ -28,9 +29,16 @@ interface AdminMapsEditorMapProps {
     AdminMapsEditorMapInnerProps,
     'safeRoads' | 'dangerZones' | 'resourcePoints'
   >
+  activeTool: AdminMapsDrawTool
+  onDrawComplete?: AdminMapsEditorMapInnerProps['onDrawComplete']
 }
 
-export default function AdminMapsEditorMap({ layers, mapLayers }: AdminMapsEditorMapProps) {
+export default function AdminMapsEditorMap({
+  layers,
+  mapLayers,
+  activeTool,
+  onDrawComplete,
+}: AdminMapsEditorMapProps) {
   const [query, setQuery] = useState('')
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
 
@@ -45,10 +53,10 @@ export default function AdminMapsEditorMap({ layers, mapLayers }: AdminMapsEdito
   }
 
   return (
-    <div className="relative flex h-full min-h-[280px] flex-1 flex-col overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:min-h-[360px]">
+    <div className="relative flex h-full min-h-70 flex-1 flex-col overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:min-h-90">
       <form
         onSubmit={handleSearchSubmit}
-        className="absolute left-1/2 top-3 z-[500] flex w-[calc(100%-1.5rem)] max-w-[420px] -translate-x-1/2 items-center gap-2 rounded-2xl border border-[#E8EEF5] bg-white px-3 py-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.12)] sm:top-4 sm:w-[min(92%,420px)] sm:px-4 sm:py-3"
+        className="absolute left-1/2 top-3 z-500 flex w-[calc(100%-1.5rem)] max-w-105 -translate-x-1/2 items-center gap-2 rounded-2xl border border-[#E8EEF5] bg-white px-3 py-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.12)] sm:top-4 sm:w-[min(92%,420px)] sm:px-4 sm:py-3"
         dir="rtl"
       >
         <Search size={18} className="shrink-0 text-[#94A3B8]" />
@@ -67,6 +75,8 @@ export default function AdminMapsEditorMap({ layers, mapLayers }: AdminMapsEdito
         showConflict={showConflict}
         showHospitals={showHospitals}
         flyTo={flyTo}
+        activeTool={activeTool}
+        onDrawComplete={onDrawComplete}
         {...mapLayers}
       />
     </div>

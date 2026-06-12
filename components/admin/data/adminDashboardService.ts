@@ -89,6 +89,8 @@ export function mapAdminDashboardMock(raw: AdminDashboardMockData = ADMIN_DASHBO
 }
 
 export function getAdminDashboardData(): AdminDashboardData {
+  // TODO: Wire real API when backend adds a dashboard statistics endpoint.
+  // Currently returns mock layout + real user stats (via fetchAdminDashboardData below).
   return mapAdminDashboardMock(ADMIN_DASHBOARD_MOCK)
 }
 

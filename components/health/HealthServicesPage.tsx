@@ -41,6 +41,34 @@ import './health.css'
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS) as [FacilityCategory, string][]
 
+function StalenessIndicator({ cachedAt }: { cachedAt: number }) {
+  const [now, setNow] = useState<number>(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNow(Date.now())
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [])
+  const minutes = Math.floor((now - cachedAt) / 60_000)
+  const label = minutes < 1 ? 'للتو' : `منذ ${minutes} دقيقة`
+  return (
+    <div
+      dir="rtl"
+      style={{
+        background: '#FFF3CD',
+        border: '1px solid #FFC107',
+        borderRadius: 8,
+        padding: '6px 12px',
+        margin: '8px 0',
+        fontSize: 13,
+        color: '#856404',
+      }}
+    >
+      ⚠ البيانات محلية — آخر تحديث {label}
+    </div>
+  )
+}
+
 function numericRouteId(value?: string | null): string | undefined {
   return value && /^\d+$/.test(value) ? value : undefined
 }
@@ -112,7 +140,7 @@ export default function HealthServicesPage({
     [router, category, openMobileMenu],
   )
 
-  const { data, catalog, isLoading, isError, error, refetch, isBackgroundRefreshing } =
+  const { data, catalog, isLoading, isError, error, refetch, isBackgroundRefreshing, cachedAt } =
     useHealthFacilities(listQueryParams)
 
   const routeOrdinal = effectiveFacilityId ? parseOrdinalRouteParam(effectiveFacilityId) : null
@@ -446,7 +474,7 @@ export default function HealthServicesPage({
     <div className="health-page-container">
       <HealthHeader onShowMap={handleHealthHeaderMap} />
 
-      <HealthFilter 
+      <HealthFilter
         categories={CATEGORIES}
         activeCategory={category}
         setActiveCategory={handleCategoryChange}
@@ -457,6 +485,8 @@ export default function HealthServicesPage({
         selectedRegion={selectedRegion}
         setSelectedRegion={setSelectedRegion}
       />
+
+      {cachedAt && <StalenessIndicator cachedAt={cachedAt} />}
 
       <FacilityGrid 
         isLoading={isLoading}

@@ -63,17 +63,26 @@ export const clinicsAPI = {
     })
   },
 
-  create(formData: FormData): Promise<ClinicDto> {
-    return request(`${V1_ROOT}/clinics`, { method: 'POST', body: formData }).then((raw) =>
-      clinicDtoSchema.parse(raw),
-    )
+  create(body: FormData | Record<string, unknown>): Promise<ClinicDto> {
+    return request(`${V1_ROOT}/clinics`, {
+      method: 'POST',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return clinicDtoSchema.parse(data)
+    })
   },
 
   update(id: string, body: Record<string, unknown> | FormData): Promise<ClinicDto> {
     return request(`${V1_ROOT}/clinics/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }).then((raw) => clinicDtoSchema.parse(raw))
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return clinicDtoSchema.parse(data)
+    })
   },
 
   softDelete(id: string): Promise<unknown> {

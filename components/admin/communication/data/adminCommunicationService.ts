@@ -45,6 +45,8 @@ const BADGE_BY_PRIORITY = {
 
 export async function fetchAdminCommunicationDashboard(): Promise<AdminCommunicationDashboard> {
   if (!USE_MOCK_ADMIN_COMMUNICATION) {
+    // TODO: Wire real API when backend adds /v1/admin/communication/* endpoints.
+    // Remove NEXT_PUBLIC_ADMIN_COMMUNICATION_MOCK=1 from .env when the endpoint is live.
     return fetchAdminCommunicationDashboardFromApi()
   }
   await delay()

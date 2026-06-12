@@ -18,6 +18,7 @@ export const dentalDtoSchema = z.object({
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   distance: z.coerce.number().optional(),
+  status: z.string().optional(),
   dentalChairs: z.number().optional(),
   implantsAvailable: z.boolean().optional().default(false),
   orthodonticsAvailable: z.boolean().optional().default(false),

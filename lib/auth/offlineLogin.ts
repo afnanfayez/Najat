@@ -23,12 +23,12 @@ import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
 import { normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
 import type { UserProfile } from '@/schemas/userProfile'
 import {
-  idbPutAuthSnapshot,
-  idbGetAuthSnapshot,
-  idbGetLatestAuthSnapshot,
-  idbUpdateAuthProfile,
-  idbDeleteAuthSnapshot,
-} from '@/lib/pwa/offlineDB'
+  putAuthSnapshot as idbPutAuthSnapshot,
+  getAuthSnapshot as idbGetAuthSnapshot,
+  getLatestAuthSnapshot as idbGetLatestAuthSnapshot,
+  updateAuthProfile as idbUpdateAuthProfile,
+  deleteAuthSnapshot as idbDeleteAuthSnapshot,
+} from '@/lib/offline/db'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -112,7 +112,7 @@ export async function saveOfflineLoginSnapshot(
     role: normalizedRole,
     profile: resolvedProfile,
   }
-  await idbPutAuthSnapshot(snapshot as unknown as Omit<import('@/lib/pwa/offlineDB').OfflineAuthRecord, '_savedAt'>)
+  await idbPutAuthSnapshot(snapshot)
 }
 
 /**
@@ -125,9 +125,6 @@ export async function clearOfflineLoginSnapshot(email?: string): Promise<void> {
   if (typeof window === 'undefined') return
   if (email) {
     await idbDeleteAuthSnapshot(email)
-  } else {
-    // Legacy: try to clear the localStorage fallback as well
-    localStorage.removeItem('najat_offline_login')
   }
 }
 
@@ -152,21 +149,9 @@ export async function getOfflineCachedProfile(): Promise<UserProfile | null> {
  */
 export async function updateOfflineLoginProfile(profile: UserProfile): Promise<void> {
   if (typeof window === 'undefined') return
-  try {
-    await idbUpdateAuthProfile(profile.email ?? '', profile)
-  } catch {
-    // Fallback: update localStorage snapshot if present
-    try {
-      const raw = localStorage.getItem('najat_offline_login')
-      if (!raw) return
-      const snap = JSON.parse(raw)
-      snap.profile = profile
-      snap.role = normalizeUserRole(profile.role) ?? snap.role
-      localStorage.setItem('najat_offline_login', JSON.stringify(snap))
-    } catch {
-      // ignore
-    }
-  }
+  await idbUpdateAuthProfile(profile.email ?? '', profile).catch(() => {
+    // ignore — profile update is best-effort
+  })
 }
 
 /**
@@ -182,25 +167,11 @@ export async function tryOfflineLogin(
 
   const key = email.trim().toLowerCase()
 
-  // 1. Try IndexedDB first (primary storage)
   let snapshot: OfflineLoginSnapshot | null = null
   try {
     snapshot = (await idbGetAuthSnapshot(key)) as OfflineLoginSnapshot | null
   } catch {
     snapshot = null
-  }
-
-  // 2. Fallback to localStorage if IndexedDB failed or returned nothing
-  if (!snapshot) {
-    try {
-      const raw = localStorage.getItem('najat_offline_login')
-      if (raw) {
-        const parsed = JSON.parse(raw) as OfflineLoginSnapshot
-        if (parsed.email === key) snapshot = parsed
-      }
-    } catch {
-      // ignore
-    }
   }
 
   if (!snapshot) {

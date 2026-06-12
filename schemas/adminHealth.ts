@@ -21,6 +21,13 @@ export type AdminHealthStatsDto = {
   underMaintenance: number
 }
 
+export type AdminHealthFacilityType =
+  | 'hospital'
+  | 'pharmacy'
+  | 'lab'
+  | 'clinic'
+  | 'dental_clinic'
+
 export type AdminHealthFacility = {
   id: string
   name: string
@@ -31,6 +38,9 @@ export type AdminHealthFacility = {
   phone?: string
   region: AdminHealthFacilityRegion
   status: AdminHealthFacilityStatus
+  facilityType?: AdminHealthFacilityType
+  latitude?: number
+  longitude?: number
 }
 
 export type AdminHealthMedicalContent = {
@@ -89,6 +99,19 @@ export type AdminHealthFacilityStaff = {
   shift: string
 }
 
+export type AdminHealthFacilityDoctor = {
+  name: string
+  specialty: string
+  workingDays: string[]
+  workingHours: string
+}
+
+export type AdminHealthFacilityMedication = {
+  name: string
+  type: string
+  status: string
+}
+
 export type CreateAdminHealthFacilityBody = {
   name: string
   address: string
@@ -101,9 +124,14 @@ export type CreateAdminHealthFacilityBody = {
   services?: string[]
   drugs?: AdminHealthFacilityDrug[]
   staff?: AdminHealthFacilityStaff[]
-  workingDays?: number[]
+  workingDays?: string[]
   workingTimes?: string[]
   operatingStatus?: 'efficient' | 'limited' | 'closed'
   latitude?: number
   longitude?: number
+  workingDoctors?: AdminHealthFacilityDoctor[]
+  currentMedications?: AdminHealthFacilityMedication[]
+  workingHours?: string
+  medicalSupplies?: string[]
+  healthcareCategories?: string[]
 }

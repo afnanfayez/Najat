@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
@@ -17,14 +17,16 @@ import AdminMapsEditorFeedPanel from './AdminMapsEditorFeedPanel'
 import AdminMapsEditorMobileTabs, {
   type AdminMapsEditorMobileTab,
 } from './adminMapsEditorMobileTabs'
-import { fetchAdminMapsPackageEditor } from '../data/adminMapsService'
+import { getEditorFeedData } from '../data/adminMapsService'
 import { useSafetyMapData } from '@/hooks/useSafetyMapData'
+import { useSafetyAdminMutations } from '@/hooks/useSafetyAdminMutations'
 import type { AdminMapsEditorLayer, AdminMapsPackageEditorData } from '@/schemas/adminMaps'
 import type {
   MapDangerZone,
   MapResourcePoint,
   MapSafeRoad,
 } from '@/lib/maps/safetyMapTransforms'
+import type { AdminMapsEditorMapInnerProps } from './AdminMapsEditorMapInner'
 import {
   MAP_DANGER_ORANGE,
   MAP_DANGER_RED,
@@ -71,38 +73,20 @@ const FALLBACK_MAP_LAYERS = {
 export default function AdminMapsPackageEditorContent() {
   const router = useRouter()
   const mapDataQuery = useSafetyMapData()
+  const mutations = useSafetyAdminMutations()
 
-  const [loading, setLoading] = useState(true)
   const [editorData, setEditorData] = useState<AdminMapsPackageEditorData | null>(null)
   const [layers, setLayers] = useState<AdminMapsEditorLayer[]>([])
   const [activeTool, setActiveTool] = useState<AdminMapsDrawTool>(null)
   const [mobileTab, setMobileTab] = useState<AdminMapsEditorMobileTab>('map')
 
   useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      setLoading(true)
-      try {
-        const data = await fetchAdminMapsPackageEditor()
-        if (!cancelled) {
-          setEditorData(data)
-          setLayers(data.layers)
-        }
-      } catch {
-        if (!cancelled) toast.error('تعذّر تحميل محرر الخرائط')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
+    const data = getEditorFeedData()
+    setEditorData(data)
+    setLayers(data.layers)
   }, [])
 
-  const mapLayers = useMemo(() => {
+  const mapLayers = useMemo<Pick<AdminMapsEditorMapInnerProps, 'safeRoads' | 'dangerZones' | 'resourcePoints'>>(() => {
     const hasApiData =
       (mapDataQuery.data?.safeRoads.length ?? 0) > 0 ||
       (mapDataQuery.data?.dangerZones.length ?? 0) > 0 ||
@@ -119,6 +103,37 @@ export default function AdminMapsPackageEditorContent() {
     return FALLBACK_MAP_LAYERS
   }, [mapDataQuery.data])
 
+  /** Called by DrawController when the user finalises a drawn shape. */
+  const handleDrawComplete = useCallback(
+    async (tool: NonNullable<AdminMapsDrawTool>, geoCoords: number[][]) => {
+      setActiveTool(null)
+
+      try {
+        if (tool === 'danger') {
+          // Polygon — close the ring by repeating the first point.
+          const ring = [...geoCoords, geoCoords[0]]
+          await mutations.createZone.mutateAsync({
+            description: 'منطقة خطر جديدة',
+            dangerLevel: 'medium',
+            area: { type: 'Polygon', coordinates: [ring] },
+          })
+          toast.success('تمت إضافة منطقة الخطر', { position: 'top-center' })
+        } else {
+          // LineString (safe or alternative road)
+          await mutations.createSafeRoad.mutateAsync({
+            name: tool === 'safe' ? 'مسار آمن جديد' : 'مسار بديل جديد',
+            description: '',
+            path: { type: 'LineString', coordinates: geoCoords },
+          })
+          toast.success('تمت إضافة المسار الآمن', { position: 'top-center' })
+        }
+      } catch {
+        // Error toasts are handled inside the mutation hooks.
+      }
+    },
+    [mutations.createZone, mutations.createSafeRoad],
+  )
+
   function handleLayerToggle(layerId: string) {
     setLayers((prev) =>
       prev.map((layer) =>
@@ -127,9 +142,8 @@ export default function AdminMapsPackageEditorContent() {
     )
   }
 
-  function handleToolChange(tool: AdminMapsDrawTool) {
-    setActiveTool(tool)
-  }
+  const isSaving =
+    mutations.createZone.isPending || mutations.createSafeRoad.isPending
 
   return (
     <AdminShell activeNav="maps">
@@ -145,22 +159,26 @@ export default function AdminMapsPackageEditorContent() {
               <ArrowRight size={16} />
               العودة إلى مركز الصيانة
             </button>
-            <h1 style={ADMIN_PAGE_TITLE_STYLE}>إنشاء حزمة خرائط جديدة</h1>
+            <h1 style={ADMIN_PAGE_TITLE_STYLE}>محرر الخرائط الأمنية</h1>
             <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, marginTop: '8px', fontSize: 'clamp(12px, 2.5vw, 15px)' }}>
-              رسم المسارات، إدارة الطبقات، ومراجعة البلاغات الميدانية قبل النشر
+              {activeTool
+                ? 'انقر على الخريطة لتحديد النقاط — انقر مرتين لحفظ الشكل — Esc للإلغاء'
+                : 'اختر أداة رسم لإضافة عنصر جديد أو راجع البيانات الحالية على الخريطة'}
             </p>
           </div>
+
+          {isSaving && (
+            <div
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-[#E3F2FD] px-4 py-2 text-sm font-bold text-[#2196F3]"
+              style={{ fontFamily: ADMIN_MAPS_FONT }}
+            >
+              جاري الحفظ...
+            </div>
+          )}
         </div>
       </header>
 
-      {loading ? (
-        <div
-          className="flex min-h-[50vh] items-center justify-center"
-          style={{ fontFamily: ADMIN_MAPS_FONT }}
-        >
-          <p className="text-sm font-medium text-[#64748B]">جاري التحميل...</p>
-        </div>
-      ) : editorData ? (
+      {editorData ? (
         <>
           <AdminMapsEditorMobileTabs active={mobileTab} onChange={setMobileTab} />
 
@@ -178,7 +196,7 @@ export default function AdminMapsPackageEditorContent() {
                 layers={layers}
                 integrity={editorData.integrity}
                 activeTool={activeTool}
-                onToolChange={handleToolChange}
+                onToolChange={setActiveTool}
                 onLayerToggle={handleLayerToggle}
               />
             </div>
@@ -188,7 +206,12 @@ export default function AdminMapsPackageEditorContent() {
                 mobileTab === 'map' ? 'flex' : 'hidden xl:flex'
               }`}
             >
-              <AdminMapsEditorMap layers={layers} mapLayers={mapLayers} />
+              <AdminMapsEditorMap
+                layers={layers}
+                mapLayers={mapLayers}
+                activeTool={activeTool}
+                onDrawComplete={handleDrawComplete}
+              />
             </div>
 
             <div
@@ -204,7 +227,14 @@ export default function AdminMapsPackageEditorContent() {
             </div>
           </div>
         </>
-      ) : null}
+      ) : (
+        <div
+          className="flex min-h-[50vh] items-center justify-center"
+          style={{ fontFamily: ADMIN_MAPS_FONT }}
+        >
+          <p className="text-sm font-medium text-[#64748B]">جاري التحميل...</p>
+        </div>
+      )}
 
       <style
         dangerouslySetInnerHTML={{

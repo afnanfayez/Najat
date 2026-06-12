@@ -65,17 +65,26 @@ export const labsAPI = {
     })
   },
 
-  create(formData: FormData): Promise<LabDto> {
-    return request(`${V1_ROOT}/labs`, { method: 'POST', body: formData }).then((raw) =>
-      labDtoSchema.parse(raw),
-    )
+  create(body: FormData | Record<string, unknown>): Promise<LabDto> {
+    return request(`${V1_ROOT}/labs`, {
+      method: 'POST',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return labDtoSchema.parse(data)
+    })
   },
 
   update(id: string, body: Record<string, unknown> | FormData): Promise<LabDto> {
     return request(`${V1_ROOT}/labs/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }).then((raw) => labDtoSchema.parse(raw))
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return labDtoSchema.parse(data)
+    })
   },
 
   softDelete(id: string): Promise<unknown> {

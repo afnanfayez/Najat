@@ -13,7 +13,7 @@ import {
 } from '@/lib/profile/localProfileStorage'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
-import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
+import { enqueueOfflineOp } from '@/lib/offline/db'
 import {
   getOfflineCachedProfile,
   updateOfflineLoginProfile,
@@ -114,11 +114,9 @@ export function useProfile() {
       if (offline) {
         saveLocalOverrides(id, backendBody)
         await updateOfflineLoginProfile(merged)
-        await idbEnqueueSync({
+        await enqueueOfflineOp({
           type: 'PROFILE_SYNC',
-          status: 'pending',
           payload: backendBody as Record<string, unknown>,
-          createdAt: Date.now(),
         })
         toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
         return { profile: merged, syncedWithServer: false }

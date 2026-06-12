@@ -114,8 +114,8 @@ export const ADMIN_AUDIT_COMPARE_DETAILS: Record<string, AdminAuditCompareDetail
         currentTone: 'warning',
         previousImageCaption: 'الصورة القديمة (الأرشيفية)',
         currentImageCaption: 'الصورة الجديدة (المرفوعة حديثاً)',
-        previousImageUrl: '/assets/الطاقم1.png',
-        currentImageUrl: '/assets/الطاقم 2.jpg',
+        previousImageUrl: '/assets/staff1.png',
+        currentImageUrl: '/assets/staff2.jpg',
       },
     ],
     recoveryBullets: [

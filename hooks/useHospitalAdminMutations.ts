@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { hospitalsAPI } from '@/lib/api/hospitals'
-import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
 import { enqueueOfflineOp } from '@/lib/offline/db'
 import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
 
@@ -97,12 +96,9 @@ export function useHospitalAdminMutations() {
       const offline = typeof navigator !== 'undefined' && !navigator.onLine
 
       if (offline) {
-        // IDB queue (يعالجه processSyncQueue)
-        await idbEnqueueSync({
+        await enqueueOfflineOp({
           type: 'UPDATE_FACILITY_STATUS',
-          status: 'pending',
           payload: { id, status, updatedAt: Date.now() },
-          createdAt: Date.now(),
         })
         // Optimistic update في الـ cache
         queryClient.setQueriesData<{ facilities: Array<{ id: string; status?: string }>; total: number }>(

@@ -18,6 +18,7 @@ export const clinicDtoSchema = z.object({
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   distance: z.coerce.number().optional(),
+  status: z.string().optional(),
   specialties: z.array(z.string()).optional(),
   practitionersCount: z.number().optional(),
   workingDoctors: z.array(clinicDoctorSchema).optional(),

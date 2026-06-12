@@ -78,8 +78,29 @@ export default function PWARegister() {
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
     const registerSW = async () => {
       try {
-        // في وضع التطوير نُمرّر ?dev=1 حتى يتجنب SW تخزين ملفات /_next/ الديناميكية
-        await navigator.serviceWorker.register('/sw.js')
+        const registration = await navigator.serviceWorker.register('/sw.js')
+
+        // Notify user when a new SW version installs so they can reload
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          if (!newWorker) return
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              toast.info('تحديث جديد للتطبيق متاح', {
+                id: 'sw-update',
+                duration: Infinity,
+                action: {
+                  label: 'تحديث الآن',
+                  onClick: () => {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' })
+                    window.location.reload()
+                  },
+                },
+              })
+            }
+          })
+        })
+
         if (getToken()) {
           void precacheRoutesForRole(getCurrentAuthRole())
           scheduleDataSync(true)

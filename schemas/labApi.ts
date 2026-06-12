@@ -29,6 +29,7 @@ export const labDtoSchema = z.object({
   image: z.string().optional().nullable(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
+  status: z.string().optional(),
   availableTests: z.array(labTestSchema).optional(),
   homeCollection: z.boolean().optional().default(false),
   isoCertified: z.boolean().optional().default(false),

@@ -4,7 +4,7 @@ import { Phone } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import AdminUsersSelectField from '../../users/AdminUsersSelectField'
 import SetupSectionCard from './SetupSectionCard'
-import { ADMIN_AID_REGION_OPTIONS } from '@/lib/mocks/adminAidMockData'
+import { ADMIN_AID_REGION_OPTIONS, AID_POINT_TYPE_OPTIONS } from '@/lib/mocks/adminAidMockData'
 import type { AdminAidDistributionPoint } from '@/schemas/adminAid'
 import {
   SETUP_FONT,
@@ -41,6 +41,13 @@ export default function BasicInfoSection({ form, onChange }: BasicInfoSectionPro
           value={form.region}
           onValueChange={(v) => onChange('region', v)}
           options={ADMIN_AID_REGION_OPTIONS}
+        />
+
+        <AdminUsersSelectField
+          label="نوع النقطة"
+          value={form.category}
+          onValueChange={(v) => onChange('category', v)}
+          options={AID_POINT_TYPE_OPTIONS}
         />
 
         <div className="flex flex-col gap-2 text-right md:col-span-2">

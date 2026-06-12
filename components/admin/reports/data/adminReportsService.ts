@@ -12,6 +12,8 @@ function delay(ms = 280): Promise<void> {
 
 export async function fetchAdminReportsDashboard(): Promise<AdminReportsDashboard> {
   if (!USE_MOCK_ADMIN_REPORTS) {
+    // TODO: Wire real API when backend adds /v1/admin/reports/* endpoints.
+    // Remove NEXT_PUBLIC_ADMIN_REPORTS_MOCK=1 from .env when the endpoint is live.
     return fetchAdminReportsDashboardFromApi()
   }
   await delay()

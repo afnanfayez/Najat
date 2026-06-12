@@ -59,6 +59,8 @@ function triggerBlobDownload(blob: Blob, filename: string) {
 
 export async function fetchAdminAuditDashboard(): Promise<AdminAuditDashboard> {
   if (!USE_MOCK_ADMIN_AUDIT) {
+    // TODO: Wire real API when backend adds /v1/admin/audit/* endpoints.
+    // Remove NEXT_PUBLIC_ADMIN_AUDIT_MOCK=1 from .env when the endpoint is live.
     return fetchAdminAuditDashboardFromApi()
   }
   await delay()

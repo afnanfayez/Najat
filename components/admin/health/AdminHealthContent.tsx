@@ -126,7 +126,8 @@ export default function AdminHealthContent() {
   }
 
   function handleEditFacility(facility: AdminHealthFacility) {
-    router.push(`/admin/health/${facility.id}/edit`)
+    const type = facility.facilityType ?? 'hospital'
+    router.push(`/admin/health/${facility.id}/edit?type=${type}`)
   }
 
   function handleDeleteFacility(facility: AdminHealthFacility) {
@@ -162,7 +163,7 @@ export default function AdminHealthContent() {
 
     setDeletingId(facilityToDelete.id)
     try {
-      await deleteAdminHealthFacility(facilityToDelete.id)
+      await deleteAdminHealthFacility(facilityToDelete.id, facilityToDelete.facilityType)
       await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
       setFacilityToDelete(null)
       toast.success('تم حذف المنشأة بنجاح', { position: 'top-center' })

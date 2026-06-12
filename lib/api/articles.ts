@@ -1,5 +1,6 @@
 import { request, unwrapPaginated } from '@/lib/api/api'
 import {
+  articleResponseDtoSchema,
   parseArticleGetByIdResponse,
   parseArticlesListResponse,
   type ArticleCategory,
@@ -12,6 +13,17 @@ const V1_ROOT =
 
 const ARTICLE_LIST_PAGE_SIZE = 50
 const MAX_ARTICLE_PAGES = 25
+
+export type CreateArticleBody = {
+  titleAr: string
+  contentAr: string
+  category: ArticleCategory
+  image?: string | null
+  titleEn?: string
+  contentEn?: string
+}
+
+export type UpdateArticleBody = Partial<CreateArticleBody>
 
 export type ListArticlesParams = {
   page?: number
@@ -44,6 +56,37 @@ export const articlesAPI = {
     return request(`${V1_ROOT}/articles/${encodeURIComponent(id)}`).then(
       parseArticleGetByIdResponse,
     )
+  },
+
+  /** ADMIN — create a new article */
+  create(body: CreateArticleBody): Promise<ArticleResponseDto> {
+    return request(`${V1_ROOT}/articles`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord && 'data' in asRecord ? asRecord.data : raw
+      return articleResponseDtoSchema.parse(data)
+    })
+  },
+
+  /** ADMIN — update an existing article */
+  update(id: string, body: UpdateArticleBody): Promise<ArticleResponseDto> {
+    return request(`${V1_ROOT}/articles/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord && 'data' in asRecord ? asRecord.data : raw
+      return articleResponseDtoSchema.parse(data)
+    })
+  },
+
+  /** ADMIN — soft-delete an article */
+  softDelete(id: string): Promise<unknown> {
+    return request(`${V1_ROOT}/articles/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    })
   },
 }
 

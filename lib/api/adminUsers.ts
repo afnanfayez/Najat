@@ -319,17 +319,23 @@ export async function verifyAdminPassword(
   email: string,
   password: string,
 ): Promise<void> {
+  let response: unknown
   try {
-    const response = await request(`${V1_ROOT}/auth/login`, {
+    response = await request(`${V1_ROOT}/auth/login`, {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
-    const { role } = extractAuthPayload(response)
-    if (role !== 'admin') {
-      throw { status: 403, message: 'كلمة مرور المسؤول غير صحيحة' }
+  } catch (err) {
+    const status = (err as { status?: number }).status
+    if (status === 401 || status === 403) {
+      throw { status: 401, message: 'كلمة مرور المسؤول غير صحيحة' }
     }
-  } catch {
-    throw { status: 401, message: 'كلمة مرور المسؤول غير صحيحة' }
+    // Re-throw network errors and 5xx so the UI can show "connection error"
+    throw err
+  }
+  const { role } = extractAuthPayload(response)
+  if (role !== 'admin') {
+    throw { status: 403, message: 'ليس لديك صلاحيات المسؤول' }
   }
 }
 

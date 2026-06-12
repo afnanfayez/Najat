@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBackend'
 import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
 import type { FacilityCategory, HealthFacility } from '@/schemas/healthFacility'
-import { getFacilitiesByCategory, getAllFacilities, putFacilities } from '@/lib/offline/db'
+import { getFacilitiesByCategory, getAllFacilities, putFacilities, getLastSyncTime } from '@/lib/offline/db'
 
 export type HealthFacilitiesQueryParams = {
   category?: FacilityCategory
@@ -18,6 +18,7 @@ type HealthFacilitiesResult = {
   total: number
   source: 'cache' | 'network' | 'empty'
   refreshing?: boolean
+  cachedAt?: number
 }
 
 const INITIAL_NETWORK_WAIT_MS = 1_500
@@ -74,8 +75,11 @@ async function fetchCategoryFacilities(
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
   if (isOffline) {
-    const facilities = await fetchFromIndexedDB(category)
-    return { facilities, total: facilities.length, source: 'cache' }
+    const [facilities, cachedAt] = await Promise.all([
+      fetchFromIndexedDB(category),
+      getLastSyncTime(),
+    ])
+    return { facilities, total: facilities.length, source: 'cache', cachedAt: cachedAt ?? undefined }
   }
 
   const cached = await fetchFromIndexedDB(category)
@@ -121,11 +125,15 @@ async function fetchCategoryFacilities(
     }
 
     console.warn('Network request failed, falling back to offline DB', e)
-    const fallback = await fetchFromIndexedDB(category)
+    const [fallback, cachedAt] = await Promise.all([
+      fetchFromIndexedDB(category),
+      getLastSyncTime(),
+    ])
     return {
       facilities: fallback,
       total: fallback.length,
       source: fallback.length > 0 ? 'cache' : 'empty',
+      cachedAt: cachedAt ?? undefined,
     }
   }
 }
@@ -161,12 +169,15 @@ export function useHealthFacilities(params?: HealthFacilitiesQueryParams) {
     return { facilities, total: facilities.length }
   }, [baseQuery.data, params?.region, params?.search])
 
+  const cachedAt =
+    baseQuery.data?.source !== 'network' ? (baseQuery.data?.cachedAt ?? null) : null
+
   return {
     ...baseQuery,
     data,
     isLoading: baseQuery.isLoading && !baseQuery.data,
     isBackgroundRefreshing: baseQuery.data?.refreshing === true,
-    /** القائمة الكاملة قبل فلترة البحث/المنطقة — لحساب أرقام المسارات */
+    cachedAt,
     catalog: baseQuery.data,
   }
 }

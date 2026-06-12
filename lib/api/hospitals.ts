@@ -81,12 +81,16 @@ export const hospitalsAPI = {
     )
   },
 
-  /** ADMIN — multipart/form-data */
-  create(formData: FormData): Promise<HospitalDto> {
+  /** ADMIN — JSON body or multipart/form-data */
+  create(body: FormData | Record<string, unknown>): Promise<HospitalDto> {
     return request(`${V1_ROOT}/hospitals`, {
       method: 'POST',
-      body: formData,
-    }).then((raw) => parseOrThrow(hospitalDtoSchema, raw))
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return parseOrThrow(hospitalDtoSchema, data)
+    })
   },
 
   /** ADMIN — JSON body shape depends on backend */
@@ -97,7 +101,11 @@ export const hospitalsAPI = {
     return request(`${V1_ROOT}/hospitals/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
-    }).then((raw) => parseOrThrow(hospitalEntitySchema, raw))
+    }).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return parseOrThrow(hospitalEntitySchema, data)
+    })
   },
 
   softDelete(id: string): Promise<unknown> {

@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { aidAPI, type AidStatus } from '@/lib/api/aid'
-import { idbEnqueueSync } from '@/lib/pwa/offlineDB'
 import { enqueueOfflineOp } from '@/lib/offline/db'
 
 /** Mutations for ADMIN aid management with offline support. */
@@ -80,11 +79,9 @@ export function useAidAdminMutations() {
       const offline = typeof navigator !== 'undefined' && !navigator.onLine
 
       if (offline) {
-        await idbEnqueueSync({
+        await enqueueOfflineOp({
           type: 'UPDATE_AID_STATUS',
-          status: 'pending',
           payload: { id, status, updatedAt: Date.now() },
-          createdAt: Date.now(),
         })
         // Optimistic update في الـ cache
         queryClient.setQueryData<Array<{ id: string; status?: string }>>(

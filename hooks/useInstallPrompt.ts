@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import {
   showInstallToast,
+  isDismissed,
   type BeforeInstallPromptEvent,
 } from '@/lib/pwa/installPrompt'
 
@@ -33,9 +34,9 @@ export function useInstallPrompt() {
 
     const triggerToast = (event: BeforeInstallPromptEvent | null) => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) return
+      if (isDismissed()) return
       if (promptShownRef.current && !event) return
       promptShownRef.current = true
-
       showInstallToast(event)
     }
 
@@ -56,8 +57,9 @@ export function useInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
 
+    // Only fire the fallback if no native prompt arrived AND user hasn't dismissed
     const fallbackTimer = window.setTimeout(() => {
-      if (!deferredPromptRef.current) {
+      if (!deferredPromptRef.current && !isDismissed()) {
         triggerToast(null)
       }
     }, 1500)

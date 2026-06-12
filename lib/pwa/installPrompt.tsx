@@ -11,6 +11,30 @@ type WindowWithDeferredPrompt = Window & {
   deferredNajatPrompt?: BeforeInstallPromptEvent
 }
 
+const DISMISSED_KEY = 'najat-install-dismissed'
+const DISMISSED_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+export function isDismissed(): boolean {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(DISMISSED_KEY) : null
+    if (!raw) return false
+    const { dismissedAt } = JSON.parse(raw) as { dismissedAt: number }
+    return Date.now() - dismissedAt < DISMISSED_EXPIRY_MS
+  } catch {
+    return false
+  }
+}
+
+export function setDismissed(): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify({ dismissedAt: Date.now() }))
+    }
+  } catch {
+    // ignore — storage may be unavailable
+  }
+}
+
 export function showInstallToast(event: BeforeInstallPromptEvent | null) {
   if (typeof navigator !== 'undefined' && !navigator.onLine) return
 
@@ -64,6 +88,7 @@ export function showInstallToast(event: BeforeInstallPromptEvent | null) {
             type="button"
             className="install-prompt-card__skip-btn"
             onClick={() => {
+              setDismissed()
               toast.dismiss(toastId)
             }}
           >
