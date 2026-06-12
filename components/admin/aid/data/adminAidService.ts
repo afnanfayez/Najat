@@ -3,6 +3,8 @@ import {
   getAdminAidPoints,
   getAdminAidPointById,
   putAdminAidPoints,
+  enqueueOfflineOp,
+  getOfflineDB,
 } from '@/lib/offline/db'
 import {
   createAdminAidPointFromApi,
@@ -120,9 +122,24 @@ export async function saveAdminAidDistributionPoint(
 ): Promise<AdminAidDistributionPoint> {
   if (!USE_MOCK_ADMIN_AID) {
     const isNew = point.id.startsWith('new-')
-    return isNew
-      ? createAdminAidPointFromApi(point)
-      : updateAdminAidPointFromApi(point)
+
+    // Offline: cache optimistically and queue for sync
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      const tempId = isNew ? `offline-aid-${Date.now()}` : point.id
+      const optimistic = { ...point, id: tempId }
+      await putAdminAidPoints([optimistic]).catch(() => {})
+      await enqueueOfflineOp({
+        type: isNew ? 'CREATE_AID_POINT' : 'UPDATE_AID_POINT',
+        payload: isNew ? { body: point } : { id: point.id, body: point },
+      })
+      return optimistic
+    }
+
+    const result = isNew
+      ? await createAdminAidPointFromApi(point)
+      : await updateAdminAidPointFromApi(point)
+    await putAdminAidPoints([result]).catch(() => {})
+    return result
   }
   const points = getMockPoints()
   const index = points.findIndex((p) => p.id === point.id)
@@ -146,7 +163,16 @@ export async function deleteAdminAidDistributionPoint(id: string): Promise<void>
   const index = points.findIndex((p) => p.id === id)
   if (index >= 0) points.splice(index, 1)
   if (!USE_MOCK_ADMIN_AID) {
+    // Offline: remove from local cache and queue for sync
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      const db = getOfflineDB()
+      await db.adminAidPoints.delete(id).catch(() => {})
+      await enqueueOfflineOp({ type: 'DELETE_AID_POINT', payload: { id } })
+      return
+    }
     await deleteAdminAidPointFromApi(id)
+    const db = getOfflineDB()
+    await db.adminAidPoints.delete(id).catch(() => {})
   }
 }
 

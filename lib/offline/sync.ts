@@ -5,6 +5,8 @@ import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
 import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import { safetyAPI } from '@/lib/api/safety'
 import { getToken } from '@/lib/api/auth'
+import { fetchAdminHealthFacilitiesFromApi } from '@/lib/api/adminHealth'
+import { processSyncQueue } from '@/lib/offline/processSyncQueue'
 import {
   precacheAllFacilityMapTiles,
   precacheMainMapArea,
@@ -15,6 +17,7 @@ import {
   putSafetyMapLayers,
   putLocalPlaces,
   putArticles,
+  putAdminFacilities,
   setSyncMeta,
   getAllFacilities,
   getAllAid,
@@ -181,6 +184,19 @@ async function syncArticles(): Promise<void> {
   }
 }
 
+async function syncAdminFacilities(): Promise<void> {
+  try {
+    const token = getToken()
+    if (!token) return
+    const result = await fetchAdminHealthFacilitiesFromApi({})
+    if (result.facilities.length > 0) {
+      await putAdminFacilities(result.facilities)
+    }
+  } catch {
+    // fail silently
+  }
+}
+
 async function syncMapTiles(): Promise<void> {
   try {
     const facilities = await getAllFacilities()
@@ -236,7 +252,7 @@ export async function syncAllData(force = false): Promise<void> {
   isSyncing = true
   try {
     const tasks: Array<() => Promise<void>> = []
-    if (runCritical) tasks.push(syncHospitals, syncAid)
+    if (runCritical) tasks.push(syncHospitals, syncAid, syncAdminFacilities)
     if (runStandard) tasks.push(syncPharmacies, syncClinics, syncLabs, syncDental, syncSafetyMap, syncArticles)
     await runSyncTasksInBatches(tasks)
     await setSyncMeta('all')
@@ -270,7 +286,10 @@ export function initOfflineSync(): () => void {
     setTimeout(startSync, 5_000)
   }
 
-  const onOnline = () => syncAllData()
+  const onOnline = () => {
+    void processSyncQueue()
+    void syncAllData()
+  }
   window.addEventListener('online', onOnline)
 
   if (!syncTimer) {

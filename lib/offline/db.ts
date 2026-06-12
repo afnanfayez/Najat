@@ -109,6 +109,14 @@ export type OfflineSyncType =
   | 'DELETE_SAFE_ROAD'
   | 'CREATE_RESOURCE_POINT'
   | 'DELETE_RESOURCE_POINT'
+  // Admin facility full CRUD (all types)
+  | 'CREATE_FACILITY_TYPED'
+  | 'UPDATE_FACILITY_TYPED'
+  | 'DELETE_FACILITY_TYPED'
+  // Admin health content CRUD
+  | 'CREATE_HEALTH_CONTENT'
+  | 'UPDATE_HEALTH_CONTENT'
+  | 'DELETE_HEALTH_CONTENT'
 
 export type OfflineSyncStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'conflict'
 
@@ -240,6 +248,22 @@ class NajatOfflineDB extends Dexie {
     })
     // v8: admin health medical content cache
     this.version(8).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+      adminHealthContent: 'id, cachedAt',
+    })
+    // v9: full admin CRUD offline queue types (CREATE_FACILITY_TYPED etc.) — no schema change
+    this.version(9).stores({
       facilities: 'id, category, cachedAt',
       facilityDetails: 'id, category, cachedAt',
       aid: 'id, cachedAt',

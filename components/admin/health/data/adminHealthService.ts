@@ -17,6 +17,8 @@ import {
   getAdminHealthContent,
   getAdminHealthContentById,
   putAdminHealthContent,
+  enqueueOfflineOp,
+  getOfflineDB,
 } from '@/lib/offline/db'
 import { USE_MOCK_ADMIN_HEALTH } from '@/lib/mocks/mockConfig'
 import {
@@ -360,8 +362,29 @@ export async function createAdminHealthFacility(
     return createMockFacility(body, form)
   }
 
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const tempId = `offline-${Date.now()}`
+    const optimistic: AdminHealthFacility = {
+      id: tempId,
+      ...bodyToFacilityFields(body),
+      workloadPercent: 0,
+      facilityType: facilityType ?? 'hospital',
+      latitude: body.latitude,
+      longitude: body.longitude,
+    }
+    await putAdminFacilities([optimistic])
+    await enqueueOfflineOp({
+      type: 'CREATE_FACILITY_TYPED',
+      payload: { body, facilityType, tempId },
+    })
+    mockFacilityFormsStore[tempId] = form
+    return optimistic
+  }
+
   const payload = hasImages ? buildFacilityFormData(form) : body
   const facility = await createAdminHealthFacilityFromApi(payload, facilityType)
+  await putAdminFacilities([facility]).catch(() => {})
   mockFacilityFormsStore[facility.id] = form
   return facility
 }
@@ -401,8 +424,29 @@ export async function updateAdminHealthFacility(
     return updateMockFacility(id, body, form)
   }
 
+  // Offline: optimistically update cache, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const existing = await getAdminFacilityById(id)
+    const optimistic: AdminHealthFacility = {
+      ...(existing ?? { id, workloadPercent: 0, facilityType }),
+      ...bodyToFacilityFields(body),
+      id,
+      facilityType: facilityType ?? existing?.facilityType ?? 'hospital',
+      latitude: body.latitude ?? existing?.latitude,
+      longitude: body.longitude ?? existing?.longitude,
+    }
+    await putAdminFacilities([optimistic])
+    await enqueueOfflineOp({
+      type: 'UPDATE_FACILITY_TYPED',
+      payload: { id, body, facilityType },
+    })
+    mockFacilityFormsStore[id] = form
+    return optimistic
+  }
+
   const payload = hasImages ? buildFacilityFormData(form) : body
   const facility = await updateAdminHealthFacilityFromApi(id, payload, facilityType)
+  await putAdminFacilities([facility]).catch(() => {})
   mockFacilityFormsStore[id] = form
   return facility
 }
@@ -419,7 +463,21 @@ export async function deleteAdminHealthFacility(
     return
   }
 
+  // Offline: remove from local cache immediately, queue delete for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const db = getOfflineDB()
+    await db.adminFacilities.delete(id)
+    await enqueueOfflineOp({
+      type: 'DELETE_FACILITY_TYPED',
+      payload: { id, facilityType },
+    })
+    delete mockFacilityFormsStore[id]
+    return
+  }
+
   await deleteAdminHealthFacilityFromApi(id, facilityType)
+  const db = getOfflineDB()
+  await db.adminFacilities.delete(id).catch(() => {})
   delete mockFacilityFormsStore[id]
 }
 
@@ -454,7 +512,16 @@ export async function createAdminHealthContent(
     return createMockContent(body)
   }
 
-  return createAdminHealthContentFromApi(body)
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const optimistic = createMockContent(body)
+    await putAdminHealthContent([optimistic]).catch(() => {})
+    await enqueueOfflineOp({ type: 'CREATE_HEALTH_CONTENT', payload: { body } })
+    return optimistic
+  }
+
+  const content = await createAdminHealthContentFromApi(body)
+  await putAdminHealthContent([content]).catch(() => {})
+  return content
 }
 
 export async function updateAdminHealthContent(
@@ -468,7 +535,17 @@ export async function updateAdminHealthContent(
     return updateMockContent(id, body)
   }
 
-  return updateAdminHealthContentFromApi(id, body)
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const existing = await getAdminHealthContentById(id)
+    const optimistic: AdminHealthMedicalContent = { ...(existing ?? { id, date: '', author: '', thumbnailUrl: '', status: 'draft', category: 'first-aid', description: '', body: '', references: '' }), ...body, id }
+    await putAdminHealthContent([optimistic]).catch(() => {})
+    await enqueueOfflineOp({ type: 'UPDATE_HEALTH_CONTENT', payload: { id, body } })
+    return optimistic
+  }
+
+  const content = await updateAdminHealthContentFromApi(id, body)
+  await putAdminHealthContent([content]).catch(() => {})
+  return content
 }
 
 export async function deleteAdminHealthContent(id: string): Promise<void> {
@@ -480,5 +557,14 @@ export async function deleteAdminHealthContent(id: string): Promise<void> {
     return
   }
 
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const db = getOfflineDB()
+    await db.adminHealthContent.delete(id).catch(() => {})
+    await enqueueOfflineOp({ type: 'DELETE_HEALTH_CONTENT', payload: { id } })
+    return
+  }
+
   await deleteAdminHealthContentFromApi(id)
+  const db = getOfflineDB()
+  await db.adminHealthContent.delete(id).catch(() => {})
 }

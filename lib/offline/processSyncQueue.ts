@@ -9,6 +9,14 @@ import {
   type CreateSafeRoadBody,
   type CreateResourcePointBody,
 } from '@/lib/api/safety'
+import {
+  createAdminHealthFacilityFromApi,
+  updateAdminHealthFacilityFromApi,
+  deleteAdminHealthFacilityFromApi,
+  createAdminHealthContentFromApi,
+  updateAdminHealthContentFromApi,
+  deleteAdminHealthContentFromApi,
+} from '@/lib/api/adminHealth'
 import { updateOfflineLoginProfile } from '@/lib/auth/offlineLogin'
 import { clearLocalOverrides } from '@/lib/profile/localProfileStorage'
 import {
@@ -18,11 +26,15 @@ import {
   markOfflineOpFailed,
   markOfflineOpConflict,
   incrementOfflineOpRetry,
+  putAdminFacilities,
+  getAdminFacilityById,
+  getOfflineDB,
   type OfflineSyncQueueItem,
 } from '@/lib/offline/db'
 import type { AidHelpRequestForm } from '@/schemas/aidHelpRequest'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
+import type { AdminHealthFacilityType, CreateAdminHealthFacilityBody, CreateAdminHealthContentBody, UpdateAdminHealthContentBody } from '@/schemas/adminHealth'
 
 const MAX_RETRIES = 3
 
@@ -118,6 +130,55 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'DELETE_RESOURCE_POINT') {
     const { id } = item.payload as { id: string }
     await safetyAPI.deleteResourcePoint(id)
+    return true
+  }
+
+  if (item.type === 'CREATE_FACILITY_TYPED') {
+    const { body, facilityType, tempId } = item.payload as {
+      body: CreateAdminHealthFacilityBody
+      facilityType?: AdminHealthFacilityType
+      tempId: string
+    }
+    const created = await createAdminHealthFacilityFromApi(body, facilityType)
+    // Replace optimistic temp record with the real server record
+    const db = getOfflineDB()
+    await db.adminFacilities.delete(tempId)
+    await putAdminFacilities([created])
+    return true
+  }
+
+  if (item.type === 'UPDATE_FACILITY_TYPED') {
+    const { id, body, facilityType } = item.payload as {
+      id: string
+      body: CreateAdminHealthFacilityBody
+      facilityType?: AdminHealthFacilityType
+    }
+    const updated = await updateAdminHealthFacilityFromApi(id, body, facilityType)
+    await putAdminFacilities([updated])
+    return true
+  }
+
+  if (item.type === 'DELETE_FACILITY_TYPED') {
+    const { id, facilityType } = item.payload as { id: string; facilityType?: AdminHealthFacilityType }
+    await deleteAdminHealthFacilityFromApi(id, facilityType)
+    return true
+  }
+
+  if (item.type === 'CREATE_HEALTH_CONTENT') {
+    const { body } = item.payload as { body: CreateAdminHealthContentBody }
+    await createAdminHealthContentFromApi(body)
+    return true
+  }
+
+  if (item.type === 'UPDATE_HEALTH_CONTENT') {
+    const { id, body } = item.payload as { id: string; body: UpdateAdminHealthContentBody }
+    await updateAdminHealthContentFromApi(id, body)
+    return true
+  }
+
+  if (item.type === 'DELETE_HEALTH_CONTENT') {
+    const { id } = item.payload as { id: string }
+    await deleteAdminHealthContentFromApi(id)
     return true
   }
 
