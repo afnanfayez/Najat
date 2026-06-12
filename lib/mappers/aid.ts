@@ -73,8 +73,8 @@ export function mapAidDtoToHumanitarianAid(dto: AidDto): HumanitarianAid {
 
   return {
     id: dto.id,
-    name: dto.label ?? dto.name,
-    provider: dto.name,
+    name: dto.name,
+    provider: dto.label ?? dto.name,
     description,
     status: mapStatus(dto.status),
     tags: supplies.slice(0, 4),

@@ -4,8 +4,9 @@ import { MapPin, Phone } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import AdminUsersSelectField from '../../users/AdminUsersSelectField'
 import SetupSectionCard from './SetupSectionCard'
-import { FACILITY_REGION_OPTIONS } from './setupConstants'
+import { FACILITY_REGION_OPTIONS, FACILITY_TYPE_OPTIONS } from './setupConstants'
 import type { FacilitySetupForm } from './types'
+import type { AdminHealthFacilityType } from '@/schemas/adminHealth'
 import {
   SETUP_FONT,
   SETUP_INPUT_BG,
@@ -20,12 +21,25 @@ interface BasicInfoSectionProps {
     key: K,
     value: FacilitySetupForm[K],
   ) => void
+  facilityType?: AdminHealthFacilityType
+  onFacilityTypeChange?: (type: AdminHealthFacilityType) => void
 }
 
-export default function BasicInfoSection({ form, onChange }: BasicInfoSectionProps) {
+export default function BasicInfoSection({ form, onChange, facilityType, onFacilityTypeChange }: BasicInfoSectionProps) {
   return (
     <SetupSectionCard title="المعلومات الأساسية">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {onFacilityTypeChange && (
+          <div className="md:col-span-2">
+            <AdminUsersSelectField
+              label="نوع المنشأة"
+              value={facilityType ?? 'hospital'}
+              onValueChange={(v) => onFacilityTypeChange(v as AdminHealthFacilityType)}
+              options={FACILITY_TYPE_OPTIONS}
+            />
+          </div>
+        )}
+
         <div className="flex flex-col gap-2 text-right">
           <label style={SETUP_LABEL_STYLE}>اسم المنشأة</label>
           <Input

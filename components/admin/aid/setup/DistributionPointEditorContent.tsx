@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import AdminShell from '../../AdminShell'
 import DistributionPointEditorHeader from './DistributionPointEditorHeader'
@@ -64,6 +65,7 @@ export default function DistributionPointEditorContent({
   pointId,
 }: DistributionPointEditorContentProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const isEdit = Boolean(pointId)
   const [form, setForm] = useState<AdminAidDistributionPoint>(
     createEmptyDistributionPoint(),
@@ -119,6 +121,8 @@ export default function DistributionPointEditorContent({
     setSaving(true)
     try {
       await saveAdminAidDistributionPoint(form)
+      // Invalidate both admin and beneficiary caches so fresh data appears on return
+      await queryClient.invalidateQueries({ queryKey: ['aid'] })
       toast.success(isEdit ? 'تم تحديث نقطة التوزيع' : 'تم إنشاء نقطة التوزيع')
       router.push('/admin/aid')
     } catch {

@@ -74,6 +74,7 @@ export default function AddFacilityContent({ facilityId, facilityType }: AddFaci
   const router = useRouter()
   const queryClient = useQueryClient()
   const isEdit = Boolean(facilityId)
+  const [selectedFacilityType, setSelectedFacilityType] = useState<AdminHealthFacilityType>(facilityType ?? 'hospital')
   const [form, setForm] = useState<FacilitySetupForm>(INITIAL_FACILITY_SETUP)
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
@@ -232,10 +233,10 @@ export default function AddFacilityContent({ facilityId, facilityType }: AddFaci
     setSaving(true)
     try {
       if (isEdit && facilityId) {
-        await updateAdminHealthFacility(facilityId, form, facilityType)
+        await updateAdminHealthFacility(facilityId, form, facilityType ?? selectedFacilityType)
         toast.success('تم تحديث المنشأة بنجاح')
       } else {
-        await createAdminHealthFacility(form, facilityType)
+        await createAdminHealthFacility(form, selectedFacilityType)
         toast.success('تم حفظ المنشأة بنجاح')
       }
       await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
@@ -277,7 +278,12 @@ export default function AddFacilityContent({ facilityId, facilityType }: AddFaci
       <div dir="rtl" className="flex flex-col gap-5">
         <SetupRow>
           <SetupCol span={8}>
-            <BasicInfoSection form={form} onChange={updateField} />
+            <BasicInfoSection
+              form={form}
+              onChange={updateField}
+              facilityType={selectedFacilityType}
+              onFacilityTypeChange={!isEdit ? setSelectedFacilityType : undefined}
+            />
           </SetupCol>
           <SetupCol span={4}>
             <DrugInventorySection

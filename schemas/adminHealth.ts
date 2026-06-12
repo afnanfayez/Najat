@@ -41,6 +41,10 @@ export type AdminHealthFacility = {
   facilityType?: AdminHealthFacilityType
   latitude?: number
   longitude?: number
+  workingDoctors?: Array<{ name: string; specialty: string; workingDays?: string[]; workingHours?: string }>
+  currentMedications?: Array<{ name: string; type: string; status: string }>
+  workingHours?: string
+  workingDays?: string[]
 }
 
 export type AdminHealthMedicalContent = {
@@ -65,10 +69,13 @@ export type CreateAdminHealthContentBody = Omit<
 
 export type UpdateAdminHealthContentBody = Partial<CreateAdminHealthContentBody>
 
+export type AdminHealthFacilityTypeFilter = 'all' | AdminHealthFacilityType
+
 export type AdminHealthFacilitiesQueryParams = {
   search?: string
   region?: AdminHealthRegionFilter
   status?: AdminHealthStatusFilter
+  facilityType?: AdminHealthFacilityTypeFilter
 }
 
 export type AdminHealthFacilitiesListResponse = {

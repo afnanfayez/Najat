@@ -18,6 +18,15 @@ export const ADMIN_HEALTH_STATUS_OPTIONS = [
   { value: 'maintenance', label: 'تحت الصيانة' },
 ] as const
 
+export const ADMIN_HEALTH_TYPE_OPTIONS = [
+  { value: 'all', label: 'جميع الأنواع' },
+  { value: 'hospital', label: 'مستشفيات' },
+  { value: 'pharmacy', label: 'صيدليات' },
+  { value: 'lab', label: 'مختبرات' },
+  { value: 'clinic', label: 'عيادات' },
+  { value: 'dental_clinic', label: 'مراكز أسنان' },
+] as const
+
 export const ADMIN_HEALTH_CONTENT_STATUS_LABELS: Record<
   AdminHealthMedicalContent['status'],
   string

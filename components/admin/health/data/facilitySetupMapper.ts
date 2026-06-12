@@ -152,12 +152,34 @@ export function buildFacilityFormData(form: FacilitySetupForm): FormData {
   return fd
 }
 
+const API_DRUG_STATUS_MAP: Record<string, DrugStatus> = {
+  available:   'available',
+  low_stock:   'low',
+  out_of_stock: 'unavailable',
+}
+
 export function mapFacilityToSetupForm(
   facility: AdminHealthFacility,
   details?: Partial<FacilitySetupForm> | null,
 ): FacilitySetupForm {
   const lat = facility.latitude ?? DEFAULT_FACILITY_MAP_CENTER[0]
   const lng = facility.longitude ?? DEFAULT_FACILITY_MAP_CENTER[1]
+
+  // Map API doctors to form staff
+  const staffFromApi = facility.workingDoctors?.map((d, i) => ({
+    id: `api-staff-${i}`,
+    name: d.name,
+    role: d.specialty,
+    shift: d.workingHours ?? 'الفترة الصباحية',
+  }))
+
+  // Map API medications to form drugs
+  const drugsFromApi = facility.currentMedications?.map((m, i) => ({
+    id: `api-drug-${i}`,
+    name: m.name,
+    subtitle: m.type ?? 'عام',
+    status: (API_DRUG_STATUS_MAP[m.status] ?? 'available') as DrugStatus,
+  }))
 
   const base: FacilitySetupForm = {
     ...INITIAL_FACILITY_SETUP,
@@ -178,6 +200,8 @@ export function mapFacilityToSetupForm(
         : [],
     latitude: lat,
     longitude: lng,
+    staff: staffFromApi?.length ? staffFromApi : INITIAL_FACILITY_SETUP.staff,
+    drugs: drugsFromApi?.length ? drugsFromApi : INITIAL_FACILITY_SETUP.drugs,
   }
 
   if (!details) return base
@@ -191,5 +215,7 @@ export function mapFacilityToSetupForm(
     phone: details.phone ?? base.phone,
     operatingStatus: details.operatingStatus ?? base.operatingStatus,
     images: details.images?.length ? details.images : base.images,
+    staff: details.staff?.length ? details.staff : base.staff,
+    drugs: details.drugs?.length ? details.drugs : base.drugs,
   }
 }

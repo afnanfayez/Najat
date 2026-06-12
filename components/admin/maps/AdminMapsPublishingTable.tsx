@@ -80,16 +80,17 @@ export default function AdminMapsPublishingTable({
         id: editingRow.id,
         body: { description: data.areaName },
       })
+      toast.success('تم تحديث البيانات', { position: 'top-center' })
     } else {
-      // Safe roads and resource points: update via the zone API isn't available
-      // for roads/points, so show a toast directing the user to the map editor.
+      // Safe roads and resource points don't have a coordinate-update API;
+      // direct the user to the map editor for geometry changes.
       toast.info(
-        'لتعديل إحداثيات المسار استخدم محرر الخرائط',
-        { duration: 4000 },
+        'لتعديل إحداثيات المسار أو نقطة الموارد، استخدم محرر الخرائط',
+        { duration: 5000 },
       )
+      router.push('/admin/maps/new')
     }
 
-    toast.success('تم تحديث البيانات', { position: 'top-center' })
     closeModal()
   }
 
@@ -241,17 +242,15 @@ export default function AdminMapsPublishingTable({
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-center gap-2">
-                              {row.classification === 'danger' && (
-                                <button
-                                  type="button"
-                                  aria-label="تعديل"
-                                  onClick={() => openEditModal(row)}
-                                  disabled={isDeleting}
-                                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#E3F2FD] hover:text-[#2196F3] disabled:opacity-50"
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                aria-label="تعديل"
+                                onClick={() => openEditModal(row)}
+                                disabled={isDeleting}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#E3F2FD] hover:text-[#2196F3] disabled:opacity-50"
+                              >
+                                <Pencil size={16} />
+                              </button>
                               <button
                                 type="button"
                                 aria-label="حذف"
@@ -298,17 +297,15 @@ export default function AdminMapsPublishingTable({
                           {status.label}
                         </span>
                         <div className="flex shrink-0 items-center gap-2">
-                          {row.classification === 'danger' && (
-                            <button
-                              type="button"
-                              aria-label="تعديل"
-                              onClick={() => openEditModal(row)}
-                              disabled={isDeleting}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#E3F2FD] hover:text-[#2196F3] disabled:opacity-50"
-                            >
-                              <Pencil size={16} />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            aria-label="تعديل"
+                            onClick={() => openEditModal(row)}
+                            disabled={isDeleting}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#64748B] transition-colors hover:bg-[#E3F2FD] hover:text-[#2196F3] disabled:opacity-50"
+                          >
+                            <Pencil size={16} />
+                          </button>
                           <button
                             type="button"
                             aria-label="حذف"

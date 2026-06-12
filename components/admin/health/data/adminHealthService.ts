@@ -161,10 +161,12 @@ function filterMockFacilities(
   const q = normalizeSearch(params.search)
   const region = params.region ?? 'all'
   const status = params.status ?? 'all'
+  const facilityType = params.facilityType ?? 'all'
 
   const facilities = getMockFacilities().filter((facility) => {
     if (region !== 'all' && facility.region !== region) return false
     if (status !== 'all' && facility.status !== status) return false
+    if (facilityType !== 'all' && facility.facilityType !== facilityType) return false
     if (!q) return true
     return (
       facility.name.toLowerCase().includes(q) ||
@@ -182,10 +184,12 @@ function filterCachedFacilities(
   const q = normalizeSearch(params.search)
   const region = params.region ?? 'all'
   const status = params.status ?? 'all'
+  const facilityType = params.facilityType ?? 'all'
 
   const filtered = facilities.filter((facility) => {
     if (region !== 'all' && facility.region !== region) return false
     if (status !== 'all' && facility.status !== status) return false
+    if (facilityType !== 'all' && facility.facilityType !== facilityType) return false
     if (!q) return true
     return (
       facility.name.toLowerCase().includes(q) ||
@@ -324,6 +328,7 @@ export type AdminHealthFilterState = {
   search: string
   region: AdminHealthRegionFilter
   status: AdminHealthStatusFilter
+  facilityType?: import('@/schemas/adminHealth').AdminHealthFacilityTypeFilter
 }
 
 export function toFacilitiesQueryParams(
@@ -333,6 +338,7 @@ export function toFacilitiesQueryParams(
     search: filters.search.trim() || undefined,
     region: filters.region,
     status: filters.status,
+    facilityType: filters.facilityType,
   }
 }
 

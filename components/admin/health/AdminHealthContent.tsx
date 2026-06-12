@@ -28,6 +28,7 @@ import {
 import type {
   AdminHealthContentCategory,
   AdminHealthFacility,
+  AdminHealthFacilityTypeFilter,
   AdminHealthMedicalContent,
   AdminHealthRegionFilter,
   AdminHealthStatusFilter,
@@ -52,6 +53,7 @@ export default function AdminHealthContent() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [region, setRegion] = useState<AdminHealthRegionFilter>('all')
   const [status, setStatus] = useState<AdminHealthStatusFilter>('all')
+  const [facilityType, setFacilityType] = useState<AdminHealthFacilityTypeFilter>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [facilityToDelete, setFacilityToDelete] =
     useState<AdminHealthFacility | null>(null)
@@ -73,8 +75,9 @@ export default function AdminHealthContent() {
         search: debouncedSearch,
         region,
         status,
+        facilityType,
       }),
-    [debouncedSearch, region, status],
+    [debouncedSearch, region, status, facilityType],
   )
 
   const contentQueryParams = useMemo(
@@ -212,10 +215,12 @@ export default function AdminHealthContent() {
             search={search}
             region={region}
             status={status}
+            facilityType={facilityType}
             actionLabel="إضافة منشأة جديدة"
             onSearchChange={setSearch}
             onRegionChange={setRegion}
             onStatusChange={setStatus}
+            onFacilityTypeChange={setFacilityType}
             onAction={handleAddFacility}
           />
 

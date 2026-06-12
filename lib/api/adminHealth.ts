@@ -32,6 +32,16 @@ const HOSPITAL_STATUS_MAP: Record<string, AdminHealthFacility['status']> = {
   closed: 'closed',
 }
 
+/** Derive a workload percentage from backend capacity status */
+function capacityToWorkload(status?: string): number {
+  switch (status) {
+    case 'full':      return 100
+    case 'critical':  return 75
+    case 'available': return 50
+    default:          return 0
+  }
+}
+
 // Derive Gaza Strip region from latitude (no region field in backend)
 // north ≥ 31.40 | central ≥ 31.20 | south < 31.20
 export function latToRegion(lat: number): AdminHealthFacility['region'] {
@@ -47,13 +57,17 @@ function mapHospital(h: HospitalDto): AdminHealthFacility {
     address: h.address,
     imageUrl: h.image ?? '/assets/health1.jpg',
     isOpen: h.status !== 'closed',
-    workloadPercent: 0, // TODO: not in API — add when backend exposes it
+    workloadPercent: capacityToWorkload(h.status),
     phone: h.contactNumber ?? undefined,
     region: latToRegion(h.latitude),
     status: HOSPITAL_STATUS_MAP[h.status] ?? 'open',
     facilityType: 'hospital',
     latitude: h.latitude,
     longitude: h.longitude,
+    workingDoctors: h.workingDoctors,
+    currentMedications: h.currentMedications as Array<{ name: string; type: string; status: string }> | undefined,
+    workingHours: h.workingHours ?? undefined,
+    workingDays: h.workingDays,
   }
 }
 
@@ -65,7 +79,7 @@ function mapPharmacy(p: PharmacyDto): AdminHealthFacility {
     address: p.address,
     imageUrl: p.image ?? '/assets/health1.jpg',
     isOpen: status !== 'closed',
-    workloadPercent: 0,
+    workloadPercent: capacityToWorkload(p.status),
     phone: p.contactNumber ?? undefined,
     region: latToRegion(p.latitude),
     status,
@@ -83,7 +97,7 @@ function mapLab(l: LabDto): AdminHealthFacility {
     address: l.address,
     imageUrl: l.image ?? '/assets/health1.jpg',
     isOpen: status !== 'closed',
-    workloadPercent: 0,
+    workloadPercent: capacityToWorkload(l.status),
     phone: l.contactNumber ?? undefined,
     region: latToRegion(l.latitude),
     status,
@@ -101,7 +115,7 @@ function mapClinic(c: ClinicDto): AdminHealthFacility {
     address: c.address,
     imageUrl: c.image ?? '/assets/health1.jpg',
     isOpen: status !== 'closed',
-    workloadPercent: 0,
+    workloadPercent: capacityToWorkload(c.status),
     phone: c.contactNumber ?? undefined,
     region: latToRegion(c.latitude),
     status,
@@ -119,7 +133,7 @@ function mapDentalClinic(d: DentalDto): AdminHealthFacility {
     address: d.address,
     imageUrl: d.image ?? '/assets/health1.jpg',
     isOpen: status !== 'closed',
-    workloadPercent: 0,
+    workloadPercent: capacityToWorkload(d.status),
     phone: d.contactNumber ?? undefined,
     region: latToRegion(d.latitude),
     status,
@@ -136,6 +150,7 @@ function filterFacilities(
   return facilities.filter((f) => {
     if (params.region && params.region !== 'all' && f.region !== params.region) return false
     if (params.status && params.status !== 'all' && f.status !== params.status) return false
+    if (params.facilityType && params.facilityType !== 'all' && f.facilityType !== params.facilityType) return false
     if (params.search) {
       const q = params.search.toLowerCase()
       if (!f.name.toLowerCase().includes(q) && !f.address.toLowerCase().includes(q)) return false
@@ -223,13 +238,25 @@ export async function fetchAdminHealthFacilityByIdFromApi(
   return mapDentalClinic(d)
 }
 
+/** Maps our internal admin status to the hospital API's capacity status enum */
+function adminStatusToCapacityStatus(status?: string): string {
+  switch (status) {
+    case 'open':        return 'available'
+    case 'maintenance': return 'critical'
+    case 'closed':      return 'closed'
+    default:            return 'available'
+  }
+}
+
 function buildCreatePayload(b: CreateAdminHealthFacilityBody): Record<string, unknown> {
   return {
     name: b.name,
     address: b.address,
     ...(b.phone && { contactNumber: b.phone }),
+    ...(b.imageUrl?.startsWith('http') && { image: b.imageUrl }),
     ...(b.latitude != null && { latitude: b.latitude }),
     ...(b.longitude != null && { longitude: b.longitude }),
+    status: adminStatusToCapacityStatus(b.status),
     workingDoctors: b.workingDoctors ?? [],
     currentMedications: b.currentMedications ?? [],
     workingHours: b.workingHours ?? 'على مدار 24 ساعة',
@@ -297,15 +324,8 @@ export async function updateAdminHealthFacilityFromApi(
   if (body instanceof FormData) {
     payload = body
   } else {
-    const b = body as UpdateAdminHealthFacilityBody
-    payload = {
-      ...(b.name !== undefined && { name: b.name }),
-      ...(b.address !== undefined && { address: b.address }),
-      ...(b.phone !== undefined && { contactNumber: b.phone }),
-      ...(b.imageUrl !== undefined && { image: b.imageUrl }),
-      ...(b.latitude != null && { latitude: b.latitude }),
-      ...(b.longitude != null && { longitude: b.longitude }),
-    }
+    // Use the full payload (same fields as create) so the backend has all required data
+    payload = buildCreatePayload(body as CreateAdminHealthFacilityBody)
   }
 
   await api.update(id, payload as Record<string, unknown>)

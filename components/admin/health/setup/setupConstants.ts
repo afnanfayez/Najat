@@ -1,3 +1,13 @@
+import type { AdminHealthFacilityType } from '@/schemas/adminHealth'
+
+export const FACILITY_TYPE_OPTIONS: Array<{ value: AdminHealthFacilityType; label: string }> = [
+  { value: 'hospital',      label: 'مستشفى' },
+  { value: 'pharmacy',      label: 'صيدلية' },
+  { value: 'lab',           label: 'مختبر' },
+  { value: 'clinic',        label: 'عيادة' },
+  { value: 'dental_clinic', label: 'مركز أسنان' },
+]
+
 export const FACILITY_REGION_OPTIONS = [
   { value: 'gaza', label: 'غزة' },
   { value: 'north', label: 'شمال قطاع غزة' },
