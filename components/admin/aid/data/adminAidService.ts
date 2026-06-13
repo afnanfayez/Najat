@@ -11,9 +11,11 @@ import {
   deleteAdminAidPointFromApi,
   fetchAdminAidPointByIdFromApi,
   fetchAdminAidPointsFromApi,
+  fetchAdminAidRequestsFromApi,
   fetchAdminAidStatsFromApi,
   updateAdminAidPointFromApi,
 } from '@/lib/api/adminAid'
+import type { AidRequestDto } from '@/schemas/aidApi'
 import {
   ADMIN_AID_AREA_COVERAGE,
   ADMIN_AID_DISTRIBUTION_POINTS,
@@ -336,6 +338,16 @@ export function createEmptyDistributionPoint(): AdminAidDistributionPoint {
     longitude: 34.4467,
   }
 }
+
+export async function fetchAdminAidRequests(): Promise<AidRequestDto[]> {
+  try {
+    return await fetchAdminAidRequestsFromApi({ limit: 100 })
+  } catch {
+    return []
+  }
+}
+
+export { type AidRequestDto }
 
 export function mapPointToForm(point: AdminAidDistributionPoint): AdminAidDistributionPoint {
   return {

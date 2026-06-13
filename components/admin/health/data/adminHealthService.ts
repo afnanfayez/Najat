@@ -9,6 +9,7 @@ import {
   fetchAdminHealthFacilityByIdFromApi,
   updateAdminHealthFacilityFromApi,
   updateAdminHealthContentFromApi,
+  updateAdminHospitalStatusFromApi,
 } from '@/lib/api/adminHealth'
 import {
   getAdminFacilities,
@@ -449,6 +450,61 @@ export async function updateAdminHealthFacility(
   await putAdminFacilities([facility]).catch(() => {})
   mockFacilityFormsStore[id] = form
   return facility
+}
+
+export async function updateAdminHospitalStatus(
+  id: string,
+  status: AdminHealthFacility['status'],
+): Promise<AdminHealthFacility> {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    const facilities = getMockFacilities()
+    const index = facilities.findIndex((f) => f.id === id)
+    if (index === -1) throw new Error('Facility not found')
+    const updated = { ...facilities[index], status, isOpen: status !== 'closed' }
+    mockFacilitiesStore = facilities.map((f, i) => (i === index ? updated : f))
+    return updated
+  }
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const existing = await getAdminFacilityById(id)
+    if (!existing) throw new Error('المنشأة غير متوفرة في وضع عدم الاتصال')
+    const optimistic: AdminHealthFacility = {
+      ...existing,
+      status,
+      isOpen: status !== 'closed',
+    }
+    await putAdminFacilities([optimistic]).catch(() => {})
+    await enqueueOfflineOp({ type: 'UPDATE_FACILITY_TYPED', payload: { id, body: { status }, facilityType: 'hospital' } })
+    return optimistic
+  }
+
+  const facility = await updateAdminHospitalStatusFromApi(id, status)
+  await putAdminFacilities([facility]).catch(() => {})
+  return facility
+}
+
+/**
+ * Updates only the capacity/operational status of a hospital using the dedicated
+ * PATCH /v1/hospitals/{id}/status endpoint. Only works for hospital type.
+ * Falls back to full update for other facility types.
+ */
+export async function updateAdminHealthFacilityStatus(
+  id: string,
+  status: AdminHealthFacility['status'],
+  facilityType?: AdminHealthFacilityType,
+): Promise<AdminHealthFacility> {
+  if (!USE_MOCK_ADMIN_HEALTH && (!facilityType || facilityType === 'hospital')) {
+    const updated = await updateAdminHospitalStatusFromApi(id, status)
+    await putAdminFacilities([updated]).catch(() => {})
+    return updated
+  }
+  // For mock or non-hospital types: update via mock store
+  const facilities = getMockFacilities()
+  const index = facilities.findIndex((f) => f.id === id)
+  if (index === -1) throw new Error('Facility not found')
+  const updated: AdminHealthFacility = { ...facilities[index], status, isOpen: status !== 'closed' }
+  mockFacilitiesStore = facilities.map((f, i) => (i === index ? updated : f))
+  return updated
 }
 
 export async function deleteAdminHealthFacility(

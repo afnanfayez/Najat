@@ -1,4 +1,7 @@
+export type UserTypeOption = 'volunteer' | 'resident'
+
 export type VolunteerFormData = {
+  userType: UserTypeOption
   photo: string | null
   fullName: string
   idNumber: string
@@ -19,6 +22,13 @@ export type VolunteerFormData = {
   specialSkills: string[]
   trainingCourses: string
   agreedToTerms: boolean
+  // Resident-specific fields
+  gender?: 'male' | 'female'
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed'
+  familyMembersCount?: string
+  femalesCount?: string
+  malesCount?: string
+  housingStatus?: string
 }
 
 export type UpdateField = <K extends keyof VolunteerFormData>(
@@ -27,6 +37,7 @@ export type UpdateField = <K extends keyof VolunteerFormData>(
 ) => void
 
 export const INITIAL_FORM_DATA: VolunteerFormData = {
+  userType: 'volunteer',
   photo: null,
   fullName: '',
   idNumber: '',
@@ -47,6 +58,12 @@ export const INITIAL_FORM_DATA: VolunteerFormData = {
   specialSkills: [],
   trainingCourses: '',
   agreedToTerms: false,
+  gender: undefined,
+  maritalStatus: undefined,
+  familyMembersCount: '',
+  femalesCount: '',
+  malesCount: '',
+  housingStatus: '',
 }
 
 export const STEP_NAMES = [

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import AdminUsersToggle from './AdminUsersToggle'
 import { ADMIN_USERS_BLUE, ADMIN_USERS_FONT } from './adminUsersStyles'
 import type { AdminManagedUser } from '@/schemas/adminUser'
@@ -11,6 +11,8 @@ interface AdminUsersTableProps {
   enabledOverrides: Record<string, boolean>
   onToggleUser: (userId: string, enabled: boolean, userName: string) => void
   onEditUser: (user: AdminManagedUser) => void
+  onRestoreUser?: (userId: string, userName: string) => void
+  onDeleteUser?: (userId: string, userName: string) => void
   pagination?: ReactNode
 }
 
@@ -24,6 +26,8 @@ export default function AdminUsersTable({
   enabledOverrides,
   onToggleUser,
   onEditUser,
+  onRestoreUser,
+  onDeleteUser,
   pagination,
 }: AdminUsersTableProps) {
   return (
@@ -103,19 +107,43 @@ export default function AdminUsersTable({
                     </td>
                     <td className={tdClass}>
                       <div className="flex items-center justify-center gap-3">
-                        <AdminUsersToggle
-                          checked={enabled}
-                          onChange={(next) => onToggleUser(user.id, next, user.name)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => onEditUser(user)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
-                          style={{ color: ADMIN_USERS_BLUE }}
-                          aria-label={`تعديل ${user.name}`}
-                        >
-                          <Pencil size={17} strokeWidth={2} />
-                        </button>
+                        {user.deletedAt ? (
+                          <button
+                            type="button"
+                            onClick={() => onRestoreUser?.(user.id, user.name)}
+                            className="flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#22C55E]/10"
+                            style={{ color: '#22C55E', fontFamily: ADMIN_USERS_FONT }}
+                            aria-label={`استعادة ${user.name}`}
+                          >
+                            <RotateCcw size={14} strokeWidth={2.5} />
+                            استعادة
+                          </button>
+                        ) : (
+                          <>
+                            <AdminUsersToggle
+                              checked={enabled}
+                              onChange={(next) => onToggleUser(user.id, next, user.name)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => onEditUser(user)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
+                              style={{ color: ADMIN_USERS_BLUE }}
+                              aria-label={`تعديل ${user.name}`}
+                            >
+                              <Pencil size={17} strokeWidth={2} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeleteUser?.(user.id, user.name)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#F44336]/10"
+                              style={{ color: '#F44336' }}
+                              aria-label={`حذف ${user.name}`}
+                            >
+                              <Trash2 size={16} strokeWidth={2} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -153,19 +181,43 @@ export default function AdminUsersTable({
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <AdminUsersToggle
-                    checked={enabled}
-                    onChange={(next) => onToggleUser(user.id, next, user.name)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onEditUser(user)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
-                    style={{ color: ADMIN_USERS_BLUE }}
-                    aria-label={`تعديل ${user.name}`}
-                  >
-                    <Pencil size={17} strokeWidth={2} />
-                  </button>
+                  {user.deletedAt ? (
+                    <button
+                      type="button"
+                      onClick={() => onRestoreUser?.(user.id, user.name)}
+                      className="flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#22C55E]/10"
+                      style={{ color: '#22C55E', fontFamily: ADMIN_USERS_FONT }}
+                      aria-label={`استعادة ${user.name}`}
+                    >
+                      <RotateCcw size={14} strokeWidth={2.5} />
+                      استعادة
+                    </button>
+                  ) : (
+                    <>
+                      <AdminUsersToggle
+                        checked={enabled}
+                        onChange={(next) => onToggleUser(user.id, next, user.name)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => onEditUser(user)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#2196F3]/10"
+                        style={{ color: ADMIN_USERS_BLUE }}
+                        aria-label={`تعديل ${user.name}`}
+                      >
+                        <Pencil size={17} strokeWidth={2} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteUser?.(user.id, user.name)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#F44336]/10"
+                        style={{ color: '#F44336' }}
+                        aria-label={`حذف ${user.name}`}
+                      >
+                        <Trash2 size={16} strokeWidth={2} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

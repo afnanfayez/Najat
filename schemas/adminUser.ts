@@ -51,6 +51,7 @@ export type AdminUserDto = {
   malesCount?: number | null
   createdAt?: string
   updatedAt?: string
+  deletedAt?: string | null
 }
 
 export type AdminUsersStatsDto = {
@@ -83,6 +84,7 @@ export type AdminUsersQueryParams = {
   region?: AdminUserRegionFilter
   isActive?: boolean
   isVerified?: boolean
+  withDeleted?: boolean
   page?: number
   pageSize?: number
 }

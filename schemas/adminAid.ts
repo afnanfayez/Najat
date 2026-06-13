@@ -1,4 +1,4 @@
-export type AdminAidViewTab = 'distribution' | 'donors'
+export type AdminAidViewTab = 'distribution' | 'donors' | 'requests'
 
 export type DistributionPointStatus = 'open' | 'crowded' | 'closed'
 

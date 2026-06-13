@@ -9,10 +9,12 @@ import { ADMIN_HEALTH_BLUE, ADMIN_HEALTH_FONT } from './adminHealthStyles'
 interface AdminHealthFacilityCardProps {
   facility: AdminHealthFacility
   isDeleting?: boolean
+  isUpdatingStatus?: boolean
   onDetails?: (facility: AdminHealthFacility) => void
   onEdit?: (facility: AdminHealthFacility) => void
   onDelete?: (facility: AdminHealthFacility) => void
   onCall?: (facility: AdminHealthFacility) => void
+  onStatusChange?: (facility: AdminHealthFacility, newStatus: AdminHealthFacility['status']) => void
 }
 
 function FacilityImage({ src, alt }: { src: string; alt: string }) {
@@ -34,17 +36,33 @@ function FacilityImage({ src, alt }: { src: string; alt: string }) {
   )
 }
 
+const STATUS_CYCLE: Record<NonNullable<AdminHealthFacility['status']>, AdminHealthFacility['status']> = {
+  open: 'closed',
+  closed: 'open',
+  maintenance: 'open',
+}
+
+const STATUS_LABEL: Record<NonNullable<AdminHealthFacility['status']>, string> = {
+  open: 'مفتوح',
+  closed: 'مغلق',
+  maintenance: 'صيانة',
+}
+
 export default function AdminHealthFacilityCard({
   facility,
   isDeleting = false,
+  isUpdatingStatus = false,
   onDetails,
   onEdit,
   onDelete,
   onCall,
+  onStatusChange,
 }: AdminHealthFacilityCardProps) {
   const barColor = availabilityBarColor(facility.workloadPercent)
-  const statusLabel = facility.isOpen ? 'مفتوح الآن' : 'مغلق'
-  const statusColor = facility.isOpen ? '#4CAF50' : '#9E9E9E'
+  const currentStatus = facility.status ?? (facility.isOpen ? 'open' : 'closed')
+  const statusLabel = STATUS_LABEL[currentStatus] ?? (facility.isOpen ? 'مفتوح' : 'مغلق')
+  const statusColor = currentStatus === 'open' ? '#4CAF50' : currentStatus === 'maintenance' ? '#F59E0B' : '#9E9E9E'
+  const isHospital = !facility.facilityType || facility.facilityType === 'hospital'
 
   return (
     <article
@@ -56,18 +74,29 @@ export default function AdminHealthFacilityCard({
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-        <div
-          className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5"
-          style={{ fontFamily: ADMIN_HEALTH_FONT }}
-        >
-          <span
-            className="h-2 w-2 rounded-full"
-            style={{ background: statusColor }}
-          />
-          <span className="text-xs font-bold" style={{ color: statusColor }}>
-            {statusLabel}
-          </span>
-        </div>
+        {isHospital && onStatusChange ? (
+          <button
+            type="button"
+            disabled={isUpdatingStatus}
+            onClick={() => onStatusChange(facility, STATUS_CYCLE[currentStatus] ?? 'open')}
+            title="انقر لتغيير الحالة"
+            className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ fontFamily: ADMIN_HEALTH_FONT }}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: isUpdatingStatus ? '#94A3B8' : statusColor }} />
+            <span className="text-xs font-bold" style={{ color: isUpdatingStatus ? '#94A3B8' : statusColor }}>
+              {isUpdatingStatus ? '...' : statusLabel}
+            </span>
+          </button>
+        ) : (
+          <div
+            className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5"
+            style={{ fontFamily: ADMIN_HEALTH_FONT }}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: statusColor }} />
+            <span className="text-xs font-bold" style={{ color: statusColor }}>{statusLabel}</span>
+          </div>
+        )}
 
         <div className="absolute top-3 left-3 flex items-center gap-2">
           <button

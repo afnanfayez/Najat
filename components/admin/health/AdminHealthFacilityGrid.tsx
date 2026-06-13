@@ -7,19 +7,23 @@ import { ADMIN_HEALTH_FONT } from './adminHealthStyles'
 interface AdminHealthFacilityGridProps {
   facilities: AdminHealthFacility[]
   deletingId?: string | null
+  updatingStatusId?: string | null
   onDetails?: (facility: AdminHealthFacility) => void
   onEdit?: (facility: AdminHealthFacility) => void
   onDelete?: (facility: AdminHealthFacility) => void
   onCall?: (facility: AdminHealthFacility) => void
+  onStatusChange?: (facility: AdminHealthFacility, newStatus: AdminHealthFacility['status']) => void
 }
 
 export default function AdminHealthFacilityGrid({
   facilities,
   deletingId = null,
+  updatingStatusId = null,
   onDetails,
   onEdit,
   onDelete,
   onCall,
+  onStatusChange,
 }: AdminHealthFacilityGridProps) {
   if (facilities.length === 0) {
     return (
@@ -39,10 +43,12 @@ export default function AdminHealthFacilityGrid({
           key={facility.id}
           facility={facility}
           isDeleting={deletingId === facility.id}
+          isUpdatingStatus={updatingStatusId === facility.id}
           onDetails={onDetails}
           onEdit={onEdit}
           onDelete={onDelete}
           onCall={onCall}
+          onStatusChange={onStatusChange}
         />
       ))}
     </section>

@@ -12,7 +12,7 @@ import {
   transformMapDataLayers,
   type SafetyMapLayers,
 } from '@/lib/maps/safetyMapTransforms'
-import { request } from '@/lib/api/api'
+import { request, unwrapPaginated } from '@/lib/api/api'
 import { safetyCheckResponseSchema, type SafetyCheckResult } from '@/schemas/safetyApi'
 
 const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
@@ -155,11 +155,12 @@ export const safetyAPI = {
     if (params?.since) qs.set('since', params.since)
     const query = qs.toString()
     const raw = await request(`${V1_ROOT}/safety/zones${query ? `?${query}` : ''}`)
-    const envelope = raw as Record<string, unknown>
+    const unwrapped = unwrapPaginated(raw)
+    const envelope = unwrapped as Record<string, unknown>
     const items = Array.isArray(envelope?.data)
       ? envelope.data
-      : Array.isArray(raw)
-        ? raw
+      : Array.isArray(unwrapped)
+        ? unwrapped
         : []
     return (items as unknown[]).map(parseZone)
   },

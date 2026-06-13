@@ -3,9 +3,12 @@ import {
   aidsPaginatedResponseSchema,
   aidByIdResponseSchema,
   aidNearbyEnvelopeSchema,
+  aidRequestsPaginatedResponseSchema,
   nearbyAidPointDtoSchema,
   type AidsPaginatedResponse,
   type AidDto,
+  type AidRequestDto,
+  type AidRequestsPaginatedResponse,
   type NearbyAidPointDto,
 } from '@/schemas/aidApi'
 
@@ -89,5 +92,38 @@ export const aidAPI = {
 
   softDelete(id: string): Promise<unknown> {
     return request(`${V1_ROOT}/aid/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
+
+  listRequests(params?: ListAidParams): Promise<AidRequestsPaginatedResponse> {
+    const qs = new URLSearchParams()
+    if (params?.page != null) qs.set('page', String(params.page))
+    if (params?.limit != null) qs.set('limit', String(params.limit))
+    const query = qs.toString()
+    return request(`${V1_ROOT}/aid/requests${query ? `?${query}` : ''}`).then((raw) => {
+      // Backend returns { data: { data: [...], meta: {} } } — unwrap before parsing
+      const unwrapped = unwrapPaginated(raw)
+      const parsed = aidRequestsPaginatedResponseSchema.safeParse(unwrapped)
+      if (parsed.success) return parsed.data
+      const dataArr = Array.isArray((unwrapped as Record<string, unknown>)?.data)
+        ? (unwrapped as Record<string, unknown>).data
+        : Array.isArray(unwrapped) ? unwrapped : []
+      return aidRequestsPaginatedResponseSchema.parse({
+        success: true,
+        data: dataArr,
+      })
+    })
+  },
+
+  createRequest(
+    aidPointId: string,
+    body: { notes?: string; requestedSupplies?: string[] },
+  ): Promise<AidRequestDto> {
+    return request(`${V1_ROOT}/aid/${encodeURIComponent(aidPointId)}/requests`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }).then((raw) => {
+      const obj = raw as Record<string, unknown>
+      return (obj?.data ?? raw) as AidRequestDto
+    })
   },
 }

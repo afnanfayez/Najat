@@ -1,4 +1,5 @@
 import { hospitalsAPI } from '@/lib/api/hospitals'
+import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
 import { pharmaciesAPI } from '@/lib/api/pharmacies'
 import { labsAPI } from '@/lib/api/labs'
 import { clinicsAPI } from '@/lib/api/clinics'
@@ -372,6 +373,20 @@ export async function deleteAdminHealthFacilityFromApi(
   facilityType?: AdminHealthFacilityType,
 ): Promise<void> {
   await getFacilityApiByType(facilityType).softDelete(id)
+}
+
+/**
+ * Updates only the capacity/operational status of a hospital using the dedicated
+ * PATCH /v1/hospitals/{id}/status endpoint (faster, atomic update).
+ */
+export async function updateAdminHospitalStatusFromApi(
+  id: string,
+  status: AdminHealthFacility['status'],
+): Promise<AdminHealthFacility> {
+  const capacityStatus = adminStatusToCapacityStatus(status) as HospitalCapacityStatus
+  // HospitalEntity extends HospitalDto — mapHospital accepts both shapes
+  const updated = await hospitalsAPI.updateStatus(id, { status: capacityStatus })
+  return mapHospital({ ...updated })
 }
 
 // ─── Health Content (from /v1/articles) ──────────────────────────────────────

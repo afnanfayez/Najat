@@ -71,6 +71,23 @@ export type CreateAdminVolunteerBody = {
   region?: string
 }
 
+export type CreateAdminResidentBody = {
+  email: string
+  password: string
+  fullName: string
+  phoneNumber?: string
+  gender?: AdminBackendUserDto['gender']
+  ageGroup?: '18-40' | 'above 40'
+  healthStatus?: AdminBackendUserDto['healthStatus']
+  nationalId?: string
+  housingStatus?: string
+  region?: string
+  maritalStatus?: AdminBackendUserDto['maritalStatus']
+  familyMembersCount?: number
+  femalesCount?: number
+  malesCount?: number
+}
+
 function getEnvelopeData<T>(raw: unknown): T | undefined {
   if (!raw || typeof raw !== 'object') return undefined
   return (raw as ApiEnvelope<T>).data
@@ -131,6 +148,7 @@ export function mapBackendAdminUser(user: AdminBackendUserDto): AdminUserDto {
     malesCount: user.malesCount,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    deletedAt: user.deletedAt,
   }
 }
 
@@ -313,6 +331,27 @@ export async function createAdminVolunteer(
   })
   const created = getEnvelopeData<AdminBackendUserDto>(response)
   return created ? mapBackendAdminUser(created) : null
+}
+
+export async function createAdminResident(
+  body: CreateAdminResidentBody,
+): Promise<AdminUserDto | null> {
+  const response = await request(`${V1_ROOT}/users/residents`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  const created = getEnvelopeData<AdminBackendUserDto>(response)
+  return created ? mapBackendAdminUser(created) : null
+}
+
+export async function restoreAdminUser(id: string): Promise<AdminUserDto> {
+  const response = await request(
+    `${V1_ROOT}/admin/users/${encodeURIComponent(id)}/restore`,
+    { method: 'PATCH' },
+  )
+  const restored = getEnvelopeData<AdminBackendUserDto>(response)
+  if (!restored) throw { status: 500, message: 'تعذّر استعادة المستخدم' }
+  return mapBackendAdminUser(restored)
 }
 
 export async function verifyAdminPassword(

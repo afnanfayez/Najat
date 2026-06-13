@@ -158,6 +158,7 @@ export async function fetchAdminUsers(
       role: params.role,
       isActive: params.isActive,
       isVerified: params.isVerified,
+      withDeleted: params.withDeleted,
       page: params.page,
       pageSize: params.pageSize,
     })

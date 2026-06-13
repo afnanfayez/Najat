@@ -9,6 +9,8 @@ import {
 import {
   setAdminUserActive,
   updateAdminUser,
+  restoreAdminUser,
+  deleteAdminUser,
   type UpdateAdminUserBody,
 } from '@/lib/api/adminUsers'
 
@@ -52,6 +54,28 @@ export function useSetAdminUserActive() {
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       setAdminUserActive(id, isActive),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
+export function useRestoreAdminUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => restoreAdminUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
+export function useDeleteAdminUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => deleteAdminUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] })
     },

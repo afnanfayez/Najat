@@ -12,6 +12,7 @@ import AdminAidDistributionGrid from './AdminAidDistributionGrid'
 import AdminAidDonorStatsPanel from './AdminAidDonorStats'
 import AdminAidDonorGrid from './AdminAidDonorGrid'
 import AdminAidDonationsTable from './AdminAidDonationsTable'
+import AdminAidRequestsTable from './AdminAidRequestsTable'
 import {
   fetchAdminAidAreaCoverage,
   fetchAdminAidDistributionPoints,
@@ -19,7 +20,9 @@ import {
   fetchAdminAidDonations,
   fetchAdminAidDonors,
   fetchAdminAidDonorStats,
+  fetchAdminAidRequests,
   fetchAdminAidResponseData,
+  type AidRequestDto,
 } from './data/adminAidService'
 import type { AdminAidViewTab } from '@/schemas/adminAid'
 import type {
@@ -46,11 +49,12 @@ export default function AdminAidContent() {
   const [donorStats, setDonorStats] = useState<AdminAidDonorStats | null>(null)
   const [donors, setDonors] = useState<AdminAidDonor[]>([])
   const [donations, setDonations] = useState<AdminAidDonationRecord[]>([])
+  const [requests, setRequests] = useState<AidRequestDto[]>([])
 
   useEffect(() => {
-    if (searchParams.get('tab') === 'donors') {
-      setActiveTab('donors')
-    }
+    const tab = searchParams.get('tab')
+    if (tab === 'donors') setActiveTab('donors')
+    else if (tab === 'requests') setActiveTab('requests')
   }, [searchParams])
 
   useEffect(() => {
@@ -67,6 +71,7 @@ export default function AdminAidContent() {
           donorStatsData,
           donorsData,
           donationsData,
+          requestsData,
         ] = await Promise.all([
           fetchAdminAidDistributionStats(),
           fetchAdminAidAreaCoverage(),
@@ -75,6 +80,7 @@ export default function AdminAidContent() {
           fetchAdminAidDonorStats(),
           fetchAdminAidDonors(),
           fetchAdminAidDonations(),
+          fetchAdminAidRequests(),
         ])
 
         if (!cancelled) {
@@ -85,6 +91,7 @@ export default function AdminAidContent() {
           setDonorStats(donorStatsData)
           setDonors(donorsData)
           setDonations(donationsData)
+          setRequests(requestsData)
         }
       } catch {
         if (!cancelled) toast.error('تعذّر تحميل بيانات المساعدات')
@@ -101,7 +108,10 @@ export default function AdminAidContent() {
 
   function handleTabChange(tab: AdminAidViewTab) {
     setActiveTab(tab)
-    const url = tab === 'donors' ? '/admin/aid?tab=donors' : '/admin/aid'
+    const url =
+      tab === 'donors' ? '/admin/aid?tab=donors' :
+      tab === 'requests' ? '/admin/aid?tab=requests' :
+      '/admin/aid'
     router.replace(url, { scroll: false })
   }
 
@@ -163,6 +173,8 @@ export default function AdminAidContent() {
             onDetails={(point) => router.push(`/admin/aid/points/${point.id}/edit`)}
           />
         </>
+      ) : activeTab === 'requests' ? (
+        <AdminAidRequestsTable requests={requests} font={ADMIN_AID_FONT} />
       ) : (
         <>
           {donorStats && <AdminAidDonorStatsPanel stats={donorStats} />}

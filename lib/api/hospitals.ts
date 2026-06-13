@@ -125,6 +125,10 @@ export const hospitalsAPI = {
         method: 'PATCH',
         body: JSON.stringify(payload),
       },
-    ).then((raw) => parseOrThrow(hospitalEntitySchema, raw))
+    ).then((raw) => {
+      const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
+      const data = asRecord?.data && typeof asRecord.data === 'object' ? asRecord.data : raw
+      return parseOrThrow(hospitalEntitySchema, data)
+    })
   },
 }

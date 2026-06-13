@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import AdminShell from '@/components/admin/AdminShell'
 import {
   createVolunteerFromForm,
+  createResidentFromForm,
   getVolunteerCreateErrorMessage,
   validateVolunteerFormForApi,
 } from '@/components/admin/data/adminVolunteerService'
@@ -107,11 +108,15 @@ export default function AddVolunteerContent() {
     if (!validate(4)) return
     setSubmitting(true)
     try {
-      const result = await createVolunteerFromForm(formData)
+      const isResident = formData.userType === 'resident'
+      const result = isResident
+        ? await createResidentFromForm(formData)
+        : await createVolunteerFromForm(formData)
       await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
       clearDraft()
       setSubmitted(true)
-      toast.success(`تم إنشاء حساب المتطوع. كلمة المرور المؤقتة: ${result.temporaryPassword}`)
+      const roleLabel = isResident ? 'المقيم' : 'المتطوع'
+      toast.success(`تم إنشاء حساب ${roleLabel}. كلمة المرور المؤقتة: ${result.temporaryPassword}`)
     } catch (err: unknown) {
       const message = getVolunteerCreateErrorMessage(err)
       setValidationError(message)
@@ -160,6 +165,30 @@ export default function AddVolunteerContent() {
           <p style={{ ...ADMIN_PAGE_SUBTITLE_STYLE, color: '#000000' }}>
             يرجى ملء البيانات التالية للانضمام إلى فريق الاستجابة وإدارة الأزمات
           </p>
+        </div>
+
+        {/* User type selector */}
+        <div className="mb-6 flex gap-3">
+          {(['volunteer', 'resident'] as const).map((type) => {
+            const label = type === 'volunteer' ? 'متطوع' : 'مقيم'
+            const active = formData.userType === type
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => updateField('userType', type)}
+                className="rounded-xl border px-5 py-2 text-sm font-bold transition-all"
+                style={{
+                  fontFamily: FORM_FONT,
+                  background: active ? FORM_BLUE : 'white',
+                  color: active ? 'white' : '#64748B',
+                  borderColor: active ? FORM_BLUE : '#E8EEF5',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
 
         {/* Progress */}

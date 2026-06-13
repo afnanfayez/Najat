@@ -1,5 +1,5 @@
 import { aidAPI, type AidStatus } from '@/lib/api/aid'
-import type { AidDto } from '@/schemas/aidApi'
+import type { AidDto, AidRequestDto } from '@/schemas/aidApi'
 import type {
   AdminAidDistributionPoint,
   AdminAidDistributionStats,
@@ -114,4 +114,18 @@ export async function updateAdminAidPointFromApi(
 
 export async function deleteAdminAidPointFromApi(id: string): Promise<void> {
   await aidAPI.softDelete(id)
+}
+
+export async function fetchAdminAidRequestsFromApi(
+  params?: { page?: number; limit?: number },
+): Promise<AidRequestDto[]> {
+  const response = await aidAPI.listRequests(params)
+  return response.data
+}
+
+export async function createAidRequestFromAdminApi(
+  aidPointId: string,
+  body: { notes?: string; requestedSupplies?: string[] },
+): Promise<AidRequestDto> {
+  return aidAPI.createRequest(aidPointId, body)
 }

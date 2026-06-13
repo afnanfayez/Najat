@@ -17,6 +17,7 @@ import DeleteFacilityDialog from './DeleteFacilityDialog'
 import {
   deleteAdminHealthFacility,
   deleteAdminHealthContent,
+  updateAdminHospitalStatus,
   toContentQueryParams,
   toFacilitiesQueryParams,
 } from './data/adminHealthService'
@@ -55,6 +56,7 @@ export default function AdminHealthContent() {
   const [status, setStatus] = useState<AdminHealthStatusFilter>('all')
   const [facilityType, setFacilityType] = useState<AdminHealthFacilityTypeFilter>('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   const [facilityToDelete, setFacilityToDelete] =
     useState<AdminHealthFacility | null>(null)
 
@@ -135,6 +137,22 @@ export default function AdminHealthContent() {
 
   function handleDeleteFacility(facility: AdminHealthFacility) {
     setFacilityToDelete(facility)
+  }
+
+  async function handleFacilityStatusChange(
+    facility: AdminHealthFacility,
+    newStatus: AdminHealthFacility['status'],
+  ) {
+    setUpdatingStatusId(facility.id)
+    try {
+      await updateAdminHospitalStatus(facility.id, newStatus!)
+      await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
+      toast.success(`تم تغيير حالة ${facility.name} إلى "${newStatus === 'open' ? 'مفتوح' : 'مغلق'}"`)
+    } catch {
+      toast.error(`تعذّر تغيير حالة ${facility.name}`)
+    } finally {
+      setUpdatingStatusId(null)
+    }
   }
 
   function handleOpenContent(item: AdminHealthMedicalContent) {
@@ -246,10 +264,12 @@ export default function AdminHealthContent() {
             <AdminHealthFacilityGrid
               facilities={facilities}
               deletingId={deletingId}
+              updatingStatusId={updatingStatusId}
               onDetails={handleEditFacility}
               onEdit={handleEditFacility}
               onDelete={handleDeleteFacility}
               onCall={(f) => handleCall(f.phone)}
+              onStatusChange={handleFacilityStatusChange}
             />
           )}
 

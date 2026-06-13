@@ -1,6 +1,8 @@
 import {
   createAdminVolunteer,
+  createAdminResident,
   type CreateAdminVolunteerBody,
+  type CreateAdminResidentBody,
 } from '@/lib/api/adminUsers'
 import type { AdminUserDto } from '@/schemas/adminUser'
 import type { VolunteerFormData } from '@/components/admin/users/add-volunteer/types'
@@ -119,5 +121,39 @@ export async function createVolunteerFromForm(
 ): Promise<CreateVolunteerResult> {
   const body = mapVolunteerFormToCreateBody(data)
   const user = await createAdminVolunteer(body)
+  return { user, temporaryPassword: body.password }
+}
+
+export function mapResidentFormToCreateBody(
+  data: VolunteerFormData,
+): CreateAdminResidentBody {
+  const region = [data.currentAddress, data.detailedAddress]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' - ')
+
+  return {
+    email: data.email.trim(),
+    password: buildTemporaryPassword(data),
+    fullName: data.fullName.trim(),
+    phoneNumber: data.primaryPhone.trim() || undefined,
+    ageGroup: inferAgeGroup(data.birthDate),
+    nationalId: data.idNumber.trim() || undefined,
+    region: region || undefined,
+    gender: data.gender ?? undefined,
+    maritalStatus: data.maritalStatus ?? undefined,
+    housingStatus: data.housingStatus?.trim() || undefined,
+    familyMembersCount: data.familyMembersCount ? Number(data.familyMembersCount) : undefined,
+    femalesCount: data.femalesCount ? Number(data.femalesCount) : undefined,
+    malesCount: data.malesCount ? Number(data.malesCount) : undefined,
+    healthStatus: 'Healthy',
+  }
+}
+
+export async function createResidentFromForm(
+  data: VolunteerFormData,
+): Promise<CreateVolunteerResult> {
+  const body = mapResidentFormToCreateBody(data)
+  const user = await createAdminResident(body)
   return { user, temporaryPassword: body.password }
 }

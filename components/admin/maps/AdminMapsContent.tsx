@@ -10,11 +10,13 @@ import AdminMapsPublishingTable from './AdminMapsPublishingTable'
 import AdminMapsInsightCards from './AdminMapsInsightCards'
 import { buildDashboardFromSafetyData } from './data/adminMapsService'
 import { useSafetyMapData } from '@/hooks/useSafetyMapData'
+import { useSafetyZones } from '@/hooks/useSafetyZones'
 import { ADMIN_MAPS_FONT } from './adminMapsStyles'
 
 export default function AdminMapsContent() {
   const router = useRouter()
   const mapDataQuery = useSafetyMapData()
+  const zonesQuery = useSafetyZones({ limit: 50 })
 
   const dashboard = useMemo(() => {
     if (!mapDataQuery.data) return null
@@ -53,6 +55,71 @@ export default function AdminMapsContent() {
           <AdminMapsPublishingTable logs={dashboard.publishLogs} />
 
           <AdminMapsInsightCards insights={dashboard.insights} />
+
+          {/* Danger Zones list — fetched directly from GET /v1/safety/zones */}
+          <section dir="rtl" className="mt-6">
+            <h2
+              className="mb-3 text-base font-bold text-[#1e293b]"
+              style={{ fontFamily: ADMIN_MAPS_FONT }}
+            >
+              مناطق الخطر ({zonesQuery.data?.length ?? 0})
+            </h2>
+            {zonesQuery.isLoading ? (
+              <p className="text-sm text-[#64748B]" style={{ fontFamily: ADMIN_MAPS_FONT }}>جاري تحميل المناطق...</p>
+            ) : zonesQuery.isError ? (
+              <p className="text-sm text-[#F44336]" style={{ fontFamily: ADMIN_MAPS_FONT }}>تعذّر تحميل مناطق الخطر</p>
+            ) : zonesQuery.data && zonesQuery.data.length > 0 ? (
+              <div className="overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                <table className="w-full table-fixed border-collapse text-right" style={{ fontFamily: ADMIN_MAPS_FONT }}>
+                  <thead>
+                    <tr style={{ background: '#EF44441A' }}>
+                      <th className="px-4 py-3 text-right text-[13px] font-semibold text-[#7E7D7D] w-[40%]">الوصف</th>
+                      <th className="px-4 py-3 text-center text-[13px] font-semibold text-[#7E7D7D] w-[25%]">مستوى الخطر</th>
+                      <th className="px-4 py-3 text-center text-[13px] font-semibold text-[#7E7D7D] w-[20%]">الحالة</th>
+                      <th className="px-4 py-3 text-center text-[13px] font-semibold text-[#7E7D7D] w-[15%]">المعرّف</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {zonesQuery.data.map((zone) => {
+                      const levelColor = zone.dangerLevel === 'high' ? '#F44336' : zone.dangerLevel === 'medium' ? '#F59E0B' : '#22C55E'
+                      const levelLabel = zone.dangerLevel === 'high' ? 'عالٍ' : zone.dangerLevel === 'medium' ? 'متوسط' : 'منخفض'
+                      return (
+                        <tr key={zone.id} className="border-b border-[#EEF2F7] last:border-b-0">
+                          <td className="px-4 py-3 text-right text-[14px] font-medium text-[#1e293b]">
+                            {zone.description || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className="rounded-full px-3 py-1 text-[12px] font-bold"
+                              style={{ background: `${levelColor}1A`, color: levelColor }}
+                            >
+                              {levelLabel}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className="rounded-full px-3 py-1 text-[12px] font-bold"
+                              style={{
+                                background: zone.isActive ? '#22C55E1A' : '#94A3B81A',
+                                color: zone.isActive ? '#22C55E' : '#94A3B8',
+                              }}
+                            >
+                              {zone.isActive ? 'نشطة' : 'غير نشطة'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center text-[12px] font-mono text-[#64748B]">
+                            {zone.id.slice(0, 8)}…
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-[#94A3B8]" style={{ fontFamily: ADMIN_MAPS_FONT }}>لا توجد مناطق خطر مسجلة</p>
+            )}
+          </section>
         </>
       ) : (
         <div

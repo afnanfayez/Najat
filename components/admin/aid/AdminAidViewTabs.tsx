@@ -6,6 +6,7 @@ import { ADMIN_AID_BLUE, ADMIN_AID_FONT } from './adminAidStyles'
 const TABS: { id: AdminAidViewTab; label: string }[] = [
   { id: 'distribution', label: 'نقاط التوزيع والمخزون' },
   { id: 'donors', label: 'المانحون والشركاء' },
+  { id: 'requests', label: 'طلبات المساعدة' },
 ]
 
 interface AdminAidViewTabsProps {
