@@ -81,3 +81,27 @@ export const aidByIdResponseSchema = z.object({
   data: aidDtoSchema,
   timestamp: z.string().optional(),
 })
+
+export const aidRequestDtoSchema = z.object({
+  id: z.string(),
+  aidPointId: z.string().optional(),
+  userId: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'fulfilled']).catch('pending'),
+  notes: z.string().optional().nullable(),
+  requestedSupplies: z.array(z.string()).optional().default([]),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+}).passthrough()
+
+export type AidRequestDto = z.infer<typeof aidRequestDtoSchema>
+
+export const aidRequestsPaginatedResponseSchema = z.object({
+  success: z.boolean(),
+  statusCode: z.number().optional(),
+  message: bilingualMessageSchema.optional(),
+  data: z.array(aidRequestDtoSchema),
+  meta: z.object({ totalItems: z.coerce.number() }).passthrough().optional(),
+  timestamp: z.string().optional(),
+}).passthrough()
+
+export type AidRequestsPaginatedResponse = z.infer<typeof aidRequestsPaginatedResponseSchema>
