@@ -15,6 +15,9 @@ const DISMISSED_KEY = 'najat-install-dismissed'
 const DISMISSED_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 export function isDismissed(): boolean {
+  if (process.env.NODE_ENV !== 'production') {
+    return false
+  }
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(DISMISSED_KEY) : null
     if (!raw) return false

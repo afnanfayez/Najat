@@ -15,6 +15,7 @@ import { useLoginStore } from '@/store/useLoginStore'
 import { useRegisterStore } from '@/store/useRegisterStore'
 import { showNoInternetToast } from '@/lib/auth/offlineToasts'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 
 const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
   return (
@@ -36,6 +37,7 @@ const AppleAppStoreIcon = ({ size = 40, opacity = 1, className = '' }) => {
 }
 
 const LoginError = () => {
+  useInstallPrompt()
   const {
     email,
     password,

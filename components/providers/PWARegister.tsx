@@ -62,10 +62,7 @@ export default function PWARegister() {
       !('serviceWorker' in navigator)
     ) return
 
-    if (process.env.NODE_ENV !== 'production') {
-      void unregisterDevServiceWorkers()
-      return
-    }
+    const devMode = process.env.NODE_ENV !== 'production'
 
     let lastSyncSignalAt = 0
     const shouldHandleSyncSignal = () => {
@@ -78,7 +75,8 @@ export default function PWARegister() {
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
     const registerSW = async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js')
+        const swUrl = devMode ? '/sw.js?dev=1' : '/sw.js'
+        const registration = await navigator.serviceWorker.register(swUrl)
 
         // Notify user when a new SW version installs so they can reload
         registration.addEventListener('updatefound', () => {
