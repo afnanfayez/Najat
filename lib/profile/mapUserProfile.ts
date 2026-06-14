@@ -100,6 +100,9 @@ export function mapUserProfile(raw: unknown): UserProfile | null {
       typeof u.assistanceLocation === 'string' ? u.assistanceLocation : null,
     assistanceRadius:
       typeof u.assistanceRadius === 'number' ? u.assistanceRadius : null,
+    emergencyContacts: Array.isArray(u.emergencyContacts) ? u.emergencyContacts : null,
+    sosMessage: typeof u.sosMessage === 'string' ? u.sosMessage : null,
+    bloodType: typeof u.bloodType === 'string' ? u.bloodType : null,
   }
 }
 

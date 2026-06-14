@@ -29,13 +29,18 @@ export default function EmergencySettings() {
   useEffect(() => {
     if (!user?.id) return
     const local = getLocalProfileData(user.id)
+    const serverContacts = user.emergencyContacts
+    const serverSos = user.sosMessage
+
     setContacts(
       local.emergencyContacts?.length
         ? local.emergencyContacts
-        : [{ id: crypto.randomUUID(), name: '', phone: '' }],
+        : serverContacts?.length
+          ? serverContacts
+          : [{ id: crypto.randomUUID(), name: '', phone: '' }],
     )
-    setSosMessage(local.sosMessage ?? '')
-  }, [user?.id])
+    setSosMessage(local.sosMessage ?? serverSos ?? '')
+  }, [user?.id, user?.emergencyContacts, user?.sosMessage])
 
   const handleSave = async () => {
     if (!user?.id) return

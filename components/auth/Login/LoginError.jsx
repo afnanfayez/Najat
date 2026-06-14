@@ -299,13 +299,14 @@ const LoginError = () => {
             </div>
 
             <div className="flex justify-center gap-12 pt-3 sm:gap-20 sm:pt-5">
-              <button className="group flex h-10 w-10 items-center justify-center transition-all hover:scale-110 active:scale-95 sm:h-12 sm:w-12">
+              <button type="button" className="group flex h-10 w-10 items-center justify-center transition-all hover:scale-110 active:scale-95 sm:h-12 sm:w-12">
                 <Image
-                  src="https://www.svgrepo.com/show/475656/google-color.svg"
+                  src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
                   alt="Google"
                   width={40}
                   height={40}
                   className="h-8 w-8 opacity-90 transition-opacity group-hover:opacity-100 sm:h-10 sm:w-10"
+                  unoptimized
                 />
               </button>
               <button className="group flex h-10 w-10 items-center justify-center transition-all hover:scale-110 active:scale-95 sm:h-12 sm:w-12">
