@@ -76,7 +76,7 @@ export function useSafetyMapData() {
       }
       
       try {
-        const data = await safetyAPI.getMapData({ limit: 100 })
+        const data = await safetyAPI.getMapData()
         if (data) {
           putSafetyMapLayers(data).catch(() => {})
         }

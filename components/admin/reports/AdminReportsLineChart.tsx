@@ -6,6 +6,7 @@ function buildChartPath(
   height: number,
   padding: number
 ): string {
+  if (values.length < 2) return ''
   const min = Math.min(...values) - 4
   const max = Math.max(...values) + 4
   const range = max - min || 1
@@ -44,7 +45,15 @@ export default function AdminReportsLineChart({
   const height = 120
   const padding = 12
   const linePath = buildChartPath(values, width, height, padding)
-  const areaPath = `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`
+  const areaPath = linePath ? `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z` : ''
+
+  if (!linePath) {
+    return (
+      <div className={`flex w-full items-center justify-center ${heightClass} text-xs text-[#CBD5E1]`}>
+        لا توجد بيانات
+      </div>
+    )
+  }
 
   return (
     <div className="w-full min-w-0 overflow-hidden">

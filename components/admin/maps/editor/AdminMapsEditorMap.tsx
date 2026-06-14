@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import type { AdminMapsEditorLayer } from '@/schemas/adminMaps'
 import type { AdminMapsEditorMapInnerProps } from './AdminMapsEditorMapInner'
@@ -31,6 +31,7 @@ interface AdminMapsEditorMapProps {
   >
   activeTool: AdminMapsDrawTool
   onDrawComplete?: AdminMapsEditorMapInnerProps['onDrawComplete']
+  externalFlyTo?: [number, number] | null
 }
 
 export default function AdminMapsEditorMap({
@@ -38,9 +39,14 @@ export default function AdminMapsEditorMap({
   mapLayers,
   activeTool,
   onDrawComplete,
+  externalFlyTo,
 }: AdminMapsEditorMapProps) {
   const [query, setQuery] = useState('')
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
+
+  useEffect(() => {
+    if (externalFlyTo) setFlyTo(externalFlyTo)
+  }, [externalFlyTo])
 
   const showCorridors = layers.find((l) => l.id === 'corridors')?.active ?? false
   const showConflict = layers.find((l) => l.id === 'conflict')?.active ?? false

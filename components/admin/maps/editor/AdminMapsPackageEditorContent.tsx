@@ -20,7 +20,7 @@ import AdminMapsEditorMobileTabs, {
 import { getEditorFeedData } from '../data/adminMapsService'
 import { useSafetyMapData } from '@/hooks/useSafetyMapData'
 import { useSafetyAdminMutations } from '@/hooks/useSafetyAdminMutations'
-import type { AdminMapsEditorLayer, AdminMapsPackageEditorData } from '@/schemas/adminMaps'
+import type { AdminMapsEditorLayer, AdminMapsPackageEditorData, AdminMapsQuickAction } from '@/schemas/adminMaps'
 import type {
   MapDangerZone,
   MapResourcePoint,
@@ -79,11 +79,14 @@ export default function AdminMapsPackageEditorContent() {
   const [layers, setLayers] = useState<AdminMapsEditorLayer[]>([])
   const [activeTool, setActiveTool] = useState<AdminMapsDrawTool>(null)
   const [mobileTab, setMobileTab] = useState<AdminMapsEditorMobileTab>('map')
+  const [mapFlyTo, setMapFlyTo] = useState<[number, number] | null>(null)
+  const [quickActions, setQuickActions] = useState<AdminMapsPackageEditorData['quickActions']>([])
 
   useEffect(() => {
     const data = getEditorFeedData()
     setEditorData(data)
     setLayers(data.layers)
+    setQuickActions(data.quickActions)
   }, [])
 
   const mapLayers = useMemo<Pick<AdminMapsEditorMapInnerProps, 'safeRoads' | 'dangerZones' | 'resourcePoints'>>(() => {
@@ -109,24 +112,36 @@ export default function AdminMapsPackageEditorContent() {
       setActiveTool(null)
 
       try {
+        let actionMessage = ''
         if (tool === 'danger') {
-          // Polygon — close the ring by repeating the first point.
           const ring = [...geoCoords, geoCoords[0]]
           await mutations.createZone.mutateAsync({
             description: 'منطقة خطر جديدة',
             dangerLevel: 'medium',
             area: { type: 'Polygon', coordinates: [ring] },
+            isDraft: false,
           })
           toast.success('تمت إضافة منطقة الخطر', { position: 'top-center' })
+          actionMessage = `إضافة: منطقة خطر جديدة (${geoCoords.length} نقطة)`
         } else {
-          // LineString (safe or alternative road)
           await mutations.createSafeRoad.mutateAsync({
             name: tool === 'safe' ? 'مسار آمن جديد' : 'مسار بديل جديد',
             description: '',
             path: { type: 'LineString', coordinates: geoCoords },
+            isDraft: false,
           })
           toast.success('تمت إضافة المسار الآمن', { position: 'top-center' })
+          actionMessage = tool === 'safe'
+            ? `إضافة: مسار آمن جديد (${geoCoords.length} نقطة)`
+            : `إضافة: مسار بديل جديد (${geoCoords.length} نقطة)`
         }
+
+        const newAction: AdminMapsQuickAction = {
+          id: `action-${Date.now()}`,
+          type: 'add',
+          message: actionMessage,
+        }
+        setQuickActions((prev) => [newAction, ...prev.slice(0, 9)])
       } catch {
         // Error toasts are handled inside the mutation hooks.
       }
@@ -211,6 +226,7 @@ export default function AdminMapsPackageEditorContent() {
                 mapLayers={mapLayers}
                 activeTool={activeTool}
                 onDrawComplete={handleDrawComplete}
+                externalFlyTo={mapFlyTo}
               />
             </div>
 
@@ -222,7 +238,8 @@ export default function AdminMapsPackageEditorContent() {
               <AdminMapsEditorFeedPanel
                 verificationRequests={editorData.verificationRequests}
                 fieldReports={editorData.fieldReports}
-                quickActions={editorData.quickActions}
+                quickActions={quickActions}
+                onViewLocation={(lat, lng) => setMapFlyTo([lat, lng])}
               />
             </div>
           </div>

@@ -1,11 +1,3 @@
-import { fetchAdminAlertsFromApi } from '@/lib/api/adminAlerts'
-import {
-  ADMIN_ALERT_PRIORITY_COLORS,
-  ADMIN_ALERT_PRIORITY_LABELS,
-  ADMIN_ALERTS_MAP_CENTER,
-  getMockAdminAlertsList,
-  USE_MOCK_ADMIN_ALERTS,
-} from '@/lib/mocks/adminAlertsMockData'
 import type {
   AdminAlertDto,
   AdminAlertsListResponse,
@@ -15,12 +7,24 @@ import type {
 
 export type { AdminAlertsTab, AdminManagedAlert, AdminAlertDto }
 
+const ALERT_PRIORITY_COLORS: Record<string, string> = {
+  very_urgent: '#F44336',
+  help_request: '#FF9800',
+}
+
+const ALERT_PRIORITY_LABELS: Record<string, string> = {
+  very_urgent: 'عاجل جداً',
+  help_request: 'طلب مساعدة',
+}
+
+const DEFAULT_MAP_CENTER = { lat: 31.5, lng: 34.46 }
+
 export function mapAdminAlertDto(alert: AdminAlertDto): AdminManagedAlert {
   return {
     ...alert,
     time: alert.reportedAt,
-    accentColor: ADMIN_ALERT_PRIORITY_COLORS[alert.priority],
-    badgeLabel: ADMIN_ALERT_PRIORITY_LABELS[alert.priority],
+    accentColor: ALERT_PRIORITY_COLORS[alert.priority] ?? '#64748B',
+    badgeLabel: ALERT_PRIORITY_LABELS[alert.priority] ?? alert.priority,
   }
 }
 
@@ -30,28 +34,18 @@ export function mapAdminAlertsList(alerts: AdminAlertDto[]): AdminManagedAlert[]
 
 export function filterAdminAlerts(
   alerts: AdminManagedAlert[],
-  tab: AdminAlertsTab,
+  tab: AdminAlertsTab
 ): AdminManagedAlert[] {
   if (tab === 'all') return alerts
   return alerts.filter((alert) => alert.priority === tab)
 }
 
 export async function fetchAdminAlerts(): Promise<AdminAlertsListResponse> {
-  if (USE_MOCK_ADMIN_ALERTS) {
-    // TODO: Wire real API when backend adds /v1/admin/alerts endpoint.
-    // Real API layer is ready in lib/api/adminAlerts.ts (fetchAdminAlertsFromApi).
-    // Remove NEXT_PUBLIC_ADMIN_ALERTS_MOCK=1 from .env when the endpoint is live.
-    return {
-      alerts: getMockAdminAlertsList(),
-      mapCenter: ADMIN_ALERTS_MAP_CENTER,
-    }
-  }
-
-  return fetchAdminAlertsFromApi()
+  return { alerts: [], mapCenter: DEFAULT_MAP_CENTER }
 }
 
 export function getAdminAlertsMapCenter(
-  response?: AdminAlertsListResponse,
+  response?: AdminAlertsListResponse
 ): { lat: number; lng: number } {
-  return response?.mapCenter ?? ADMIN_ALERTS_MAP_CENTER
+  return response?.mapCenter ?? DEFAULT_MAP_CENTER
 }

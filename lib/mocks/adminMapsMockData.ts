@@ -85,6 +85,8 @@ export const ADMIN_MAPS_PACKAGE_EDITOR: AdminMapsPackageEditorData = {
       title: 'بلاغ عن قصف بالقرب من مستشفى الشفاء',
       description:
         'أبلغ عنه 4 مستخدمين موثوقين في المنطقة المحيطة بالمستشفى، يرجى التحديث فوراً.',
+      lat: 31.5207,
+      lng: 34.4665,
     },
     {
       id: 'v2',
@@ -93,6 +95,8 @@ export const ADMIN_MAPS_PACKAGE_EDITOR: AdminMapsPackageEditorData = {
       title: 'انقطاع طريق صلاح الدين',
       description:
         'انهيار مبنى سكني أدى إلى إغلاق كلي للمسار الجنوبي عند مفترق نتساريم.',
+      lat: 31.4956,
+      lng: 34.4631,
     },
     {
       id: 'v3',
@@ -101,6 +105,8 @@ export const ADMIN_MAPS_PACKAGE_EDITOR: AdminMapsPackageEditorData = {
       title: 'بلاغ عن قصف بالقرب من مستشفى الشفاء',
       description:
         'أبلغ عنه 4 مستخدمين موثوقين في المنطقة المحيطة بالمستشفى، يرجى التحديث فوراً.',
+      lat: 31.5207,
+      lng: 34.4665,
     },
   ],
   fieldReports: [

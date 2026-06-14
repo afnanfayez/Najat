@@ -56,6 +56,8 @@ export interface AdminMapsVerificationRequest {
   tagVariant: AdminMapsVerificationTagVariant
   title: string
   description: string
+  lat?: number
+  lng?: number
 }
 
 export interface AdminMapsFieldReport {

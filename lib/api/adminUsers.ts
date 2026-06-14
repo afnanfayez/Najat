@@ -1,10 +1,5 @@
 import { request } from '@/lib/api/api'
 import { extractAuthPayload } from '@/lib/api/extractAuth'
-import {
-  getMockAdminUsersList,
-  updateMockAdminUser,
-  USE_MOCK_ADMIN_USERS,
-} from '@/lib/mocks/adminUsersMockData'
 import type {
   AdminBackendUserDto,
   AdminUserDto,
@@ -262,12 +257,6 @@ export async function updateAdminUser(
   id: string,
   body: UpdateAdminUserBody,
 ): Promise<AdminUserDto> {
-  if (USE_MOCK_ADMIN_USERS) {
-    const updated = updateMockAdminUser(id, body)
-    if (!updated) throw { status: 404, message: 'المستخدم غير موجود' }
-    return updated
-  }
-
   const response = await request(`${V1_ROOT}/admin/users/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify(buildBackendUpdateBody(body)),
@@ -280,16 +269,6 @@ export async function setAdminUserActive(
   id: string,
   isActive: boolean,
 ): Promise<AdminUserDto | null> {
-  if (USE_MOCK_ADMIN_USERS) {
-    const updated = updateMockAdminUser(id, {
-      enabled: isActive,
-      isActive,
-      status: isActive ? 'active' : 'disabled',
-    })
-    if (!updated) throw { status: 404, message: 'المستخدم غير موجود' }
-    return updated
-  }
-
   const response = await request(
     `${V1_ROOT}/admin/users/${encodeURIComponent(id)}/status`,
     {
@@ -378,4 +357,3 @@ export async function verifyAdminPassword(
   }
 }
 
-export { getMockAdminUsersList }

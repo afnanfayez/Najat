@@ -10,8 +10,8 @@ import {
   Users,
 } from 'lucide-react'
 import {
-  ADMIN_ALERT_COLORS,
   ADMIN_DASHBOARD_MOCK,
+  ADMIN_ALERT_COLORS,
   type AdminActivityMock,
   type AdminDashboardMockData,
   type AdminIconKey,
@@ -19,8 +19,8 @@ import {
   type AdminStatMock,
   type AdminUrgentAlertMock,
 } from '@/lib/mocks/adminDashboardMockData'
+import { fetchAdminSystemStatsFromApi } from '@/lib/api/adminStats'
 import { fetchAdminUsersStatsFromApi } from '@/lib/api/adminUsers'
-import type { AdminUsersStatsDto } from '@/schemas/adminUser'
 
 const ADMIN_ICONS: Record<AdminIconKey, LucideIcon> = {
   users: Users,
@@ -77,55 +77,66 @@ function mapUrgentAlert(alert: AdminUrgentAlertMock): AdminUrgentAlert {
   }
 }
 
-export function mapAdminDashboardMock(raw: AdminDashboardMockData = ADMIN_DASHBOARD_MOCK): AdminDashboardData {
-  return {
-    stats: raw.stats.map(mapStat),
-    responseTime: raw.responseTime,
-    informationAccuracy: raw.informationAccuracy,
-    recentActivities: raw.recentActivities.map(mapActivity),
-    quickActions: raw.quickActions.map(mapQuickAction),
-    urgentAlerts: raw.urgentAlerts.map(mapUrgentAlert),
-  }
-}
-
-export function getAdminDashboardData(): AdminDashboardData {
-  // TODO: Wire real API when backend adds a dashboard statistics endpoint.
-  // Currently returns mock layout + real user stats (via fetchAdminDashboardData below).
-  return mapAdminDashboardMock(ADMIN_DASHBOARD_MOCK)
-}
-
 function formatDashboardNumber(value: number): string {
   return value.toLocaleString('en-US')
 }
 
-function mergeUserStats(
-  dashboard: AdminDashboardData,
-  userStats: AdminUsersStatsDto,
-): AdminDashboardData {
+export function getAdminDashboardData(): AdminDashboardData {
+  return getBaseLayout()
+}
+
+function getBaseLayout(): AdminDashboardData {
+  const mock = ADMIN_DASHBOARD_MOCK
   return {
-    ...dashboard,
-    stats: dashboard.stats.map((stat) => {
-      if (stat.id === 'users') {
-        return { ...stat, value: formatDashboardNumber(userStats.totalUsers) }
-      }
-      if (stat.id === 'volunteers') {
-        return {
-          ...stat,
-          value: formatDashboardNumber(userStats.roleBreakdown?.volunteer ?? 0),
-        }
-      }
-      return stat
-    }),
+    stats: mock.stats.map(mapStat),
+    responseTime: mock.responseTime,
+    informationAccuracy: mock.informationAccuracy,
+    recentActivities: [],
+    quickActions: mock.quickActions.map(mapQuickAction),
+    urgentAlerts: [],
   }
 }
 
 export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
-  const dashboard = getAdminDashboardData()
+  const dashboard = getBaseLayout()
 
-  try {
-    const userStats = await fetchAdminUsersStatsFromApi()
-    return mergeUserStats(dashboard, userStats)
-  } catch {
-    return dashboard
+  const [systemStats, userStats] = await Promise.allSettled([
+    fetchAdminSystemStatsFromApi(),
+    fetchAdminUsersStatsFromApi(),
+  ])
+
+  const sys = systemStats.status === 'fulfilled' ? systemStats.value : null
+  const usr = userStats.status === 'fulfilled' ? userStats.value : null
+
+  const updated: AdminDashboardData = {
+    ...dashboard,
+    stats: dashboard.stats.map((stat) => {
+      if (stat.id === 'users') {
+        const total = usr?.totalUsers ?? sys?.userStats?.totalUsers
+        return total != null ? { ...stat, value: formatDashboardNumber(total) } : stat
+      }
+      if (stat.id === 'volunteers') {
+        const vol = usr?.roleBreakdown?.volunteer ?? sys?.userStats?.roleBreakdown?.volunteer
+        return vol != null ? { ...stat, value: formatDashboardNumber(vol) } : stat
+      }
+      if (stat.id === 'tasks') {
+        const tasks = sys?.activeActivitiesCount
+        return tasks != null ? { ...stat, value: formatDashboardNumber(tasks) } : stat
+      }
+      if (stat.id === 'alerts') {
+        const alerts = sys?.urgentAlertsCount
+        return alerts != null ? { ...stat, value: formatDashboardNumber(alerts) } : stat
+      }
+      return stat
+    }),
+    informationAccuracy: sys?.informationAccuracy != null
+      ? {
+          percentage: sys.informationAccuracy > 1
+            ? sys.informationAccuracy
+            : Math.round(sys.informationAccuracy * 100),
+        }
+      : dashboard.informationAccuracy,
   }
+
+  return updated
 }

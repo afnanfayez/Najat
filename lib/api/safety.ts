@@ -84,24 +84,28 @@ export type CreateDangerZoneBody = {
   description: string
   dangerLevel: string
   area: object
+  isDraft?: boolean
 }
 
 export type UpdateDangerZoneBody = Partial<{
   description: string
   dangerLevel: string
   area: object
+  isDraft: boolean
 }>
 
 export type CreateSafeRoadBody = {
   name: string
   description?: string
   path: object
+  isDraft?: boolean
 }
 
 export type CreateResourcePointBody = {
   name: string
   type: string
   location: object
+  isDraft?: boolean
 }
 
 function unwrapEntity<T>(raw: unknown): T {

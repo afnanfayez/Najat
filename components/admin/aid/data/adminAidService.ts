@@ -341,7 +341,7 @@ export function createEmptyDistributionPoint(): AdminAidDistributionPoint {
 
 export async function fetchAdminAidRequests(): Promise<AidRequestDto[]> {
   try {
-    return await fetchAdminAidRequestsFromApi({ limit: 100 })
+    return await fetchAdminAidRequestsFromApi()
   } catch {
     return []
   }

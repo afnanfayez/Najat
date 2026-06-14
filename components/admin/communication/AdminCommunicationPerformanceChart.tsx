@@ -19,6 +19,7 @@ function buildChartPath(
   height: number,
   padding: number
 ): string {
+  if (values.length < 2) return ''
   const min = Math.min(...values) - 4
   const max = Math.max(...values) + 4
   const range = max - min || 1
@@ -51,7 +52,7 @@ export default function AdminCommunicationPerformanceChart({
   const height = 110
   const padding = 12
   const linePath = buildChartPath(values, width, height, padding)
-  const areaPath = `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`
+  const areaPath = linePath ? `${linePath} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z` : ''
 
   return (
     <section
@@ -108,14 +109,16 @@ export default function AdminCommunicationPerformanceChart({
               <stop offset="100%" stopColor={ADMIN_COMM_BLUE} stopOpacity="0.02" />
             </linearGradient>
           </defs>
-          <path d={areaPath} fill="url(#commChartFill)" />
-          <path
-            d={linePath}
-            fill="none"
-            stroke={ADMIN_COMM_BLUE}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
+          {areaPath && <path d={areaPath} fill="url(#commChartFill)" />}
+          {linePath && (
+            <path
+              d={linePath}
+              fill="none"
+              stroke={ADMIN_COMM_BLUE}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          )}
           {data.map((item, index) => {
             const stepX = (width - padding * 2) / (values.length - 1)
             const x = padding + index * stepX

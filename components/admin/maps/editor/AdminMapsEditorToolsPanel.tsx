@@ -5,6 +5,7 @@ import {
   ArrowUpDown,
   CheckCircle2,
 } from 'lucide-react'
+import { useRef } from 'react'
 import { toast } from 'sonner'
 import type { AdminMapsEditorIntegrity, AdminMapsEditorLayer } from '@/schemas/adminMaps'
 import { ADMIN_MAPS_BLUE, ADMIN_MAPS_FONT } from '../adminMapsStyles'
@@ -56,6 +57,19 @@ export default function AdminMapsEditorToolsPanel({
   onToolChange,
   onLayerToggle,
 }: AdminMapsEditorToolsPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function handleUploadClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    toast.success(`تم اختيار الخريطة: ${file.name}`, { position: 'top-center' })
+    e.target.value = ''
+  }
+
   return (
     <aside
       className="flex h-auto flex-col gap-4 rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:gap-5 sm:p-5 xl:h-full"
@@ -188,11 +202,16 @@ export default function AdminMapsEditorToolsPanel({
         </div>
       </section>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".geojson,.json,.kml,.gpx"
+        className="hidden"
+        onChange={handleFileChange}
+      />
       <button
         type="button"
-        onClick={() =>
-          toast.info('رفع خريطة أساس جديدة — قريباً', { position: 'top-center' })
-        }
+        onClick={handleUploadClick}
         className="mt-auto w-full rounded-xl py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
         style={{ background: ADMIN_MAPS_BLUE, fontFamily: ADMIN_MAPS_FONT }}
       >

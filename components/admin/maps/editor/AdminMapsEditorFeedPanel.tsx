@@ -1,6 +1,6 @@
 'use client'
 
-import { toast } from 'sonner'
+import { useState } from 'react'
 import type {
   AdminMapsFieldReport,
   AdminMapsQuickAction,
@@ -23,13 +23,19 @@ interface AdminMapsEditorFeedPanelProps {
   verificationRequests: AdminMapsVerificationRequest[]
   fieldReports: AdminMapsFieldReport[]
   quickActions: AdminMapsQuickAction[]
+  onViewLocation?: (lat: number, lng: number) => void
 }
 
 export default function AdminMapsEditorFeedPanel({
   verificationRequests,
   fieldReports,
   quickActions,
+  onViewLocation,
 }: AdminMapsEditorFeedPanelProps) {
+  const [showAllReports, setShowAllReports] = useState(false)
+  const INITIAL_REPORT_COUNT = 2
+  const visibleReports = showAllReports ? fieldReports : fieldReports.slice(0, INITIAL_REPORT_COUNT)
+
   return (
     <aside
       className="flex h-auto flex-col gap-4 rounded-2xl border border-[#E8EEF5] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:gap-5 sm:p-5 xl:h-full"
@@ -76,12 +82,13 @@ export default function AdminMapsEditorFeedPanel({
                 </p>
                 <button
                   type="button"
-                  onClick={() =>
-                    toast.info('عرض الموقع على الخريطة — قريباً', {
-                      position: 'top-center',
-                    })
-                  }
-                  className="mt-3 w-full rounded-xl py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                  onClick={() => {
+                    if (request.lat != null && request.lng != null) {
+                      onViewLocation?.(request.lat, request.lng)
+                    }
+                  }}
+                  disabled={request.lat == null || request.lng == null}
+                  className="mt-3 w-full rounded-xl py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                   style={{ background: ADMIN_MAPS_BLUE, fontFamily: ADMIN_MAPS_FONT }}
                 >
                   عرض الموقع
@@ -102,17 +109,27 @@ export default function AdminMapsEditorFeedPanel({
           >
             تقارير الميدان الأخيرة
           </h2>
-          <button
-            type="button"
-            onClick={() => toast.info('عرض كل التقارير — قريباً', { position: 'top-center' })}
-            className="shrink-0 text-xs font-bold text-[#2196F3]"
-            style={{ fontFamily: ADMIN_MAPS_FONT }}
-          >
-            عرض الكل
-          </button>
+          {fieldReports.length > INITIAL_REPORT_COUNT && (
+            <button
+              type="button"
+              onClick={() => setShowAllReports((prev) => !prev)}
+              className="shrink-0 text-xs font-bold text-[#2196F3]"
+              style={{ fontFamily: ADMIN_MAPS_FONT }}
+            >
+              {showAllReports ? 'عرض أقل' : 'عرض الكل'}
+            </button>
+          )}
+          {fieldReports.length <= INITIAL_REPORT_COUNT && fieldReports.length > 0 && (
+            <span
+              className="shrink-0 text-xs font-medium text-[#94A3B8]"
+              style={{ fontFamily: ADMIN_MAPS_FONT }}
+            >
+              عرض الكل ({fieldReports.length})
+            </span>
+          )}
         </div>
         <div className="space-y-4">
-          {fieldReports.map((report) => (
+          {visibleReports.map((report) => (
             <div key={report.id}>
               <div className="flex items-center justify-between gap-2">
                 <span
@@ -136,6 +153,11 @@ export default function AdminMapsEditorFeedPanel({
               </p>
             </div>
           ))}
+          {fieldReports.length === 0 && (
+            <p className="py-2 text-center text-xs text-[#CBD5E1]" style={{ fontFamily: ADMIN_MAPS_FONT }}>
+              لا توجد تقارير ميدانية
+            </p>
+          )}
         </div>
       </section>
 
@@ -163,13 +185,18 @@ export default function AdminMapsEditorFeedPanel({
               </p>
             </div>
           ))}
+          {quickActions.length === 0 && (
+            <p className="py-2 text-center text-xs text-[#CBD5E1]" style={{ fontFamily: ADMIN_MAPS_FONT }}>
+              لا توجد إجراءات مسجلة
+            </p>
+          )}
         </div>
       </section>
 
       <button
         type="button"
         onClick={() =>
-          toast.info('سجل التدقيق الكامل — قريباً', { position: 'top-center' })
+          document.getElementById('admin-maps-audit-log')?.scrollIntoView({ behavior: 'smooth' })
         }
         className="mt-auto w-full rounded-xl py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
         style={{ background: ADMIN_MAPS_BLUE, fontFamily: ADMIN_MAPS_FONT }}

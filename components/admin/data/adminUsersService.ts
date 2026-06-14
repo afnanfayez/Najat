@@ -1,11 +1,6 @@
 import { fetchAdminUsersFromApi } from '@/lib/api/adminUsers'
 import { putAdminUsers, getAdminUsers } from '@/lib/offline/db'
-import {
-  ADMIN_USER_ROLE_OPTIONS,
-  ADMIN_USERS_STATS_MOCK,
-  getMockAdminUsersList,
-  USE_MOCK_ADMIN_USERS,
-} from '@/lib/mocks/adminUsersMockData'
+import { ADMIN_USER_ROLE_OPTIONS } from '@/lib/mocks/adminUsersMockData'
 import type {
   AdminManagedUser,
   AdminUserDto,
@@ -109,25 +104,21 @@ function paginateUsers(
   return users.slice(start, start + pageSize)
 }
 
-function getMockAdminUsersResult(params: AdminUsersQueryParams): AdminUsersListResponse {
-  const page = params.page ?? 1
-  const pageSize = params.pageSize ?? 4
-  const filtered = filterMockUsers(getMockAdminUsersList(), params)
-
-  return {
-    users: paginateUsers(filtered, page, pageSize),
-    stats: ADMIN_USERS_STATS_MOCK,
-    total: filtered.length,
-    page,
-    pageSize,
-  }
+const EMPTY_STATS = {
+  totalUsers: 0,
+  admins: 0,
+  pendingApproval: 0,
+  activeUsers: 0,
+  verifiedUsers: 0,
+  roleBreakdown: {},
+  genderBreakdown: {},
+  healthStatusBreakdown: {},
+  regionBreakdown: {},
 }
 
 export async function fetchAdminUsers(
   params: AdminUsersQueryParams = {},
 ): Promise<AdminUsersListResponse> {
-  if (USE_MOCK_ADMIN_USERS) return getMockAdminUsersResult(params)
-
   try {
     let apiResult: AdminUsersListResponse
 
@@ -171,7 +162,7 @@ export async function fetchAdminUsers(
     const filtered = filterMockUsers(cached, params)
     return {
       users: paginateUsers(filtered, page, pageSize),
-      stats: ADMIN_USERS_STATS_MOCK,
+      stats: EMPTY_STATS,
       total: filtered.length,
       page,
       pageSize,
