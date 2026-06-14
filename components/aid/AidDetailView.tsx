@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { ArrowRight, ExternalLink, MapPin, Send } from 'lucide-react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -103,6 +103,7 @@ const MOCK_NEARBY_POINTS: NearbyAidPointDto[] = [
 ]
 
 export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
+  const queryClient = useQueryClient()
   const [isMobile, setIsMobile] = useState(false)
   const isClient = useSyncExternalStore(
     clientSnapshotSubscribe,
@@ -180,6 +181,7 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     onSuccess: (result) => {
       if (result.ok) {
         toast.success(result.message)
+        queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })
         form.reset({
           aidOrganizationId: aid.id,
           husbandName: '',
@@ -215,6 +217,7 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
           payload: payloadWithOrg as unknown as Record<string, unknown>,
         })
         toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
+        queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })
         form.reset({
           aidOrganizationId: aid.id,
           husbandName: '',
@@ -230,7 +233,7 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
       }
       mutation.mutate(payloadWithOrg)
     },
-    [aid.id, aid.name, form, mutation],
+    [aid.id, aid.name, form, mutation, queryClient],
   )
 
   return (

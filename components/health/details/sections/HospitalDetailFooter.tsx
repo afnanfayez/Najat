@@ -16,7 +16,7 @@ export default function HospitalDetailFooter({ onBack }: HospitalDetailFooterPro
         <div className="flex flex-col xl:flex-row items-center justify-between h-full py-5 xl:py-0 px-4 sm:px-8 gap-5 xl:gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full xl:w-auto justify-center xl:justify-start">
             <div className="relative w-[90px] h-[90px] sm:w-[100px] sm:h-[100px] flex-shrink-0">
-              <Image src="/assets/logo1.png" alt="Health Logo" fill className="object-contain" />
+              <Image src="/assets/Logo1.png" alt="Health Logo" fill className="object-contain" />
             </div>
             <div className="flex flex-col text-center sm:text-right">
               <h4 className="text-[16px] sm:text-[18px] xl:text-[21px] font-[900] text-slate-800" style={{ fontFamily: "'Cairo', sans-serif" }}>منصة نجاة للخدمات الإنسانية والطوارئ</h4>

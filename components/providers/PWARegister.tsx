@@ -78,27 +78,6 @@ export default function PWARegister() {
         const swUrl = devMode ? '/sw.js?dev=1' : '/sw.js'
         const registration = await navigator.serviceWorker.register(swUrl)
 
-        // Notify user when a new SW version installs so they can reload
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing
-          if (!newWorker) return
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              toast.info('تحديث جديد للتطبيق متاح', {
-                id: 'sw-update',
-                duration: Infinity,
-                action: {
-                  label: 'تحديث الآن',
-                  onClick: () => {
-                    newWorker.postMessage({ type: 'SKIP_WAITING' })
-                    window.location.reload()
-                  },
-                },
-              })
-            }
-          })
-        })
-
         if (getToken()) {
           void precacheRoutesForRole(getCurrentAuthRole())
           scheduleDataSync(true)

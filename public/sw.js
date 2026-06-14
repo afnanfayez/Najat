@@ -398,6 +398,7 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return
   if (url.pathname.startsWith('/_next/webpack-hmr')) return
+  if (IS_DEV && (request.mode === 'navigate' || isAppRouteRequest(request, url))) return
 
   if (url.origin !== self.location.origin) {
     if (!isExternalCacheable(url) && !isMapTileUrl(url)) return

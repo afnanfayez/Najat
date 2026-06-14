@@ -30,14 +30,18 @@ export default function AdminAidRequestsTable({ requests, font = "'Cairo', sans-
   return (
     <div className="overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
       <div className="overflow-x-auto">
-        <table className="w-full table-fixed border-collapse text-right" style={{ fontFamily: font }}>
+        <table className="w-full border-collapse text-right" style={{ fontFamily: font, tableLayout: 'auto' }}>
           <thead>
             <tr style={{ background: `${ADMIN_AID_BLUE}1A` }}>
-              <th className="px-4 py-4 text-right text-[13px] font-semibold text-[#7E7D7D] w-[20%]">رقم الطلب</th>
-              <th className="px-4 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] w-[20%]">نقطة التوزيع</th>
-              <th className="px-4 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] w-[25%]">المستلزمات المطلوبة</th>
-              <th className="px-4 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] w-[20%]">الحالة</th>
-              <th className="px-4 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] w-[15%]">تاريخ الطلب</th>
+              <th className="px-3 py-4 text-right text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">رقم الطلب</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">اسم الزوج</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">اسم الزوجة</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">رقم الهاتف</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">الموقع الحالي</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">الأبناء (ذ/إ)</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">نقطة التوزيع</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">الحالة</th>
+              <th className="px-3 py-4 text-center text-[13px] font-semibold text-[#7E7D7D] whitespace-nowrap">تاريخ الطلب</th>
             </tr>
           </thead>
           <tbody>
@@ -48,28 +52,47 @@ export default function AdminAidRequestsTable({ requests, font = "'Cairo', sans-
                     day: 'numeric', month: 'short', year: 'numeric',
                   })
                 : '—'
+
+              const r = req as AidRequestDto & {
+                husbandName?: string
+                wifeName?: string
+                phoneNumber?: string
+                currentLocation?: string
+                aidOrganizationName?: string
+                maleChildrenCount?: number
+                femaleChildrenCount?: number
+              }
+
+              const distributionPoint = r.aidOrganizationName || r.aidPointId?.slice(0, 8) || '—'
+
               return (
-                <tr key={req.id} className="border-b border-[#EEF2F7] last:border-b-0">
-                  <td className="px-4 py-4 text-right">
-                    <span className="text-[13px] font-mono text-[#64748B]">
-                      {req.id.slice(0, 8)}…
+                <tr key={req.id} className="border-b border-[#EEF2F7] last:border-b-0 hover:bg-[#F8FAFC] transition-colors">
+                  <td className="px-3 py-4 text-right">
+                    <span className="text-[12px] font-mono text-[#64748B]">
+                      {req.id.slice(0, 10)}…
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-center text-[14px] font-medium text-[#1e293b]">
-                    {req.aidPointId?.slice(0, 8) ?? '—'}
+                  <td className="px-3 py-4 text-center text-[13px] font-medium text-[#1e293b]">
+                    {r.husbandName || '—'}
                   </td>
-                  <td className="px-4 py-4 text-center">
-                    {req.requestedSupplies && req.requestedSupplies.length > 0 ? (
-                      <span className="text-[13px] text-[#475569]">
-                        {req.requestedSupplies.join('، ')}
-                      </span>
-                    ) : (
-                      <span className="text-[13px] text-[#94A3B8]">—</span>
-                    )}
+                  <td className="px-3 py-4 text-center text-[13px] font-medium text-[#1e293b]">
+                    {r.wifeName || '—'}
                   </td>
-                  <td className="px-4 py-4 text-center">
+                  <td className="px-3 py-4 text-center text-[13px] text-[#475569] whitespace-nowrap" dir="ltr">
+                    {r.phoneNumber || '—'}
+                  </td>
+                  <td className="px-3 py-4 text-center text-[13px] text-[#475569]">
+                    {r.currentLocation || '—'}
+                  </td>
+                  <td className="px-3 py-4 text-center text-[13px] text-[#475569] whitespace-nowrap">
+                    {(r.maleChildrenCount ?? 0)} ذ / {(r.femaleChildrenCount ?? 0)} إ
+                  </td>
+                  <td className="px-3 py-4 text-center text-[13px] font-medium text-[#1e293b]">
+                    {distributionPoint}
+                  </td>
+                  <td className="px-3 py-4 text-center">
                     <span
-                      className="rounded-full px-3 py-1 text-[12px] font-bold"
+                      className="rounded-full px-3 py-1 text-[12px] font-bold whitespace-nowrap"
                       style={{
                         background: `${statusMeta.color}1A`,
                         color: statusMeta.color,
@@ -78,7 +101,7 @@ export default function AdminAidRequestsTable({ requests, font = "'Cairo', sans-
                       {statusMeta.label}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-center text-[13px] text-[#64748B]">
+                  <td className="px-3 py-4 text-center text-[13px] text-[#64748B] whitespace-nowrap">
                     {date}
                   </td>
                 </tr>

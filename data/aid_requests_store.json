@@ -1,6 +1,59 @@
 {
   "023745f2-6a3a-48f4-8b6f-7961f1b365cb": [
     {
+      "id": "req_96m9sttzo",
+      "userId": "023745f2-6a3a-48f4-8b6f-7961f1b365cb",
+      "aidOrganizationId": "32ba791d-0f51-431f-8bea-bed11c11a5e1",
+      "aidOrganizationName": "مساعدات جباليا الأولية",
+      "husbandName": "أحمد الزيتي ",
+      "wifeName": "امل ",
+      "phoneNumber": "0597715362",
+      "currentLocation": "شمال غزة",
+      "femaleChildrenCount": 3,
+      "maleChildrenCount": 4,
+      "status": "pending",
+      "createdAt": "2026-06-14T18:00:41.472Z"
+    },
+    {
+      "id": "req_xqdc7t0be",
+      "aidOrganizationId": "a76c5648-56a5-43dd-b7df-56832efd8393",
+      "aidOrganizationName": "دعم الشتاء النصيرات",
+      "husbandName": "محمد",
+      "wifeName": "افنان",
+      "phoneNumber": "0597715632",
+      "currentLocation": "البريج",
+      "femaleChildrenCount": 3,
+      "maleChildrenCount": 2,
+      "status": "pending",
+      "createdAt": "2026-06-14T17:46:12.267Z"
+    },
+    {
+      "id": "req_nq71h2uud",
+      "aidOrganizationId": "a76c5648-56a5-43dd-b7df-56832efd8393",
+      "aidOrganizationName": "دعم الشتاء النصيرات",
+      "husbandName": "فايز ",
+      "wifeName": "افنان",
+      "phoneNumber": "0597715632",
+      "currentLocation": "البريج",
+      "femaleChildrenCount": 2,
+      "maleChildrenCount": 3,
+      "status": "pending",
+      "createdAt": "2026-06-14T17:45:06.418Z"
+    },
+    {
+      "id": "req_wn4i8959d",
+      "aidOrganizationId": "b3f1b43c-c29a-4700-9eea-5225ed1377da",
+      "aidOrganizationName": "نقطة الطوارئ الشاملة",
+      "husbandName": "فايز ",
+      "wifeName": "افنان",
+      "phoneNumber": "0597715632",
+      "currentLocation": "البريج",
+      "femaleChildrenCount": 2,
+      "maleChildrenCount": 3,
+      "status": "pending",
+      "createdAt": "2026-06-14T17:41:32.706Z"
+    },
+    {
       "id": "req_v8tiahf75",
       "aidOrganizationId": "11974c5d-c432-4bfd-bf48-f30025de5a73",
       "aidOrganizationName": "مؤسسة إغاثة فلسطين",
@@ -25,6 +78,21 @@
       "maleChildrenCount": 4,
       "status": "pending",
       "createdAt": "2026-06-14T16:23:05.347Z"
+    }
+  ],
+  "fb377a32-75a0-4dfe-a26c-23fcd1bf8b0f": [
+    {
+      "id": "req_dpt7uk0t5",
+      "aidOrganizationId": "32ba791d-0f51-431f-8bea-bed11c11a5e1",
+      "aidOrganizationName": "مساعدات جباليا الأولية",
+      "husbandName": "أحمد الزيتي ",
+      "wifeName": "امل ",
+      "phoneNumber": "0597715362",
+      "currentLocation": "الوسطى/البريج/بلوك 12",
+      "femaleChildrenCount": 3,
+      "maleChildrenCount": 3,
+      "status": "pending",
+      "createdAt": "2026-06-14T17:49:06.823Z"
     }
   ]
 }

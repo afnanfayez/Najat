@@ -40,58 +40,101 @@ function getUserIdFromAuthHeader(authHeader: string): string | null {
   }
 }
 
+async function fetchWithTimeout(url: string, init?: RequestInit, timeoutMs = 2500): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get('authorization')
   if (!authHeader) {
     return NextResponse.json({ message: 'غير مصرح' }, { status: 401 })
   }
 
+  const userId = getUserIdFromAuthHeader(authHeader)
+
   try {
-    // 1. One single GET request to the real backend
-    const backendRes = await fetch(BACKEND_ME_URL, {
+    // 1. One single GET request to the real backend with a short timeout
+    const backendRes = await fetchWithTimeout(BACKEND_ME_URL, {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
         'Cache-Control': 'no-cache',
       },
-    })
+    }, 2500)
 
-    if (!backendRes.ok) {
-      const text = await backendRes.text()
-      let errBody = { message: 'فشل التحقق من الجلسة' }
-      try { errBody = JSON.parse(text) } catch {}
-      return NextResponse.json(errBody, { status: backendRes.status })
+    if (backendRes.ok) {
+      const rawUser = await backendRes.json()
+      const mapped = mapUserProfile(rawUser)
+      if (mapped) {
+        // 2. Read local server db and merge
+        const db = await readDb()
+        const local = db[mapped.id] || {}
+
+        const merged = {
+          ...mapped,
+          avatarUrl: local.avatarUrl ?? mapped.avatarUrl ?? null,
+          assistancePreferences: local.assistancePreferences ?? mapped.assistancePreferences ?? null,
+          assistanceLocation: local.assistanceLocation ?? mapped.assistanceLocation ?? null,
+          assistanceRadius: local.assistanceRadius ?? mapped.assistanceRadius ?? null,
+          emergencyContacts: local.emergencyContacts ?? null,
+          sosMessage: local.sosMessage ?? null,
+          bloodType: local.bloodType ?? null,
+        }
+
+        // Cache merged values in server DB
+        db[mapped.id] = { ...local, ...merged }
+        await writeDb(db)
+
+        return NextResponse.json({ success: true, data: merged })
+      }
     }
-
-    const rawUser = await backendRes.json()
-    const mapped = mapUserProfile(rawUser)
-    if (!mapped) {
-      return NextResponse.json(
-        { message: 'تعذر تحليل بيانات الملف الشخصي من الخادم الرئيسي' },
-        { status: 500 }
-      )
-    }
-
-    // 2. Read local server db and merge
-    const db = await readDb()
-    const local = db[mapped.id] || {}
-
-    const merged = {
-      ...mapped,
-      avatarUrl: local.avatarUrl ?? mapped.avatarUrl ?? null,
-      assistancePreferences: local.assistancePreferences ?? mapped.assistancePreferences ?? null,
-      assistanceLocation: local.assistanceLocation ?? mapped.assistanceLocation ?? null,
-      assistanceRadius: local.assistanceRadius ?? mapped.assistanceRadius ?? null,
-      emergencyContacts: local.emergencyContacts ?? null,
-      sosMessage: local.sosMessage ?? null,
-      bloodType: local.bloodType ?? null,
-    }
-
-    return NextResponse.json({ success: true, data: merged })
   } catch (err) {
-    console.error('Profile GET proxy error:', err)
-    return NextResponse.json({ message: 'خطأ داخلي في الخادم' }, { status: 500 })
+    console.warn('[Profile GET] Remote backend unreachable or timed out. Falling back to server database:', err)
   }
+
+  // Fallback: load directly from server DB when offline
+  if (userId) {
+    const db = await readDb()
+    const local = db[userId]
+    if (local) {
+      const fallbackProfile = {
+        id: userId,
+        fullName: local.fullName ?? 'مستخدم نجاة',
+        email: local.email ?? '',
+        role: local.role ?? 'resident',
+        phoneNumber: local.phoneNumber ?? null,
+        gender: local.gender ?? null,
+        ageGroup: local.ageGroup ?? null,
+        maritalStatus: local.maritalStatus ?? null,
+        healthStatus: local.healthStatus ?? null,
+        nationalId: local.nationalId ?? null,
+        housingStatus: local.housingStatus ?? null,
+        familyMembersCount: local.familyMembersCount ?? null,
+        femalesCount: local.femalesCount ?? null,
+        malesCount: local.malesCount ?? null,
+        region: local.region ?? null,
+        avatarUrl: local.avatarUrl ?? null,
+        assistancePreferences: local.assistancePreferences ?? null,
+        assistanceLocation: local.assistanceLocation ?? null,
+        assistanceRadius: local.assistanceRadius ?? null,
+        emergencyContacts: local.emergencyContacts ?? null,
+        sosMessage: local.sosMessage ?? null,
+        bloodType: local.bloodType ?? null,
+      }
+      return NextResponse.json({ success: true, data: fallbackProfile })
+    }
+  }
+
+  return NextResponse.json({ message: 'تعذر الاتصال بالخادم وقاعدة البيانات فارغة' }, { status: 504 })
 }
 
 export async function PATCH(req: Request) {
@@ -140,6 +183,22 @@ export async function PATCH(req: Request) {
     if (sosMessage !== undefined) local.sosMessage = sosMessage
     if (bloodType !== undefined) local.bloodType = bloodType
 
+    // If backend body contains offline supported fields, cache them too
+    if (body.fullName !== undefined) local.fullName = body.fullName
+    if (body.email !== undefined) local.email = body.email
+    if (body.role !== undefined) local.role = body.role
+    if (body.phoneNumber !== undefined) local.phoneNumber = body.phoneNumber
+    if (body.gender !== undefined) local.gender = body.gender
+    if (body.ageGroup !== undefined) local.ageGroup = body.ageGroup
+    if (body.maritalStatus !== undefined) local.maritalStatus = body.maritalStatus
+    if (body.healthStatus !== undefined) local.healthStatus = body.healthStatus
+    if (body.nationalId !== undefined) local.nationalId = body.nationalId
+    if (body.housingStatus !== undefined) local.housingStatus = body.housingStatus
+    if (body.familyMembersCount !== undefined) local.familyMembersCount = body.familyMembersCount
+    if (body.femalesCount !== undefined) local.femalesCount = body.femalesCount
+    if (body.malesCount !== undefined) local.malesCount = body.malesCount
+    if (body.region !== undefined) local.region = body.region
+
     db[userId] = local
     await writeDb(db)
 
@@ -147,56 +206,66 @@ export async function PATCH(req: Request) {
 
     // 4. Update backend if there are any backend fields (1 single fetch!)
     if (Object.keys(backendBody).length > 0) {
-      const updateRes = await fetch(BACKEND_ME_URL, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(backendBody),
-      })
+      try {
+        const updateRes = await fetchWithTimeout(BACKEND_ME_URL, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': authHeader,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(backendBody),
+        }, 3000)
 
-      if (!updateRes.ok) {
-        const text = await updateRes.text()
-        let errBody = { message: 'فشل تعديل الملف الشخصي على الخادم الرئيسي' }
-        try { errBody = JSON.parse(text) } catch {}
-        return NextResponse.json(errBody, { status: updateRes.status })
+        if (updateRes.ok) {
+          const updateRaw = await updateRes.json()
+          refreshedMapped = mapUserProfile(updateRaw)
+        }
+      } catch (err) {
+        console.warn('[Profile PATCH] Remote backend update failed (offline). Saved locally.', err)
       }
-
-      // The PATCH response contains the refreshed profile data directly!
-      const updateRaw = await updateRes.json()
-      refreshedMapped = mapUserProfile(updateRaw)
     }
 
-    // 5. If no backend fields were updated, fetch current user info from backend (1 single fetch!)
+    // 5. If no backend fields were updated or update failed, fetch current user info from backend (1 single fetch!)
     if (!refreshedMapped) {
-      const refreshedRes = await fetch(BACKEND_ME_URL, {
-        method: 'GET',
-        headers: {
-          'Authorization': authHeader,
-          'Cache-Control': 'no-cache',
-        },
-      })
+      try {
+        const refreshedRes = await fetchWithTimeout(BACKEND_ME_URL, {
+          method: 'GET',
+          headers: {
+            'Authorization': authHeader,
+            'Cache-Control': 'no-cache',
+          },
+        }, 2500)
 
-      if (!refreshedRes.ok) {
-        return NextResponse.json({ message: 'فشل تحديث الجلسة' }, { status: refreshedRes.status })
+        if (refreshedRes.ok) {
+          const refreshedRaw = await refreshedRes.json()
+          refreshedMapped = mapUserProfile(refreshedRaw)
+        }
+      } catch (err) {
+        console.warn('[Profile PATCH] Remote backend GET failed (offline).', err)
       }
-
-      const refreshedRaw = await refreshedRes.json()
-      refreshedMapped = mapUserProfile(refreshedRaw)
     }
 
-    if (!refreshedMapped) {
-      return NextResponse.json({ message: 'تعذر تحليل بيانات الملف الشخصي' }, { status: 500 })
-    }
-
-    // 6. Merge and return
+    // 6. Merge and return (even if completely offline, we merge with local)
     const finalMerged = {
-      ...refreshedMapped,
-      avatarUrl: local.avatarUrl ?? refreshedMapped.avatarUrl ?? null,
-      assistancePreferences: local.assistancePreferences ?? refreshedMapped.assistancePreferences ?? null,
-      assistanceLocation: local.assistanceLocation ?? refreshedMapped.assistanceLocation ?? null,
-      assistanceRadius: local.assistanceRadius ?? refreshedMapped.assistanceRadius ?? null,
+      id: userId,
+      fullName: refreshedMapped?.fullName ?? local.fullName ?? 'مستخدم نجاة',
+      email: refreshedMapped?.email ?? local.email ?? '',
+      role: refreshedMapped?.role ?? local.role ?? 'resident',
+      phoneNumber: refreshedMapped?.phoneNumber ?? local.phoneNumber ?? null,
+      gender: refreshedMapped?.gender ?? local.gender ?? null,
+      ageGroup: refreshedMapped?.ageGroup ?? local.ageGroup ?? null,
+      maritalStatus: refreshedMapped?.maritalStatus ?? local.maritalStatus ?? null,
+      healthStatus: refreshedMapped?.healthStatus ?? local.healthStatus ?? null,
+      nationalId: refreshedMapped?.nationalId ?? local.nationalId ?? null,
+      housingStatus: refreshedMapped?.housingStatus ?? local.housingStatus ?? null,
+      familyMembersCount: refreshedMapped?.familyMembersCount ?? local.familyMembersCount ?? null,
+      femalesCount: refreshedMapped?.femalesCount ?? local.femalesCount ?? null,
+      malesCount: refreshedMapped?.malesCount ?? local.malesCount ?? null,
+      region: refreshedMapped?.region ?? local.region ?? null,
+      avatarUrl: local.avatarUrl ?? refreshedMapped?.avatarUrl ?? null,
+      assistancePreferences: local.assistancePreferences ?? refreshedMapped?.assistancePreferences ?? null,
+      assistanceLocation: local.assistanceLocation ?? refreshedMapped?.assistanceLocation ?? null,
+      assistanceRadius: local.assistanceRadius ?? refreshedMapped?.assistanceRadius ?? null,
       emergencyContacts: local.emergencyContacts ?? null,
       sosMessage: local.sosMessage ?? null,
       bloodType: local.bloodType ?? null,

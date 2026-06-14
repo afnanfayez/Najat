@@ -91,6 +91,15 @@ export const aidRequestDtoSchema = z.object({
   requestedSupplies: z.array(z.string()).optional().default([]),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  // Local-store fields (saved by /api/aid-requests POST)
+  aidOrganizationId: z.string().optional(),
+  aidOrganizationName: z.string().optional(),
+  husbandName: z.string().optional(),
+  wifeName: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  currentLocation: z.string().optional(),
+  femaleChildrenCount: z.number().optional(),
+  maleChildrenCount: z.number().optional(),
 }).passthrough()
 
 export type AidRequestDto = z.infer<typeof aidRequestDtoSchema>
