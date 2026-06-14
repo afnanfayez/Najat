@@ -39,6 +39,9 @@ export const userProfileSchema = z.object({
   assistancePreferences: assistancePreferencesSchema.nullable().optional(),
   assistanceLocation: z.string().nullable().optional(),
   assistanceRadius: z.coerce.number().nullable().optional(),
+  emergencyContacts: z.array(z.any()).nullable().optional(),
+  sosMessage: z.string().nullable().optional(),
+  bloodType: z.string().nullable().optional(),
 })
 
 export type UserProfile = z.infer<typeof userProfileSchema>

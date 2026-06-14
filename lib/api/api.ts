@@ -63,7 +63,17 @@ export function unwrapPaginated(raw: unknown): unknown {
 }
 
 export async function request(endpoint: string, options: RequestInit = {}) {
-  const url = `${BASE_URL}${endpoint}`
+  let url = `${BASE_URL}${endpoint}`
+
+  const matchAidRequest = endpoint.match(/\/aid\/([^/]+)\/requests$/)
+  if (endpoint === `${V1_ROOT}/auth/me` || endpoint === '/v1/auth/me') {
+    url = '/api/profile'
+  } else if (endpoint === `${V1_ROOT}/aid/requests` || endpoint === '/v1/aid/requests') {
+    url = '/api/aid-requests'
+  } else if (matchAidRequest && options.method === 'POST') {
+    const orgId = matchAidRequest[1]
+    url = `/api/aid-requests?aidOrganizationId=${encodeURIComponent(orgId)}`
+  }
 
   const config: RequestInit = {
     cache: 'no-store', // Disable browser and Next.js fetch caching

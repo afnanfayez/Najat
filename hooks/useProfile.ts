@@ -21,6 +21,9 @@ import {
 
 export type ProfileSavePayload = UpdateUserProfileBody & {
   avatarDataUrl?: string
+  emergencyContacts?: any[]
+  sosMessage?: string
+  bloodType?: string
 }
 
 async function loadProfileOffline() {
@@ -75,6 +78,9 @@ export function useProfile() {
         assistancePreferences,
         assistanceLocation,
         assistanceRadius,
+        emergencyContacts,
+        sosMessage,
+        bloodType,
         ...backendBody
       } = payload
 
@@ -91,15 +97,18 @@ export function useProfile() {
       if (assistanceRadius !== undefined) {
         localDataToSave.assistanceRadius = assistanceRadius
       }
+      if (emergencyContacts !== undefined) {
+        localDataToSave.emergencyContacts = emergencyContacts
+      }
+      if (sosMessage !== undefined) {
+        localDataToSave.sosMessage = sosMessage
+      }
+      if (bloodType !== undefined) {
+        localDataToSave.bloodType = bloodType
+      }
 
       if (Object.keys(localDataToSave).length > 0) {
         saveLocalProfileData(id, localDataToSave)
-      }
-
-      if (Object.keys(backendBody).length === 0) {
-        const current = query.data ?? (await loadProfileOffline().catch(() => null))
-        if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
-        return { profile: mergeProfileAvatarOnly(current), syncedWithServer: false }
       }
 
       const current = query.data ?? (await loadProfileOffline().catch(() => null))
@@ -107,7 +116,7 @@ export function useProfile() {
 
       const merged = mergeProfileAvatarOnly({
         ...current,
-        ...backendBody,
+        ...payload,
       })
 
       const offline = typeof navigator !== 'undefined' && !navigator.onLine
@@ -122,7 +131,7 @@ export function useProfile() {
         return { profile: merged, syncedWithServer: false }
       }
 
-      const result = await profileAPI.update(backendBody)
+      const result = await profileAPI.update(payload)
       await updateOfflineLoginProfile(result.profile)
       return result
     },

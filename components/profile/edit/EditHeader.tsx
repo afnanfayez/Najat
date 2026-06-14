@@ -28,6 +28,7 @@ export default function EditHeader() {
   const [familyMembersCount, setFamilyMembersCount] = useState<number | ''>('')
   const [femalesCount, setFemalesCount] = useState<number | ''>('')
   const [malesCount, setMalesCount] = useState<number | ''>('')
+  const [bloodType, setBloodType] = useState('')
 
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>()
   const [pendingAvatar, setPendingAvatar] = useState<string | undefined>()
@@ -49,6 +50,7 @@ export default function EditHeader() {
     setFamilyMembersCount(profile.familyMembersCount ?? '')
     setFemalesCount(profile.femalesCount ?? '')
     setMalesCount(profile.malesCount ?? '')
+    setBloodType((profile as any).bloodType || '')
 
     setAvatarPreview(profile.avatarUrl ?? undefined)
     setPendingAvatar(undefined)
@@ -88,6 +90,7 @@ export default function EditHeader() {
         femalesCount: femalesCount !== '' ? Number(femalesCount) : undefined,
         malesCount: malesCount !== '' ? Number(malesCount) : undefined,
         avatarDataUrl: pendingAvatar,
+        bloodType: bloodType || undefined,
       })
 
       if (navigator.onLine) {
@@ -228,6 +231,21 @@ export default function EditHeader() {
               <option value="Chronically Ill">مريض مزمن</option>
               <option value="Injured">مصاب</option>
               <option value="Amputee">مبتور</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs font-semibold text-blue-500 mb-1 px-1">فصيلة الدم</label>
+            <select value={bloodType} onChange={(e) => setBloodType(e.target.value)} className="w-full font-bold text-slate-800 bg-white border border-blue-200 rounded-lg py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              <option value="">اختر فصيلة الدم</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
             </select>
           </div>
 

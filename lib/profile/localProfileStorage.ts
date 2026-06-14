@@ -18,6 +18,7 @@ export type LocalProfileData = {
   assistanceLocation?: string
   assistanceRadius?: number
   overrides?: UpdateUserProfileBody
+  bloodType?: string
 }
 
 const STORAGE_PREFIX = 'najat_profile_local_'
@@ -115,7 +116,10 @@ export function mergeProfileAvatarOnly(profile: UserProfile): UserProfile {
     assistancePreferences: local.assistancePreferences ?? profile.assistancePreferences ?? null,
     assistanceLocation: local.assistanceLocation ?? profile.assistanceLocation ?? null,
     assistanceRadius: local.assistanceRadius ?? profile.assistanceRadius ?? null,
-  }
+    emergencyContacts: local.emergencyContacts ?? profile.emergencyContacts ?? null,
+    sosMessage: local.sosMessage ?? profile.sosMessage ?? null,
+    bloodType: local.bloodType ?? profile.bloodType ?? null,
+  } as any
 }
 
 export function clearLocalOverrides(userId: string, keys: (keyof UpdateUserProfileBody)[]) {

@@ -23,6 +23,7 @@ import {
 } from '@/lib/auth/offlineLogin'
 import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
 import type { UserRole } from '@/lib/auth/roleUtils'
+import { mergeProfileAvatarOnly } from '@/lib/profile/localProfileStorage'
 
 export type AuthUser = Awaited<ReturnType<typeof profileAPI.me>>
 
@@ -87,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       const cachedProfile = await getOfflineCachedProfile()
       if (cachedProfile) {
-        setUser(cachedProfile)
+        setUser(mergeProfileAvatarOnly(cachedProfile))
         saveUserRole(cachedProfile.role)
         setIsLoading(false)
         return
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (seq !== refreshSeqRef.current) return
       if (getToken() !== tokenAtStart) return
 
-      setUser(profile)
+      setUser(mergeProfileAvatarOnly(profile))
       saveUserRole(profile.role)
       await updateOfflineLoginProfile(profile)
     } catch (err: unknown) {
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         const cachedProfile = await getOfflineCachedProfile()
         if (cachedProfile) {
-          setUser(cachedProfile)
+          setUser(mergeProfileAvatarOnly(cachedProfile))
           saveUserRole(cachedProfile.role)
         } else {
           setUser(null)

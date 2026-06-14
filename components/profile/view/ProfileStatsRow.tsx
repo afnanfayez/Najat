@@ -38,8 +38,11 @@ export default function ProfileStatsRow() {
       </div>
       <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
         <h3 className="text-blue-500 text-sm font-semibold mb-2">جهة اتصال الطوارئ</h3>
-        <span className="text-xl font-bold text-slate-800" dir="ltr">
-          {user?.phoneNumber ?? '—'}
+        <span className="text-[14px] font-bold text-slate-800">
+          {(() => {
+            const firstContact = (user as any)?.emergencyContacts?.[0]
+            return firstContact ? `${firstContact.name} (${firstContact.phone})` : '—'
+          })()}
         </span>
       </div>
       <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center relative">
@@ -47,7 +50,9 @@ export default function ProfileStatsRow() {
             <Droplet size={20} />
          </div>
         <h3 className="text-blue-500 text-sm font-semibold mb-2">فصيلة الدم</h3>
-        <span className="text-3xl font-bold text-red-500">O+</span>
+        <span className="text-3xl font-bold text-red-500">
+          {(user as any)?.bloodType || '—'}
+        </span>
       </div>
     </div>
   )

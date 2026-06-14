@@ -9,6 +9,7 @@ import {
   saveEmergencySettings,
   type EmergencyContact,
 } from '@/lib/profile/localProfileStorage'
+import { useProfile } from '@/hooks/useProfile'
 
 function newContact(): EmergencyContact {
   return {
@@ -20,6 +21,7 @@ function newContact(): EmergencyContact {
 
 export default function EmergencySettings() {
   const { user } = useAuth()
+  const { saveProfile } = useProfile()
   const [contacts, setContacts] = useState<EmergencyContact[]>([])
   const [sosMessage, setSosMessage] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -35,7 +37,7 @@ export default function EmergencySettings() {
     setSosMessage(local.sosMessage ?? '')
   }, [user?.id])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user?.id) return
     const cleaned = contacts.filter(
       (c) => c.name.trim() || c.phone.trim(),
@@ -44,8 +46,17 @@ export default function EmergencySettings() {
       contacts: cleaned,
       sosMessage: sosMessage.trim(),
     })
-    toast.success('تم حفظ إعدادات الطوارئ')
-    setEditingId(null)
+    
+    try {
+      await saveProfile({
+        emergencyContacts: cleaned,
+        sosMessage: sosMessage.trim(),
+      })
+      toast.success('تم حفظ إعدادات الطوارئ')
+      setEditingId(null)
+    } catch {
+      toast.error('حدث خطأ أثناء مزامنة إعدادات الطوارئ مع الخادم')
+    }
   }
 
   const updateContact = (

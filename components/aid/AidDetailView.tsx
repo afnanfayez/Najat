@@ -208,10 +208,11 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
 
   const onSubmit = useCallback(
     async (data: AidHelpRequestForm) => {
+      const payloadWithOrg = { ...data, aidOrganizationName: aid.name }
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         await enqueueOfflineOp({
           type: 'AID_REQUEST',
-          payload: data as unknown as Record<string, unknown>,
+          payload: payloadWithOrg as unknown as Record<string, unknown>,
         })
         toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
         form.reset({
@@ -227,9 +228,9 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
         })
         return
       }
-      mutation.mutate(data)
+      mutation.mutate(payloadWithOrg)
     },
-    [aid.id, form, mutation],
+    [aid.id, aid.name, form, mutation],
   )
 
   return (

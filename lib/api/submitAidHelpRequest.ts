@@ -34,6 +34,7 @@ export async function submitAidHelpRequest(
     maleChildrenCount: payload.sonsCount,
     phoneNumber: payload.phone,
     currentLocation: payload.currentLocation,
+    aidOrganizationName: (payload as any).aidOrganizationName || '',
   }
 
   try {

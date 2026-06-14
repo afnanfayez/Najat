@@ -49,12 +49,12 @@ export const profileAPI = {
   },
 
   /** Updates the authenticated user's profile via PATCH /auth/me. */
-  async update(body: UpdateUserProfileBody): Promise<ProfileUpdateResult> {
-    await request(`${V1_ROOT}/auth/me`, {
+  async update(body: any): Promise<ProfileUpdateResult> {
+    const res = await request(`${V1_ROOT}/auth/me`, {
       method: 'PATCH',
       body: JSON.stringify(body),
     })
-    const profile = await profileAPI.me()
+    const profile = res?.data ?? (await profileAPI.me())
     return { profile, syncedWithServer: true }
   },
 }
