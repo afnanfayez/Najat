@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { searchSuggestions } from '../data/dashboardConstants'
 import { useRouter } from 'next/navigation'
+import { MOCK_AID } from '@/lib/mocks/aidMockData'
+import { ALL_MOCK_HEALTH_FACILITIES } from '@/lib/mocks/healthFacilitiesMockData'
+import { sortAidByStableId, sortHealthFacilitiesStable } from '@/lib/health/healthFacilityRoutes'
 
 interface SearchBarProps {
   searchValue: string
@@ -25,14 +28,44 @@ export default function SearchBar({
     const target = (queryStr || searchValue).trim().toLowerCase()
     if (!target) return
 
+    // 1. Search for a specific Humanitarian Aid program by name
+    const matchedAid = MOCK_AID.find((aid) =>
+      aid.name.toLowerCase().includes(target)
+    )
+    if (matchedAid) {
+      const sortedAid = sortAidByStableId(MOCK_AID)
+      const idx = sortedAid.findIndex((a) => a.id === matchedAid.id)
+      if (idx >= 0) {
+        router.push(`/humanitarian-aid/${idx + 1}`)
+        return
+      }
+    }
+
+    // 2. Search for a specific Health Facility by name
+    const matchedFacility = ALL_MOCK_HEALTH_FACILITIES.find((f) =>
+      f.name.toLowerCase().includes(target)
+    )
+    if (matchedFacility) {
+      const cat = matchedFacility.category
+      const routePrefix = cat === 'dental' ? '/dental-clinics' : `/${cat}`
+      const catFacilities = ALL_MOCK_HEALTH_FACILITIES.filter((f) => f.category === cat)
+      const sortedFac = sortHealthFacilitiesStable(catFacilities)
+      const idx = sortedFac.findIndex((f) => f.id === matchedFacility.id)
+      if (idx >= 0) {
+        router.push(`${routePrefix}/${idx + 1}`)
+        return
+      }
+    }
+
+    // 3. Fallback to category keyword matching
     if (target.includes('مستشف') || target.includes('صحة') || target.includes('طبيب') || target.includes('دكتور') || target.includes('علاج')) {
-      router.push(`/hospitals?search=${encodeURIComponent(queryStr || searchValue)}`)
+      router.push('/hospitals')
     } else if (target.includes('صيدل') || target.includes('دواء')) {
-      router.push(`/pharmacies?search=${encodeURIComponent(queryStr || searchValue)}`)
+      router.push('/pharmacies')
     } else if (target.includes('عياد') || target.includes('مستوصف')) {
-      router.push(`/clinics?search=${encodeURIComponent(queryStr || searchValue)}`)
+      router.push('/clinics')
     } else if (target.includes('مساعد') || target.includes('طعام') || target.includes('غذاء') || target.includes('إيواء') || target.includes('كساء') || target.includes('ماء') || target.includes('تموين') || target.includes('معونات')) {
-      router.push(`/humanitarian-aid?search=${encodeURIComponent(queryStr || searchValue)}`)
+      router.push('/humanitarian-aid')
     } else if (target.includes('طوارئ') || target.includes('نجدة') || target.includes('إسعاف') || target.includes('اسعاف')) {
       router.push('/emergency')
     } else if (target.includes('خريط') || target.includes('خرائط') || target.includes('ممر') || target.includes('موقع')) {
@@ -40,7 +73,7 @@ export default function SearchBar({
     } else if (target.includes('دليل') || target.includes('نصائح') || target.includes('إسعافات')) {
       router.push('/health-guide')
     } else {
-      router.push(`/hospitals?search=${encodeURIComponent(queryStr || searchValue)}`)
+      setSearchValue('لا يوجد')
     }
   }
 
@@ -139,7 +172,15 @@ export default function SearchBar({
               onClick={() => {
                 setSearchValue(item.label)
                 setIsSearchFocused(false)
-                handleSearchSubmit(item.label)
+                if (item.id === 'hospitals') {
+                  router.push('/hospitals')
+                } else if (item.id === 'aid') {
+                  router.push('/humanitarian-aid')
+                } else if (item.id === 'emergency-nums') {
+                  router.push('/emergency')
+                } else {
+                  handleSearchSubmit(item.label)
+                }
               }}
               style={{
                 padding: '16px 20px',

@@ -30,7 +30,7 @@ export default function AdminAidPageHeader({
       ? 'المانحون والشراكات'
       : activeTab === 'requests'
         ? 'طلبات المساعدة من المواطنين'
-        : 'إدارة المساعدات الإنسانية')
+        : 'المساعدات الإنسانية')
 
   const resolvedSubtitle =
     subtitle ??
@@ -38,7 +38,7 @@ export default function AdminAidPageHeader({
       ? 'إدارة وتتبع المساهمات الإنسانية والشركاء الاستراتيجيين'
       : activeTab === 'requests'
         ? 'عرض ومتابعة طلبات المساعدة المقدمة من المواطنين'
-        : 'مراقبة نقاط التوزيع والمخزون والاستجابة الإنسانية')
+        : 'احصل على الدعم الضروري بسرعة وسهولة خلال الأزمات')
 
   return (
     <header className="mb-6">

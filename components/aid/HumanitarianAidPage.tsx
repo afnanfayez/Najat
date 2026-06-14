@@ -228,39 +228,52 @@ export default function HumanitarianAidPage({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
-          marginBottom: '28px',
+          marginBottom: '24px',
           gap: '8px',
           flexShrink: 0,
         }}
       >
         <h2
+          className="hsp-page-title"
           style={{
             fontFamily: "'Cairo', sans-serif",
-            fontWeight: 800,
-            fontSize: isMobile ? '32px' : '48px',
+            fontWeight: 700,
+            fontSize: 'clamp(22px, 3vw, 42px)',
             color: '#1a2d4a',
             margin: '0',
-            lineHeight: '1.1',
+            lineHeight: '1.15',
             textAlign: 'right',
-            width: '100%',
           }}
         >
           المساعدات الإنسانية
         </h2>
-        <p
+
+        <div 
+          className="header-row"
           style={{
-            fontFamily: "'Cairo', sans-serif",
-            fontWeight: 600,
-            fontSize: isMobile ? '16px' : '18px',
-            color: '#000',
-            margin: 0,
-            textAlign: 'right',
-            lineHeight: '1.6',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             width: '100%',
+            gap: '12px'
           }}
         >
-          احصل على الدعم الضروري بسرعة وسهولة خلال الأزمات
-        </p>
+          <p
+            className="hsp-subtitle"
+            style={{
+              fontFamily: "'Cairo', sans-serif",
+              fontWeight: 500,
+              fontSize: '15px',
+              color: '#000',
+              margin: 0,
+              textAlign: 'right',
+              lineHeight: '1.6',
+              flex: 1,
+            }}
+          >
+            احصل على الدعم الضروري بسرعة وسهولة خلال الأزمات
+          </p>
+        </div>
       </div>
 
 
