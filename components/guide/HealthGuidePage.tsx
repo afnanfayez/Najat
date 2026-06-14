@@ -22,59 +22,60 @@ export default function HealthGuidePage() {
       style={{ direction: 'rtl', fontFamily: "'Cairo', sans-serif" }}
     >
       {/* ── Header ── */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          marginBottom: '24px',
-          gap: '8px',
-          flexShrink: 0,
-        }}
-      >
-        <h2
-          className="hsp-page-title"
-          style={{
-            fontFamily: "'Cairo', sans-serif",
-            fontWeight: 700,
-            fontSize: 'clamp(22px, 3vw, 42px)',
-            color: '#1a2d4a',
-            margin: '0',
-            lineHeight: '1.15',
-            textAlign: 'right',
-            width: '100%',
-          }}
-        >
-          دليلك الصحي في أوقات الحاجة
-        </h2>
-
-        <div 
-          className="header-row"
+      <div className="pt-0 text-right">
+        <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%',
-            gap: '12px'
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            marginBottom: '24px',
+            gap: '8px',
+            flexShrink: 0,
           }}
         >
-          <p
-            className="hsp-subtitle"
+          <h2
+            className="hsp-page-title"
             style={{
               fontFamily: "'Cairo', sans-serif",
-              fontWeight: 500,
-              fontSize: '15px',
-              color: '#000',
-              margin: 0,
+              fontWeight: 700,
+              fontSize: 'clamp(22px, 3vw, 42px)',
+              color: '#1a2d4a',
+              margin: '0',
+              lineHeight: '1.15',
               textAlign: 'right',
-              lineHeight: '1.6',
-              flex: 1,
+              width: '100%',
             }}
           >
-            نقدم لك إرشادات موثوقة للإسعافات الأولية والتوعية الصحية والدعم النفسي لضمان سلامتك وسلامة عائلتك في جميع الظروف.
-          </p>
+            دليلك الصحي في أوقات الحاجة
+          </h2>
+
+          <div 
+            className="header-row"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              gap: '12px'
+            }}
+          >
+            <p
+              className="hsp-subtitle"
+              style={{
+                fontFamily: "'Cairo', sans-serif",
+                fontWeight: 500,
+                fontSize: '15px',
+                color: '#000',
+                margin: 0,
+                textAlign: 'right',
+                lineHeight: '1.6',
+                flex: 1,
+              }}
+            >
+              نقدم لك إرشادات موثوقة للإسعافات الأولية والتوعية الصحية والدعم النفسي لضمان سلامتك وسلامة عائلتك في جميع الظروف.
+            </p>
+          </div>
         </div>
-      </div>
 
         {/* Tabs */}
         <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-100 mb-6 overflow-x-auto no-scrollbar">
@@ -108,6 +109,7 @@ export default function HealthGuidePage() {
             style={{ background: '#D9D9D961' }}
           />
         </div>
+      </div>
 
 
       {/* ── Tab Content ── */}

@@ -7,8 +7,14 @@ import {
   Phone,
   Play,
   HeartHandshake,
+  X,
+  User,
+  MapPin,
+  Loader2,
 } from 'lucide-react'
 import { EMOTIONS, MENTAL_TIPS } from '@/lib/guide/mentalHealthContent'
+import { fetchAdminUsers } from '@/components/admin/data/adminUsersService'
+import type { AdminUserDto } from '@/schemas/adminUser'
 
 export default function MentalHealthTab() {
   const [openTip, setOpenTip] = useState<number | null>(0)
@@ -18,6 +24,12 @@ export default function MentalHealthTab() {
     interval: NodeJS.Timeout | null
     timeout: NodeJS.Timeout | null
   }>({ interval: null, timeout: null })
+
+  // Volunteer Directory states
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [volunteers, setVolunteers] = useState<AdminUserDto[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const PHASES = ['شهيق', 'استقرار', 'زفير']
 
@@ -49,6 +61,21 @@ export default function MentalHealthTab() {
     }, 48000)
 
     setTimerRefs({ interval, timeout })
+  }
+
+  const handleFetchVolunteers = async () => {
+    setIsModalOpen(true)
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetchAdminUsers({ role: 'volunteer', pageSize: 100 })
+      setVolunteers(res.users ?? [])
+    } catch (err) {
+      console.error(err)
+      setError('تعذر تحميل المتطوعين. يرجى التحقق من الاتصال بالشبكة.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -271,12 +298,118 @@ export default function MentalHealthTab() {
         <div className="flex-1 flex justify-end w-full md:w-auto">
           <button
             type="button"
-            className="bg-[#2196F3] text-white font-black text-[14px] px-8 py-3.5 rounded-2xl hover:bg-blue-600 transition-all shadow-md w-full md:w-auto"
+            onClick={handleFetchVolunteers}
+            className="bg-[#2196F3] text-white font-black text-[14px] px-8 py-3.5 rounded-2xl hover:bg-blue-600 transition-all shadow-md w-full md:w-auto cursor-pointer"
           >
             تحدث مع متطوع الآن
           </button>
         </div>
       </div>
+
+      {/* Custom Volunteer Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+          {/* Backdrop click close */}
+          <div className="absolute inset-0 cursor-default" onClick={() => setIsModalOpen(false)} />
+          
+          <div className="relative w-full max-w-md bg-white rounded-[24px] border border-slate-100 shadow-2xl flex flex-col max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-slate-100 flex justify-between items-start gap-4 text-right">
+              <div className="flex-1">
+                <h3 className="text-[18px] font-black text-slate-900">
+                  المتطوعون المتاحون الآن
+                </h3>
+                <p className="text-[13px] text-slate-500 font-bold mt-1">
+                  متطوعونا جاهزون للاستماع إليك وتقديم الدعم الإرشادي والنفسي
+                </p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 hover:bg-slate-100 rounded-full"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3 text-slate-500">
+                  <Loader2 className="animate-spin text-[#2196F3]" size={32} />
+                  <span className="font-bold text-[14px]">جاري تحميل قائمة المتطوعين...</span>
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+                  <p className="text-red-500 text-[14px] font-bold">{error}</p>
+                  <button
+                    onClick={handleFetchVolunteers}
+                    className="px-4 py-2 bg-[#2196F3] text-white rounded-xl text-xs font-black hover:bg-blue-600 transition-all cursor-pointer"
+                  >
+                    إعادة المحاولة
+                  </button>
+                </div>
+              ) : volunteers.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 font-bold text-[14px]">
+                  لا يوجد متطوعون متاحون حالياً.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 font-cairo">
+                  {volunteers.map((vol) => (
+                    <div
+                      key={vol.id}
+                      className="flex items-center justify-between p-4 bg-slate-50 hover:bg-[#2196F3]/5 border border-slate-100 rounded-[20px] transition-all"
+                    >
+                      {/* Right side: Avatar and Info */}
+                      <div className="flex items-center gap-3 text-right">
+                        <div className="relative">
+                          <div className="w-11 h-11 rounded-full bg-[#2196F3]/10 flex items-center justify-center text-slate-600 font-bold">
+                            <User size={20} className="text-[#2196F3]" />
+                          </div>
+                          {/* Status Dot */}
+                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white animate-pulse" />
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-black text-slate-800 text-[14px]">
+                            {vol.name || vol.fullName}
+                          </span>
+                          <span className="text-[12px] font-bold text-slate-400 flex items-center gap-1">
+                            <MapPin size={12} className="text-[#2196F3]" />
+                            {vol.region || 'المنطقة الشمالية'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Left side: Call Action */}
+                      {vol.phoneNumber ? (
+                        <a
+                          href={`tel:${vol.phoneNumber}`}
+                          className="flex items-center gap-1.5 bg-[#22C55E] hover:bg-green-600 text-white font-black text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer"
+                          style={{ direction: 'ltr' }}
+                        >
+                          <Phone size={12} />
+                          <span>{vol.phoneNumber}</span>
+                        </a>
+                      ) : (
+                        <span className="text-[12px] text-slate-400 font-bold">لا يوجد رقم هاتف</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs rounded-xl transition-all cursor-pointer"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

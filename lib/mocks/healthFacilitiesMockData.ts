@@ -388,7 +388,7 @@ export const MOCK_CLINIC_FACILITIES: HealthFacility[] = [
       clinicSupplies: [
         { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
         { label: 'مضاد حيوي', icon: 'https://api.iconify.design/solar:pill-bold.svg?color=%23F2A122' },
-        { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
+        { label: 'تعقيم', icon: 'https://api.iconify.design/healthicons:clean-hands.svg?color=%23F2A122' },
         { label: 'مسكن ألم', icon: 'https://api.iconify.design/solar:medical-kit-bold.svg?color=%23F2A122' },
       ],
     }),
@@ -700,7 +700,7 @@ export const MOCK_DENTAL_FACILITIES: HealthFacility[] = [
       dentalSupplies: [
         { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
         { label: 'مضاد حيوي', icon: 'https://api.iconify.design/solar:pill-bold.svg?color=%23F2A122' },
-        { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
+        { label: 'تعقيم', icon: 'https://api.iconify.design/healthicons:clean-hands.svg?color=%23F2A122' },
         { label: 'مسكن ألم', icon: 'https://api.iconify.design/solar:medical-kit-bold.svg?color=%23F2A122' },
       ],
     }),
@@ -746,7 +746,7 @@ export const MOCK_DENTAL_FACILITIES: HealthFacility[] = [
       dentalSupplies: [
         { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
         { label: 'حشوات', icon: 'https://api.iconify.design/healthicons:odontology.svg?color=%23F2A122' },
-        { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
+        { label: 'تعقيم', icon: 'https://api.iconify.design/healthicons:clean-hands.svg?color=%23F2A122' },
       ],
     }),
   },

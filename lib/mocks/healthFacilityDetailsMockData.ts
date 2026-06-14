@@ -137,7 +137,7 @@ export const MOCK_DENTAL_SERVICES: DentalServiceItem[] = [
 export const MOCK_DENTAL_SUPPLIES: LabeledIcon[] = [
   { label: 'مخدر موضعي', icon: 'https://api.iconify.design/solar:syringe-bold.svg?color=%23F2A122' },
   { label: 'مضاد حيوي', icon: 'https://api.iconify.design/solar:pill-bold.svg?color=%23F2A122' },
-  { label: 'تعقيم', icon: 'https://api.iconify.design/solar:mask-bold.svg?color=%23F2A122' },
+  { label: 'تعقيم', icon: 'https://api.iconify.design/healthicons:clean-hands.svg?color=%23F2A122' },
   { label: 'مسكن الام', icon: 'https://api.iconify.design/solar:medical-kit-bold.svg?color=%23F2A122' },
 ]
 

@@ -180,13 +180,14 @@ export default function HealthServicesPage({
   }, [displayFacility?.latitude, displayFacility?.longitude])
 
   const goToFacilityList = useCallback(() => {
-    if (typeof navigator !== 'undefined' && !navigator.onLine && !effectiveFacilityId) {
-      setSelectedFacility(null)
-      setView('list')
-      return
+    setSelectedFacility(null)
+    setView('list')
+    if (typeof window !== 'undefined') {
+      window.location.href = HEALTH_ROUTE[category]
+    } else {
+      router.push(HEALTH_ROUTE[category])
     }
-    router.push(HEALTH_ROUTE[category])
-  }, [router, category, effectiveFacilityId, setSelectedFacility, setView])
+  }, [router, category, setSelectedFacility, setView])
 
   const handleHealthHeaderMap = useCallback(() => {
     const first = data?.facilities?.[0]
