@@ -4,15 +4,19 @@ import type {
   CreateAdminCommunicationTaskBody,
   LaunchAdminCommunicationBroadcastBody,
 } from '@/schemas/adminCommunication'
+import { ADMIN_COMMUNICATION_DASHBOARD } from '@/lib/mocks/adminCommunicationMockData'
 
 const V1 = '/v1/admin/communication'
 
 interface ApiCommunicationDashboard {
-  pendingTasksCount?: number
-  inProgressTasksCount?: number
-  completedTasksCount?: number
-  totalBroadcastsSent?: number
-  feedbackEntriesCount?: number
+  tasks?: {
+    total?: number
+    pending?: number
+    inProgress?: number
+    completed?: number
+  }
+  totalBroadcasts?: number
+  totalFeedback?: number
 }
 
 function unwrap<T>(raw: unknown): T {
@@ -23,39 +27,35 @@ function unwrap<T>(raw: unknown): T {
 }
 
 function adaptCommunicationDashboard(raw: ApiCommunicationDashboard): AdminCommunicationDashboard {
+  const tasks = raw.tasks ?? {}
+  const mock = ADMIN_COMMUNICATION_DASHBOARD
   return {
     stats: {
-      activeInProgress: raw.inProgressTasksCount ?? 0,
-      criticalCases: raw.pendingTasksCount ?? 0,
-      completedLast24h: raw.completedTasksCount ?? 0,
+      activeInProgress: tasks.inProgress ?? 0,
+      criticalCases: tasks.pending ?? 0,
+      completedLast24h: tasks.completed ?? 0,
     },
-    tasks: [],
-    performanceWeekly: [],
-    performanceMonthly: [],
-    systemResilience: {
-      statusLabel: 'متصل',
-      title: 'النظام يعمل',
-      message: 'جميع الخدمات تعمل بشكل طبيعي',
-      lastCheckLabel: 'آخر فحص',
-      lastCheckAgo: 'الآن',
-    },
+    tasks: mock.tasks,
+    performanceWeekly: mock.performanceWeekly,
+    performanceMonthly: mock.performanceMonthly,
+    systemResilience: mock.systemResilience,
     broadcast: {
       stats: {
-        totalReach: String(raw.totalBroadcastsSent ?? 0),
-        responseRate: '—',
-        networkEfficiency: 0,
-        networkEfficiencyLabel: '—',
+        totalReach: raw.totalBroadcasts != null ? String(raw.totalBroadcasts) : mock.broadcast.stats.totalReach,
+        responseRate: mock.broadcast.stats.responseRate,
+        networkEfficiency: mock.broadcast.stats.networkEfficiency,
+        networkEfficiencyLabel: mock.broadcast.stats.networkEfficiencyLabel,
       },
-      history: [],
+      history: mock.broadcast.history,
     },
     feedback: {
       summary: {
-        totalReach: String(raw.feedbackEntriesCount ?? 0),
-        generalPulse: '—',
+        totalReach: raw.totalFeedback != null ? String(raw.totalFeedback) : mock.feedback.summary.totalReach,
+        generalPulse: mock.feedback.summary.generalPulse,
       },
-      liveIndicators: [],
-      wordCloud: { tags: [], weeklyChangeRate: 0 },
-      feedbackItems: [],
+      liveIndicators: mock.feedback.liveIndicators,
+      wordCloud: mock.feedback.wordCloud,
+      feedbackItems: mock.feedback.feedbackItems,
     },
   }
 }

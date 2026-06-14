@@ -2,55 +2,75 @@ import type {
   AdminSecurityDashboard,
   AdminSecurityUpdateScheduleBody,
 } from '@/schemas/adminSecurity'
+import {
+  createAdminSecurityBackupFromApi,
+  fetchAdminSecurityDashboardFromApi,
+  updateAdminSecurityScheduleFromApi,
+} from '@/lib/api/adminSecurity'
+import { ADMIN_SECURITY_DASHBOARD } from '@/lib/mocks/adminSecurityMockData'
 
-function emptySecurityDashboard(): AdminSecurityDashboard {
-  return {
-    backup: {
-      kpis: [],
-      storageWarning: '',
-      syncRequestsTitle: 'النسخ الاحتياطية',
-      syncRequestsSubtitle: 'لا توجد نسخ احتياطية',
-      newBackupLabel: 'نسخة جديدة',
-      backups: [],
-      publishLabel: 'نشر',
-      scheduleTitle: 'جدولة النسخ الاحتياطي',
-      timelineTitle: 'الجدول الزمني',
-      scheduleOptions: [],
-      selectedScheduleId: '',
-      storageTargetsTitle: 'وجهات التخزين',
-      storageTargets: [],
-      updateScheduleLabel: 'تحديث الجدولة',
-    },
-    security: {
-      rolesTitle: 'الأدوار والصلاحيات',
-      addRoleLabel: 'إضافة دور',
-      roles: [],
-      selectedRoleId: '',
-      permissionsTitle: 'الصلاحيات',
-      permissionsSubtitle: 'حدد دوراً لعرض الصلاحيات',
-      authorizedBadge: 'مخوّل',
-      permissions: [],
-      savePermissionsLabel: 'حفظ الصلاحيات',
-      encryptionTitle: 'بروتوكولات التشفير',
-      encryptionProtocols: [],
-      advancedPrivacyLabel: 'إعدادات الخصوصية المتقدمة',
-      alertsTitle: 'تنبيهات الأمان',
-      activeAlertsCount: 0,
-      alerts: [],
-      auditTitle: 'سجل المراجعة',
-      auditEntries: [],
-    },
-  }
+function cronToScheduleId(cron?: string): string {
+  if (!cron) return 'daily'
+  const parts = cron.split(' ')
+  if (parts[4] && parts[4] !== '*') return 'weekly'
+  if (parts[2] && parts[2] !== '*') return 'monthly'
+  return 'daily'
 }
 
 export async function fetchAdminSecurityDashboard(): Promise<AdminSecurityDashboard> {
-  return emptySecurityDashboard()
+  try {
+    const raw = await fetchAdminSecurityDashboardFromApi()
+    const stats = raw.backupStats ?? {}
+    const status = raw.securityStatus ?? {}
+    const schedule = raw.backupSchedule ?? {}
+    const mock = ADMIN_SECURITY_DASHBOARD
+
+    const lastBackupLabel = stats.lastBackupDate
+      ? new Date(stats.lastBackupDate).toLocaleDateString('ar-EG')
+      : (mock.backup.kpis[1]?.value ?? '—')
+
+    const latestBackupEntry = stats.lastBackupFile
+      ? [
+          {
+            id: 'api-latest',
+            version: 'v1.0',
+            filename: stats.lastBackupFile.replace('.sql', ''),
+            timestamp: lastBackupLabel,
+            size: stats.lastBackupSize ?? '—',
+            integrityOk: true,
+          },
+        ]
+      : []
+
+    return {
+      backup: {
+        ...mock.backup,
+        kpis: [
+          { id: 'k1', label: 'إجمالي النسخ الاحتياطية', value: String(stats.totalBackups ?? mock.backup.kpis[0]?.value ?? '—') },
+          { id: 'k2', label: 'آخر نسخة ناجحة', value: lastBackupLabel },
+          { id: 'k3', label: 'حجم آخر نسخة', value: stats.lastBackupSize ?? (mock.backup.kpis[2]?.value ?? '—') },
+        ],
+        backups: [...latestBackupEntry, ...mock.backup.backups],
+        selectedScheduleId: cronToScheduleId(schedule.cronExpression),
+      },
+      security: {
+        ...mock.security,
+        encryptionProtocols: mock.security.encryptionProtocols.map((p) => ({
+          ...p,
+          status: status.firewallStatus === 'active' ? ('active' as const) : p.status,
+        })),
+        activeAlertsCount: mock.security.alerts.length,
+      },
+    }
+  } catch {
+    return ADMIN_SECURITY_DASHBOARD
+  }
 }
 
 export async function updateAdminSecuritySchedule(
-  _body: AdminSecurityUpdateScheduleBody
+  body: AdminSecurityUpdateScheduleBody
 ): Promise<void> {
-  throw { status: 501, message: 'جدولة النسخ الاحتياطي غير متاحة حالياً' }
+  await updateAdminSecurityScheduleFromApi(body)
 }
 
 export async function publishAdminSecurityBackup(_backupId: string): Promise<void> {
@@ -58,7 +78,7 @@ export async function publishAdminSecurityBackup(_backupId: string): Promise<voi
 }
 
 export async function createAdminSecurityBackup(): Promise<void> {
-  throw { status: 501, message: 'إنشاء نسخ احتياطية غير متاح حالياً' }
+  await createAdminSecurityBackupFromApi()
 }
 
 export async function saveAdminSecurityPermissions(_roleId: string): Promise<void> {

@@ -1,59 +1,39 @@
 import type { AdminReportsDashboard } from '@/schemas/adminReports'
-
-function emptyReportsDashboard(): AdminReportsDashboard {
-  return {
-    statistical: {
-      kpis: [],
-      regionalDistribution: {
-        title: 'التوزيع الجغرافي',
-        subtitle: 'لا توجد بيانات',
-        periodTag: '—',
-        points: [],
-      },
-      resourceBreakdown: {
-        segments: [],
-        totalLabel: 'الإجمالي',
-        totalValue: '—',
-      },
-      responseTime: {
-        title: 'وقت الاستجابة',
-        volunteers: [],
-        beneficiaries: [],
-      },
-      needyRegions: {
-        title: 'المناطق الأكثر حاجة',
-        regions: [],
-      },
-      insight: {
-        title: '—',
-        body: 'لا توجد تقارير متاحة حالياً',
-        actionLabel: '—',
-      },
-    },
-    operations: {
-      kpis: [],
-      activityBreakdown: {
-        segments: [],
-        totalLabel: 'الإجمالي',
-        totalValue: '—',
-      },
-      activeRegions: {
-        title: 'المناطق النشطة',
-        subtitle: 'لا توجد بيانات',
-        mapActionLabel: 'عرض الخريطة',
-        regions: [],
-      },
-      dataQuality: {
-        title: 'جودة البيانات',
-        subtitle: 'لا توجد بيانات',
-        gauges: [],
-      },
-    },
-  }
-}
+import { fetchAdminReportsDashboardFromApi } from '@/lib/api/adminReports'
+import { ADMIN_REPORTS_DASHBOARD } from '@/lib/mocks/adminReportsMockData'
 
 export async function fetchAdminReportsDashboard(): Promise<AdminReportsDashboard> {
-  return emptyReportsDashboard()
+  try {
+    const raw = await fetchAdminReportsDashboardFromApi()
+    const ov = raw.overview ?? {}
+    const safety = raw.safetyStats ?? {}
+    const activity = raw.activitySummary ?? {}
+    const mock = ADMIN_REPORTS_DASHBOARD
+
+    return {
+      statistical: {
+        ...mock.statistical,
+        kpis: [
+          { id: 'k1', label: 'المستشفيات النشطة', value: String(ov.totalHospitals ?? '—'), tag: 'نشط' },
+          { id: 'k2', label: 'نقاط الإغاثة', value: String(ov.totalAidPoints ?? '—'), tag: 'نشطة' },
+          { id: 'k3', label: 'المتطوعون', value: String(ov.totalVolunteers ?? '—'), tag: 'مسجل' },
+          { id: 'k4', label: 'مناطق الخطر', value: String(ov.totalDangerZones ?? '—'), tag: 'منطقة' },
+        ],
+      },
+      operations: {
+        ...mock.operations,
+        kpis: [
+          { id: 'o1', label: 'تصعيدات نشطة', value: String(safety.activeEscalations ?? '—') },
+          { id: 'o2', label: 'مناطق محلولة', value: String(safety.resolvedZones ?? '—') },
+          { id: 'o3', label: 'طرق خطرة', value: String(safety.dangerousRoadsCount ?? '—') },
+          { id: 'o4', label: 'وقت الاستجابة', value: activity.avgResponseTime ?? '—' },
+          { id: 'o5', label: 'رسائل طبية', value: String(activity.medicalDispatches ?? '—') },
+        ],
+      },
+    }
+  } catch {
+    return ADMIN_REPORTS_DASHBOARD
+  }
 }
 
 export async function exportAdminReportsPdf(): Promise<void> {

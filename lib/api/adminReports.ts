@@ -1,19 +1,37 @@
 import { request } from '@/lib/api/api'
-import type { AdminReportsDashboard } from '@/schemas/adminReports'
 
 const V1 = '/v1/admin/reports'
 
-function unwrap<T>(raw: unknown, key?: string): T {
+function unwrap<T>(raw: unknown): T {
   if (!raw || typeof raw !== 'object') return raw as T
   const obj = raw as Record<string, unknown>
-  if (key && obj[key] != null) return obj[key] as T
-  if (obj.data != null) return unwrap<T>(obj.data, key)
+  if (obj.data != null) return unwrap<T>(obj.data)
   return raw as T
 }
 
-export async function fetchAdminReportsDashboardFromApi(): Promise<AdminReportsDashboard> {
+export interface AdminReportsApiRaw {
+  overview?: {
+    totalVolunteers?: number
+    totalResidents?: number
+    totalHospitals?: number
+    totalDangerZones?: number
+    totalAidPoints?: number
+  }
+  safetyStats?: {
+    activeEscalations?: number
+    resolvedZones?: number
+    dangerousRoadsCount?: number
+  }
+  activitySummary?: {
+    weeklySyncVolume?: string
+    avgResponseTime?: string
+    medicalDispatches?: number
+  }
+}
+
+export async function fetchAdminReportsDashboardFromApi(): Promise<AdminReportsApiRaw> {
   const response = await request(`${V1}/dashboard`, { method: 'GET' })
-  return unwrap<AdminReportsDashboard>(response, 'dashboard')
+  return unwrap<AdminReportsApiRaw>(response)
 }
 
 export async function exportAdminReportsPdfFromApi(): Promise<Blob> {
