@@ -67,18 +67,38 @@ export async function fetchAdminSecurityDashboard(): Promise<AdminSecurityDashbo
   }
 }
 
+/** Maps UI schedule option IDs to standard cron expressions */
+const SCHEDULE_ID_TO_CRON: Record<string, string> = {
+  daily: '0 2 * * *',
+  weekly: '0 2 * * 0',
+  monthly: '0 2 1 * *',
+}
+
+/**
+ * Converts the UI schedule picker selection into the API contract
+ * (cronExpression + isEnabled) before forwarding to the API client.
+ */
 export async function updateAdminSecuritySchedule(
-  body: AdminSecurityUpdateScheduleBody
+  scheduleId: string,
+  storageTargetIds: string[]
 ): Promise<void> {
-  await updateAdminSecurityScheduleFromApi(body)
+  const cronExpression = SCHEDULE_ID_TO_CRON[scheduleId] ?? '0 2 * * *'
+  const isEnabled = storageTargetIds.length > 0
+  await updateAdminSecurityScheduleFromApi({ cronExpression, isEnabled })
 }
 
 export async function publishAdminSecurityBackup(_backupId: string): Promise<void> {
   throw { status: 501, message: 'نشر النسخ الاحتياطية غير متاح حالياً' }
 }
 
-export async function createAdminSecurityBackup(): Promise<void> {
-  await createAdminSecurityBackupFromApi()
+export interface BackupResult {
+  filename: string
+  sizeBytes: number | string
+  status: string
+}
+
+export async function createAdminSecurityBackup(): Promise<BackupResult | null> {
+  return createAdminSecurityBackupFromApi()
 }
 
 export async function saveAdminSecurityPermissions(_roleId: string): Promise<void> {

@@ -1,24 +1,35 @@
-export type AdminAlertPriority = 'very_urgent' | 'help_request'
+/** Severity levels returned by AdminAlertEntity */
+export type AdminAlertSeverity = 'critical' | 'warning' | string
 
-/** شكل البيانات القادمة من الباك اند */
+/** Source categories returned by AdminAlertEntity */
+export type AdminAlertSource = 'system' | 'sync' | 'user_report' | string
+
+/** Matches AdminAlertEntity from the API */
 export type AdminAlertDto = {
   id: string
   title: string
-  location: string
-  priority: AdminAlertPriority
-  /** وقت نسبي جاهز للعرض أو ISO date من API */
-  reportedAt: string
-  lat: number
-  lng: number
+  /** Full description / message body of the alert */
+  message: string
+  severity: AdminAlertSeverity
+  source: AdminAlertSource
+  isResolved: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
-/** نموذج العرض بعد التحويل في الواجهة */
+/** UI-enriched alert with derived display fields */
 export type AdminManagedAlert = AdminAlertDto & {
+  /** Formatted time string derived from createdAt */
   time: string
+  /** Hex color for the badge, derived from severity */
   accentColor: string
+  /** Arabic label for the badge, derived from severity */
   badgeLabel: string
+  /** Arabic label for the source type */
+  sourceLabel: string
 }
 
+/** Tab IDs — 'very_urgent' maps to severity=critical, 'help_request' maps to source=user_report */
 export type AdminAlertsTab = 'all' | 'very_urgent' | 'help_request'
 
 export type AdminAlertsListResponse = {

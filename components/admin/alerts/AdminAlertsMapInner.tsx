@@ -22,12 +22,26 @@ function createMarkerIcon(color: string) {
   })
 }
 
+interface AlertWithCoords extends AdminManagedAlert {
+  lat: number
+  lng: number
+}
+
+function hasCoords(a: AdminManagedAlert): a is AlertWithCoords {
+  return (
+    typeof (a as AlertWithCoords).lat === 'number' &&
+    typeof (a as AlertWithCoords).lng === 'number'
+  )
+}
+
 interface AdminAlertsMapInnerProps {
   alerts: AdminManagedAlert[]
   mapCenter: { lat: number; lng: number }
 }
 
 export default function AdminAlertsMapInner({ alerts, mapCenter }: AdminAlertsMapInnerProps) {
+  const mappableAlerts = alerts.filter(hasCoords)
+
   return (
     <MapContainer
       center={[mapCenter.lat, mapCenter.lng]}
@@ -39,7 +53,7 @@ export default function AdminAlertsMapInner({ alerts, mapCenter }: AdminAlertsMa
         attribution='&copy; OpenStreetMap'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {alerts.map((alert) => (
+      {mappableAlerts.map((alert) => (
         <Marker
           key={alert.id}
           position={[alert.lat, alert.lng]}
@@ -48,7 +62,7 @@ export default function AdminAlertsMapInner({ alerts, mapCenter }: AdminAlertsMa
           <Popup>
             <strong>{alert.title}</strong>
             <br />
-            {alert.location}
+            {alert.message}
           </Popup>
         </Marker>
       ))}

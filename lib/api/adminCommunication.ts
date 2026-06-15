@@ -66,12 +66,29 @@ export async function fetchAdminCommunicationDashboardFromApi(): Promise<AdminCo
   return adaptCommunicationDashboard(raw)
 }
 
+const BENEFICIARY_TO_TARGET: Record<string, 'all' | 'volunteers' | 'residents'> = {
+  volunteers: 'volunteers',
+  residents: 'residents',
+}
+
 export async function createAdminCommunicationTaskFromApi(
   body: CreateAdminCommunicationTaskBody
 ): Promise<AdminCommunicationDashboard> {
+  let isoDate: string | undefined
+  if (body.dueDate) {
+    const raw = `${body.dueDate}T${body.dueTime ? body.dueTime + ':00' : '00:00:00'}`
+    const parsed = new Date(raw)
+    isoDate = isNaN(parsed.getTime()) ? undefined : parsed.toISOString()
+  }
+
   await request(`${V1}/tasks`, {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      title: body.title,
+      description: body.description,
+      ...(body.volunteerId ? { assignedTo: body.volunteerId } : {}),
+      ...(isoDate ? { dueDate: isoDate } : {}),
+    }),
   })
   return fetchAdminCommunicationDashboardFromApi()
 }
@@ -81,7 +98,11 @@ export async function launchAdminCommunicationBroadcastFromApi(
 ): Promise<AdminCommunicationDashboard> {
   await request(`${V1}/broadcasts`, {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      title: body.title,
+      message: body.description,
+      target: BENEFICIARY_TO_TARGET[body.beneficiarySegment] ?? 'all',
+    }),
   })
   return fetchAdminCommunicationDashboardFromApi()
 }

@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
+  BellRing,
   Compass,
   Heart,
   LayoutGrid,
@@ -25,6 +26,7 @@ export const adminNavItems: AdminNavItem[] = [
   { id: 'aid', label: 'إدارة المساعدات الإنسانية', icon: Heart },
   { id: 'maps', label: 'إدارة الخرائط والملاحة', icon: Compass },
   { id: 'data', label: 'البيانات', icon: BarChart3 },
+  { id: 'alerts', label: 'التنبيهات والتحذيرات', icon: BellRing },
   { id: 'audit', label: 'المراجعة والتدقيق', icon: Search },
   { id: 'communication', label: 'التواصل والتنسيق', icon: MessageCircle },
   { id: 'reports', label: 'التقرير والتحليلات', icon: PieChart },

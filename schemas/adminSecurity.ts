@@ -110,7 +110,8 @@ export interface AdminSecurityDashboard {
   security: AdminSecurityControlData
 }
 
+/** Matches ScheduleBackupDto required by PUT /admin/security/backup/schedule */
 export interface AdminSecurityUpdateScheduleBody {
-  scheduleId: string
-  storageTargetIds: string[]
+  cronExpression: string
+  isEnabled: boolean
 }

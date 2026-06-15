@@ -1,5 +1,5 @@
 import type { AdminReportsDashboard } from '@/schemas/adminReports'
-import { fetchAdminReportsDashboardFromApi } from '@/lib/api/adminReports'
+import { exportAdminReportsPdfFromApi, fetchAdminReportsDashboardFromApi } from '@/lib/api/adminReports'
 import { ADMIN_REPORTS_DASHBOARD } from '@/lib/mocks/adminReportsMockData'
 
 export async function fetchAdminReportsDashboard(): Promise<AdminReportsDashboard> {
@@ -37,5 +37,11 @@ export async function fetchAdminReportsDashboard(): Promise<AdminReportsDashboar
 }
 
 export async function exportAdminReportsPdf(): Promise<void> {
-  throw { status: 501, message: 'تصدير التقارير غير متاح حالياً' }
+  const blob = await exportAdminReportsPdfFromApi()
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = 'najat_system_report.pdf'
+  anchor.click()
+  URL.revokeObjectURL(url)
 }

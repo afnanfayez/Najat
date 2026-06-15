@@ -1,10 +1,13 @@
-import { toast } from 'sonner'
 import {
+  approveAdminDataRequestFromApi,
+  deleteAdminDataRequestFromApi,
   downloadAdminDataReviewReportFromApi,
   exportAdminDataSyncCsvFromApi,
   fetchAdminDataDashboardFromApi,
   fetchAdminDataReviewFromApi,
   fetchAdminDataSyncDashboardFromApi,
+  publishAdminDataSyncRequestFromApi,
+  publishAllAdminDataSyncFromApi,
   submitAdminDataReviewFromApi,
 } from '@/lib/api/adminData'
 import type {
@@ -55,12 +58,12 @@ export async function fetchAdminDataSyncDashboard(): Promise<AdminDataSyncDashbo
   return fetchAdminDataSyncDashboardFromApi()
 }
 
-export async function deleteAdminDataRequest(_id: string): Promise<void> {
-  toast.error('حذف الطلبات غير متاح حالياً')
+export async function deleteAdminDataRequest(id: string): Promise<void> {
+  await deleteAdminDataRequestFromApi(id)
 }
 
-export async function approveAdminDataRequest(_id: string): Promise<void> {
-  toast.error('الموافقة المباشرة غير متاحة — استخدم صفحة المراجعة')
+export async function approveAdminDataRequest(id: string): Promise<void> {
+  await approveAdminDataRequestFromApi(id)
 }
 
 export async function submitAdminDataReview(
@@ -76,12 +79,12 @@ export async function downloadAdminDataReviewReport(id: string): Promise<void> {
   triggerBlobDownload(blob, `data-review-${id}.pdf`)
 }
 
-export async function publishAdminDataSyncRequest(_id: string): Promise<void> {
-  toast.error('نشر الطلبات الفردية غير متاح حالياً')
+export async function publishAdminDataSyncRequest(id: string): Promise<void> {
+  await publishAdminDataSyncRequestFromApi(id)
 }
 
-export async function publishAllAdminDataSync(): Promise<void> {
-  toast.error('النشر الجماعي غير متاح حالياً')
+export async function publishAllAdminDataSync(): Promise<{ processed: number; details: Array<{ id: string; success: boolean; error?: string }> }> {
+  return publishAllAdminDataSyncFromApi()
 }
 
 export async function exportAdminDataSyncCsv(): Promise<void> {

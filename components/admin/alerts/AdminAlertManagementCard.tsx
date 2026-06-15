@@ -25,14 +25,18 @@ export default function AdminAlertManagementCard({ alert }: AdminAlertManagement
         </span>
       </div>
 
-      <div className="mb-4 flex items-center justify-start gap-2 text-right">
-        <MapPin size={16} className="shrink-0 text-[#94A3B8]" />
+      <div className="mb-2 flex items-start justify-start gap-2 text-right">
+        <MapPin size={16} className="mt-0.5 shrink-0 text-[#94A3B8]" />
         <span
           className="text-sm text-black"
           style={{ fontFamily: "'Cairo', sans-serif" }}
         >
-          {alert.location}
+          {alert.message}
         </span>
+      </div>
+
+      <div className="mb-4 text-right text-xs text-[#94A3B8]" style={{ fontFamily: "'Cairo', sans-serif" }}>
+        {alert.sourceLabel}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

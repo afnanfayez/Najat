@@ -12,17 +12,18 @@ import type {
 
 const V1 = '/v1/admin/data'
 
+/** Matches DataSyncDashboardResponseDto from the API */
 interface ApiDataDashboard {
-  totalSyncRequests?: number
-  pendingApprovalsCount?: number
-  approvedChangesCount?: number
-  errorRatePercentage?: number
-  syncHealthStatus?: string
+  totalRequests?: number
+  pendingRequests?: number
+  approvedRequests?: number
+  rejectedRequests?: number
+  publishedRequests?: number
+  syncHealth?: string
 }
 
 interface ApiDataSyncRequest {
   id: string
-  // Fields from actual API response
   entityName?: string
   action?: string
   payload?: unknown
@@ -31,15 +32,14 @@ interface ApiDataSyncRequest {
   createdAt?: string
   updatedAt?: string | null
   deletedAt?: string | null
-  // Legacy field names (kept for backward compat)
+  status?: string
+  // legacy field names kept for backward compat
   nodeId?: string
   requestType?: string
   changesData?: unknown
   submittedAt?: string
   reviewedAt?: string | null
   reviewedBy?: string | null
-  status?: string
-  // Danger zone / polygon fields
   area?: string
   dangerLevel?: string
   description?: string
@@ -66,6 +66,18 @@ function unwrapArray<T>(raw: unknown): T[] {
   return []
 }
 
+function extractPayloadDescription(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null
+  const obj = payload as Record<string, unknown>
+  if (typeof obj.description === 'string' && obj.description) return obj.description
+  const parts: string[] = []
+  if (typeof obj.name === 'string' && obj.name) parts.push(obj.name)
+  if (typeof obj.dangerLevel === 'string') parts.push(`مستوى الخطر: ${obj.dangerLevel}`)
+  if (typeof obj.icuCapacity === 'number') parts.push(`طاقة العناية: ${obj.icuCapacity}`)
+  if (typeof obj.capacity === 'number') parts.push(`السعة: ${obj.capacity}`)
+  return parts.length > 0 ? parts.join(' · ') : null
+}
+
 function adaptDataRequest(r: ApiDataSyncRequest): AdminDataRequest {
   const statusMap: Record<string, AdminDataRequestStatus> = {
     pending: 'pending_review',
@@ -83,27 +95,24 @@ function adaptDataRequest(r: ApiDataSyncRequest): AdminDataRequest {
     pending_review: 'under_review',
   }
 
-  // Build title from actual API fields
   const entityName = r.entityName ?? r.requestType ?? r.nodeId ?? ''
   const action = r.action ?? ''
   const title = entityName && action
     ? `${action}: ${entityName}`
     : entityName || action || 'طلب مزامنة'
 
-  // Build subtitle from area/description or payload
   const subtitle = r.description
     ?? r.area
     ?? (r.payload ? (r.payload as Record<string, unknown>)?.name as string : undefined)
     ?? r.nodeId
     ?? '—'
 
-  // Build description from payload or changesData
   const changesData = r.payload ?? r.changesData
-  const description = changesData
-    ? JSON.stringify(changesData, null, 0).slice(0, 120)
-    : r.reviewNotes ?? '—'
+  const description =
+    extractPayloadDescription(changesData) ??
+    r.reviewNotes ??
+    '—'
 
-  // Date from createdAt or submittedAt
   const dateRaw = r.createdAt ?? r.submittedAt
   const submittedAt = dateRaw
     ? new Date(dateRaw).toLocaleDateString('ar-EG')
@@ -135,9 +144,9 @@ export async function fetchAdminDataDashboardFromApi(
 
   return {
     stats: {
-      pendingReview: dash.pendingApprovalsCount ?? requests.filter((r) => r.status === 'pending_review' || r.status === 'under_review').length,
-      publishedToday: dash.approvedChangesCount ?? requests.filter((r) => r.status === 'published').length,
-      rejectedRequests: requests.filter((r) => r.status === 'rejected').length,
+      pendingReview: dash.pendingRequests ?? requests.filter((r) => r.status === 'pending_review' || r.status === 'under_review').length,
+      publishedToday: dash.publishedRequests ?? requests.filter((r) => r.status === 'published').length,
+      rejectedRequests: dash.rejectedRequests ?? requests.filter((r) => r.status === 'rejected').length,
       activeVolunteers: 0,
     },
     requests,
@@ -199,35 +208,59 @@ export async function fetchAdminDataSyncDashboardFromApi(): Promise<AdminDataSyn
       priority: 'medium' as const,
     }))
 
+  // syncHealth is a string like "100%" — parse the number
+  const healthStr = dash.syncHealth ?? '0%'
+  const healthNum = parseFloat(healthStr.replace('%', ''))
+
   return {
     syncStatus: {
       lastSyncAgo: '—',
-      successRate: Math.max(0, 100 - (dash.errorRatePercentage ?? 0)),
-      queueCount: dash.pendingApprovalsCount ?? 0,
+      successRate: isNaN(healthNum) ? 0 : healthNum,
+      queueCount: dash.pendingRequests ?? 0,
     },
     acceptedRequests: accepted,
     activityLog: [],
   }
 }
 
-export async function deleteAdminDataRequestFromApi(_id: string): Promise<void> {
-  throw { status: 501, message: 'حذف الطلبات غير متاح حالياً' }
-}
-
-export async function approveAdminDataRequestFromApi(_id: string): Promise<void> {
-  throw { status: 501, message: 'الموافقة المباشرة غير متاحة — استخدم صفحة المراجعة' }
+/** Maps frontend AdminDataReviewDecision values to the API's ReviewSyncRequestDto status enum */
+const DECISION_TO_STATUS: Record<string, 'approved' | 'rejected'> = {
+  approve: 'approved',
+  needs_review: 'approved',
+  reject: 'rejected',
 }
 
 export async function submitAdminDataReviewFromApi(
   id: string,
   body: SubmitAdminDataReviewBody,
-  mode: 'draft' | 'publish'
+  _mode: 'draft' | 'publish'
 ): Promise<AdminDataReviewDetail> {
   await request(`${V1}/requests/${id}/review`, {
     method: 'POST',
-    body: JSON.stringify({ ...body, mode }),
+    body: JSON.stringify({
+      status: DECISION_TO_STATUS[body.decision] ?? 'approved',
+      reviewNotes: body.notes,
+    }),
   })
   return fetchAdminDataReviewFromApi(id)
+}
+
+export async function deleteAdminDataRequestFromApi(id: string): Promise<void> {
+  await request(`${V1}/requests/${id}`, { method: 'DELETE' })
+}
+
+export async function approveAdminDataRequestFromApi(id: string): Promise<void> {
+  await request(`${V1}/requests/${id}/approve`, { method: 'POST' })
+}
+
+export async function publishAdminDataSyncRequestFromApi(id: string): Promise<void> {
+  await request(`${V1}/sync/requests/${id}/publish`, { method: 'POST' })
+}
+
+export async function publishAllAdminDataSyncFromApi(): Promise<{ processed: number; details: Array<{ id: string; success: boolean; error?: string }> }> {
+  const response = await request(`${V1}/sync/publish-all`, { method: 'POST' })
+  const data = (response?.data ?? response) as { processed: number; details: Array<{ id: string; success: boolean; error?: string }> }
+  return data
 }
 
 export async function downloadAdminDataReviewReportFromApi(id: string): Promise<Blob> {
@@ -243,14 +276,6 @@ export async function downloadAdminDataReviewReportFromApi(id: string): Promise<
   })
   if (!res.ok) throw new Error('تعذّر تحميل التقرير')
   return res.blob()
-}
-
-export async function publishAdminDataSyncRequestFromApi(_id: string): Promise<void> {
-  throw { status: 501, message: 'نشر الطلبات الفردية غير متاح حالياً' }
-}
-
-export async function publishAllAdminDataSyncFromApi(): Promise<void> {
-  throw { status: 501, message: 'النشر الجماعي غير متاح حالياً' }
 }
 
 export async function exportAdminDataSyncCsvFromApi(): Promise<Blob> {

@@ -37,6 +37,17 @@ export async function updateAdminSecurityScheduleFromApi(
   await request(`${V1}/backup/schedule`, { method: 'PUT', body: JSON.stringify(body) })
 }
 
-export async function createAdminSecurityBackupFromApi(): Promise<void> {
-  await request(`${V1}/backup`, { method: 'POST' })
+export interface SecurityBackupResult {
+  id?: string
+  filename: string
+  sizeBytes: number | string
+  status: string
+  scheduledCron?: string | null
+  createdAt?: string
+}
+
+export async function createAdminSecurityBackupFromApi(): Promise<SecurityBackupResult | null> {
+  const response = await request(`${V1}/backup`, { method: 'POST' })
+  const data = (response?.data ?? response) as SecurityBackupResult | null
+  return data ?? null
 }

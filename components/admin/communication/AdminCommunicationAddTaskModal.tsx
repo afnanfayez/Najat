@@ -113,7 +113,7 @@ export default function AdminCommunicationAddTaskModal({
   }
 
   async function handleSubmit() {
-    if (!title.trim() || !description.trim() || !volunteerId) return
+    if (!title.trim() || !description.trim()) return
     await onSubmit({
       title: title.trim(),
       description: description.trim(),
@@ -371,7 +371,7 @@ export default function AdminCommunicationAddTaskModal({
           </button>
           <button
             type="button"
-            disabled={saving || !title.trim() || !description.trim() || !volunteerId}
+            disabled={saving || !title.trim() || !description.trim()}
             onClick={handleSubmit}
             className="rounded-xl px-6 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             style={{ background: ADMIN_COMM_BLUE, fontFamily: ADMIN_COMM_FONT }}
