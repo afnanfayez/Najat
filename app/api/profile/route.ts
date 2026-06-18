@@ -93,6 +93,7 @@ export async function GET(req: Request) {
 
         const merged = {
           ...mapped,
+          // Local-only fields: always prefer the locally stored value, never overwrite with null from backend
           avatarUrl: local.avatarUrl ?? mapped.avatarUrl ?? null,
           assistancePreferences: local.assistancePreferences ?? mapped.assistancePreferences ?? null,
           assistanceLocation: local.assistanceLocation ?? mapped.assistanceLocation ?? null,
@@ -102,8 +103,31 @@ export async function GET(req: Request) {
           bloodType: local.bloodType ?? null,
         }
 
-        // Cache merged values in server DB
-        db[mapped.id] = { ...local, ...merged }
+        // Cache ONLY backend fields + preserve existing local-only fields.
+        // IMPORTANT: do NOT spread `merged` here because it would overwrite locally-stored
+        // values (avatarUrl, emergencyContacts, bloodType, etc.) with null if the backend
+        // doesn't know about them.
+        db[mapped.id] = {
+          ...local,                                    // preserve ALL existing local fields first
+          // then update backend-authoritative fields only
+          id: mapped.id,
+          fullName: mapped.fullName,
+          email: mapped.email,
+          role: mapped.role,
+          phoneNumber: mapped.phoneNumber,
+          gender: mapped.gender,
+          ageGroup: mapped.ageGroup,
+          maritalStatus: mapped.maritalStatus,
+          healthStatus: mapped.healthStatus,
+          nationalId: mapped.nationalId,
+          housingStatus: mapped.housingStatus,
+          familyMembersCount: mapped.familyMembersCount,
+          femalesCount: mapped.femalesCount,
+          malesCount: mapped.malesCount,
+          region: mapped.region,
+          isVerified: (mapped as any).isVerified,
+          isActive: (mapped as any).isActive,
+        }
         await writeDb(db)
 
         return NextResponse.json({ success: true, data: merged })

@@ -468,26 +468,6 @@ export default function MapsContent() {
             width: auto !important;
           }
           .maps-legend span { font-size: 12px !important; }
-          .maps-right-panel {
-            right: 12px !important;
-            left: 12px !important;
-            bottom: auto !important;
-            top: 72px !important;
-            min-width: 0 !important;
-            max-width: none !important;
-            width: auto !important;
-            padding: 10px !important;
-            gap: 8px !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-          }
-          .maps-right-panel > div {
-            padding: 8px 10px !important;
-            font-size: 12px !important;
-            width: auto !important;
-            flex: 1 1 calc(50% - 4px) !important;
-            min-width: 140px !important;
-          }
           .maps-banner {
             font-size: 11px !important;
             padding: 8px 14px !important;
@@ -509,6 +489,13 @@ export default function MapsContent() {
           }
           .maps-banner {
             bottom: 150px !important;
+          }
+        }
+
+        /* ── Hide right info panel on mobile — it overlaps the search bar ── */
+        @media (max-width: 768px) {
+          .maps-right-panel {
+            display: none !important;
           }
         }
       `}</style>

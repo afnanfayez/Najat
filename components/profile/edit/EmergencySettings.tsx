@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Edit2, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '@/context/AuthContext'
 import {
-  getLocalProfileData,
   saveEmergencySettings,
   type EmergencyContact,
 } from '@/lib/profile/localProfileStorage'
@@ -20,34 +18,38 @@ function newContact(): EmergencyContact {
 }
 
 export default function EmergencySettings() {
-  const { user } = useAuth()
-  const { saveProfile } = useProfile()
+  const { profile, saveProfile } = useProfile()
   const [contacts, setContacts] = useState<EmergencyContact[]>([])
   const [sosMessage, setSosMessage] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
+  // Load data from profile (server-side profile_store.json via API) — works on any device/browser
   useEffect(() => {
-    if (!user?.id) return
-    const local = getLocalProfileData(user.id)
-    const serverContacts = user.emergencyContacts
-    const serverSos = user.sosMessage
+    if (!profile) return
+    // Only initialize once to avoid overwriting user edits on re-renders
+    if (initialized) return
+
+    const serverContacts = (profile as any).emergencyContacts as EmergencyContact[] | null
+    const serverSos = (profile as any).sosMessage as string | null
 
     setContacts(
-      local.emergencyContacts?.length
-        ? local.emergencyContacts
-        : serverContacts?.length
-          ? serverContacts
-          : [{ id: crypto.randomUUID(), name: '', phone: '' }],
+      serverContacts?.length
+        ? serverContacts
+        : [{ id: crypto.randomUUID(), name: '', phone: '' }],
     )
-    setSosMessage(local.sosMessage ?? serverSos ?? '')
-  }, [user?.id, user?.emergencyContacts, user?.sosMessage])
+    setSosMessage(serverSos ?? '')
+    setInitialized(true)
+  }, [profile, initialized])
+
 
   const handleSave = async () => {
-    if (!user?.id) return
+    if (!profile?.id) return
     const cleaned = contacts.filter(
       (c) => c.name.trim() || c.phone.trim(),
     )
-    saveEmergencySettings(user.id, {
+    // Also save to localStorage as a fast local cache
+    saveEmergencySettings(profile.id, {
       contacts: cleaned,
       sosMessage: sosMessage.trim(),
     })
@@ -63,6 +65,7 @@ export default function EmergencySettings() {
       toast.error('حدث خطأ أثناء مزامنة إعدادات الطوارئ مع الخادم')
     }
   }
+
 
   const updateContact = (
     id: string,
