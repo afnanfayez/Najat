@@ -11,6 +11,7 @@ import {
   saveLocalOverrides,
   type LocalProfileData,
 } from '@/lib/profile/localProfileStorage'
+import { validateProfileUpdate } from '@/schemas/userProfile'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
 import { enqueueOfflineOp } from '@/lib/offline/db'
@@ -84,6 +85,13 @@ export function useProfile() {
         ...backendBody
       } = payload
 
+      // Validate backend-bound fields up front so invalid input is rejected the
+      // same way whether online or offline (prevents permanently-stuck overrides).
+      if (Object.keys(backendBody).length > 0) {
+        const validationError = validateProfileUpdate(backendBody)
+        if (validationError) throw { status: 422, message: validationError }
+      }
+
       const localDataToSave: Partial<LocalProfileData> = {}
       if (avatarDataUrl !== undefined) {
         localDataToSave.avatarDataUrl = avatarDataUrl
@@ -131,9 +139,28 @@ export function useProfile() {
         return { profile: merged, syncedWithServer: false }
       }
 
-      const result = await profileAPI.update(payload)
-      await updateOfflineLoginProfile(result.profile)
-      return result
+      try {
+        const result = await profileAPI.update(payload)
+        await updateOfflineLoginProfile(result.profile)
+        return result
+      } catch (err) {
+        // Distinguish a real backend rejection (validation) from a connectivity
+        // failure. Connectivity failures are queued exactly like an offline edit;
+        // validation errors are surfaced so the user can correct the input.
+        const status = (err as { status?: number })?.status
+        const isConnectivity =
+          status === 0 || status === 504 || status === 502 || status === undefined
+        if (!isConnectivity) throw err
+
+        saveLocalOverrides(id, backendBody)
+        await updateOfflineLoginProfile(merged)
+        await enqueueOfflineOp({
+          type: 'PROFILE_SYNC',
+          payload: backendBody as Record<string, unknown>,
+        })
+        toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
+        return { profile: merged, syncedWithServer: false }
+      }
     },
     onSuccess: async ({ profile, syncedWithServer }) => {
       queryClient.setQueryData(getProfileQueryKey(token), profile)

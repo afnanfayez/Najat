@@ -108,3 +108,16 @@ export async function precacheRoutesForRole(role: OfflinePrecacheRole): Promise<
 export async function precacheResidentRoutes(): Promise<void> {
   return precacheRoutesForRole('resident')
 }
+
+/**
+ * Ask the SW to precache every hashed /_next/static asset (build-time manifest)
+ * so any route boots offline. Background, idempotent, best-effort.
+ */
+export async function precacheStaticAssets(): Promise<void> {
+  if (typeof window === 'undefined' || !navigator.onLine) return
+  try {
+    await postToServiceWorker({ type: 'PRECACHE_STATIC' })
+  } catch {
+    // ignore
+  }
+}

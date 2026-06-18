@@ -39,9 +39,70 @@ function readRaw(userId: string): LocalProfileData {
   }
 }
 
+function isQuotaError(error: unknown): boolean {
+  return (
+    error instanceof DOMException &&
+    (error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      error.code === 22)
+  )
+}
+
+/** Free localStorage by dropping OTHER users' avatar blobs (the heaviest items). */
+function evictOtherUsersAvatars(currentUserId: string) {
+  if (typeof window === 'undefined') return
+  const currentKey = storageKey(currentUserId)
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (!key || !key.startsWith(STORAGE_PREFIX) || key === currentKey) continue
+    try {
+      const raw = localStorage.getItem(key)
+      if (!raw) continue
+      const parsed = JSON.parse(raw) as LocalProfileData
+      if (parsed.avatarDataUrl) {
+        delete parsed.avatarDataUrl
+        localStorage.setItem(key, JSON.stringify(parsed))
+      }
+    } catch {
+      // ignore individual entries
+    }
+  }
+}
+
 function writeRaw(userId: string, data: LocalProfileData) {
   if (typeof window === 'undefined' || !userId) return
-  localStorage.setItem(storageKey(userId), JSON.stringify(data))
+  const key = storageKey(userId)
+  const serialized = JSON.stringify(data)
+
+  try {
+    localStorage.setItem(key, serialized)
+    return
+  } catch (error) {
+    if (!isQuotaError(error)) {
+      console.warn('[profile] Failed to persist local profile data:', error)
+      return
+    }
+  }
+
+  // Quota exceeded — reclaim space from other users' avatars, then retry.
+  try {
+    evictOtherUsersAvatars(userId)
+    localStorage.setItem(key, serialized)
+    return
+  } catch {
+    // still failing — fall through
+  }
+
+  // Last resort: persist everything EXCEPT the heavy avatar so emergency
+  // contacts / settings are never lost to a storage limit.
+  try {
+    const withoutAvatar = { ...data }
+    delete withoutAvatar.avatarDataUrl
+    localStorage.setItem(key, JSON.stringify(withoutAvatar))
+    console.warn('[profile] Stored profile without avatar due to storage limits')
+  } catch (error) {
+    console.warn('[profile] Unable to persist local profile data:', error)
+  }
 }
 
 export function getLocalProfileData(userId: string): LocalProfileData {

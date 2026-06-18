@@ -42,13 +42,17 @@ export default function DashboardLayoutClient({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, role, isLoading, isHydrated, logout } = useAuth()
 
-  // Initialize lightweight background data sync.
+  // Initialize lightweight background data sync once per session. Deliberately
+  // does NOT depend on isLoading — that flag flips on every refreshUser() call
+  // (including the one triggered by SW background sync on reconnect), which
+  // would otherwise tear down and restart initOfflineSync (and its idle-time
+  // syncAllData call) on every profile refresh.
   useEffect(() => {
-    if (!isHydrated || isLoading) return
+    if (!isHydrated) return
     if (!getToken()) return
     const cleanup = initOfflineSync()
     return cleanup
-  }, [isHydrated, isLoading])
+  }, [isHydrated])
 
   // Auth guard
   useEffect(() => {

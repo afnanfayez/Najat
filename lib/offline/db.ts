@@ -145,6 +145,14 @@ export interface AuthSnapshot {
   savedAt: number     // was _savedAt in the old raw IDB type
 }
 
+// Generic cache of GET API responses (keyed by request URL) so any read can be
+// served offline — see lib/api/api.ts. Complements the typed entity caches.
+export interface ApiCacheEntry {
+  key: string
+  data: unknown
+  cachedAt: number
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Dexie class
 // ──────────────────────────────────────────────────────────────────────────────
@@ -163,6 +171,7 @@ class NajatOfflineDB extends Dexie {
   adminAidPoints!: Table<CachedAdminAidPoint, string>
   adminUsers!: Table<CachedAdminUser, string>
   adminHealthContent!: Table<CachedAdminHealthContent, string>
+  apiCache!: Table<ApiCacheEntry, string>
 
   constructor() {
     super('najat-offline-v2')
@@ -277,6 +286,23 @@ class NajatOfflineDB extends Dexie {
       adminAidPoints: 'id, cachedAt',
       adminUsers: 'id, cachedAt',
       adminHealthContent: 'id, cachedAt',
+    })
+    // v10: generic API GET response cache for offline reads
+    this.version(10).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+      adminHealthContent: 'id, cachedAt',
+      apiCache: 'key, cachedAt',
     })
   }
 }
@@ -634,4 +660,19 @@ export async function getAdminHealthContentById(id: string): Promise<AdminHealth
   const db = getOfflineDB()
   const row = await db.adminHealthContent.get(id)
   return row?.data ?? null
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Generic API response cache (for offline GET reads — see lib/api/api.ts)
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putApiResponse(key: string, data: unknown): Promise<void> {
+  const db = getOfflineDB()
+  await db.apiCache.put({ key, data, cachedAt: Date.now() })
+}
+
+export async function getApiResponse<T = unknown>(key: string): Promise<T | undefined> {
+  const db = getOfflineDB()
+  const row = await db.apiCache.get(key)
+  return row ? (row.data as T) : undefined
 }

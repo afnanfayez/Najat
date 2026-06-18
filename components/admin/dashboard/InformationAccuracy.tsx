@@ -6,6 +6,7 @@ interface InformationAccuracyProps {
 
 export default function InformationAccuracy({ percentage }: InformationAccuracyProps) {
   const scaleMarks = [0, 25, 50, 75, 100]
+  const safePercentage = Number.isFinite(percentage) ? percentage : 96
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -20,14 +21,14 @@ export default function InformationAccuracy({ percentage }: InformationAccuracyP
           className="text-lg font-bold text-[#2196F3]"
           style={{ fontFamily: "'Cairo', sans-serif" }}
         >
-          {percentage}%
+          {safePercentage}%
         </span>
       </div>
 
       <div className="relative h-3 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
         <div
           className="absolute top-0 right-0 h-full rounded-full bg-[#2196F3] transition-all duration-500"
-          style={{ width: `${percentage}%` }}
+          style={{ width: `${safePercentage}%` }}
         />
       </div>
 

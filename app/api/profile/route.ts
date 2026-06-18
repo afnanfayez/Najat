@@ -1,3 +1,15 @@
+/**
+ * Profile proxy for GET/PATCH /api/profile.
+ *
+ * Source-of-truth model:
+ *  - Backend fields (fullName, phoneNumber, nationalId, ...) → the remote API is
+ *    authoritative. They are cached in profile_store.json ONLY after a confirmed
+ *    backend response, purely as an offline-read fallback — never reported as
+ *    saved unless the backend accepted them.
+ *  - Local-only fields (avatar, assistance*, emergency contacts, sosMessage,
+ *    bloodType) → the client's localStorage is authoritative and is overlaid last
+ *    on the client; the copy stored here is a best-effort fallback only.
+ */
 import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
@@ -69,7 +81,7 @@ export async function GET(req: Request) {
         'Authorization': authHeader,
         'Cache-Control': 'no-cache',
       },
-    }, 2500)
+    }, 9000)
 
     if (backendRes.ok) {
       const rawUser = await backendRes.json()
@@ -170,7 +182,8 @@ export async function PATCH(req: Request) {
       ...backendBody
     } = body
 
-    // 3. Save local fields to local DB
+    // 3. Persist LOCAL-ONLY fields immediately. These never touch the backend,
+    //    so they can be saved regardless of backend availability.
     const db = await readDb()
     const local = db[userId] || {}
 
@@ -183,50 +196,65 @@ export async function PATCH(req: Request) {
     if (sosMessage !== undefined) local.sosMessage = sosMessage
     if (bloodType !== undefined) local.bloodType = bloodType
 
-    // If backend body contains offline supported fields, cache them too
-    if (body.fullName !== undefined) local.fullName = body.fullName
-    if (body.email !== undefined) local.email = body.email
-    if (body.role !== undefined) local.role = body.role
-    if (body.phoneNumber !== undefined) local.phoneNumber = body.phoneNumber
-    if (body.gender !== undefined) local.gender = body.gender
-    if (body.ageGroup !== undefined) local.ageGroup = body.ageGroup
-    if (body.maritalStatus !== undefined) local.maritalStatus = body.maritalStatus
-    if (body.healthStatus !== undefined) local.healthStatus = body.healthStatus
-    if (body.nationalId !== undefined) local.nationalId = body.nationalId
-    if (body.housingStatus !== undefined) local.housingStatus = body.housingStatus
-    if (body.familyMembersCount !== undefined) local.familyMembersCount = body.familyMembersCount
-    if (body.femalesCount !== undefined) local.femalesCount = body.femalesCount
-    if (body.malesCount !== undefined) local.malesCount = body.malesCount
-    if (body.region !== undefined) local.region = body.region
-
     db[userId] = local
     await writeDb(db)
 
     let refreshedMapped: any = null
+    const hasBackendFields = Object.keys(backendBody).length > 0
 
-    // 4. Update backend if there are any backend fields (1 single fetch!)
-    if (Object.keys(backendBody).length > 0) {
+    // 4. The backend is authoritative for backend fields. Only report success if
+    //    it actually accepted the change — never fake success on error/timeout.
+    if (hasBackendFields) {
+      let updateRes: Response
       try {
-        const updateRes = await fetchWithTimeout(BACKEND_ME_URL, {
+        updateRes = await fetchWithTimeout(BACKEND_ME_URL, {
           method: 'PATCH',
           headers: {
             'Authorization': authHeader,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(backendBody),
-        }, 3000)
-
-        if (updateRes.ok) {
-          const updateRaw = await updateRes.json()
-          refreshedMapped = mapUserProfile(updateRaw)
-        }
+        }, 9000)
       } catch (err) {
-        console.warn('[Profile PATCH] Remote backend update failed (offline). Saved locally.', err)
+        // Network error / timeout while the client believed it was online →
+        // the change was NOT saved. Tell the caller so it can retry / queue.
+        console.warn('[Profile PATCH] Backend unreachable; backend fields NOT saved.', err)
+        return NextResponse.json(
+          { message: 'تعذّر الوصول إلى الخادم، لم يتم حفظ التعديلات. حاول مرة أخرى.' },
+          { status: 504 },
+        )
       }
-    }
 
-    // 5. If no backend fields were updated or update failed, fetch current user info from backend (1 single fetch!)
-    if (!refreshedMapped) {
+      let updateData: any = null
+      try {
+        updateData = await updateRes.json()
+      } catch {
+        /* non-JSON backend response */
+      }
+
+      if (!updateRes.ok) {
+        // Surface the backend's real validation result instead of faking success.
+        const errors = Array.isArray(updateData?.errors) ? updateData.errors : null
+        const firstFieldMsg =
+          errors && errors[0]?.message
+            ? errors[0].message.ar ?? errors[0].message.en
+            : undefined
+        const rawMsg = updateData?.message
+        const generalMsg =
+          rawMsg && typeof rawMsg === 'object' ? rawMsg.ar ?? rawMsg.en : rawMsg
+        return NextResponse.json(
+          {
+            message: firstFieldMsg ?? generalMsg ?? 'فشل حفظ التعديلات على الخادم',
+            errors,
+          },
+          { status: updateRes.status },
+        )
+      }
+
+      refreshedMapped = mapUserProfile(updateData)
+    } else {
+      // Local-only update → fetch a fresh backend snapshot for an accurate merge,
+      // but tolerate failure (local-only changes don't depend on the backend).
       try {
         const refreshedRes = await fetchWithTimeout(BACKEND_ME_URL, {
           method: 'GET',
@@ -234,15 +262,37 @@ export async function PATCH(req: Request) {
             'Authorization': authHeader,
             'Cache-Control': 'no-cache',
           },
-        }, 2500)
+        }, 9000)
 
         if (refreshedRes.ok) {
           const refreshedRaw = await refreshedRes.json()
           refreshedMapped = mapUserProfile(refreshedRaw)
         }
       } catch (err) {
-        console.warn('[Profile PATCH] Remote backend GET failed (offline).', err)
+        console.warn('[Profile PATCH] Backend GET refresh failed (local-only update).', err)
       }
+    }
+
+    // 5. Cache the AUTHORITATIVE backend fields locally (offline fallback reads).
+    //    Only done after a confirmed backend response so we never cache values
+    //    the backend rejected.
+    if (refreshedMapped) {
+      local.fullName = refreshedMapped.fullName ?? local.fullName
+      local.email = refreshedMapped.email ?? local.email
+      local.role = refreshedMapped.role ?? local.role
+      local.phoneNumber = refreshedMapped.phoneNumber ?? local.phoneNumber
+      local.gender = refreshedMapped.gender ?? local.gender
+      local.ageGroup = refreshedMapped.ageGroup ?? local.ageGroup
+      local.maritalStatus = refreshedMapped.maritalStatus ?? local.maritalStatus
+      local.healthStatus = refreshedMapped.healthStatus ?? local.healthStatus
+      local.nationalId = refreshedMapped.nationalId ?? local.nationalId
+      local.housingStatus = refreshedMapped.housingStatus ?? local.housingStatus
+      local.familyMembersCount = refreshedMapped.familyMembersCount ?? local.familyMembersCount
+      local.femalesCount = refreshedMapped.femalesCount ?? local.femalesCount
+      local.malesCount = refreshedMapped.malesCount ?? local.malesCount
+      local.region = refreshedMapped.region ?? local.region
+      db[userId] = local
+      await writeDb(db)
     }
 
     // 6. Merge and return (even if completely offline, we merge with local)

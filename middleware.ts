@@ -74,8 +74,11 @@ export const config = {
      * - /login and /register (public auth pages)
      * - /api/* (Next.js API routes — have their own auth)
      * - /_next/* (Next.js internals)
-     * - /static/* and public files
+     * - /static/* and public files (incl. /assets/* — public images/fonts that
+     *   must never be auth-gated, otherwise the image optimizer's cookie-less
+     *   server-side fetch is redirected to /login and every next/image of a
+     *   local asset fails with "isn't a valid image")
      */
-    '/((?!login|register|api|_next/static|_next/image|favicon.ico|icons|manifest|sw\\.js|workbox|offline).*)',
+    '/((?!login|register|api|_next/static|_next/image|favicon.ico|icons|assets|manifest|precache-manifest|sw\\.js|workbox|offline).*)',
   ],
 }

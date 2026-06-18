@@ -46,9 +46,19 @@ export const userProfileSchema = z.object({
 
 export type UserProfile = z.infer<typeof userProfileSchema>
 
+// Patterns mirror the backend's own validation so invalid input is caught
+// client-side (online AND offline) instead of failing later at the API.
+// phoneNumber: international "+" + 8–15 digits, or local "0" + 10 digits.
+// nationalId: exactly 9 digits.
+const PHONE_PATTERN = /^(\+\d{8,15}|0\d{9})$/
+const NATIONAL_ID_PATTERN = /^\d{9}$/
+
 export const updateUserProfileSchema = z.object({
-  fullName: z.string().min(2).optional(),
-  phoneNumber: z.string().optional(),
+  fullName: z.string().min(2, 'الاسم قصير جداً').optional(),
+  phoneNumber: z
+    .string()
+    .regex(PHONE_PATTERN, 'رقم الهاتف غير صحيح، استخدم صيغة مثل +970592990002 أو 0592990002')
+    .optional(),
   gender: z.enum(['male', 'female']).optional(),
   ageGroup: z.enum(['18-40', 'above 40']).optional(),
   maritalStatus: z
@@ -57,7 +67,10 @@ export const updateUserProfileSchema = z.object({
   healthStatus: z
     .enum(['Healthy', 'Chronically Ill', 'Injured', 'Amputee'])
     .optional(),
-  nationalId: z.string().optional(),
+  nationalId: z
+    .string()
+    .regex(NATIONAL_ID_PATTERN, 'رقم الهوية يجب أن يتكوّن من 9 أرقام')
+    .optional(),
   housingStatus: z.string().optional(),
   familyMembersCount: z.coerce.number().optional(),
   femalesCount: z.coerce.number().optional(),
@@ -69,3 +82,13 @@ export const updateUserProfileSchema = z.object({
 })
 
 export type UpdateUserProfileBody = z.infer<typeof updateUserProfileSchema>
+
+/**
+ * Validate the backend-bound profile fields before sending/queueing.
+ * Returns an Arabic error message, or null when the body is valid.
+ */
+export function validateProfileUpdate(body: Record<string, unknown>): string | null {
+  const result = updateUserProfileSchema.safeParse(body)
+  if (result.success) return null
+  return result.error.issues[0]?.message ?? 'بيانات غير صالحة'
+}

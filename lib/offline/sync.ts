@@ -6,7 +6,6 @@ import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import { safetyAPI } from '@/lib/api/safety'
 import { getToken } from '@/lib/api/auth'
 import { fetchAdminHealthFacilitiesFromApi } from '@/lib/api/adminHealth'
-import { processSyncQueue } from '@/lib/offline/processSyncQueue'
 import {
   precacheAllFacilityMapTiles,
   precacheMainMapArea,
@@ -286,11 +285,11 @@ export function initOfflineSync(): () => void {
     setTimeout(startSync, 5_000)
   }
 
-  const onOnline = () => {
-    void processSyncQueue()
-    void syncAllData()
-  }
-  window.addEventListener('online', onOnline)
+  // NOTE: reconnect-triggered sync is owned by PWARegister (throttled,
+  // forces a full sync, and also drives SW Background Sync for backgrounded
+  // tabs) — adding a second 'online' listener here duplicated that work and
+  // caused every API endpoint to be re-fetched 2-3x whenever the connection
+  // came back.
 
   if (!syncTimer) {
     syncTimer = setInterval(() => {
@@ -299,7 +298,6 @@ export function initOfflineSync(): () => void {
   }
 
   return () => {
-    window.removeEventListener('online', onOnline)
     if (syncTimer) {
       clearInterval(syncTimer)
       syncTimer = null

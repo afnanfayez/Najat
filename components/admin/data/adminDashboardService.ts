@@ -91,9 +91,9 @@ function getBaseLayout(): AdminDashboardData {
     stats: mock.stats.map(mapStat),
     responseTime: mock.responseTime,
     informationAccuracy: mock.informationAccuracy,
-    recentActivities: [],
+    recentActivities: mock.recentActivities.map(mapActivity),
     quickActions: mock.quickActions.map(mapQuickAction),
-    urgentAlerts: [],
+    urgentAlerts: mock.urgentAlerts.map(mapUrgentAlert),
   }
 }
 

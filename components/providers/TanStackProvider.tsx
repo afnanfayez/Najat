@@ -9,6 +9,10 @@ function createQueryClient() {
       queries: {
         staleTime: 60_000,
         gcTime: 5 * 60_000,
+        // Run queryFn even while offline (instead of pausing) so our SW /
+        // IndexedDB cache fallbacks can serve data — otherwise offline queries
+        // stay stuck in a perpetual "loading" state.
+        networkMode: 'offlineFirst',
         retry: (failureCount) => {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             return false

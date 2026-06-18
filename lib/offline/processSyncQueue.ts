@@ -17,6 +17,9 @@ import {
   updateAdminHealthContentFromApi,
   deleteAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
+import { toast } from 'sonner'
+import { getToken } from '@/lib/api/auth'
+import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
 import { updateOfflineLoginProfile } from '@/lib/auth/offlineLogin'
 import { clearLocalOverrides } from '@/lib/profile/localProfileStorage'
 import {
@@ -37,6 +40,35 @@ import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
 import type { AdminHealthFacilityType, CreateAdminHealthFacilityBody, CreateAdminHealthContentBody, UpdateAdminHealthContentBody } from '@/schemas/adminHealth'
 
 const MAX_RETRIES = 3
+
+function getErrStatus(err: unknown): number | undefined {
+  if (err && typeof err === 'object' && 'status' in err) {
+    const s = (err as { status?: unknown }).status
+    if (typeof s === 'number') return s
+  }
+  return undefined
+}
+
+function getErrMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'message' in err) {
+    const m = (err as { message?: unknown }).message
+    if (typeof m === 'string') return m
+  }
+  if (err instanceof Error) return err.message
+  return 'sync failed'
+}
+
+/** 4xx client errors (except 408/429) will never succeed on retry. */
+function isNonRetryable(status?: number): boolean {
+  return status !== undefined && status >= 400 && status < 500 && status !== 408 && status !== 429
+}
+
+/** Drop the optimistic local override for a profile edit the backend refused. */
+function clearFailedProfileOverrides(payload: Record<string, unknown>): void {
+  const userId = getUserIdFromToken(getToken())
+  if (!userId) return
+  clearLocalOverrides(userId, Object.keys(payload) as (keyof UpdateUserProfileBody)[])
+}
 
 async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'AID_REQUEST') {
@@ -185,36 +217,68 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   return false
 }
 
+let isProcessing = false
+
 export async function processSyncQueue(): Promise<void> {
   if (typeof window === 'undefined' || !navigator.onLine) return
+  // Multiple independent triggers (online event, SW background sync message,
+  // manual calls) can all fire processSyncQueue() within the same moment —
+  // without this guard, the same queued item could be sent to the backend
+  // twice before the first call marks it done.
+  if (isProcessing) return
+  isProcessing = true
 
-  const items = await getPendingOfflineOps()
-  for (const item of items) {
-    if (item.id == null) continue
+  try {
+    const items = await getPendingOfflineOps()
+    for (const item of items) {
+      if (item.id == null) continue
 
-    if (item.retries >= MAX_RETRIES) {
-      await markOfflineOpFailed(item.id, 'max retries exceeded')
-      continue
-    }
+      if (item.retries >= MAX_RETRIES) {
+        await markOfflineOpFailed(item.id, 'max retries exceeded')
+        continue
+      }
 
-    await markOfflineOpSyncing(item.id)
+      await markOfflineOpSyncing(item.id)
 
-    try {
-      const ok = await processDexieItem(item)
-      if (ok) {
-        await markOfflineOpDone(item.id)
-      } else {
+      try {
+        const ok = await processDexieItem(item)
+        if (ok) {
+          await markOfflineOpDone(item.id)
+        } else {
+          await incrementOfflineOpRetry(item.id)
+        }
+      } catch (err) {
+        const status = getErrStatus(err)
+        const msg = getErrMessage(err)
+        const nonRetryable = isNonRetryable(status)
+        const exhausted = item.retries + 1 >= MAX_RETRIES
+
+        // A backend rejection (e.g. failed validation) will never succeed on
+        // retry. Fail it immediately and roll back the optimistic local state so
+        // offline ends up consistent with what the server actually accepted.
+        if (nonRetryable) {
+          await markOfflineOpFailed(item.id, msg)
+          if (item.type === 'PROFILE_SYNC') {
+            clearFailedProfileOverrides(item.payload)
+            toast.error(`تعذّر حفظ تعديلات الملف الشخصي: ${msg}`)
+          }
+          continue
+        }
+
         await incrementOfflineOpRetry(item.id)
-      }
-    } catch (err) {
-      await incrementOfflineOpRetry(item.id)
-      const msg = err instanceof Error ? err.message : 'sync failed'
 
-      if (item.retries + 1 >= MAX_RETRIES) {
-        await markOfflineOpFailed(item.id, msg)
-      } else if (msg.includes('409') || msg.toLowerCase().includes('conflict')) {
-        await markOfflineOpConflict(item.id)
+        if (status === 409 || msg.toLowerCase().includes('conflict')) {
+          await markOfflineOpConflict(item.id)
+        } else if (exhausted) {
+          await markOfflineOpFailed(item.id, msg)
+          if (item.type === 'PROFILE_SYNC') {
+            clearFailedProfileOverrides(item.payload)
+            toast.error('تعذّر مزامنة تعديلات الملف الشخصي بعد عدة محاولات')
+          }
+        }
       }
     }
+  } finally {
+    isProcessing = false
   }
 }

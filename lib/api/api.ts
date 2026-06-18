@@ -1,5 +1,24 @@
 import { getToken } from '@/lib/api/auth'
 import { fetchWithTimeout } from '@/lib/api/fetchWithTimeout'
+import { getApiResponse, putApiResponse } from '@/lib/offline/db'
+
+async function readCachedGet(key: string): Promise<unknown> {
+  if (typeof window === 'undefined') return undefined
+  try {
+    return await getApiResponse(key)
+  } catch {
+    return undefined
+  }
+}
+
+function writeCachedGet(key: string, data: unknown): void {
+  if (typeof window === 'undefined') return
+  try {
+    void putApiResponse(key, data)
+  } catch {
+    // ignore cache write failures
+  }
+}
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||
@@ -75,6 +94,9 @@ export async function request(endpoint: string, options: RequestInit = {}) {
     url = `/api/aid-requests?aidOrganizationId=${encodeURIComponent(orgId)}`
   }
 
+  const method = (options.method ?? 'GET').toUpperCase()
+  const isGet = method === 'GET'
+
   const config: RequestInit = {
     cache: 'no-store', // Disable browser and Next.js fetch caching
     ...options,
@@ -104,11 +126,18 @@ export async function request(endpoint: string, options: RequestInit = {}) {
       }
     }
 
+    // Cache successful GET reads so they can be served offline.
+    if (isGet) writeCachedGet(url, data)
+
     return data
   } catch (err: any) {
-    // If it's already our custom error object, re-throw it
+    // If it's already our custom error object (real HTTP status), re-throw it.
     if (err.status) throw err
-    // Otherwise, it's a network error (like CORS or connection reset)
+    // Network error (offline / CORS / reset): serve the last cached GET if any.
+    if (isGet) {
+      const cached = await readCachedGet(url)
+      if (cached !== undefined) return cached
+    }
     throw {
       status: 0,
       message: extractMessage(err?.message) ?? 'Network error / CORS issue',

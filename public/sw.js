@@ -8,26 +8,49 @@
  *  - External cacheable assets (Leaflet etc.) → cache-first, update in background
  *  - API responses (/v1/*)                    → NOT cached here; handled by IndexedDB (lib/offline/db.ts)
  *
- * BUMP CACHE_NAME ON EVERY DEPLOY so stale shells are evicted on activate.
+ * BUMP SHELL_CACHE ON EVERY DEPLOY so stale shells are evicted on activate.
  */
 
-// BUMP THIS VERSION ON EVERY DEPLOY
-const CACHE_NAME = 'najat-pwa-cache-v25'
+// Cache buckets — keep these literals in sync with lib/pwa/cacheNames.ts
+//  - SHELL_CACHE: versioned; BUMP ON EVERY DEPLOY (shells, RSC, /_next/static)
+//  - IMAGE_CACHE: durable; survives deploys so images aren't re-downloaded
+//  - MAP_TILES_CACHE: durable; survives deploys
+const SHELL_CACHE = 'najat-shell-v27'
+const IMAGE_CACHE = 'najat-images-v1'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 // API responses are NOT cached by the SW — they are handled by IndexedDB sync (lib/offline/db.ts)
 const FETCH_TIMEOUT_MS = 8000
 const APP_SHELL_TIMEOUT_MS = 2500
+
+// Freshness windows for cache-first-with-revalidate. A fresh entry is served
+// straight from cache with NO network request (saves bandwidth on slow links);
+// a stale entry is served from cache and revalidated in the background (SWR).
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const STATIC_MAX_AGE_MS = 30 * ONE_DAY_MS // hashed /_next/static + bundled /assets — effectively immutable
+const IMAGE_MAX_AGE_MS = 7 * ONE_DAY_MS   // optimized images may change behind a stable URL
+const TILE_MAX_AGE_MS = 30 * ONE_DAY_MS   // map tiles rarely change
+
+// Hard caps so durable caches don't grow without bound and trigger eviction of
+// the whole origin's storage. Oldest entries (FIFO via cache insertion order)
+// are pruned first.
+const IMAGE_MAX_ENTRIES = 300
+const TILE_MAX_ENTRIES = 1500
 // في وضع التطوير نتجنب تخزين ملفات /_next/ حتى لا تتأثر آلية HMR
 const IS_DEV = self.location.search.includes('dev=1')
 
-const CORE_ASSETS = [
+// Shells & documents → SHELL_CACHE (versioned)
+const CORE_SHELL_ASSETS = [
   '/',
   '/login',
   '/logout',
   '/dashboard',
   '/admin',
-  '/favicon.ico',
   '/manifest.webmanifest',
+]
+
+// Images & icons → IMAGE_CACHE (durable across deploys)
+const CORE_IMAGE_ASSETS = [
+  '/favicon.ico',
   '/assets/Photo1.png',
   '/assets/Photo2.jpg',
   '/assets/Logo1.png',
@@ -231,9 +254,67 @@ async function cacheRscPayload(cache, pagePath) {
         'Next-Url': normalizedPath,
       },
     })
-    if (response.ok) await cache.put(rscCacheKey(normalizedPath), response.clone())
+    if (response.ok && !response.redirected) {
+      await cache.put(rscCacheKey(normalizedPath), response.clone())
+    }
   } catch {
     // ignore
+  }
+}
+
+// Extract the /_next/static JS & CSS a document references and cache them, so a
+// PRECACHED (never-visited) route can still boot offline. Without this, only
+// routes the user actually loaded online have their chunks cached, and a hard
+// offline load of any other route fails with "Failed to load chunk …".
+async function cacheReferencedStaticAssets(html) {
+  if (typeof html !== 'string' || !html) return
+  const cache = await caches.open(SHELL_CACHE)
+  const urls = new Set()
+  const re = /\/_next\/static\/[^"'\s)\\]+?\.(?:js|css)/g
+  let match
+  while ((match = re.exec(html)) !== null) urls.add(match[0])
+  await Promise.all(
+    [...urls].map(async (url) => {
+      try {
+        if (await cache.match(url)) return
+        const res = await fetch(url)
+        if (res.ok) await putWithTimestamp(cache, url, res)
+      } catch {
+        // ignore individual asset failures
+      }
+    }),
+  )
+}
+
+// Precache EVERY hashed /_next/static asset listed in the build-time manifest,
+// so any route — even one never visited — can boot offline. Runs in the
+// background (triggered by the client on idle) so it never blocks first paint.
+async function precacheStaticManifest() {
+  if (!self.navigator.onLine) return
+  try {
+    const res = await fetch('/precache-manifest.json', { cache: 'no-cache' })
+    if (!res.ok) return
+    const urls = await res.json()
+    if (!Array.isArray(urls)) return
+    const cache = await caches.open(SHELL_CACHE)
+    const CONCURRENCY = 6
+    let i = 0
+    async function worker() {
+      while (i < urls.length) {
+        const url = urls[i++]
+        if (typeof url !== 'string') continue
+        try {
+          if (await cache.match(url)) continue
+          const r = await fetch(url)
+          if (r.ok) await putWithTimestamp(cache, url, r)
+        } catch {
+          // ignore individual asset failures
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+  } catch {
+    // ignore — best effort
   }
 }
 
@@ -242,10 +323,12 @@ async function cacheDocument(cache, path) {
   const normalizedPath = normalizePathname(path)
   try {
     const response = await fetch(normalizedPath)
-    if (response.ok) {
+    if (response.ok && !response.redirected) {
+      const html = await response.clone().text()
       await cache.put(normalizedPath, response.clone())
       await cache.put(pageCacheKey(normalizedPath), response.clone())
       await cacheRscPayload(cache, normalizedPath)
+      await cacheReferencedStaticAssets(html)
     }
   } catch {
     // ignore
@@ -274,7 +357,76 @@ async function serveCachedDocument(cache, request, url) {
   )
 }
 
-async function cacheFirstWithUpdate(request, cacheName) {
+function isCacheableResponse(response) {
+  // 200 = readable same-origin/CORS; opaque = cross-origin no-cors <img> (status 0)
+  return response && (response.status === 200 || response.type === 'opaque')
+}
+
+// Stamp the time of caching onto a response so we can compute its age later.
+// Opaque cross-origin responses can't be re-wrapped (body is null), so they are
+// stored as-is and treated as always-stale (revalidated in background when online).
+async function putWithTimestamp(cache, request, response) {
+  if (response.type === 'opaque' || response.status === 0) {
+    try {
+      await cache.put(request, response.clone())
+    } catch {
+      // ignore
+    }
+    return
+  }
+  try {
+    const body = await response.clone().arrayBuffer()
+    const headers = new Headers(response.headers)
+    headers.set('x-sw-cached-at', String(Date.now()))
+    await cache.put(
+      request,
+      new Response(body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      }),
+    )
+  } catch {
+    // Fall back to a plain put if re-wrapping fails for any reason.
+    try {
+      await cache.put(request, response.clone())
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function cachedAgeMs(response) {
+  const ts = Number(response && response.headers.get('x-sw-cached-at'))
+  if (!ts) return Infinity // legacy entries with no timestamp → treat as stale
+  return Date.now() - ts
+}
+
+// Keep a cache under maxEntries by deleting the oldest entries first.
+// cache.keys() preserves insertion order, giving us a simple FIFO eviction.
+async function trimCache(cacheName, maxEntries) {
+  try {
+    const cache = await caches.open(cacheName)
+    const keys = await cache.keys()
+    const excess = keys.length - maxEntries
+    for (let i = 0; i < excess; i++) {
+      await cache.delete(keys[i])
+    }
+  } catch {
+    // ignore
+  }
+}
+
+// Cache-first with TTL-gated revalidation:
+//  - fresh cache hit  → return cached, NO network request (bandwidth-friendly)
+//  - stale cache hit  → return cached now, revalidate in background (SWR)
+//  - cache miss       → fetch, cache, return (or image fallback when offline)
+async function cacheFirstWithRevalidate(
+  request,
+  cacheName,
+  maxAgeMs = STATIC_MAX_AGE_MS,
+  maxEntries = 0,
+) {
   const cache = await caches.open(cacheName)
   const cached = await cache.match(request)
   const url = new URL(request.url)
@@ -287,14 +439,22 @@ async function cacheFirstWithUpdate(request, cacheName) {
     )
   }
 
+  if (cached && cachedAgeMs(cached) < maxAgeMs) {
+    return cached // fresh — skip the network entirely
+  }
+
   const update = fetch(request)
-    .then((response) => {
-      if (response.status === 200) cache.put(request, response.clone())
+    .then(async (response) => {
+      if (isCacheableResponse(response)) {
+        await putWithTimestamp(cache, request, response)
+        if (maxEntries > 0) void trimCache(cacheName, maxEntries)
+      }
       return response
     })
     .catch(() => null)
 
   if (cached) {
+    // stale — serve cache immediately, refresh in background
     update.catch(() => undefined)
     return cached
   }
@@ -308,17 +468,30 @@ async function cacheFirstWithUpdate(request, cacheName) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) =>
-        Promise.all(CORE_ASSETS.map((url) => cache.add(url).catch(() => undefined))),
-      )
-      .then(() => self.skipWaiting()),
+    Promise.all([
+      caches
+        .open(SHELL_CACHE)
+        .then((cache) =>
+          Promise.all(
+            CORE_SHELL_ASSETS.map((url) => cache.add(url).catch(() => undefined)),
+          ),
+        ),
+      caches
+        .open(IMAGE_CACHE)
+        .then((cache) =>
+          Promise.all(
+            CORE_IMAGE_ASSETS.map((url) => cache.add(url).catch(() => undefined)),
+          ),
+        ),
+    ]),
+    // NOTE: no skipWaiting() here — a new SW now waits until the page calls
+    // SKIP_WAITING (driven by an in-app "update available" prompt), so we never
+    // swap the controller out from under an active session.
   )
 })
 
 self.addEventListener('activate', (event) => {
-  const keepCaches = new Set([CACHE_NAME, MAP_TILES_CACHE])
+  const keepCaches = new Set([SHELL_CACHE, IMAGE_CACHE, MAP_TILES_CACHE])
   event.waitUntil(
     caches
       .keys()
@@ -328,6 +501,13 @@ self.addEventListener('activate', (event) => {
             if (!keepCaches.has(cacheName)) return caches.delete(cacheName)
           }),
         ),
+      )
+      // Bound the durable caches in case they grew under a previous version.
+      .then(() =>
+        Promise.all([
+          trimCache(IMAGE_CACHE, IMAGE_MAX_ENTRIES),
+          trimCache(MAP_TILES_CACHE, TILE_MAX_ENTRIES),
+        ]),
       )
       .then(() => self.clients.claim()),
   )
@@ -341,9 +521,14 @@ self.addEventListener('message', (event) => {
     return
   }
 
+  if (type === 'PRECACHE_STATIC') {
+    event.waitUntil(precacheStaticManifest())
+    return
+  }
+
   if (type === 'PRECACHE_ROUTE') {
     if (typeof path !== 'string' || !path.startsWith('/')) return
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cacheDocument(cache, path)))
+    event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cacheDocument(cache, path)))
     return
   }
 
@@ -352,7 +537,7 @@ self.addEventListener('message', (event) => {
     const safePaths = paths.filter((item) => typeof item === 'string' && item.startsWith('/'))
     if (safePaths.length === 0) return
     event.waitUntil(
-      caches.open(CACHE_NAME).then((cache) =>
+      caches.open(SHELL_CACHE).then((cache) =>
         Promise.all(safePaths.map((routePath) => cacheDocument(cache, routePath))),
       ),
     )
@@ -398,23 +583,57 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return
   if (url.pathname.startsWith('/_next/webpack-hmr')) return
-  if (IS_DEV && (request.mode === 'navigate' || isAppRouteRequest(request, url))) return
-
-  if (url.origin !== self.location.origin) {
-    if (!isExternalCacheable(url) && !isMapTileUrl(url)) return
-  }
-
   if (url.pathname.startsWith('/api/')) return
 
+  // في وضع التطوير: لا نعترض أي طلب تصفّح/RSC إطلاقاً. الـ APP_SHELL_TIMEOUT_MS
+  // (2.5s) يصلح لبناء production لكنه أقصر من زمن تجميع Turbopack لمسار جديد في
+  // dev — فينتهي المهلة بينما الطلب الحقيقي ما زال جاريًا، فيتسابق مع اتصال
+  // الـ dev server ويُغلقه ("Connection closed")، فيُسقط Next.js التنقّل الى
+  // hard navigation كامل، الذي يُعيد تسجيل الـ SW ويكرر نفس السباق — حلقة ريلود
+  // لا تنتهي. الأوفلاين في dev غير مفيد عمليًا (المطوّر متصل دائمًا)؛ اختبار
+  // الأوفلاين الحقيقي يكون عبر build/start.
+  if (IS_DEV) return
+
+  // Map tiles (cross-origin images) → durable tile cache
   if (isMapTileUrl(url)) {
-    event.respondWith(cacheFirstWithUpdate(request, MAP_TILES_CACHE))
+    event.respondWith(
+      cacheFirstWithRevalidate(request, MAP_TILES_CACHE, TILE_MAX_AGE_MS, TILE_MAX_ENTRIES),
+    )
     return
+  }
+
+  // Images → durable image cache. Covers same-origin (/assets, /_next/image,
+  // favicon) AND cross-origin remote media (Cloudinary, Railway, etc.) so that
+  // remote facility/article images survive offline. Cross-origin <img> loads
+  // are no-cors → opaque responses, which we still cache and serve offline.
+  //
+  // IMPORTANT: navigation requests advertise `image/avif,image/webp` in Accept,
+  // so we must exclude navigations and RSC payloads here — otherwise document
+  // requests would be hijacked into the image cache and skip the shell handler.
+  if (
+    request.mode !== 'navigate' &&
+    !isRscRequest(request, url) &&
+    isImageRequest(request, url)
+  ) {
+    // في وضع التطوير: تجاوز ملفات /_next/ المحلية لضمان عمل HMR بشكل سليم
+    if (IS_DEV && url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
+      return
+    }
+    event.respondWith(
+      cacheFirstWithRevalidate(request, IMAGE_CACHE, IMAGE_MAX_AGE_MS, IMAGE_MAX_ENTRIES),
+    )
+    return
+  }
+
+  // Remaining cross-origin requests: only cache whitelisted hosts (fonts/JS/CSS)
+  if (url.origin !== self.location.origin) {
+    if (!isExternalCacheable(url)) return
   }
 
   if (isStaticAsset(url)) {
     // في وضع التطوير: تجاوز تخزين ملفات /_next/ لضمان عمل HMR بشكل سليم
     if (IS_DEV && url.pathname.startsWith('/_next/')) return
-    event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
+    event.respondWith(cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS))
     return
   }
 
@@ -424,7 +643,7 @@ self.addEventListener('fetch', (event) => {
     !url.pathname.startsWith('/_next/')
   ) {
     event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
+      caches.open(SHELL_CACHE).then(async (cache) => {
         const pathname = normalizePathname(url.pathname)
         const shellKey = rscCacheKey(pathname)
         const fallbackPath = fallbackDocument(pathname)
@@ -448,7 +667,7 @@ self.addEventListener('fetch', (event) => {
 
         try {
           const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
-          if (response.ok) {
+          if (response.ok && !response.redirected) {
             await cache.put(shellKey, response.clone())
             await cache.put(request, response.clone())
           }
@@ -468,14 +687,14 @@ self.addEventListener('fetch', (event) => {
 
   if (isAppRouteRequest(request, url)) {
     event.respondWith(
-      caches.open(CACHE_NAME).then(async (cache) => {
+      caches.open(SHELL_CACHE).then(async (cache) => {
         const pathname = normalizePathname(url.pathname)
 
         if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
 
         try {
           const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
-          if (response.status === 200) {
+          if (response.status === 200 && !response.redirected) {
             await cache.put(request, response.clone())
             await cache.put(pathname, response.clone())
             await cache.put(pageCacheKey(pathname), response.clone())
@@ -490,5 +709,5 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  event.respondWith(cacheFirstWithUpdate(request, CACHE_NAME))
+  event.respondWith(cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS))
 })

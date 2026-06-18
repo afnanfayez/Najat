@@ -2,11 +2,16 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: '/dashboard',
     name: 'منصة نجاة للطوارئ',
     short_name: 'نجاة',
     description: 'منصة نجاة للخدمات الإنسانية والطوارئ - تطبيق تسجيل الدخول والتسجيل للطوارئ',
+    lang: 'ar',
+    dir: 'rtl',
     start_url: '/dashboard',
+    scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#2496FF',
     theme_color: '#2496FF',
     categories: ['medical', 'utilities'],

@@ -1,33 +1,35 @@
 import type { HealthFacility } from '@/schemas/healthFacility'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import type { Article } from '@/schemas/healthGuide'
+import { IMAGE_CACHE } from '@/lib/pwa/cacheNames'
 
-function nextImageUrl(remoteUrl: string, width = 640): string {
-  return `/_next/image?url=${encodeURIComponent(remoteUrl)}&w=${width}&q=75`
-}
-
-async function warmUrl(url: string): Promise<void> {
+/**
+ * Warm an image into the durable image cache under its EXACT rendered URL so the
+ * Service Worker (which keys by request URL) finds it offline.
+ *
+ * Components render remote media via a raw <img src={remoteUrl}> (cross-origin),
+ * so we warm the raw remote URL with a no-cors fetch (opaque response) — NOT the
+ * /_next/image optimizer URL, which those <img> tags never request.
+ */
+async function cacheImage(url: string): Promise<void> {
+  if (typeof caches === 'undefined') return
   try {
-    await fetch(url, { mode: 'same-origin' })
+    const cache = await caches.open(IMAGE_CACHE)
+    if (await cache.match(url)) return // already warmed — don't re-download
+
+    const isRemote = url.startsWith('http://') || url.startsWith('https://')
+    const response = await fetch(url, { mode: isRemote ? 'no-cors' : 'same-origin' })
+    if (response && (response.ok || response.type === 'opaque')) {
+      await cache.put(url, response)
+    }
   } catch {
-    // ignore
+    // ignore — best effort
   }
 }
 
 export async function warmImageUrls(urls: string[]): Promise<void> {
   const unique = [...new Set(urls.filter(Boolean))]
-  await Promise.allSettled(
-    unique.map(async (url) => {
-      if (url.startsWith('/assets/') || url.startsWith('/')) {
-        await warmUrl(url)
-        return
-      }
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        await warmUrl(nextImageUrl(url))
-        await warmUrl(nextImageUrl(url, 1280))
-      }
-    }),
-  )
+  await Promise.allSettled(unique.map((url) => cacheImage(url)))
 }
 
 export function collectFacilityImageUrls(facilities: HealthFacility[]): string[] {
