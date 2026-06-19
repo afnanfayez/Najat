@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 import { adminNavItems } from './adminNavItems'
 import type { AuthUser } from '@/context/AuthContext'
@@ -22,6 +23,7 @@ export default function AdminSidebarContent({
   handleLogout,
   user,
 }: AdminSidebarContentProps) {
+  const pathname = usePathname()
   return (
     <div
       style={{
@@ -55,7 +57,12 @@ export default function AdminSidebarContent({
         }}
       >
         {adminNavItems.map((item) => {
-          const isActive = activeNav === item.id
+          const isActive =
+            activeNav === item.id ||
+            (pathname &&
+              (pathname === `/admin/${item.id}` ||
+                pathname.startsWith(`/admin/${item.id}/`))) ||
+            (item.id === 'dashboard' && pathname === '/admin')
           const isHovered = hoveredNav === item.id
           const Icon = item.icon
 

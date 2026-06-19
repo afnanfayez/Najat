@@ -48,6 +48,7 @@ interface AdminMapsEditorToolsPanelProps {
   activeTool: AdminMapsDrawTool
   onToolChange: (tool: AdminMapsDrawTool) => void
   onLayerToggle: (layerId: string) => void
+  onUploadMap?: (file: File) => void
 }
 
 export default function AdminMapsEditorToolsPanel({
@@ -56,6 +57,7 @@ export default function AdminMapsEditorToolsPanel({
   activeTool,
   onToolChange,
   onLayerToggle,
+  onUploadMap,
 }: AdminMapsEditorToolsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -66,7 +68,11 @@ export default function AdminMapsEditorToolsPanel({
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    toast.success(`تم اختيار الخريطة: ${file.name}`, { position: 'top-center' })
+    if (onUploadMap) {
+      onUploadMap(file)
+    } else {
+      toast.success(`تم اختيار الخريطة: ${file.name}`, { position: 'top-center' })
+    }
     e.target.value = ''
   }
 

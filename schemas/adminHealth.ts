@@ -65,6 +65,7 @@ export type CreateAdminHealthContentBody = Omit<
   'id' | 'date' | 'author'
 > & {
   author?: string
+  imageFile?: any
 }
 
 export type UpdateAdminHealthContentBody = Partial<CreateAdminHealthContentBody>

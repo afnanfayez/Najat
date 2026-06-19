@@ -18,6 +18,39 @@ interface Props {
   query: string
 }
 
+function GuideImage({
+  src,
+  alt,
+  className,
+}: {
+  src: string
+  alt: string
+  className?: string
+}) {
+  const usePlainImage =
+    src.startsWith('http://') ||
+    src.startsWith('https://') ||
+    src.startsWith('data:image/') ||
+    src.startsWith('/uploads/')
+
+  if (usePlainImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt={alt} className={`h-full w-full ${className ?? 'object-cover'}`} />
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className={className ?? 'object-cover'}
+      sizes="(max-width: 768px) 100vw, 33vw"
+    />
+  )
+}
+
 export default function FirstAidTab({ query }: Props) {
   const router = useRouter()
   const [offlineArticle, setOfflineArticle] = useState<Article | null>(null)
@@ -73,12 +106,10 @@ export default function FirstAidTab({ query }: Props) {
                 className="group relative h-[220px] sm:h-[280px] rounded-[24px] overflow-hidden shadow-lg shadow-blue-900/5 transition-transform hover:-translate-y-1 cursor-pointer"
                 onClick={() => openArticle(card)}
               >
-                <Image
+                <GuideImage
                   src={card.image ?? '/assets/healthcare1.jpg'}
                   alt={card.title}
-                  fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                 <div className="absolute inset-0 p-5 sm:p-6 flex flex-col justify-end text-right">
@@ -174,12 +205,10 @@ export default function FirstAidTab({ query }: Props) {
                 className="bg-white rounded-[20px] border-2 border-slate-50 p-3 sm:p-4 flex items-center gap-4 group cursor-pointer hover:border-blue-100 transition-all shadow-sm"
               >
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0">
-                  <Image
+                  <GuideImage
                     src={article.image ?? '/assets/artical.png'}
                     alt={article.title}
-                    fill
                     className="object-cover"
-                    sizes="80px"
                   />
                 </div>
                 <div className="flex-1 text-right flex flex-col gap-1">

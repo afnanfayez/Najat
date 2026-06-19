@@ -87,7 +87,13 @@ export default function ContentAttachmentUpload({
                 >
                   {file.name}
                 </span>
-                <FileText size={16} className="shrink-0 text-[#64748B]" />
+                {file.url && (file.url.startsWith('blob:') || file.url.startsWith('http') || file.url.startsWith('/')) && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <img src={file.url} alt={file.name} className="h-10 w-10 object-cover rounded shadow-sm shrink-0" />
+                ) : file.url && (file.url.startsWith('blob:') || file.url.startsWith('http') || file.url.startsWith('/')) ? (
+                  <img src={file.url} alt={file.name} className="h-10 w-10 object-cover rounded shadow-sm shrink-0" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                ) : (
+                  <FileText size={16} className="shrink-0 text-[#64748B]" />
+                )}
               </div>
             </li>
           ))}

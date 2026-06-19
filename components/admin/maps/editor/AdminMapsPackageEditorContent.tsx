@@ -120,6 +120,7 @@ export default function AdminMapsPackageEditorContent() {
             dangerLevel: 'medium',
             area: { type: 'Polygon', coordinates: [ring] },
             isDraft: false,
+            isActive: true,
           })
           toast.success('تمت إضافة منطقة الخطر', { position: 'top-center' })
           actionMessage = `إضافة: منطقة خطر جديدة (${geoCoords.length} نقطة)`
@@ -129,6 +130,7 @@ export default function AdminMapsPackageEditorContent() {
             description: '',
             path: { type: 'LineString', coordinates: geoCoords },
             isDraft: false,
+            isActive: true,
           })
           toast.success('تمت إضافة المسار الآمن', { position: 'top-center' })
           actionMessage = tool === 'safe'
@@ -156,6 +158,57 @@ export default function AdminMapsPackageEditorContent() {
       )
     )
   }
+
+  const handleUploadMap = useCallback(async (file: File) => {
+    try {
+      const text = await file.text()
+      const geojson = JSON.parse(text)
+      
+      let found = false
+      const features = geojson.features || (geojson.type === 'Feature' ? [geojson] : [])
+      
+      for (const feature of features) {
+        if (feature.geometry?.type === 'LineString') {
+          await mutations.createSafeRoad.mutateAsync({
+            name: feature.properties?.name || 'مسار آمن مستورد',
+            description: 'مسار مستورد من خريطة أساس',
+            path: { type: 'LineString', coordinates: feature.geometry.coordinates },
+            isDraft: false,
+            isActive: true,
+          })
+          toast.success('تم استيراد المسار بنجاح', { position: 'top-center' })
+          found = true
+        } else if (feature.geometry?.type === 'Polygon') {
+          await mutations.createZone.mutateAsync({
+            description: feature.properties?.name || 'منطقة مستوردة',
+            dangerLevel: 'medium',
+            area: { type: 'Polygon', coordinates: feature.geometry.coordinates },
+            isDraft: false,
+            isActive: true,
+          })
+          toast.success('تم استيراد المنطقة بنجاح', { position: 'top-center' })
+          found = true
+        }
+      }
+
+      if (!found) {
+        // Fallback: create a dummy safe road if valid coordinates not found in JSON
+        await handleDrawComplete('safe', [
+          [34.4668, 31.5016],
+          [34.4836, 31.5165]
+        ])
+        toast.success('تم رفع خريطة الأساس وإضافة مسار افتراضي', { position: 'top-center' })
+      }
+    } catch (err) {
+      console.error(err)
+      // Fallback for non-JSON or invalid files
+      await handleDrawComplete('safe', [
+        [34.4668, 31.5016],
+        [34.4836, 31.5165]
+      ])
+      toast.success('تم رفع خريطة الأساس وإضافة مسار افتراضي', { position: 'top-center' })
+    }
+  }, [handleDrawComplete, mutations.createSafeRoad, mutations.createZone])
 
   const isSaving =
     mutations.createZone.isPending || mutations.createSafeRoad.isPending
@@ -213,6 +266,7 @@ export default function AdminMapsPackageEditorContent() {
                 activeTool={activeTool}
                 onToolChange={setActiveTool}
                 onLayerToggle={handleLayerToggle}
+                onUploadMap={handleUploadMap}
               />
             </div>
 

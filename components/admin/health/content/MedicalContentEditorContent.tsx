@@ -68,7 +68,21 @@ export default function MedicalContentEditorContent({
     key: K,
     value: MedicalContentForm[K],
   ) {
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => {
+      const next = { ...prev, [key]: value }
+      if (key === 'attachments') {
+        const atts = value as any[]
+        const imgAttach = atts.find((a) =>
+          a.file ? a.file.type.startsWith('image/') : a.url.match(/\.(jpg|jpeg|png|gif|webp)/i)
+        )
+        if (imgAttach) {
+          next.thumbnailUrl = imgAttach.url
+        } else {
+          next.thumbnailUrl = '/assets/artical.png'
+        }
+      }
+      return next
+    })
   }
 
   async function handleSave() {

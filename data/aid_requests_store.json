@@ -11,8 +11,9 @@
       "currentLocation": "AlBurij Camp",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 4,
-      "status": "pending",
-      "createdAt": "2026-06-19T08:36:44.620Z"
+      "status": "fulfilled",
+      "createdAt": "2026-06-19T08:36:44.620Z",
+      "updatedAt": "2026-06-19T17:46:05.749Z"
     },
     {
       "id": "req_zlbqomemt",
@@ -25,8 +26,9 @@
       "currentLocation": "AlBurij Camp",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 4,
-      "status": "pending",
-      "createdAt": "2026-06-19T08:36:41.649Z"
+      "status": "fulfilled",
+      "createdAt": "2026-06-19T08:36:41.649Z",
+      "updatedAt": "2026-06-19T17:46:06.383Z"
     },
     {
       "id": "req_96m9sttzo",
@@ -39,8 +41,9 @@
       "currentLocation": "شمال غزة",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 4,
-      "status": "pending",
-      "createdAt": "2026-06-14T18:00:41.472Z"
+      "status": "rejected",
+      "createdAt": "2026-06-14T18:00:41.472Z",
+      "updatedAt": "2026-06-19T17:46:09.269Z"
     },
     {
       "id": "req_xqdc7t0be",
@@ -52,8 +55,9 @@
       "currentLocation": "البريج",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 2,
-      "status": "pending",
-      "createdAt": "2026-06-14T17:46:12.267Z"
+      "status": "rejected",
+      "createdAt": "2026-06-14T17:46:12.267Z",
+      "updatedAt": "2026-06-19T17:46:10.349Z"
     },
     {
       "id": "req_nq71h2uud",
@@ -65,8 +69,9 @@
       "currentLocation": "البريج",
       "femaleChildrenCount": 2,
       "maleChildrenCount": 3,
-      "status": "pending",
-      "createdAt": "2026-06-14T17:45:06.418Z"
+      "status": "approved",
+      "createdAt": "2026-06-14T17:45:06.418Z",
+      "updatedAt": "2026-06-19T17:46:11.125Z"
     },
     {
       "id": "req_wn4i8959d",
@@ -78,8 +83,9 @@
       "currentLocation": "البريج",
       "femaleChildrenCount": 2,
       "maleChildrenCount": 3,
-      "status": "pending",
-      "createdAt": "2026-06-14T17:41:32.706Z"
+      "status": "approved",
+      "createdAt": "2026-06-14T17:41:32.706Z",
+      "updatedAt": "2026-06-19T17:46:11.861Z"
     },
     {
       "id": "req_v8tiahf75",
@@ -135,8 +141,9 @@
       "currentLocation": "الوسطى/البريج/بلوك 12",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 2,
-      "status": "pending",
-      "createdAt": "2026-06-17T16:42:01.348Z"
+      "status": "rejected",
+      "createdAt": "2026-06-17T16:42:01.348Z",
+      "updatedAt": "2026-06-19T17:46:07.501Z"
     }
   ]
 }

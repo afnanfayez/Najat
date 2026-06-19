@@ -95,6 +95,18 @@ export default function MedicalContentEditorForm({
           }))}
         />
 
+        <AdminUsersSelectField
+          label="حالة النشر"
+          value={form.status}
+          onValueChange={(v) =>
+            onChange('status', v as MedicalContentForm['status'])
+          }
+          options={[
+            { value: 'published', label: 'منشور' },
+            { value: 'draft', label: 'مسودة' },
+          ]}
+        />
+
         <div className="flex flex-col gap-2 text-right">
           <label style={ADMIN_HEALTH_LABEL_STYLE}>المحتوى التعليمي</label>
           <div className="overflow-hidden rounded-xl border border-[#E8EEF5]">

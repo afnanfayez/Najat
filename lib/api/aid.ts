@@ -131,9 +131,9 @@ export const aidAPI = {
     requestId: string,
     status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
   ): Promise<AidRequestDto> {
-    return request(`${V1_ROOT}/aid/requests/${encodeURIComponent(requestId)}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
+    return request(`${V1_ROOT}/aid/requests`, {
+      method: 'PUT',
+      body: JSON.stringify({ id: requestId, status }),
     }).then((raw) => {
       const obj = raw as Record<string, unknown>
       return (obj?.data ?? raw) as AidRequestDto

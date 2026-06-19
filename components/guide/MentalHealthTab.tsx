@@ -1,9 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
   Phone,
   Play,
   HeartHandshake,
@@ -14,9 +16,13 @@ import {
 } from 'lucide-react'
 import { EMOTIONS, MENTAL_TIPS } from '@/lib/guide/mentalHealthContent'
 import { fetchAdminUsers } from '@/components/admin/data/adminUsersService'
+import { useHealthGuideArticles } from '@/hooks/useHealthGuideArticles'
+import ArticleDetailPage from './ArticleDetailPage'
+import type { Article } from '@/schemas/healthGuide'
 import type { AdminUserDto } from '@/schemas/adminUser'
 
 export default function MentalHealthTab() {
+  const router = useRouter()
   const [openTip, setOpenTip] = useState<number | null>(0)
   const [breathPhase, setBreathPhase] = useState(0)
   const [isBreathing, setIsBreathing] = useState(false)
@@ -24,6 +30,15 @@ export default function MentalHealthTab() {
     interval: NodeJS.Timeout | null
     timeout: NodeJS.Timeout | null
   }>({ interval: null, timeout: null })
+
+  // Mental health articles state & query
+  const [offlineArticle, setOfflineArticle] = useState<Article | null>(null)
+  const {
+    data: mentalArticles = [],
+    isLoading: articlesLoading,
+    isError: articlesError,
+    refetch: refetchArticles,
+  } = useHealthGuideArticles({ category: 'mental' })
 
   // Volunteer Directory states
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -76,6 +91,16 @@ export default function MentalHealthTab() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (offlineArticle) {
+    return (
+      <ArticleDetailPage
+        articleId={offlineArticle.id}
+        initialArticle={offlineArticle}
+        onBack={() => setOfflineArticle(null)}
+      />
+    )
   }
 
   return (
@@ -303,6 +328,70 @@ export default function MentalHealthTab() {
           >
             تحدث مع متطوع الآن
           </button>
+        </div>
+      </div>
+
+      {/* ── مقالات الصحة النفسية ── */}
+      <div className="text-right mt-6">
+        <h3 className="text-[18px] sm:text-[20px] font-black text-slate-800 mb-4">
+          مقالات وإرشادات الصحة النفسية
+        </h3>
+        <div className="flex flex-col gap-4">
+          {articlesLoading && (
+            <div className="flex justify-center py-6">
+              <span className="text-slate-500 font-bold text-sm">جاري تحميل المقالات...</span>
+            </div>
+          )}
+          {articlesError && (
+            <div className="flex flex-col items-center justify-center py-6 gap-2">
+              <span className="text-red-500 font-bold text-sm">تعذر تحميل المقالات</span>
+              <button
+                type="button"
+                onClick={() => refetchArticles()}
+                className="text-[#2196F3] font-bold text-xs underline"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          )}
+          {!articlesLoading && !articlesError && mentalArticles.length === 0 && (
+            <div className="text-center py-6 text-slate-400 font-bold text-sm">
+              لا توجد مقالات متاحة حالياً.
+            </div>
+          )}
+          {!articlesLoading && !articlesError && mentalArticles.map((article) => (
+            <div
+              key={article.id}
+              onClick={() => {
+                if (typeof navigator !== 'undefined' && !navigator.onLine) {
+                  setOfflineArticle(article)
+                } else {
+                  router.push(`/health-guide/article/${article.id}`)
+                }
+              }}
+              className="bg-white rounded-[20px] border border-slate-100 p-3 sm:p-4 flex items-center gap-4 group cursor-pointer hover:border-blue-100 transition-all shadow-sm"
+            >
+              {article.image && (
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1 text-right flex flex-col gap-1">
+                <h4 className="text-[15px] sm:text-[18px] font-black text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+                  {article.title}
+                </h4>
+                <p className="text-slate-500 text-xs sm:text-sm line-clamp-1 font-bold leading-relaxed">
+                  {article.desc}
+                </p>
+              </div>
+              <ChevronLeft className="text-slate-300 group-hover:text-blue-400 transition-colors" />
+            </div>
+          ))}
         </div>
       </div>
 

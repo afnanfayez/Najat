@@ -87,7 +87,8 @@ export function useSafetyMapData() {
       }
     },
     enabled: isHydrated && Boolean(getToken()),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 10,
+    refetchOnWindowFocus: true,
     retry: 1,
   })
 }

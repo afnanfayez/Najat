@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Share2, Download, Bookmark } from 'lucide-react'
-import GuideQueryState, { buildArticlePrintHtml } from './GuideQueryState'
+import GuideQueryState from './GuideQueryState'
 import { useHealthGuideArticles } from '@/hooks/useHealthGuideArticles'
+import { downloadArticlePdf } from '@/lib/utils/articlePdf'
 import type { Article } from '@/schemas/healthGuide'
 import ArticleDetailPage from './ArticleDetailPage'
 
@@ -43,10 +44,7 @@ export default function ArticlesTab({ query }: Props) {
   }
 
   const handleDownload = (article: Article) => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-    printWindow.document.write(buildArticlePrintHtml(article))
-    printWindow.document.close()
+    downloadArticlePdf(article)
   }
 
   const handleSave = (id: string) => {
@@ -97,6 +95,15 @@ export default function ArticlesTab({ query }: Props) {
             key={article.id}
             className="bg-white rounded-[20px] border border-slate-100 p-4 sm:p-5 flex flex-col gap-3 shadow-sm hover:shadow-md hover:border-blue-100 transition-all group cursor-pointer"
           >
+            {article.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={article.image}
+                alt={article.title}
+                onClick={() => openArticle(article)}
+                className="h-40 w-full rounded-2xl object-cover"
+              />
+            )}
             <div
               className="flex flex-col gap-1.5 text-right"
               onClick={() => openArticle(article)}

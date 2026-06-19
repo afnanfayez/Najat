@@ -89,7 +89,7 @@ export async function request(endpoint: string, options: RequestInit = {}) {
     url = '/api/profile'
   } else if (endpoint === `${V1_ROOT}/aid/requests` || endpoint === '/v1/aid/requests') {
     url = '/api/aid-requests'
-  } else if (matchAidRequest && options.method === 'POST') {
+  } else if (matchAidRequest && (options.method ?? 'GET').toUpperCase() === 'POST') {
     const orgId = matchAidRequest[1]
     url = `/api/aid-requests?aidOrganizationId=${encodeURIComponent(orgId)}`
   }

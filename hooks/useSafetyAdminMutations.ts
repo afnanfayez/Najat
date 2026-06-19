@@ -48,6 +48,7 @@ async function persistCacheFromQuery(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
   await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+  await queryClient.invalidateQueries({ queryKey: ['safety', 'zones'] })
   const fresh = queryClient.getQueryData<SafetyMapLayers>(QUERY_KEY)
   if (fresh) {
     putSafetyMapLayers(fresh).catch(() => {})

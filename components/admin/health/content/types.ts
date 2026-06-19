@@ -27,7 +27,7 @@ export const INITIAL_MEDICAL_CONTENT: MedicalContentForm = {
   body: '',
   references: '',
   description: '',
-  status: 'draft',
+  status: 'published',
   thumbnailUrl: '/assets/artical.png',
   attachments: [],
 }

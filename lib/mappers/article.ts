@@ -1,5 +1,6 @@
 import type { ArticleCategory } from '@/schemas/articleApi'
 import type { Article, ArticleUiCategory } from '@/schemas/healthGuide'
+import { resolveImageUrl } from '@/lib/utils'
 
 const DEFAULT_IMAGE = '/assets/healthcare1.jpg'
 
@@ -53,7 +54,7 @@ export function mapArticleDtoToUi(dto: {
     category: mapApiCategoryToUi(dto.category),
     readTime: `${dto.readTime} دقائق`,
     readTimeMinutes: dto.readTime,
-    image: dto.image?.trim() || DEFAULT_IMAGE,
+    image: resolveImageUrl(dto.image?.trim()) || DEFAULT_IMAGE,
     viewsCount: dto.viewsCount,
     authorName: dto.author?.fullName,
   }

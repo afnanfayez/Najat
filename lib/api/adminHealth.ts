@@ -446,6 +446,15 @@ export async function updateAdminHospitalStatusFromApi(
 // ─── Health Content (from /v1/articles) ──────────────────────────────────────
 
 function mapArticleToContent(article: ArticleResponseDto): AdminHealthMedicalContent {
+  let body = article.contentAr || ''
+  let references = ''
+
+  const refIndex = body.indexOf('\n\n---REFERENCES---\n')
+  if (refIndex !== -1) {
+    references = body.slice(refIndex + 19)
+    body = body.slice(0, refIndex)
+  }
+
   return {
     id: article.id,
     title: article.titleAr,
@@ -456,19 +465,23 @@ function mapArticleToContent(article: ArticleResponseDto): AdminHealthMedicalCon
       year: 'numeric',
     }),
     thumbnailUrl: article.image ?? '/assets/artical.png',
-    status: 'published',
+    status: article.isActive ? 'published' : 'draft',
     category: article.category,
-    description: '', // not in ArticleResponseDto
-    body: article.contentAr,
-    references: '', // not in ArticleResponseDto
+    description: body.slice(0, 120),
+    body: body,
+    references: references,
   }
 }
 
 function contentBodyToArticle(body: CreateAdminHealthContentBody): CreateArticleBody {
   const wordCount = body.body.trim().split(/\s+/).filter(Boolean).length
+  let contentAr = body.body
+  if (body.references && body.references.trim()) {
+    contentAr += `\n\n---REFERENCES---\n${body.references.trim()}`
+  }
   return {
     titleAr: body.title,
-    contentAr: body.body,
+    contentAr: contentAr,
     category: body.category,
     image: body.thumbnailUrl ?? null,
     readTime: Math.max(1, Math.ceil(wordCount / 180)),
@@ -479,13 +492,21 @@ function contentBodyToArticle(body: CreateAdminHealthContentBody): CreateArticle
 function contentUpdateToArticle(body: UpdateAdminHealthContentBody): UpdateArticleBody {
   const result: UpdateArticleBody = {}
   if (body.title !== undefined) result.titleAr = body.title
-  if (body.body !== undefined) result.contentAr = body.body
   if (body.category !== undefined) result.category = body.category
   if (body.thumbnailUrl !== undefined) result.image = body.thumbnailUrl ?? null
-  if (body.body !== undefined) {
-    const wordCount = body.body.trim().split(/\s+/).filter(Boolean).length
+
+  if (body.body !== undefined || body.references !== undefined) {
+    let contentAr = body.body ?? ''
+    const refs = body.references ?? ''
+    if (refs.trim()) {
+      contentAr += `\n\n---REFERENCES---\n${refs.trim()}`
+    }
+    result.contentAr = contentAr
+
+    const wordCount = contentAr.trim().split(/\s+/).filter(Boolean).length
     result.readTime = Math.max(1, Math.ceil(wordCount / 180))
   }
+
   if (body.status !== undefined) result.isActive = body.status === 'published'
   return result
 }
@@ -518,7 +539,21 @@ export async function fetchAdminHealthContentByIdFromApi(
 export async function createAdminHealthContentFromApi(
   body: CreateAdminHealthContentBody,
 ): Promise<AdminHealthMedicalContent> {
-  const article = await articlesAPI.create(contentBodyToArticle(body))
+  const jsonBody = contentBodyToArticle(body)
+  let payload: CreateArticleBody | FormData = jsonBody
+
+  if (body.imageFile) {
+    const fd = new FormData()
+    fd.append('titleAr', jsonBody.titleAr)
+    if (jsonBody.contentAr) fd.append('contentAr', jsonBody.contentAr)
+    if (jsonBody.category) fd.append('category', jsonBody.category)
+    if (jsonBody.readTime) fd.append('readTime', jsonBody.readTime.toString())
+    if (jsonBody.isActive !== undefined) fd.append('isActive', jsonBody.isActive ? 'true' : 'false')
+    fd.append('image', body.imageFile)
+    payload = fd
+  }
+
+  const article = await articlesAPI.create(payload)
   return mapArticleToContent(article)
 }
 
@@ -526,7 +561,21 @@ export async function updateAdminHealthContentFromApi(
   id: string,
   body: UpdateAdminHealthContentBody,
 ): Promise<AdminHealthMedicalContent> {
-  const article = await articlesAPI.update(id, contentUpdateToArticle(body))
+  const jsonBody = contentUpdateToArticle(body)
+  let payload: UpdateArticleBody | FormData = jsonBody
+
+  if (body.imageFile) {
+    const fd = new FormData()
+    if (jsonBody.titleAr) fd.append('titleAr', jsonBody.titleAr)
+    if (jsonBody.contentAr) fd.append('contentAr', jsonBody.contentAr)
+    if (jsonBody.category) fd.append('category', jsonBody.category)
+    if (jsonBody.readTime) fd.append('readTime', jsonBody.readTime.toString())
+    if (jsonBody.isActive !== undefined) fd.append('isActive', jsonBody.isActive ? 'true' : 'false')
+    fd.append('image', body.imageFile)
+    payload = fd
+  }
+
+  const article = await articlesAPI.update(id, payload)
   return mapArticleToContent(article)
 }
 

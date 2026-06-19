@@ -11,9 +11,10 @@ import {
   Eye,
   User,
 } from 'lucide-react'
-import GuideQueryState, { buildArticlePrintHtml } from './GuideQueryState'
+import GuideQueryState from './GuideQueryState'
 import { useArticle } from '@/hooks/useArticle'
 import { getCategoryLabel, formatViewsCount } from '@/lib/mappers/article'
+import { downloadArticlePdf } from '@/lib/utils/articlePdf'
 import type { Article } from '@/schemas/healthGuide'
 
 interface Props {
@@ -57,10 +58,7 @@ export default function ArticleDetailPage({ articleId, initialArticle = null, on
 
   const handleDownload = () => {
     if (!article) return
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-    printWindow.document.write(buildArticlePrintHtml(article))
-    printWindow.document.close()
+    downloadArticlePdf(article)
   }
 
   const handleSave = () => {
@@ -81,8 +79,23 @@ export default function ArticleDetailPage({ articleId, initialArticle = null, on
     }
   }
 
+  let displayContent = article?.content || ''
+  let references: string[] = []
+
+  const refIndex = displayContent.indexOf('---REFERENCES---')
+  if (refIndex !== -1) {
+    const rawRefs = displayContent.slice(refIndex + 16).trim()
+    displayContent = displayContent.slice(0, refIndex).trim()
+    if (rawRefs) {
+      references = rawRefs
+        .split(/\n+/)
+        .map((r) => r.trim())
+        .filter(Boolean)
+    }
+  }
+
   const paragraphs =
-    article?.content
+    displayContent
       .split(/\n\n+/)
       .map((p) => p.trim())
       .filter(Boolean) ?? []
@@ -153,6 +166,14 @@ export default function ArticleDetailPage({ articleId, initialArticle = null, on
           {article && (
             <>
               <div className="mb-6">
+                {article.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="mb-6 aspect-[16/9] w-full rounded-[20px] object-cover shadow-sm"
+                  />
+                )}
                 <span className="inline-block bg-[#2196F3]/10 text-[#2196F3] text-[11px] font-black px-3 py-1 rounded-full mb-3">
                   {getCategoryLabel(article.category)}
                 </span>
@@ -189,6 +210,33 @@ export default function ArticleDetailPage({ articleId, initialArticle = null, on
                       {paragraph}
                     </p>
                   ))}
+
+                  {references.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-slate-100 text-right">
+                      <h3 className="text-[16px] sm:text-[18px] font-black text-slate-800 mb-3">المراجع والمصادر:</h3>
+                      <ul className="list-disc list-inside flex flex-col gap-2">
+                        {references.map((ref, idx) => {
+                          const isUrl = ref.startsWith('http://') || ref.startsWith('https://')
+                          return (
+                            <li key={idx} className="text-slate-600 text-sm font-bold">
+                              {isUrl ? (
+                                <a
+                                  href={ref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#2196F3] hover:underline break-all"
+                                >
+                                  {ref}
+                                </a>
+                              ) : (
+                                ref
+                              )}
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
 

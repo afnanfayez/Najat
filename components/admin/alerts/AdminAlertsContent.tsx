@@ -14,7 +14,7 @@ export default function AdminAlertsContent() {
   const { alerts, mapCenter, isLoading, isError } = useAdminAlerts(activeTab)
 
   return (
-    <AdminShell activeNav="dashboard">
+    <AdminShell activeNav="alerts">
       <AdminAlertsPageHeader />
       <AdminAlertsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
