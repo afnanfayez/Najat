@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { AlertTriangle } from 'lucide-react'
 import type { AdminUrgentAlert } from '../data/adminDashboardService'
 
@@ -8,6 +9,7 @@ interface UrgentAlertItemProps {
 }
 
 export default function UrgentAlertItem({ alert }: UrgentAlertItemProps) {
+  const router = useRouter()
   const accent = alert.accentColor
 
   return (
@@ -43,6 +45,7 @@ export default function UrgentAlertItem({ alert }: UrgentAlertItemProps) {
 
       <button
         type="button"
+        onClick={() => router.push('/admin/alerts')}
         className="shrink-0 self-center rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         style={{ backgroundColor: accent, fontFamily: "'Cairo', sans-serif" }}
       >

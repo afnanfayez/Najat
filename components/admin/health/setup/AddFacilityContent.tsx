@@ -240,6 +240,7 @@ export default function AddFacilityContent({ facilityId, facilityType }: AddFaci
         toast.success('تم حفظ المنشأة بنجاح')
       }
       await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
+      await queryClient.invalidateQueries({ queryKey: ['health-facilities'] })
       router.push('/admin/health')
     } catch {
       toast.error(isEdit ? 'تعذّر تحديث المنشأة' : 'تعذّر حفظ المنشأة')

@@ -1,5 +1,6 @@
 import { request } from '@/lib/api/api'
 import { extractAuthPayload } from '@/lib/api/extractAuth'
+import { getOfflineDB } from '@/lib/offline/db'
 import type {
   AdminBackendUserDto,
   AdminUserDto,
@@ -299,6 +300,16 @@ export async function deleteAdminUser(id: string): Promise<void> {
   await request(`${V1_ROOT}/admin/users/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
+  try {
+    const db = getOfflineDB()
+    const existing = await db.adminUsers.get(id)
+    if (existing) {
+      existing.data.deletedAt = new Date().toISOString()
+      await db.adminUsers.put(existing)
+    }
+  } catch (err) {
+    console.error('Failed to update local db cache after delete', err)
+  }
 }
 
 export async function createAdminVolunteer(
@@ -330,7 +341,18 @@ export async function restoreAdminUser(id: string): Promise<AdminUserDto> {
   )
   const restored = getEnvelopeData<AdminBackendUserDto>(response)
   if (!restored) throw { status: 500, message: 'تعذّر استعادة المستخدم' }
-  return mapBackendAdminUser(restored)
+  const mapped = mapBackendAdminUser(restored)
+  try {
+    const db = getOfflineDB()
+    const existing = await db.adminUsers.get(id)
+    if (existing) {
+      existing.data.deletedAt = null
+      await db.adminUsers.put(existing)
+    }
+  } catch (err) {
+    console.error('Failed to update local db cache after restore', err)
+  }
+  return mapped
 }
 
 export async function verifyAdminPassword(

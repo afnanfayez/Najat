@@ -138,15 +138,30 @@ export function buildFacilityFormData(form: FacilitySetupForm): FormData {
 
   Object.entries(body).forEach(([key, value]) => {
     if (value === undefined) return
+    if (
+      [
+        'region',
+        'isOpen',
+        'imageUrl',
+        'services',
+        'drugs',
+        'staff',
+        'workingTimes',
+        'operatingStatus',
+      ].includes(key)
+    ) {
+      return
+    }
+    const apiKey = key === 'phone' ? 'contactNumber' : key
     if (Array.isArray(value) || typeof value === 'object') {
-      fd.append(key, JSON.stringify(value))
+      fd.append(apiKey, JSON.stringify(value))
     } else {
-      fd.append(key, String(value))
+      fd.append(apiKey, String(value))
     }
   })
 
   form.images.forEach((img) => {
-    if (img.file) fd.append('images', img.file, img.name)
+    if (img.file) fd.append('image', img.file, img.name)
   })
 
   return fd

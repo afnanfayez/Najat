@@ -21,6 +21,8 @@ export type CreateArticleBody = {
   image?: string | null
   titleEn?: string
   contentEn?: string
+  readTime?: number
+  isActive?: boolean
 }
 
 export type UpdateArticleBody = Partial<CreateArticleBody>
@@ -59,10 +61,10 @@ export const articlesAPI = {
   },
 
   /** ADMIN — create a new article */
-  create(body: CreateArticleBody): Promise<ArticleResponseDto> {
+  create(body: CreateArticleBody | FormData): Promise<ArticleResponseDto> {
     return request(`${V1_ROOT}/articles`, {
       method: 'POST',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }).then((raw) => {
       const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
       const data = asRecord && 'data' in asRecord ? asRecord.data : raw
@@ -71,10 +73,10 @@ export const articlesAPI = {
   },
 
   /** ADMIN — update an existing article */
-  update(id: string, body: UpdateArticleBody): Promise<ArticleResponseDto> {
+  update(id: string, body: UpdateArticleBody | FormData): Promise<ArticleResponseDto> {
     return request(`${V1_ROOT}/articles/${encodeURIComponent(id)}`, {
       method: 'PATCH',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }).then((raw) => {
       const asRecord = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : null
       const data = asRecord && 'data' in asRecord ? asRecord.data : raw

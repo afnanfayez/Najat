@@ -174,7 +174,15 @@ export default function AdminAidContent() {
           />
         </>
       ) : activeTab === 'requests' ? (
-        <AdminAidRequestsTable requests={requests} font={ADMIN_AID_FONT} />
+        <AdminAidRequestsTable
+          requests={requests}
+          font={ADMIN_AID_FONT}
+          onRequestUpdated={(updated) => {
+            setRequests((prev) =>
+              prev.map((r) => (r.id === updated.id ? updated : r)),
+            )
+          }}
+        />
       ) : (
         <>
           {donorStats && <AdminAidDonorStatsPanel stats={donorStats} />}

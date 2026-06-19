@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import type { AdminActivity } from '../data/adminDashboardService'
 
 interface RecentActivityProps {
@@ -7,6 +8,8 @@ interface RecentActivityProps {
 }
 
 export default function RecentActivity({ activities }: RecentActivityProps) {
+  const router = useRouter()
+
   return (
     <div className="rounded-2xl bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <h2
@@ -40,6 +43,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
 
       <button
         type="button"
+        onClick={() => router.push('/admin/audit')}
         className="mt-5 w-full rounded-xl bg-[#E3F2FD] py-3 text-sm font-semibold text-[#2196F3] transition-colors hover:bg-[#BBDEFB]"
         style={{ fontFamily: "'Cairo', sans-serif" }}
       >
@@ -48,3 +52,4 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
     </div>
   )
 }
+

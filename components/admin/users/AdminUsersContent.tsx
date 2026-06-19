@@ -72,7 +72,6 @@ export default function AdminUsersContent() {
   }
 
   function handleDeleteUser(userId: string, userName: string) {
-    if (!window.confirm(`هل أنت متأكد من حذف المستخدم "${userName}"؟ لا يمكن التراجع عن هذا الإجراء.`)) return
     deleteMutation.mutate(userId, {
       onSuccess: () => toast.success(`تم حذف المستخدم "${userName}" بنجاح`),
       onError: () => toast.error(`تعذّر حذف المستخدم "${userName}"`),
@@ -116,11 +115,11 @@ export default function AdminUsersContent() {
           }}
         >
           <span className={`h-2 w-2 rounded-full ${showDeleted ? 'bg-[#F44336]' : 'bg-[#94A3B8]'}`} />
-          {showDeleted ? 'إخفاء المحذوفين' : 'عرض المحذوفين'}
+          {showDeleted ? 'إخفاء المحذوفين فقط' : 'عرض المحذوفين فقط'}
         </button>
         {showDeleted && (
           <span className="text-xs text-[#F44336]" style={{ fontFamily: "'Cairo', sans-serif" }}>
-            يعرض المستخدمين المحذوفين — اضغط زر الاستعادة الأخضر لاسترجاعهم
+            يعرض المستخدمين المحذوفين فقط — اضغط زر الإرجاع الأخضر لاسترجاعهم
           </span>
         )}
       </div>

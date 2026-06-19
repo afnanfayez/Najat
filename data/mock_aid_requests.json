@@ -1,0 +1,80 @@
+[
+  {
+    "id": "req-1",
+    "aidPointId": "1",
+    "userId": "user-1",
+    "status": "fulfilled",
+    "notes": "بحاجة ماسة لحليب أطفال وحفاضات مقاس 4",
+    "requestedSupplies": [
+      "أدوية ومستلزمات",
+      "مواد غذائية"
+    ],
+    "createdAt": "2026-06-17T10:45:40.494Z",
+    "updatedAt": "2026-06-19T15:18:59.398Z",
+    "husbandName": "أحمد سعيد المصري",
+    "wifeName": "فاطمة عمر المصري",
+    "phoneNumber": "0599123456",
+    "currentLocation": "دير البلح - قرب مدرسة المنفلوطي",
+    "femaleChildrenCount": 3,
+    "maleChildrenCount": 2,
+    "aidOrganizationName": "الهلال الأحمر الفلسطيني"
+  },
+  {
+    "id": "req-2",
+    "aidPointId": "1",
+    "userId": "user-2",
+    "status": "approved",
+    "notes": "العائلة نازحة من شمال غزة ولديها طفل مريض بالسكري بحاجة لإنسولين",
+    "requestedSupplies": [
+      "أدوية"
+    ],
+    "createdAt": "2026-06-14T10:45:40.496Z",
+    "updatedAt": "2026-06-15T10:45:40.496Z",
+    "husbandName": "محمود عبد الله خليل",
+    "wifeName": "منى يوسف خليل",
+    "phoneNumber": "0592223344",
+    "currentLocation": "رفح - تل السلطان",
+    "femaleChildrenCount": 1,
+    "maleChildrenCount": 3,
+    "aidOrganizationName": "منظمة الصحة العالمية"
+  },
+  {
+    "id": "req-3",
+    "aidPointId": "2",
+    "userId": "user-3",
+    "status": "rejected",
+    "notes": "تم رفض الطلب لتكرار التقديم خلال نفس الأسبوع للاستفادة من سلتين غذائيتين",
+    "requestedSupplies": [
+      "مواد غذائية"
+    ],
+    "createdAt": "2026-06-09T10:45:40.496Z",
+    "updatedAt": "2026-06-09T10:45:40.496Z",
+    "husbandName": "سليمان خالد حمدان",
+    "wifeName": "عبير جابر حمدان",
+    "phoneNumber": "0595556677",
+    "currentLocation": "خان يونس - معسكر خان يونس",
+    "femaleChildrenCount": 4,
+    "maleChildrenCount": 0,
+    "aidOrganizationName": "جمعية البر - حي التفاح"
+  },
+  {
+    "id": "req-4",
+    "aidPointId": "3",
+    "userId": "user-4",
+    "status": "fulfilled",
+    "notes": "تم تسليم السلة الغذائية والمياه المعقمة بنجاح",
+    "requestedSupplies": [
+      "مواد غذائية",
+      "مياه صالحة للشرب"
+    ],
+    "createdAt": "2026-06-07T10:45:40.496Z",
+    "updatedAt": "2026-06-08T10:45:40.496Z",
+    "husbandName": "ياسر محمد رضوان",
+    "wifeName": "خلود علي رضوان",
+    "phoneNumber": "0597778899",
+    "currentLocation": "النصيرات - مخيم 2",
+    "femaleChildrenCount": 2,
+    "maleChildrenCount": 2,
+    "aidOrganizationName": "مركز الإغاثة - خان يونس"
+  }
+]

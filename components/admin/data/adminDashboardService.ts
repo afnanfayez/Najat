@@ -22,6 +22,9 @@ import {
 import { fetchAdminSystemStatsFromApi } from '@/lib/api/adminStats'
 import { fetchAdminUsersStatsFromApi } from '@/lib/api/adminUsers'
 
+import { fetchAdminAlertsFromApi } from '@/lib/api/adminAlerts'
+import { mapAdminAlertDto } from './adminAlertsService'
+
 const ADMIN_ICONS: Record<AdminIconKey, LucideIcon> = {
   users: Users,
   userPlus: UserPlus,
@@ -100,16 +103,45 @@ function getBaseLayout(): AdminDashboardData {
 export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
   const dashboard = getBaseLayout()
 
-  const [systemStats, userStats] = await Promise.allSettled([
+  const [systemStats, userStats, alertsData] = await Promise.allSettled([
     fetchAdminSystemStatsFromApi(),
     fetchAdminUsersStatsFromApi(),
+    fetchAdminAlertsFromApi(),
   ])
 
   const sys = systemStats.status === 'fulfilled' ? systemStats.value : null
   const usr = userStats.status === 'fulfilled' ? userStats.value : null
 
+  let urgentAlerts = dashboard.urgentAlerts
+  if (alertsData.status === 'fulfilled' && alertsData.value?.alerts) {
+    const rawAlerts = alertsData.value.alerts
+    const sortedAlerts = [...rawAlerts].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return dateB - dateA
+    })
+
+    let activeAlerts = sortedAlerts.filter((a) => !a.isResolved)
+    if (activeAlerts.length === 0) {
+      activeAlerts = sortedAlerts
+    }
+
+    urgentAlerts = activeAlerts.slice(0, 5).map((alert) => {
+      const mapped = mapAdminAlertDto(alert)
+      return {
+        id: mapped.id,
+        title: mapped.title,
+        description: mapped.message,
+        time: mapped.time,
+        severity: mapped.severity === 'critical' ? 'critical' as const : 'warning' as const,
+        accentColor: mapped.accentColor,
+      }
+    })
+  }
+
   const updated: AdminDashboardData = {
     ...dashboard,
+    urgentAlerts,
     stats: dashboard.stats.map((stat) => {
       if (stat.id === 'users') {
         const total = usr?.totalUsers ?? sys?.userStats?.totalUsers

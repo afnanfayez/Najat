@@ -66,14 +66,12 @@ export default function AdminCustomizationContent() {
   }
 
   const handleReset = () => {
-    if (window.confirm('هل أنت متأكد من استعادة القيم الافتراضية؟')) {
-      setFormState(DEFAULT_HEADER_SETTINGS)
-      updateSettings(DEFAULT_HEADER_SETTINGS)
-      toast.success('تمت استعادة القيم الافتراضية بنجاح', {
-        position: 'top-center',
-        style: { fontFamily: "'Cairo', sans-serif" },
-      })
-    }
+    setFormState(DEFAULT_HEADER_SETTINGS)
+    updateSettings(DEFAULT_HEADER_SETTINGS)
+    toast.success('تمت استعادة القيم الافتراضية بنجاح', {
+      position: 'top-center',
+      style: { fontFamily: "'Cairo', sans-serif" },
+    })
   }
 
   if (!isLoaded) {

@@ -91,6 +91,7 @@ export default function MedicalContentEditorContent({
         toast.success('تم إنشاء المحتوى بنجاح')
       }
       await queryClient.invalidateQueries({ queryKey: ['admin-health-content'] })
+      await queryClient.invalidateQueries({ queryKey: ['health-guide', 'articles'] })
       router.push('/admin/health?tab=content')
     } catch {
       toast.error('تعذّر حفظ المحتوى')

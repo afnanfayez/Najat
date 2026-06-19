@@ -25,10 +25,10 @@ export function mapPharmacyDtoToFacility(dto: PharmacyDto): HealthFacility {
     name: dto.name,
     address: dto.address,
     category: 'pharmacies',
-    // API has no real-time isOpen field; 24h pharmacies are always open, others assumed open
-    isOpen: dto.is24Hours ?? true,
+    // Use status from API: closed means closed, everything else is open
+    isOpen: dto.status !== 'closed',
     phone: dto.contactNumber ?? undefined,
-    imageUrl: pickLocalImage('pharmacies', dto.id),
+    imageUrl: dto.image ?? pickLocalImage('pharmacies', dto.id),
     latitude: dto.latitude,
     longitude: dto.longitude,
     region: deriveRegion(dto.latitude),
@@ -36,7 +36,7 @@ export function mapPharmacyDtoToFacility(dto: PharmacyDto): HealthFacility {
       medicationAvailabilityPercent(dto.currentMedications) ?? 50,
     updatedAt: dto.updatedAt,
     detail: {
-      mapPreviewImageUrl: pickLocalImage('pharmacies', dto.id),
+      mapPreviewImageUrl: dto.image ?? pickLocalImage('pharmacies', dto.id),
       lastUpdatedAt: dto.updatedAt
         ? formatUpdatedRelative(dto.updatedAt)
         : undefined,

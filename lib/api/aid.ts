@@ -126,4 +126,17 @@ export const aidAPI = {
       return (obj?.data ?? raw) as AidRequestDto
     })
   },
+
+  updateRequestStatus(
+    requestId: string,
+    status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+  ): Promise<AidRequestDto> {
+    return request(`${V1_ROOT}/aid/requests/${encodeURIComponent(requestId)}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }).then((raw) => {
+      const obj = raw as Record<string, unknown>
+      return (obj?.data ?? raw) as AidRequestDto
+    })
+  },
 }

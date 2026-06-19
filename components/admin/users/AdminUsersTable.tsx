@@ -111,12 +111,12 @@ export default function AdminUsersTable({
                           <button
                             type="button"
                             onClick={() => onRestoreUser?.(user.id, user.name)}
-                            className="flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#22C55E]/10"
-                            style={{ color: '#22C55E', fontFamily: ADMIN_USERS_FONT }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#22C55E]/10"
+                            style={{ color: '#22C55E' }}
                             aria-label={`استعادة ${user.name}`}
+                            title="إرجاع"
                           >
-                            <RotateCcw size={14} strokeWidth={2.5} />
-                            استعادة
+                            <RotateCcw size={16} strokeWidth={2.5} />
                           </button>
                         ) : (
                           <>
@@ -185,12 +185,12 @@ export default function AdminUsersTable({
                     <button
                       type="button"
                       onClick={() => onRestoreUser?.(user.id, user.name)}
-                      className="flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#22C55E]/10"
-                      style={{ color: '#22C55E', fontFamily: ADMIN_USERS_FONT }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#22C55E]/10"
+                      style={{ color: '#22C55E' }}
                       aria-label={`استعادة ${user.name}`}
+                      title="إرجاع"
                     >
-                      <RotateCcw size={14} strokeWidth={2.5} />
-                      استعادة
+                      <RotateCcw size={16} strokeWidth={2.5} />
                     </button>
                   ) : (
                     <>

@@ -249,6 +249,51 @@ function adminStatusToCapacityStatus(status?: string): string {
   }
 }
 
+function normalizeMultipartFacilityPayload(
+  payload: FormData,
+  facilityType?: AdminHealthFacilityType,
+): FormData {
+  const fd = new FormData()
+
+  payload.forEach((value, key) => {
+    fd.append(key, value)
+  })
+
+  const status = fd.get('status')
+  if (typeof status === 'string') {
+    fd.set('status', adminStatusToCapacityStatus(status))
+  }
+
+  if (facilityType === 'lab' && !fd.has('availableTests')) {
+    fd.set('availableTests', JSON.stringify([{ name: 'فحص عام', type: 'general', resultTime: '24 ساعة' }]))
+    fd.set('homeCollection', 'false')
+    fd.set('isoCertified', 'false')
+  }
+
+  if (facilityType === 'clinic' && !fd.has('specialties')) {
+    const categories = fd.get('healthcareCategories')
+    fd.set('specialties', typeof categories === 'string' ? categories : JSON.stringify(['طب عام']))
+    fd.set('practitionersCount', '1')
+  }
+
+  if (facilityType === 'dental_clinic' && !fd.has('availableTests')) {
+    fd.set('dentalChairs', '1')
+    fd.set('implantsAvailable', 'false')
+    fd.set('orthodonticsAvailable', 'false')
+    fd.set('availableTests', JSON.stringify([{ name: 'فحص أسنان عام', type: 'general', resultTime: '24 ساعة' }]))
+  }
+
+  return fd
+}
+
+function buildHospitalCreateFormData(payload: FormData): FormData {
+  const fd = new FormData()
+  for (const key of ['name', 'latitude', 'longitude', 'address', 'contactNumber', 'image']) {
+    payload.getAll(key).forEach((value) => fd.append(key, value))
+  }
+  return fd
+}
+
 /** Full PATCH payload — accepted by all facility types for updates */
 function buildCreatePayload(b: CreateAdminHealthFacilityBody): Record<string, unknown> {
   return {
@@ -298,12 +343,21 @@ export async function createAdminHealthFacilityFromApi(
   facilityType?: AdminHealthFacilityType,
 ): Promise<AdminHealthFacility> {
   if (body instanceof FormData) {
+    const payload = normalizeMultipartFacilityPayload(body, facilityType)
     switch (facilityType) {
-      case 'pharmacy':  return mapPharmacy(await pharmaciesAPI.create(body))
-      case 'lab':       return mapLab(await labsAPI.create(body))
-      case 'clinic':    return mapClinic(await clinicsAPI.create(body))
-      case 'dental_clinic': return mapDentalClinic(await dentalClinicsAPI.create(body))
-      default:          return mapHospital(await hospitalsAPI.create(body))
+      case 'pharmacy':  return mapPharmacy(await pharmaciesAPI.create(payload))
+      case 'lab':       return mapLab(await labsAPI.create(payload))
+      case 'clinic':    return mapClinic(await clinicsAPI.create(payload))
+      case 'dental_clinic': return mapDentalClinic(await dentalClinicsAPI.create(payload))
+      default: {
+        const created = await hospitalsAPI.create(buildHospitalCreateFormData(payload))
+        try {
+          const updated = await hospitalsAPI.update(created.id, payload)
+          return mapHospital(updated)
+        } catch {
+          return mapHospital(created)
+        }
+      }
     }
   }
 
@@ -358,7 +412,7 @@ export async function updateAdminHealthFacilityFromApi(
   let payload: Record<string, unknown> | FormData
 
   if (body instanceof FormData) {
-    payload = body
+    payload = normalizeMultipartFacilityPayload(body, facilityType)
   } else {
     // Use the full payload (same fields as create) so the backend has all required data
     payload = buildCreatePayload(body as CreateAdminHealthFacilityBody)
@@ -411,11 +465,14 @@ function mapArticleToContent(article: ArticleResponseDto): AdminHealthMedicalCon
 }
 
 function contentBodyToArticle(body: CreateAdminHealthContentBody): CreateArticleBody {
+  const wordCount = body.body.trim().split(/\s+/).filter(Boolean).length
   return {
     titleAr: body.title,
     contentAr: body.body,
     category: body.category,
     image: body.thumbnailUrl ?? null,
+    readTime: Math.max(1, Math.ceil(wordCount / 180)),
+    isActive: body.status === 'published',
   }
 }
 
@@ -425,6 +482,11 @@ function contentUpdateToArticle(body: UpdateAdminHealthContentBody): UpdateArtic
   if (body.body !== undefined) result.contentAr = body.body
   if (body.category !== undefined) result.category = body.category
   if (body.thumbnailUrl !== undefined) result.image = body.thumbnailUrl ?? null
+  if (body.body !== undefined) {
+    const wordCount = body.body.trim().split(/\s+/).filter(Boolean).length
+    result.readTime = Math.max(1, Math.ceil(wordCount / 180))
+  }
+  if (body.status !== undefined) result.isActive = body.status === 'published'
   return result
 }
 

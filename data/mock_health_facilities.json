@@ -1,0 +1,74 @@
+[
+  {
+    "id": "1",
+    "name": "مستشفى شهداء الأقصى",
+    "address": "الوسطى / دير البلح",
+    "imageUrl": "/assets/health1.jpg",
+    "isOpen": false,
+    "workloadPercent": 60,
+    "phone": "+970599000001",
+    "region": "north",
+    "status": "efficient",
+    "facilityType": "hospital"
+  },
+  {
+    "id": "2",
+    "name": "مستشفى المعمداني",
+    "address": "غزة - الرمال",
+    "imageUrl": "/assets/health2.jpg",
+    "isOpen": true,
+    "workloadPercent": 35,
+    "phone": "+970599000002",
+    "region": "north",
+    "status": "open",
+    "facilityType": "hospital"
+  },
+  {
+    "id": "3",
+    "name": "مستشفى ناصر الطبي",
+    "address": "خان يونس",
+    "imageUrl": "/assets/health3.jpg",
+    "isOpen": true,
+    "workloadPercent": 5,
+    "phone": "+970599000003",
+    "region": "south",
+    "status": "open",
+    "facilityType": "hospital"
+  },
+  {
+    "id": "4",
+    "name": "مستشفى الأقصى الجامعي",
+    "address": "غزة - التفاح",
+    "imageUrl": "/assets/health4.png",
+    "isOpen": false,
+    "workloadPercent": 0,
+    "phone": "+970599000004",
+    "region": "north",
+    "status": "maintenance",
+    "facilityType": "hospital"
+  },
+  {
+    "id": "5",
+    "name": "مستشفى الأمل",
+    "address": "رفح",
+    "imageUrl": "/assets/health5.jpg",
+    "isOpen": true,
+    "workloadPercent": 78,
+    "phone": "+970599000005",
+    "region": "south",
+    "status": "open",
+    "facilityType": "hospital"
+  },
+  {
+    "id": "6",
+    "name": "مستشفى الصديق",
+    "address": "بيت لاهيا",
+    "imageUrl": "/assets/health6.jpg",
+    "isOpen": true,
+    "workloadPercent": 22,
+    "phone": "+970599000006",
+    "region": "north",
+    "status": "open",
+    "facilityType": "hospital"
+  }
+]

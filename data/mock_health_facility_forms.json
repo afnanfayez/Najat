@@ -1,0 +1,110 @@
+{
+  "1": {
+    "name": "مستشفى شهداء الأقصى",
+    "region": "north",
+    "address": "الوسطى / دير البلح",
+    "phone": "+970599000001",
+    "operatingStatus": "efficient",
+    "images": [
+      {
+        "id": "existing-image",
+        "url": "/assets/health1.jpg",
+        "name": "صورة المنشأة"
+      }
+    ],
+    "selectedServices": [
+      "emergency",
+      "surgery",
+      "maternity",
+      "icu",
+      "outpatient",
+      "urology",
+      "dental",
+      "dermatology",
+      "orthopedics",
+      "pharmacy"
+    ],
+    "drugs": [
+      {
+        "id": "1",
+        "name": "أنسولين (Insulin)",
+        "subtitle": "الأدوية الحيوية",
+        "status": "available"
+      },
+      {
+        "id": "2",
+        "name": "مضادات حيوية",
+        "subtitle": "عام",
+        "status": "low"
+      },
+      {
+        "id": "3",
+        "name": "مسكنات آلام",
+        "subtitle": "عام",
+        "status": "unavailable"
+      }
+    ],
+    "staff": [
+      {
+        "id": "1",
+        "name": "د. أحمد خالد",
+        "role": "طبيب طوارئ",
+        "shift": "الفترة الصباحية"
+      },
+      {
+        "id": "2",
+        "name": "د. سارة المنصور",
+        "role": "إسعاف",
+        "shift": "الفترة الصباحية"
+      },
+      {
+        "name": "دأحمد الديني",
+        "role": "طبيب ولادة",
+        "shift": "الفترة الصباحية",
+        "id": "staff-1781865977431"
+      }
+    ],
+    "selectedDates": [
+      1,
+      2,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      21,
+      22,
+      23,
+      26,
+      27,
+      28,
+      29,
+      30,
+      4,
+      11,
+      18,
+      25,
+      31,
+      24,
+      17,
+      10,
+      3
+    ],
+    "selectedTimes": [
+      "09:30",
+      "10:00",
+      "10:30",
+      "11:00",
+      "11:30"
+    ],
+    "latitude": 31.415668222567813,
+    "longitude": 34.34903556012985
+  }
+}

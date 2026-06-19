@@ -122,18 +122,29 @@ export async function fetchAdminUsers(
   try {
     let apiResult: AdminUsersListResponse
 
-    if (params.region && params.region !== 'all') {
+    if ((params.region && params.region !== 'all') || params.withDeleted) {
       apiResult = await fetchAdminUsersFromApi({
         search: params.search,
         role: params.role,
+        withDeleted: true,
         page: 1,
-        pageSize: 100,
+        pageSize: 200,
       })
       const page = params.page ?? 1
       const pageSize = params.pageSize ?? 4
-      const filtered = apiResult.users.filter((user) =>
-        matchesRegionFilter(user, params.region),
-      )
+      
+      let filtered = apiResult.users
+      if (params.region && params.region !== 'all') {
+        filtered = filtered.filter((user) =>
+          matchesRegionFilter(user, params.region),
+        )
+      }
+      if (params.withDeleted) {
+        filtered = filtered.filter((user) => !!user.deletedAt)
+      } else {
+        filtered = filtered.filter((user) => !user.deletedAt)
+      }
+      
       putAdminUsers(apiResult.users).catch(() => {})
       return {
         ...apiResult,
@@ -159,7 +170,12 @@ export async function fetchAdminUsers(
     const cached = await getAdminUsers()
     const page = params.page ?? 1
     const pageSize = params.pageSize ?? 4
-    const filtered = filterMockUsers(cached, params)
+    let filtered = filterMockUsers(cached, params)
+    if (params.withDeleted) {
+      filtered = filtered.filter((user) => !!user.deletedAt)
+    } else {
+      filtered = filtered.filter((user) => !user.deletedAt)
+    }
     return {
       users: paginateUsers(filtered, page, pageSize),
       stats: EMPTY_STATS,

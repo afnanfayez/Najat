@@ -493,17 +493,60 @@ export async function updateAdminHealthFacilityStatus(
   status: AdminHealthFacility['status'],
   facilityType?: AdminHealthFacilityType,
 ): Promise<AdminHealthFacility> {
-  if (!USE_MOCK_ADMIN_HEALTH && (!facilityType || facilityType === 'hospital')) {
+  if (USE_MOCK_ADMIN_HEALTH) {
+    const facilities = getMockFacilities()
+    const index = facilities.findIndex((f) => f.id === id)
+    if (index === -1) throw new Error('Facility not found')
+    const updated: AdminHealthFacility = { ...facilities[index], status, isOpen: status !== 'closed' }
+    mockFacilitiesStore = facilities.map((f, i) => (i === index ? updated : f))
+    return updated
+  }
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const existing = await getAdminFacilityById(id)
+    if (!existing) throw new Error('المنشأة غير متوفرة في وضع عدم الاتصال')
+    const optimistic: AdminHealthFacility = {
+      ...existing,
+      status,
+      isOpen: status !== 'closed',
+    }
+    await putAdminFacilities([optimistic]).catch(() => {})
+    await enqueueOfflineOp({
+      type: 'UPDATE_FACILITY_TYPED',
+      payload: { id, body: { status }, facilityType },
+    })
+    return optimistic
+  }
+
+  if (!facilityType || facilityType === 'hospital') {
     const updated = await updateAdminHospitalStatusFromApi(id, status)
     await putAdminFacilities([updated]).catch(() => {})
     return updated
   }
-  // For mock or non-hospital types: update via mock store
-  const facilities = getMockFacilities()
-  const index = facilities.findIndex((f) => f.id === id)
-  if (index === -1) throw new Error('Facility not found')
-  const updated: AdminHealthFacility = { ...facilities[index], status, isOpen: status !== 'closed' }
-  mockFacilitiesStore = facilities.map((f, i) => (i === index ? updated : f))
+
+  const existing = await fetchAdminHealthFacilityByIdFromApi(id, facilityType)
+  const updated = await updateAdminHealthFacilityFromApi(
+    id,
+    {
+      name: existing.name,
+      address: existing.address,
+      phone: existing.phone,
+      region: existing.region,
+      imageUrl: existing.imageUrl,
+      latitude: existing.latitude,
+      longitude: existing.longitude,
+      workingDoctors: existing.workingDoctors?.map((doctor) => ({
+        ...doctor,
+        workingDays: doctor.workingDays ?? [],
+        workingHours: doctor.workingHours ?? '',
+      })),
+      currentMedications: existing.currentMedications,
+      workingHours: existing.workingHours,
+      workingDays: existing.workingDays,
+      status,
+    },
+    facilityType,
+  )
   return updated
 }
 

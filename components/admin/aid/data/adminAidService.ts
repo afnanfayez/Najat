@@ -14,6 +14,7 @@ import {
   fetchAdminAidRequestsFromApi,
   fetchAdminAidStatsFromApi,
   updateAdminAidPointFromApi,
+  updateAdminAidRequestStatusFromApi,
 } from '@/lib/api/adminAid'
 import type { AidRequestDto } from '@/schemas/aidApi'
 import {
@@ -40,22 +41,6 @@ import type {
   AdminAidResponsePoint,
 } from '@/schemas/adminAid'
 
-let mockPointsStore: AdminAidDistributionPoint[] | null = null
-let mockDonorsStore: AdminAidDonorDetail[] | null = null
-
-function getMockPoints(): AdminAidDistributionPoint[] {
-  if (!mockPointsStore) {
-    mockPointsStore = ADMIN_AID_DISTRIBUTION_POINTS.map((p) => ({
-      ...p,
-      inventory: p.inventory.map((item) => ({ ...item })),
-      aidTypes: [...p.aidTypes],
-      workingDays: [...p.workingDays],
-      targetGroups: [...p.targetGroups],
-    }))
-  }
-  return mockPointsStore
-}
-
 export async function fetchAdminAidDistributionStats(): Promise<AdminAidDistributionStats> {
   if (USE_MOCK_ADMIN_AID) {
     return { ...ADMIN_AID_DISTRIBUTION_STATS }
@@ -79,13 +64,8 @@ export async function fetchAdminAidResponseData(): Promise<AdminAidResponsePoint
 
 export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistributionPoint[]> {
   if (USE_MOCK_ADMIN_AID) {
-    return getMockPoints().map((p) => ({
-      ...p,
-      inventory: p.inventory.map((item) => ({ ...item })),
-      aidTypes: [...p.aidTypes],
-      workingDays: [...p.workingDays],
-      targetGroups: [...p.targetGroups],
-    }))
+    const res = await fetch('/api/mock/aid-points')
+    return res.json()
   }
 
   try {
@@ -100,82 +80,72 @@ export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistrib
 export async function fetchAdminAidDistributionPointById(
   id: string,
 ): Promise<AdminAidDistributionPoint | null> {
-  if (!USE_MOCK_ADMIN_AID) {
-    try {
-      return await fetchAdminAidPointByIdFromApi(id)
-    } catch {
-      return getAdminAidPointById(id)
-    }
+  if (USE_MOCK_ADMIN_AID) {
+    const res = await fetch(`/api/mock/aid-points?id=${encodeURIComponent(id)}`)
+    if (!res.ok) return null
+    return res.json()
   }
-  const points = getMockPoints()
-  const found = points.find((p) => p.id === id)
-  if (!found) return null
-  return {
-    ...found,
-    inventory: found.inventory.map((item) => ({ ...item })),
-    aidTypes: [...found.aidTypes],
-    workingDays: [...found.workingDays],
-    targetGroups: [...found.targetGroups],
+
+  try {
+    return await fetchAdminAidPointByIdFromApi(id)
+  } catch {
+    return getAdminAidPointById(id)
   }
 }
 
 export async function saveAdminAidDistributionPoint(
   point: AdminAidDistributionPoint,
 ): Promise<AdminAidDistributionPoint> {
-  if (!USE_MOCK_ADMIN_AID) {
+  if (USE_MOCK_ADMIN_AID) {
     const isNew = point.id.startsWith('new-')
+    const res = await fetch('/api/mock/aid-points', {
+      method: isNew ? 'POST' : 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(point)
+    })
+    return res.json()
+  }
 
-    // Offline: cache optimistically and queue for sync
-    if (typeof window !== 'undefined' && !navigator.onLine) {
-      const tempId = isNew ? `offline-aid-${Date.now()}` : point.id
-      const optimistic = { ...point, id: tempId }
-      await putAdminAidPoints([optimistic]).catch(() => {})
-      await enqueueOfflineOp({
-        type: isNew ? 'CREATE_AID_POINT' : 'UPDATE_AID_POINT',
-        payload: isNew ? { body: point } : { id: point.id, body: point },
-      })
-      return optimistic
-    }
+  const isNew = point.id.startsWith('new-')
 
-    const result = isNew
-      ? await createAdminAidPointFromApi(point)
-      : await updateAdminAidPointFromApi(point)
-    await putAdminAidPoints([result]).catch(() => {})
-    return result
+  // Offline: cache optimistically and queue for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const tempId = isNew ? `offline-aid-${Date.now()}` : point.id
+    const optimistic = { ...point, id: tempId }
+    await putAdminAidPoints([optimistic]).catch(() => {})
+    await enqueueOfflineOp({
+      type: isNew ? 'CREATE_AID_POINT' : 'UPDATE_AID_POINT',
+      payload: isNew ? { body: point } : { id: point.id, body: point },
+    })
+    return optimistic
   }
-  const points = getMockPoints()
-  const index = points.findIndex((p) => p.id === point.id)
-  const saved = {
-    ...point,
-    inventory: point.inventory.map((item) => ({ ...item })),
-    aidTypes: [...point.aidTypes],
-    workingDays: [...point.workingDays],
-    targetGroups: [...point.targetGroups],
-  }
-  if (index >= 0) {
-    points[index] = saved
-  } else {
-    points.push(saved)
-  }
-  return saved
+
+  const result = isNew
+    ? await createAdminAidPointFromApi(point)
+    : await updateAdminAidPointFromApi(point)
+  await putAdminAidPoints([result]).catch(() => {})
+  return result
 }
 
 export async function deleteAdminAidDistributionPoint(id: string): Promise<void> {
-  const points = getMockPoints()
-  const index = points.findIndex((p) => p.id === id)
-  if (index >= 0) points.splice(index, 1)
-  if (!USE_MOCK_ADMIN_AID) {
-    // Offline: remove from local cache and queue for sync
-    if (typeof window !== 'undefined' && !navigator.onLine) {
-      const db = getOfflineDB()
-      await db.adminAidPoints.delete(id).catch(() => {})
-      await enqueueOfflineOp({ type: 'DELETE_AID_POINT', payload: { id } })
-      return
-    }
-    await deleteAdminAidPointFromApi(id)
+  if (USE_MOCK_ADMIN_AID) {
+    const res = await fetch(`/api/mock/aid-points?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    })
+    if (!res.ok) throw new Error('Failed to delete point')
+    return
+  }
+
+  // Offline: remove from local cache and queue for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
     const db = getOfflineDB()
     await db.adminAidPoints.delete(id).catch(() => {})
+    await enqueueOfflineOp({ type: 'DELETE_AID_POINT', payload: { id } })
+    return
   }
+  await deleteAdminAidPointFromApi(id)
+  const db = getOfflineDB()
+  await db.adminAidPoints.delete(id).catch(() => {})
 }
 
 export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
@@ -186,17 +156,9 @@ export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
 }
 
 export async function fetchAdminAidDonors(): Promise<AdminAidDonor[]> {
-  return getMockDonors().map(donorToListItem)
-}
-
-function getMockDonors(): AdminAidDonorDetail[] {
-  if (!mockDonorsStore) {
-    mockDonorsStore = ADMIN_AID_DONOR_DETAILS.map((d) => ({
-      ...d,
-      focusAreas: [...d.focusAreas],
-    }))
-  }
-  return mockDonorsStore
+  const res = await fetch('/api/mock/aid-donors')
+  const donors: AdminAidDonorDetail[] = await res.json()
+  return donors.map(donorToListItem)
 }
 
 function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
@@ -212,33 +174,33 @@ function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
 export async function fetchAdminAidDonorById(
   id: string,
 ): Promise<AdminAidDonorDetail | null> {
-  const found = getMockDonors().find((d) => d.id === id)
-  if (!found) return null
-  return { ...found, focusAreas: [...found.focusAreas] }
+  const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`)
+  if (!res.ok) return null
+  return res.json()
 }
 
 export async function saveAdminAidDonor(
   donor: AdminAidDonorDetail,
 ): Promise<AdminAidDonorDetail> {
-  const donors = getMockDonors()
-  const index = donors.findIndex((d) => d.id === donor.id)
-  const saved = {
+  const checkRes = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(donor.id)}`)
+  const method = checkRes.ok ? 'PUT' : 'POST'
+  const payload = {
     ...donor,
-    focusAreas: [...donor.focusAreas],
     subtitle: buildDonorSubtitle(donor),
   }
-  if (index >= 0) {
-    donors[index] = saved
-  } else {
-    donors.push(saved)
-  }
-  return saved
+  const res = await fetch('/api/mock/aid-donors', {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  return res.json()
 }
 
 export async function deleteAdminAidDonor(id: string): Promise<void> {
-  const donors = getMockDonors()
-  const index = donors.findIndex((d) => d.id === id)
-  if (index >= 0) donors.splice(index, 1)
+  const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  })
+  if (!res.ok) throw new Error('Failed to delete donor')
 }
 
 function buildDonorSubtitle(donor: AdminAidDonorDetail): string {
@@ -281,9 +243,6 @@ export function mapDonorToForm(donor: AdminAidDonorDetail): AdminAidDonorDetail 
 }
 
 export async function fetchAdminAidDonations(): Promise<AdminAidDonationRecord[]> {
-  if (USE_MOCK_ADMIN_AID) {
-    return [...ADMIN_AID_DONATIONS]
-  }
   return [...ADMIN_AID_DONATIONS]
 }
 
@@ -340,11 +299,31 @@ export function createEmptyDistributionPoint(): AdminAidDistributionPoint {
 }
 
 export async function fetchAdminAidRequests(): Promise<AidRequestDto[]> {
+  if (USE_MOCK_ADMIN_AID) {
+    const res = await fetch('/api/mock/aid-requests')
+    return res.json()
+  }
   try {
     return await fetchAdminAidRequestsFromApi()
   } catch {
     return []
   }
+}
+
+export async function updateAdminAidRequestStatus(
+  requestId: string,
+  status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+): Promise<AidRequestDto> {
+  if (USE_MOCK_ADMIN_AID) {
+    const res = await fetch('/api/mock/aid-requests', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: requestId, status })
+    })
+    if (!res.ok) throw new Error('Failed to update status')
+    return res.json()
+  }
+  return updateAdminAidRequestStatusFromApi(requestId, status)
 }
 
 export { type AidRequestDto }

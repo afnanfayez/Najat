@@ -39,10 +39,10 @@ export function mapClinicDtoToFacility(dto: ClinicDto): HealthFacility {
     name: dto.name,
     address: dto.address,
     category: 'clinics',
-    isOpen: true,
+    isOpen: dto.status !== 'closed',
     medicineAvailability: medicationAvailabilityPercent(dto.currentMedications),
     phone: dto.contactNumber ?? undefined,
-    imageUrl: pickLocalImage('clinics', dto.id),
+    imageUrl: dto.image ?? pickLocalImage('clinics', dto.id),
     latitude: dto.latitude,
     longitude: dto.longitude,
     region: deriveRegion(dto.latitude),
@@ -50,7 +50,7 @@ export function mapClinicDtoToFacility(dto: ClinicDto): HealthFacility {
     distance: distanceLabel,
     updatedAt: dto.updatedAt,
     detail: {
-      mapPreviewImageUrl: pickLocalImage('clinics', dto.id),
+      mapPreviewImageUrl: dto.image ?? pickLocalImage('clinics', dto.id),
       lastUpdatedAt: dto.updatedAt
         ? formatUpdatedRelative(dto.updatedAt)
         : undefined,

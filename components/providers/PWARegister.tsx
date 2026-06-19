@@ -30,18 +30,6 @@ function scheduleDataSync(force = false): void {
   }
 }
 
-function promptUpdate(worker: ServiceWorker): void {
-  toast('يتوفر تحديث جديد للتطبيق', {
-    id: 'pwa-update',
-    description: 'اضغط لتحديث التطبيق إلى أحدث إصدار',
-    duration: Infinity,
-    action: {
-      label: 'تحديث',
-      onClick: () => worker.postMessage({ type: 'SKIP_WAITING' }),
-    },
-  })
-}
-
 async function unregisterDevServiceWorkers(): Promise<void> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
@@ -67,6 +55,9 @@ async function unregisterDevServiceWorkers(): Promise<void> {
  *  1. تسجيل SW عند تحميل الصفحة
  *  2. Background Sync عند عودة الإنترنت
  *  3. استقبال رسالة BACKGROUND_SYNC_TRIGGERED من SW → إعادة تحميل الجلسة
+ *
+ * ملاحظة: تحديثات الـ SW تُطبَّق بشكل طبيعي (lazy) دون إشعار للمستخدم أو
+ * إعادة تحميل قسرية — لا يوجد skipWaiting() مُستدعى من العميل.
  */
 export default function PWARegister() {
   useEffect(() => {
@@ -86,17 +77,10 @@ export default function PWARegister() {
     }
 
     // ── 1. تسجيل Service Worker ──────────────────────────────────────────────
-    // Track whether a SW was already controlling the page BEFORE we register.
-    // A controller change after first install (no prior controller) is NOT an
-    // update — it's clients.claim() taking control for the first time. Reloading
-    // in that case creates an infinite loop: install → claim → controllerchange
-    // → reload → install → …
-    const hadController = Boolean(navigator.serviceWorker.controller)
-
     const registerSW = async () => {
       try {
         const swUrl = devMode ? '/sw.js?dev=1' : '/sw.js'
-        const registration = await navigator.serviceWorker.register(swUrl)
+        await navigator.serviceWorker.register(swUrl)
 
         // Ask the browser to keep our offline caches & IndexedDB from being
         // evicted under storage pressure / inactivity (esp. iOS Safari).
@@ -113,23 +97,15 @@ export default function PWARegister() {
               )
             }
           })
-        }
 
-        // Controlled update: the new SW waits (no skipWaiting) until the user
-        // accepts. Prompt when an update is ready instead of swapping silently.
-        if (!devMode) {
-          if (registration.waiting && navigator.serviceWorker.controller) {
-            promptUpdate(registration.waiting)
-          }
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing
-            if (!newWorker) return
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                promptUpdate(newWorker)
-              }
-            })
-          })
+          // IS_DEV in sw.js skips ALL fetch interception (shells/RSC/images/tiles)
+          // to avoid racing Turbopack's on-demand compile and looping into endless
+          // reloads. Offline therefore cannot work under `next dev` by design —
+          // make that explicit so it isn't mistaken for a bug during testing.
+          console.warn(
+            '[PWA] العمل بلا اتصال معطّل في وضع التطوير (next dev) لتجنّب تعارض HMR. ' +
+              'لاختبار العمل بلا اتصال فعلياً، استخدم: npm run build && npm run start',
+          )
         }
 
         if (getToken()) {
@@ -211,26 +187,9 @@ export default function PWARegister() {
 
     navigator.serviceWorker.addEventListener('message', handleSWMessage)
 
-    // ── 4. عند تفعيل SW جديد (بعد قبول التحديث) → إعادة تحميل الصفحة مرة واحدة ──
-    let refreshing = false
-    const handleControllerChange = () => {
-      if (refreshing) return
-      // Skip reload on the very first SW installation (clients.claim() fires
-      // controllerchange even though no update happened — reloading here starts
-      // the infinite-reload loop).
-      if (!hadController) return
-      // In development the SW file changes on every HMR cycle, so controller
-      // changes are frequent and normal — never force a full reload.
-      if (devMode) return
-      refreshing = true
-      window.location.reload()
-    }
-    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
-
     return () => {
       window.removeEventListener('online', handleOnline)
       navigator.serviceWorker.removeEventListener('message', handleSWMessage)
-      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
     }
   }, [])
 

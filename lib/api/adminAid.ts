@@ -129,3 +129,10 @@ export async function createAidRequestFromAdminApi(
 ): Promise<AidRequestDto> {
   return aidAPI.createRequest(aidPointId, body)
 }
+
+export async function updateAdminAidRequestStatusFromApi(
+  requestId: string,
+  status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+): Promise<AidRequestDto> {
+  return aidAPI.updateRequestStatus(requestId, status)
+}
