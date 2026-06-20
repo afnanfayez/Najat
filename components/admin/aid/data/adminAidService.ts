@@ -31,7 +31,6 @@ import {
   ADMIN_AID_RESPONSE_DATA,
   ADMIN_AID_TYPE_OPTIONS,
   ADMIN_AID_TARGET_GROUPS,
-  ADMIN_AID_DONOR_FOCUS_AREAS,
 } from '@/lib/mocks/adminAidMockData'
 import type {
   AdminAidAreaCoverage,
@@ -48,7 +47,11 @@ export async function fetchAdminAidDistributionStats(): Promise<AdminAidDistribu
   if (USE_MOCK_ADMIN_AID) {
     return { ...ADMIN_AID_DISTRIBUTION_STATS }
   }
-  return fetchAdminAidStatsFromApi()
+  try {
+    return await fetchAdminAidStatsFromApi()
+  } catch {
+    return { ...ADMIN_AID_DISTRIBUTION_STATS }
+  }
 }
 
 export async function fetchAdminAidAreaCoverage(): Promise<AdminAidAreaCoverage[]> {
@@ -67,8 +70,15 @@ export async function fetchAdminAidResponseData(): Promise<AdminAidResponsePoint
 
 export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistributionPoint[]> {
   if (USE_MOCK_ADMIN_AID) {
-    const res = await fetch('/api/mock/aid-points')
-    return res.json()
+    try {
+      const res = await fetch('/api/mock/aid-points')
+      const points: AdminAidDistributionPoint[] = await res.json()
+      await putAdminAidPoints(points).catch(() => {})
+      return points
+    } catch {
+      const cached = await getAdminAidPoints().catch(() => [])
+      return cached.length > 0 ? cached : [...ADMIN_AID_DISTRIBUTION_POINTS]
+    }
   }
 
   try {
@@ -76,7 +86,8 @@ export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistrib
     putAdminAidPoints(result).catch(() => {})
     return result
   } catch {
-    return getAdminAidPoints()
+    const cached = await getAdminAidPoints().catch(() => [])
+    return cached.length > 0 ? cached : [...ADMIN_AID_DISTRIBUTION_POINTS]
   }
 }
 
@@ -84,15 +95,27 @@ export async function fetchAdminAidDistributionPointById(
   id: string,
 ): Promise<AdminAidDistributionPoint | null> {
   if (USE_MOCK_ADMIN_AID) {
-    const res = await fetch(`/api/mock/aid-points?id=${encodeURIComponent(id)}`)
-    if (!res.ok) return null
-    return res.json()
+    try {
+      const res = await fetch(`/api/mock/aid-points?id=${encodeURIComponent(id)}`)
+      if (!res.ok) return null
+      return res.json()
+    } catch {
+      return (
+        (await getAdminAidPointById(id).catch(() => null)) ??
+        ADMIN_AID_DISTRIBUTION_POINTS.find((point) => point.id === id) ??
+        null
+      )
+    }
   }
 
   try {
     return await fetchAdminAidPointByIdFromApi(id)
   } catch {
-    return getAdminAidPointById(id)
+    return (
+      (await getAdminAidPointById(id).catch(() => null)) ??
+      ADMIN_AID_DISTRIBUTION_POINTS.find((point) => point.id === id) ??
+      null
+    )
   }
 }
 
@@ -159,9 +182,13 @@ export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
 }
 
 export async function fetchAdminAidDonors(): Promise<AdminAidDonor[]> {
-  const res = await fetch('/api/mock/aid-donors')
-  const donors: AdminAidDonorDetail[] = await res.json()
-  return donors.map(donorToListItem)
+  try {
+    const res = await fetch('/api/mock/aid-donors')
+    const donors: AdminAidDonorDetail[] = await res.json()
+    return donors.map(donorToListItem)
+  } catch {
+    return [...ADMIN_AID_DONORS]
+  }
 }
 
 function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
@@ -177,9 +204,13 @@ function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
 export async function fetchAdminAidDonorById(
   id: string,
 ): Promise<AdminAidDonorDetail | null> {
-  const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`)
-  if (!res.ok) return null
-  return res.json()
+  try {
+    const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return ADMIN_AID_DONOR_DETAILS.find((donor) => donor.id === id) ?? null
+  }
 }
 
 export async function saveAdminAidDonor(

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminAidPageHeader from './AdminAidPageHeader'
 import AdminAidDistributionStatsPanel from './AdminAidDistributionStats'
@@ -36,6 +35,17 @@ import type {
 } from '@/schemas/adminAid'
 import { ADMIN_AID_BLUE, ADMIN_AID_FONT } from './adminAidStyles'
 
+async function loadOrFallback<T>(
+  load: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await load()
+  } catch {
+    return fallback
+  }
+}
+
 export default function AdminAidContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -52,9 +62,13 @@ export default function AdminAidContent() {
   const [requests, setRequests] = useState<AidRequestDto[]>([])
 
   useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab === 'donors') setActiveTab('donors')
-    else if (tab === 'requests') setActiveTab('requests')
+    const timer = window.setTimeout(() => {
+      const tab = searchParams.get('tab')
+      if (tab === 'donors') setActiveTab('donors')
+      else if (tab === 'requests') setActiveTab('requests')
+      else setActiveTab('distribution')
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [searchParams])
 
   useEffect(() => {
@@ -62,47 +76,45 @@ export default function AdminAidContent() {
 
     async function loadData() {
       setLoading(true)
-      try {
-        const [
-          statsData,
-          areasData,
-          response,
-          pointsData,
-          donorStatsData,
-          donorsData,
-          donationsData,
-          requestsData,
-        ] = await Promise.all([
-          fetchAdminAidDistributionStats(),
-          fetchAdminAidAreaCoverage(),
-          fetchAdminAidResponseData(),
-          fetchAdminAidDistributionPoints(),
-          fetchAdminAidDonorStats(),
-          fetchAdminAidDonors(),
-          fetchAdminAidDonations(),
-          fetchAdminAidRequests(),
-        ])
+      const [
+        statsData,
+        areasData,
+        response,
+        pointsData,
+        donorStatsData,
+        donorsData,
+        donationsData,
+        requestsData,
+      ] = await Promise.all([
+        loadOrFallback(fetchAdminAidDistributionStats, null),
+        loadOrFallback(fetchAdminAidAreaCoverage, []),
+        loadOrFallback(fetchAdminAidResponseData, []),
+        loadOrFallback(fetchAdminAidDistributionPoints, []),
+        loadOrFallback(fetchAdminAidDonorStats, null),
+        loadOrFallback(fetchAdminAidDonors, []),
+        loadOrFallback(fetchAdminAidDonations, []),
+        loadOrFallback(fetchAdminAidRequests, []),
+      ])
 
-        if (!cancelled) {
-          setStats(statsData)
-          setAreas(areasData)
-          setResponseData(response)
-          setPoints(pointsData)
-          setDonorStats(donorStatsData)
-          setDonors(donorsData)
-          setDonations(donationsData)
-          setRequests(requestsData)
-        }
-      } catch {
-        if (!cancelled) toast.error('تعذّر تحميل بيانات المساعدات')
-      } finally {
-        if (!cancelled) setLoading(false)
+      if (!cancelled) {
+        setStats(statsData)
+        setAreas(areasData)
+        setResponseData(response)
+        setPoints(pointsData)
+        setDonorStats(donorStatsData)
+        setDonors(donorsData)
+        setDonations(donationsData)
+        setRequests(requestsData)
+        setLoading(false)
       }
     }
 
-    loadData()
+    const timer = window.setTimeout(() => {
+      void loadData()
+    }, 0)
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [])
 
