@@ -86,7 +86,9 @@ export const aidRequestDtoSchema = z.object({
   id: z.string(),
   aidPointId: z.string().optional(),
   userId: z.string().optional(),
-  status: z.enum(['pending', 'approved', 'rejected', 'fulfilled']).catch('pending'),
+  status: z
+    .enum(['pending', 'in_progress', 'approved', 'rejected', 'fulfilled'])
+    .catch('pending'),
   notes: z.string().optional().nullable(),
   requestedSupplies: z.array(z.string()).optional().default([]),
   createdAt: z.string().optional(),

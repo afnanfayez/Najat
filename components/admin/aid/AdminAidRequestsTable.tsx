@@ -9,12 +9,13 @@ import { ADMIN_AID_BLUE } from './adminAidStyles'
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   pending:   { label: 'قيد المراجعة', color: '#F59E0B', bg: '#FEF3C7' },
+  in_progress: { label: 'قيد التنفيذ', color: '#22C55E', bg: '#DCFCE7' },
   approved:  { label: 'مقبول',        color: '#22C55E', bg: '#DCFCE7' },
   rejected:  { label: 'مرفوض',        color: '#EF4444', bg: '#FEE2E2' },
   fulfilled: { label: 'مُنجز',        color: '#3B82F6', bg: '#DBEAFE' },
 }
 
-type RequestStatus = 'pending' | 'approved' | 'rejected' | 'fulfilled'
+type RequestStatus = 'pending' | 'in_progress' | 'approved' | 'rejected' | 'fulfilled'
 
 interface AdminAidRequestsTableProps {
   requests: AidRequestDto[]
@@ -73,8 +74,12 @@ export default function AdminAidRequestsTable({
       toast.success(`تم تغيير الحالة إلى: ${meta?.label ?? newStatus}`, {
         position: 'top-center',
       })
-    } catch {
-      toast.error('تعذّر تحديث حالة الطلب')
+    } catch (err) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message?: unknown }).message)
+          : 'تعذّر تحديث حالة الطلب'
+      toast.error(message || 'تعذّر تحديث حالة الطلب')
     } finally {
       setLoadingId(null)
     }
@@ -242,7 +247,8 @@ export default function AdminAidRequestsTable({
                     {/* Action buttons */}
                     <td className="px-3 py-3.5">
                       <div className="flex items-center justify-center gap-1.5">
-                        {req.status !== 'approved' &&
+                        {req.status !== 'in_progress' &&
+                          req.status !== 'approved' &&
                           req.status !== 'fulfilled' && (
                             <ActionButton
                               label="قبول"
@@ -250,12 +256,12 @@ export default function AdminAidRequestsTable({
                               color="#16A34A"
                               bg="#DCFCE7"
                               onClick={() =>
-                                handleStatusChange(req, 'approved')
+                                handleStatusChange(req, 'in_progress')
                               }
                               loading={isLoading}
                             />
                           )}
-                        {req.status === 'approved' && (
+                        {(req.status === 'in_progress' || req.status === 'approved') && (
                           <ActionButton
                             label="إنجاز"
                             icon={PackageCheck}

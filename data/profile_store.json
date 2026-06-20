@@ -16,7 +16,7 @@
     "malesCount": 0,
     "region": null,
     "isVerified": true,
-    "isActive": false,
+    "isActive": true,
     "avatarUrl": null,
     "assistancePreferences": null,
     "assistanceLocation": null,

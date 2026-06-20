@@ -354,7 +354,7 @@ export async function fetchAdminAidRequests(): Promise<AidRequestDto[]> {
 
 export async function updateAdminAidRequestStatus(
   requestId: string,
-  status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+  status: AidRequestDto['status'],
 ): Promise<AidRequestDto> {
   const queueOfflineStatusUpdate = async () => {
     const cached =

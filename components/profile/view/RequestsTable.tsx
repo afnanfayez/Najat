@@ -15,12 +15,13 @@ interface AidRequestItem {
   wifeName?: string
   phoneNumber?: string
   currentLocation?: string
-  status: 'pending' | 'approved' | 'rejected' | 'fulfilled'
+  status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'fulfilled'
   createdAt?: string
 }
 
 const statusLabels: Record<string, string> = {
   pending: 'قيد المراجعة',
+  in_progress: 'قيد التنفيذ',
   approved: 'مقبول',
   rejected: 'مرفوض',
   fulfilled: 'مكتمل',
@@ -28,6 +29,7 @@ const statusLabels: Record<string, string> = {
 
 const statusColors: Record<string, string> = {
   pending: 'text-amber-500 bg-amber-50 border-amber-100',
+  in_progress: 'text-green-600 bg-green-50 border-green-100',
   approved: 'text-green-600 bg-green-50 border-green-100',
   rejected: 'text-red-500 bg-red-50 border-red-100',
   fulfilled: 'text-blue-500 bg-blue-50 border-blue-100',

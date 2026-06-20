@@ -132,7 +132,7 @@ export async function createAidRequestFromAdminApi(
 
 export async function updateAdminAidRequestStatusFromApi(
   requestId: string,
-  status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+  status: AidRequestDto['status'],
 ): Promise<AidRequestDto> {
   return aidAPI.updateRequestStatus(requestId, status)
 }

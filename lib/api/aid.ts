@@ -21,6 +21,7 @@ export type ListAidParams = {
 }
 
 export type AidStatus = 'active' | 'suspended' | 'limited'
+export type AidRequestStatus = AidRequestDto['status']
 
 export const aidAPI = {
   list(params?: ListAidParams): Promise<AidsPaginatedResponse> {
@@ -129,7 +130,7 @@ export const aidAPI = {
 
   updateRequestStatus(
     requestId: string,
-    status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
+    status: AidRequestStatus,
   ): Promise<AidRequestDto> {
     return request(`${V1_ROOT}/aid/requests`, {
       method: 'PUT',

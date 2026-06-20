@@ -157,7 +157,7 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'UPDATE_AID_REQUEST_STATUS') {
     const { requestId, status } = item.payload as {
       requestId: string
-      status: 'pending' | 'approved' | 'rejected' | 'fulfilled'
+      status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'fulfilled'
     }
     const updated = await updateAdminAidRequestStatusFromApi(requestId, status)
     await putAidRequests([updated])
