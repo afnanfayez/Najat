@@ -10,19 +10,18 @@ import AdminMapsPublishingTable from './AdminMapsPublishingTable'
 import AdminMapsInsightCards from './AdminMapsInsightCards'
 import { buildDashboardFromSafetyData } from './data/adminMapsService'
 import { useSafetyMapData } from '@/hooks/useSafetyMapData'
-import { useSafetyZones } from '@/hooks/useSafetyZones'
 import { ADMIN_MAPS_FONT } from './adminMapsStyles'
 
 export default function AdminMapsContent() {
   const router = useRouter()
   const mapDataQuery = useSafetyMapData()
-  const zonesQuery = useSafetyZones({ limit: 50 })
 
   const dashboard = useMemo(() => {
     if (!mapDataQuery.data) return null
     return buildDashboardFromSafetyData(mapDataQuery.data)
   }, [mapDataQuery.data])
 
+  const dangerZones = mapDataQuery.data?.dangerZones ?? []
   const isLoading = mapDataQuery.isLoading
 
   return (
@@ -56,19 +55,17 @@ export default function AdminMapsContent() {
 
           <AdminMapsInsightCards insights={dashboard.insights} />
 
-          {/* Danger Zones list — fetched directly from GET /v1/safety/zones */}
+          {/* Danger Zones list — derived from the same offline-first map-data query
+              used above, so it stays available offline instead of issuing a
+              separate (non-cached) request. */}
           <section dir="rtl" className="mt-6">
             <h2
               className="mb-3 text-base font-bold text-[#1e293b]"
               style={{ fontFamily: ADMIN_MAPS_FONT }}
             >
-              مناطق الخطر ({zonesQuery.data?.length ?? 0})
+              مناطق الخطر ({dangerZones.length})
             </h2>
-            {zonesQuery.isLoading ? (
-              <p className="text-sm text-[#64748B]" style={{ fontFamily: ADMIN_MAPS_FONT }}>جاري تحميل المناطق...</p>
-            ) : zonesQuery.isError ? (
-              <p className="text-sm text-[#F44336]" style={{ fontFamily: ADMIN_MAPS_FONT }}>تعذّر تحميل مناطق الخطر</p>
-            ) : zonesQuery.data && zonesQuery.data.length > 0 ? (
+            {dangerZones.length > 0 ? (
               <div className="overflow-hidden rounded-2xl border border-[#E8EEF5] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
                 <table className="w-full table-fixed border-collapse text-right" style={{ fontFamily: ADMIN_MAPS_FONT }}>
                   <thead>
@@ -80,7 +77,7 @@ export default function AdminMapsContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {zonesQuery.data.map((zone) => {
+                    {dangerZones.map((zone) => {
                       const levelColor = zone.dangerLevel === 'high' ? '#F44336' : zone.dangerLevel === 'medium' ? '#F59E0B' : '#22C55E'
                       const levelLabel = zone.dangerLevel === 'high' ? 'عالٍ' : zone.dangerLevel === 'medium' ? 'متوسط' : 'منخفض'
                       return (

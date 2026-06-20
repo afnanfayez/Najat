@@ -117,6 +117,17 @@ export type OfflineSyncType =
   | 'CREATE_HEALTH_CONTENT'
   | 'UPDATE_HEALTH_CONTENT'
   | 'DELETE_HEALTH_CONTENT'
+  // Admin user creation (volunteers/residents)
+  | 'CREATE_VOLUNTEER'
+  | 'CREATE_RESIDENT'
+  // Admin user management mutations
+  | 'UPDATE_ADMIN_USER'
+  | 'SET_ADMIN_USER_ACTIVE'
+  | 'DELETE_ADMIN_USER'
+  | 'RESTORE_ADMIN_USER'
+  // Admin communication mutations
+  | 'CREATE_COMMUNICATION_TASK'
+  | 'LAUNCH_COMMUNICATION_BROADCAST'
 
 export type OfflineSyncStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'conflict'
 
@@ -638,6 +649,12 @@ export async function getAdminUsers(): Promise<AdminUserDto[]> {
   const db = getOfflineDB()
   const rows = await db.adminUsers.toArray()
   return rows.map((r) => r.data)
+}
+
+export async function getAdminUserById(id: string): Promise<AdminUserDto | null> {
+  const db = getOfflineDB()
+  const row = await db.adminUsers.get(id)
+  return row?.data ?? null
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import {
   createAdminCommunicationTaskFromApi,
   exportAdminCommunicationBroadcastDataFromApi,
@@ -5,6 +6,7 @@ import {
   fetchAdminCommunicationDashboardFromApi,
   launchAdminCommunicationBroadcastFromApi,
 } from '@/lib/api/adminCommunication'
+import { enqueueOfflineOp } from '@/lib/offline/db'
 import type {
   AdminCommunicationDashboard,
   AdminCommunicationPriorityFilter,
@@ -15,6 +17,10 @@ import type {
   CreateAdminCommunicationTaskBody,
   LaunchAdminCommunicationBroadcastBody,
 } from '@/schemas/adminCommunication'
+
+function isOffline() {
+  return typeof navigator !== 'undefined' && !navigator.onLine
+}
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
@@ -55,12 +61,22 @@ export function filterAdminCommunicationTasks(
 export async function createAdminCommunicationTask(
   body: CreateAdminCommunicationTaskBody
 ): Promise<AdminCommunicationDashboard> {
+  if (isOffline()) {
+    await enqueueOfflineOp({ type: 'CREATE_COMMUNICATION_TASK', payload: { body } })
+    toast.info('ستُعيَّن المهمة عند عودة الاتصال', { duration: 4000 })
+    return fetchAdminCommunicationDashboardFromApi()
+  }
   return createAdminCommunicationTaskFromApi(body)
 }
 
 export async function launchAdminCommunicationBroadcast(
   body: LaunchAdminCommunicationBroadcastBody
 ): Promise<AdminCommunicationDashboard> {
+  if (isOffline()) {
+    await enqueueOfflineOp({ type: 'LAUNCH_COMMUNICATION_BROADCAST', payload: { body } })
+    toast.info('سيُطلَق البث الجماعي عند عودة الاتصال', { duration: 4000 })
+    return fetchAdminCommunicationDashboardFromApi()
+  }
   return launchAdminCommunicationBroadcastFromApi(body)
 }
 

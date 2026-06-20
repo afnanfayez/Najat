@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import AdminSidebar from './sidebar/AdminSidebar'
 import AdminMobileHeader from './dashboard/AdminMobileHeader'
-import AdminOfflineBanner from './layout/AdminOfflineBanner'
 import { AdminShellContext } from './AdminShellContext'
 import { ADMIN_PAGE_PADDING } from './layout/adminLayoutStyles'
 
@@ -166,7 +165,6 @@ export default function AdminShell({ activeNav = 'dashboard', children }: AdminS
           style={{ padding: ADMIN_PAGE_PADDING, boxSizing: 'border-box' }}
         >
           <AdminMobileHeader onMenuOpen={() => setIsMobileOpen(true)} />
-          <AdminOfflineBanner />
           {children}
         </main>
       </div>

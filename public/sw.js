@@ -597,7 +597,9 @@ self.addEventListener('fetch', (event) => {
   // Map tiles (cross-origin images) → durable tile cache
   if (isMapTileUrl(url)) {
     event.respondWith(
-      cacheFirstWithRevalidate(request, MAP_TILES_CACHE, TILE_MAX_AGE_MS, TILE_MAX_ENTRIES),
+      cacheFirstWithRevalidate(request, MAP_TILES_CACHE, TILE_MAX_AGE_MS, TILE_MAX_ENTRIES).catch(
+        () => new Response('', { status: 503, statusText: 'Offline' }),
+      ),
     )
     return
   }
@@ -620,7 +622,9 @@ self.addEventListener('fetch', (event) => {
       return
     }
     event.respondWith(
-      cacheFirstWithRevalidate(request, IMAGE_CACHE, IMAGE_MAX_AGE_MS, IMAGE_MAX_ENTRIES),
+      cacheFirstWithRevalidate(request, IMAGE_CACHE, IMAGE_MAX_AGE_MS, IMAGE_MAX_ENTRIES).catch(
+        () => new Response('', { status: 503, statusText: 'Offline' }),
+      ),
     )
     return
   }
@@ -633,7 +637,11 @@ self.addEventListener('fetch', (event) => {
   if (isStaticAsset(url)) {
     // في وضع التطوير: تجاوز تخزين ملفات /_next/ لضمان عمل HMR بشكل سليم
     if (IS_DEV && url.pathname.startsWith('/_next/')) return
-    event.respondWith(cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS))
+    event.respondWith(
+      cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS).catch(
+        () => new Response('', { status: 503, statusText: 'Offline' }),
+      ),
+    )
     return
   }
 
@@ -680,34 +688,52 @@ self.addEventListener('fetch', (event) => {
             emptyRsc
           )
         }
-      }),
+      }).catch(
+        () => new Response('', { status: 200, headers: { 'Content-Type': 'text/x-component' } }),
+      ),
     )
     return
   }
 
   if (isAppRouteRequest(request, url)) {
     event.respondWith(
-      caches.open(SHELL_CACHE).then(async (cache) => {
-        const pathname = normalizePathname(url.pathname)
+      caches
+        .open(SHELL_CACHE)
+        .then(async (cache) => {
+          const pathname = normalizePathname(url.pathname)
 
-        if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
+          if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
 
-        try {
-          const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
-          if (response.status === 200 && !response.redirected) {
-            await cache.put(request, response.clone())
-            await cache.put(pathname, response.clone())
-            await cache.put(pageCacheKey(pathname), response.clone())
-            cacheRscPayload(cache, pathname)
+          try {
+            const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
+            if (response.status === 200 && !response.redirected) {
+              await cache.put(request, response.clone())
+              await cache.put(pathname, response.clone())
+              await cache.put(pageCacheKey(pathname), response.clone())
+              cacheRscPayload(cache, pathname)
+            }
+            return response
+          } catch {
+            return serveCachedDocument(cache, request, url)
           }
-          return response
-        } catch {
-          return serveCachedDocument(cache, request, url)
-        }
-      }),
+        })
+        // Last-resort safety net: if anything above throws (corrupted cache,
+        // QuotaExceededError, etc.) the browser shows its OWN offline
+        // interstitial instead of ours — never let this promise reject.
+        .catch(
+          () =>
+            new Response(OFFLINE_FALLBACK_HTML, {
+              status: 200,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' },
+            }),
+        ),
     )
     return
   }
 
-  event.respondWith(cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS))
+  event.respondWith(
+    cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS).catch(
+      () => new Response('', { status: 503, statusText: 'Offline' }),
+    ),
+  )
 })

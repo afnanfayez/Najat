@@ -4,6 +4,7 @@ import {
   type CreateAdminVolunteerBody,
   type CreateAdminResidentBody,
 } from '@/lib/api/adminUsers'
+import { enqueueOfflineOp, putAdminUsers } from '@/lib/offline/db'
 import type { AdminUserDto } from '@/schemas/adminUser'
 import type { VolunteerFormData } from '@/components/admin/users/add-volunteer/types'
 
@@ -116,10 +117,46 @@ export function mapVolunteerFormToCreateBody(
   }
 }
 
+function buildOptimisticAdminUser(
+  tempId: string,
+  role: 'volunteer' | 'resident',
+  body: CreateAdminVolunteerBody | CreateAdminResidentBody,
+): AdminUserDto {
+  return {
+    id: tempId,
+    name: body.fullName,
+    fullName: body.fullName,
+    email: body.email,
+    role,
+    region: body.region ?? 'غير محدد',
+    status: 'pending_review',
+    lastActivity: 'الآن',
+    enabled: true,
+    isActive: true,
+    isVerified: false,
+    phoneNumber: body.phoneNumber,
+    gender: body.gender,
+    ageGroup: body.ageGroup,
+    healthStatus: body.healthStatus,
+    nationalId: body.nationalId,
+    housingStatus: body.housingStatus,
+  }
+}
+
 export async function createVolunteerFromForm(
   data: VolunteerFormData,
 ): Promise<CreateVolunteerResult> {
   const body = mapVolunteerFormToCreateBody(data)
+
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const tempId = `offline-${Date.now()}`
+    const optimistic = buildOptimisticAdminUser(tempId, 'volunteer', body)
+    await putAdminUsers([optimistic])
+    await enqueueOfflineOp({ type: 'CREATE_VOLUNTEER', payload: { body, tempId } })
+    return { user: optimistic, temporaryPassword: body.password }
+  }
+
   const user = await createAdminVolunteer(body)
   return { user, temporaryPassword: body.password }
 }
@@ -154,6 +191,16 @@ export async function createResidentFromForm(
   data: VolunteerFormData,
 ): Promise<CreateVolunteerResult> {
   const body = mapResidentFormToCreateBody(data)
+
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    const tempId = `offline-${Date.now()}`
+    const optimistic = buildOptimisticAdminUser(tempId, 'resident', body)
+    await putAdminUsers([optimistic])
+    await enqueueOfflineOp({ type: 'CREATE_RESIDENT', payload: { body, tempId } })
+    return { user: optimistic, temporaryPassword: body.password }
+  }
+
   const user = await createAdminResident(body)
   return { user, temporaryPassword: body.password }
 }

@@ -17,6 +17,25 @@ import {
   updateAdminHealthContentFromApi,
   deleteAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
+import {
+  createAdminCommunicationTaskFromApi,
+  launchAdminCommunicationBroadcastFromApi,
+} from '@/lib/api/adminCommunication'
+import type {
+  CreateAdminCommunicationTaskBody,
+  LaunchAdminCommunicationBroadcastBody,
+} from '@/schemas/adminCommunication'
+import {
+  createAdminVolunteer,
+  createAdminResident,
+  updateAdminUser,
+  setAdminUserActive,
+  deleteAdminUser,
+  restoreAdminUser,
+  type CreateAdminVolunteerBody,
+  type CreateAdminResidentBody,
+  type UpdateAdminUserBody,
+} from '@/lib/api/adminUsers'
 import { toast } from 'sonner'
 import { getToken } from '@/lib/api/auth'
 import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
@@ -31,6 +50,7 @@ import {
   incrementOfflineOpRetry,
   putAdminFacilities,
   getAdminFacilityById,
+  putAdminUsers,
   getOfflineDB,
   type OfflineSyncQueueItem,
 } from '@/lib/offline/db'
@@ -211,6 +231,63 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'DELETE_HEALTH_CONTENT') {
     const { id } = item.payload as { id: string }
     await deleteAdminHealthContentFromApi(id)
+    return true
+  }
+
+  if (item.type === 'CREATE_VOLUNTEER') {
+    const { body, tempId } = item.payload as { body: CreateAdminVolunteerBody; tempId: string }
+    const created = await createAdminVolunteer(body)
+    const db = getOfflineDB()
+    await db.adminUsers.delete(tempId)
+    if (created) await putAdminUsers([created])
+    return true
+  }
+
+  if (item.type === 'CREATE_RESIDENT') {
+    const { body, tempId } = item.payload as { body: CreateAdminResidentBody; tempId: string }
+    const created = await createAdminResident(body)
+    const db = getOfflineDB()
+    await db.adminUsers.delete(tempId)
+    if (created) await putAdminUsers([created])
+    return true
+  }
+
+  if (item.type === 'UPDATE_ADMIN_USER') {
+    const { id, body } = item.payload as { id: string; body: UpdateAdminUserBody }
+    const updated = await updateAdminUser(id, body)
+    await putAdminUsers([updated])
+    return true
+  }
+
+  if (item.type === 'SET_ADMIN_USER_ACTIVE') {
+    const { id, isActive } = item.payload as { id: string; isActive: boolean }
+    const updated = await setAdminUserActive(id, isActive)
+    if (updated) await putAdminUsers([updated])
+    return true
+  }
+
+  if (item.type === 'DELETE_ADMIN_USER') {
+    const { id } = item.payload as { id: string }
+    await deleteAdminUser(id)
+    return true
+  }
+
+  if (item.type === 'RESTORE_ADMIN_USER') {
+    const { id } = item.payload as { id: string }
+    const restored = await restoreAdminUser(id)
+    await putAdminUsers([restored])
+    return true
+  }
+
+  if (item.type === 'CREATE_COMMUNICATION_TASK') {
+    const { body } = item.payload as { body: CreateAdminCommunicationTaskBody }
+    await createAdminCommunicationTaskFromApi(body)
+    return true
+  }
+
+  if (item.type === 'LAUNCH_COMMUNICATION_BROADCAST') {
+    const { body } = item.payload as { body: LaunchAdminCommunicationBroadcastBody }
+    await launchAdminCommunicationBroadcastFromApi(body)
     return true
   }
 

@@ -55,6 +55,10 @@ export default function AdminDisableUserModal({
       setPasswordError(true)
       return
     }
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setApiError('تعطيل الحساب يتطلب اتصالاً بالإنترنت للتحقق من هوية المسؤول')
+      return
+    }
     setPasswordError(false)
     setLoading(true)
     setApiError(null)
