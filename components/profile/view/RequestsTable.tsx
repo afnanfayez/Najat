@@ -3,17 +3,20 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { request } from '@/lib/api/api'
+import { getToken } from '@/lib/api/auth'
+import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
+import { getAidRequests, putAidRequests } from '@/lib/offline/db'
 
 interface AidRequestItem {
   id: string
-  aidOrganizationId: string
+  aidOrganizationId?: string
   aidOrganizationName?: string
   husbandName?: string
   wifeName?: string
   phoneNumber?: string
   currentLocation?: string
   status: 'pending' | 'approved' | 'rejected' | 'fulfilled'
-  createdAt: string
+  createdAt?: string
 }
 
 const statusLabels: Record<string, string> = {
@@ -47,7 +50,23 @@ const formatDate = (isoString?: string) => {
 export default function RequestsTable() {
   const { data, isLoading, error } = useQuery<{ success: boolean; data: AidRequestItem[] }>({
     queryKey: ['my-aid-requests'],
-    queryFn: () => request('/v1/aid/requests'),
+    queryFn: async () => {
+      const userId = getUserIdFromToken(getToken()) ?? undefined
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        return { success: true, data: await getAidRequests(userId) }
+      }
+
+      try {
+        const result = await request('/v1/aid/requests')
+        const requests = Array.isArray(result?.data) ? result.data : []
+        await putAidRequests(requests).catch(() => {})
+        return result
+      } catch (err) {
+        const cached = await getAidRequests(userId)
+        if (cached.length > 0) return { success: true, data: cached }
+        throw err
+      }
+    },
   })
 
   const requests = data?.data || []

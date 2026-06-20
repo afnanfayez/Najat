@@ -11,15 +11,17 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { aidAPI } from '@/lib/api/aid'
+import { getToken } from '@/lib/api/auth'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
-import { enqueueOfflineOp } from '@/lib/offline/db'
+import { enqueueOfflineOp, upsertAidRequest } from '@/lib/offline/db'
+import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
 import { metersToKmLabel } from '@/lib/mappers/hospital'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import {
   aidHelpRequestFormSchema,
   type AidHelpRequestForm,
 } from '@/schemas/aidHelpRequest'
-import type { NearbyAidPointDto } from '@/schemas/aidApi'
+import type { AidRequestDto, NearbyAidPointDto } from '@/schemas/aidApi'
 
 interface AidDetailViewProps {
   aid: HumanitarianAid
@@ -140,7 +142,10 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
 
   useEffect(() => {
     if (!isClient) return
-    requestGeo()
+    const timer = window.setTimeout(() => {
+      requestGeo()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [isClient, requestGeo])
 
   const nearbyQuery = useQuery({
@@ -178,8 +183,9 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
 
   const mutation = useMutation({
     mutationFn: submitAidHelpRequest,
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.ok) {
+        if (result.data) await upsertAidRequest(result.data).catch(() => {})
         toast.success(result.message)
         queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })
         form.reset({
@@ -212,9 +218,33 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     async (data: AidHelpRequestForm) => {
       const payloadWithOrg = { ...data, aidOrganizationName: aid.name }
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const localRequestId = `offline-request-${Date.now()}`
+        const now = new Date().toISOString()
+        const userId = getUserIdFromToken(getToken()) ?? undefined
+        const localRequest: AidRequestDto = {
+          id: localRequestId,
+          aidPointId: aid.id,
+          aidOrganizationId: aid.id,
+          aidOrganizationName: aid.name,
+          userId,
+          husbandName: data.husbandName,
+          wifeName: data.wifeName,
+          phoneNumber: data.phone,
+          currentLocation: data.currentLocation,
+          femaleChildrenCount: data.daughtersCount,
+          maleChildrenCount: data.sonsCount,
+          requestedSupplies: [],
+          status: 'pending',
+          createdAt: now,
+          updatedAt: now,
+        }
+        await upsertAidRequest(localRequest)
         await enqueueOfflineOp({
           type: 'AID_REQUEST',
-          payload: payloadWithOrg as unknown as Record<string, unknown>,
+          payload: {
+            ...payloadWithOrg,
+            localRequestId,
+          } as unknown as Record<string, unknown>,
         })
         toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
         queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })

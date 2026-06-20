@@ -6,6 +6,7 @@ import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
 import type { AdminHealthFacility, AdminHealthMedicalContent } from '@/schemas/adminHealth'
 import type { AdminAidDistributionPoint } from '@/schemas/adminAid'
 import type { AdminUserDto } from '@/schemas/adminUser'
+import type { AidRequestDto } from '@/schemas/aidApi'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Cached entity types
@@ -25,6 +26,15 @@ export interface CachedAid {
   cachedAt: number
   updatedAt?: number
   version?: number
+}
+
+export interface CachedAidRequest {
+  id: string
+  data: AidRequestDto
+  userId?: string
+  status?: AidRequestDto['status']
+  createdAt?: string
+  cachedAt: number
 }
 
 export interface CachedSafetyMap {
@@ -100,6 +110,7 @@ export type OfflineSyncType =
   | 'DELETE_AID_POINT'
   | 'UPDATE_AID_STATUS'
   | 'AID_REQUEST'
+  | 'UPDATE_AID_REQUEST_STATUS'
   | 'PROFILE_SYNC'
   | 'SESSION_REFRESH'
   | 'CREATE_DANGER_ZONE'
@@ -183,6 +194,7 @@ class NajatOfflineDB extends Dexie {
   adminUsers!: Table<CachedAdminUser, string>
   adminHealthContent!: Table<CachedAdminHealthContent, string>
   apiCache!: Table<ApiCacheEntry, string>
+  aidRequests!: Table<CachedAidRequest, string>
 
   constructor() {
     super('najat-offline-v2')
@@ -315,6 +327,24 @@ class NajatOfflineDB extends Dexie {
       adminHealthContent: 'id, cachedAt',
       apiCache: 'key, cachedAt',
     })
+    // v11: aid request cache for beneficiary/admin offline reads + optimistic status updates
+    this.version(11).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      aidRequests: 'id, userId, status, cachedAt, createdAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+      adminHealthContent: 'id, cachedAt',
+      apiCache: 'key, cachedAt',
+    })
   }
 }
 
@@ -399,6 +429,61 @@ export async function putAid(items: HumanitarianAid[]): Promise<void> {
   await db.aid.bulkPut(
     items.map((a) => ({ id: a.id, aid: a, cachedAt: now, updatedAt: now, version: 1 }))
   )
+}
+
+export async function putAidRequests(items: AidRequestDto[]): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  await db.aidRequests.bulkPut(
+    items.map((request) => ({
+      id: request.id,
+      data: request,
+      userId: request.userId,
+      status: request.status,
+      createdAt: request.createdAt,
+      cachedAt: now,
+    })),
+  )
+}
+
+export async function getAidRequests(userId?: string): Promise<AidRequestDto[]> {
+  const db = getOfflineDB()
+  const rows = userId
+    ? await db.aidRequests.where('userId').equals(userId).toArray()
+    : await db.aidRequests.toArray()
+
+  return rows
+    .map((row) => row.data)
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt ?? 0).getTime()
+      const bTime = new Date(b.createdAt ?? 0).getTime()
+      return bTime - aTime
+    })
+}
+
+export async function upsertAidRequest(request: AidRequestDto): Promise<void> {
+  await putAidRequests([request])
+}
+
+export async function updateCachedAidRequestStatus(
+  id: string,
+  status: AidRequestDto['status'],
+): Promise<AidRequestDto | null> {
+  const db = getOfflineDB()
+  const row = await db.aidRequests.get(id)
+  if (!row) return null
+  const updated: AidRequestDto = {
+    ...row.data,
+    status,
+    updatedAt: new Date().toISOString(),
+  }
+  await db.aidRequests.put({
+    ...row,
+    data: updated,
+    status,
+    cachedAt: Date.now(),
+  })
+  return updated
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,24 @@
 {
   "023745f2-6a3a-48f4-8b6f-7961f1b365cb": [
     {
+      "id": "req_2f669uyzn",
+      "userId": "023745f2-6a3a-48f4-8b6f-7961f1b365cb",
+      "aidPointId": "a8f0332a-df83-41df-8dad-6f6ec829b645",
+      "aidOrganizationId": "a8f0332a-df83-41df-8dad-6f6ec829b645",
+      "aidOrganizationName": "نقطة جباليا",
+      "husbandName": "أحمد الزيتي ",
+      "wifeName": "امل ",
+      "phoneNumber": "0597715362",
+      "currentLocation": "شمال غزة ",
+      "femaleChildrenCount": 3,
+      "maleChildrenCount": 2,
+      "notes": "",
+      "requestedSupplies": [],
+      "status": "approved",
+      "createdAt": "2026-06-20T12:08:12.861Z",
+      "updatedAt": "2026-06-20T12:09:20.356Z"
+    },
+    {
       "id": "req_ey75ptqkv",
       "userId": "023745f2-6a3a-48f4-8b6f-7961f1b365cb",
       "aidOrganizationId": "b3f1b43c-c29a-4700-9eea-5225ed1377da",
@@ -11,9 +29,9 @@
       "currentLocation": "AlBurij Camp",
       "femaleChildrenCount": 3,
       "maleChildrenCount": 4,
-      "status": "pending",
+      "status": "approved",
       "createdAt": "2026-06-19T08:36:44.620Z",
-      "updatedAt": "2026-06-20T08:08:47.723Z"
+      "updatedAt": "2026-06-20T12:09:22.548Z"
     },
     {
       "id": "req_zlbqomemt",

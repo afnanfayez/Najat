@@ -22,7 +22,7 @@ import {
 
 export type ProfileSavePayload = UpdateUserProfileBody & {
   avatarDataUrl?: string
-  emergencyContacts?: any[]
+  emergencyContacts?: LocalProfileData['emergencyContacts']
   sosMessage?: string
   bloodType?: string
 }
@@ -133,7 +133,7 @@ export function useProfile() {
         await updateOfflineLoginProfile(merged)
         await enqueueOfflineOp({
           type: 'PROFILE_SYNC',
-          payload: backendBody as Record<string, unknown>,
+          payload: payload as Record<string, unknown>,
         })
         toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
         return { profile: merged, syncedWithServer: false }
@@ -156,7 +156,7 @@ export function useProfile() {
         await updateOfflineLoginProfile(merged)
         await enqueueOfflineOp({
           type: 'PROFILE_SYNC',
-          payload: backendBody as Record<string, unknown>,
+          payload: payload as Record<string, unknown>,
         })
         toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
         return { profile: merged, syncedWithServer: false }

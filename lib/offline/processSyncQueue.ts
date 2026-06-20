@@ -17,6 +17,7 @@ import {
   updateAdminHealthContentFromApi,
   deleteAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
+import { updateAdminAidRequestStatusFromApi } from '@/lib/api/adminAid'
 import {
   createAdminCommunicationTaskFromApi,
   launchAdminCommunicationBroadcastFromApi,
@@ -51,6 +52,8 @@ import {
   putAdminFacilities,
   getAdminFacilityById,
   putAdminUsers,
+  putAidRequests,
+  updateCachedAidRequestStatus,
   getOfflineDB,
   type OfflineSyncQueueItem,
 } from '@/lib/offline/db'
@@ -93,6 +96,14 @@ function clearFailedProfileOverrides(payload: Record<string, unknown>): void {
 async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'AID_REQUEST') {
     const result = await submitAidHelpRequest(item.payload as AidHelpRequestForm)
+    const { localRequestId } = item.payload as { localRequestId?: string }
+    if (result.ok && result.data) {
+      const db = getOfflineDB()
+      if (localRequestId && localRequestId !== result.data.id) {
+        await db.aidRequests.delete(localRequestId)
+      }
+      await putAidRequests([result.data])
+    }
     return result.ok
   }
 
@@ -140,6 +151,17 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'UPDATE_AID_STATUS') {
     const { id, status } = item.payload as { id: string; status: AidStatus }
     await aidAPI.updateStatus(id, { status })
+    return true
+  }
+
+  if (item.type === 'UPDATE_AID_REQUEST_STATUS') {
+    const { requestId, status } = item.payload as {
+      requestId: string
+      status: 'pending' | 'approved' | 'rejected' | 'fulfilled'
+    }
+    const updated = await updateAdminAidRequestStatusFromApi(requestId, status)
+    await putAidRequests([updated])
+    await updateCachedAidRequestStatus(requestId, status)
     return true
   }
 

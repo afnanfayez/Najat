@@ -6,6 +6,7 @@ import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import { safetyAPI } from '@/lib/api/safety'
 import { getToken } from '@/lib/api/auth'
 import { fetchAdminHealthFacilitiesFromApi } from '@/lib/api/adminHealth'
+import { fetchAdminAidRequestsFromApi } from '@/lib/api/adminAid'
 import {
   precacheAllFacilityMapTiles,
   precacheMainMapArea,
@@ -17,6 +18,7 @@ import {
   putLocalPlaces,
   putArticles,
   putAdminFacilities,
+  putAidRequests,
   setSyncMeta,
   getAllFacilities,
   getAllAid,
@@ -196,6 +198,19 @@ async function syncAdminFacilities(): Promise<void> {
   }
 }
 
+async function syncAdminAidRequests(): Promise<void> {
+  try {
+    const token = getToken()
+    if (!token) return
+    const requests = await fetchAdminAidRequestsFromApi({ limit: 100 })
+    if (requests.length > 0) {
+      await putAidRequests(requests)
+    }
+  } catch {
+    // fail silently
+  }
+}
+
 async function syncMapTiles(): Promise<void> {
   try {
     const facilities = await getAllFacilities()
@@ -251,7 +266,7 @@ export async function syncAllData(force = false): Promise<void> {
   isSyncing = true
   try {
     const tasks: Array<() => Promise<void>> = []
-    if (runCritical) tasks.push(syncHospitals, syncAid, syncAdminFacilities)
+    if (runCritical) tasks.push(syncHospitals, syncAid, syncAdminFacilities, syncAdminAidRequests)
     if (runStandard) tasks.push(syncPharmacies, syncClinics, syncLabs, syncDental, syncSafetyMap, syncArticles)
     await runSyncTasksInBatches(tasks)
     await setSyncMeta('all')

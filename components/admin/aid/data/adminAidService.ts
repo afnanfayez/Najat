@@ -5,6 +5,9 @@ import {
   putAdminAidPoints,
   enqueueOfflineOp,
   getOfflineDB,
+  getAidRequests,
+  putAidRequests,
+  updateCachedAidRequestStatus,
 } from '@/lib/offline/db'
 import {
   createAdminAidPointFromApi,
@@ -300,13 +303,21 @@ export function createEmptyDistributionPoint(): AdminAidDistributionPoint {
 
 export async function fetchAdminAidRequests(): Promise<AidRequestDto[]> {
   if (USE_MOCK_ADMIN_AID) {
-    const res = await fetch('/api/mock/aid-requests')
-    return res.json()
+    try {
+      const res = await fetch('/api/mock/aid-requests')
+      const requests: AidRequestDto[] = await res.json()
+      await putAidRequests(requests).catch(() => {})
+      return requests
+    } catch {
+      return getAidRequests()
+    }
   }
   try {
-    return await fetchAdminAidRequestsFromApi()
+    const requests = await fetchAdminAidRequestsFromApi()
+    await putAidRequests(requests).catch(() => {})
+    return requests
   } catch {
-    return []
+    return getAidRequests()
   }
 }
 
@@ -314,16 +325,48 @@ export async function updateAdminAidRequestStatus(
   requestId: string,
   status: 'pending' | 'approved' | 'rejected' | 'fulfilled',
 ): Promise<AidRequestDto> {
-  if (USE_MOCK_ADMIN_AID) {
-    const res = await fetch('/api/mock/aid-requests', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: requestId, status })
+  const queueOfflineStatusUpdate = async () => {
+    const cached =
+      (await updateCachedAidRequestStatus(requestId, status)) ??
+      ({ id: requestId, status, updatedAt: new Date().toISOString() } as AidRequestDto)
+    await enqueueOfflineOp({
+      type: 'UPDATE_AID_REQUEST_STATUS',
+      payload: { requestId, status },
     })
-    if (!res.ok) throw new Error('Failed to update status')
-    return res.json()
+    return cached
   }
-  return updateAdminAidRequestStatusFromApi(requestId, status)
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return queueOfflineStatusUpdate()
+  }
+
+  if (USE_MOCK_ADMIN_AID) {
+    try {
+      const res = await fetch('/api/mock/aid-requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: requestId, status })
+      })
+      if (!res.ok) throw new Error('Failed to update status')
+      const updated: AidRequestDto = await res.json()
+      await putAidRequests([updated]).catch(() => {})
+      return updated
+    } catch {
+      return queueOfflineStatusUpdate()
+    }
+  }
+
+  try {
+    const updated = await updateAdminAidRequestStatusFromApi(requestId, status)
+    await putAidRequests([updated]).catch(() => {})
+    return updated
+  } catch (err) {
+    const statusCode = (err as { status?: number })?.status
+    const isConnectivity =
+      statusCode === 0 || statusCode === 502 || statusCode === 504 || statusCode === undefined
+    if (isConnectivity) return queueOfflineStatusUpdate()
+    throw err
+  }
 }
 
 export { type AidRequestDto }
