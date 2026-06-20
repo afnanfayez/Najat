@@ -62,9 +62,10 @@ export type AdminHealthMedicalContent = {
 
 export type CreateAdminHealthContentBody = Omit<
   AdminHealthMedicalContent,
-  'id' | 'date' | 'author'
+  'id' | 'date' | 'author' | 'thumbnailUrl'
 > & {
   author?: string
+  thumbnailUrl?: string
   imageFile?: any
 }
 

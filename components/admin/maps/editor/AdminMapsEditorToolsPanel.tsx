@@ -49,6 +49,8 @@ interface AdminMapsEditorToolsPanelProps {
   onToolChange: (tool: AdminMapsDrawTool) => void
   onLayerToggle: (layerId: string) => void
   onUploadMap?: (file: File) => void
+  /** Called before opening the file picker — saves any currently drawn shape */
+  onSaveCurrentShape?: () => void
 }
 
 export default function AdminMapsEditorToolsPanel({
@@ -58,10 +60,13 @@ export default function AdminMapsEditorToolsPanel({
   onToolChange,
   onLayerToggle,
   onUploadMap,
+  onSaveCurrentShape,
 }: AdminMapsEditorToolsPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleUploadClick() {
+    // Save any currently drawn shape before opening the file picker
+    if (onSaveCurrentShape) onSaveCurrentShape()
     fileInputRef.current?.click()
   }
 

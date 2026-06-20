@@ -32,6 +32,12 @@ export interface AdminMapsPublishLog {
   status: MapPublishStatus
   classification?: MapRouteClassification
   operationalStatus?: MapRouteOperationalStatus
+  /** Safe-road path (lat,lng) — only present when classification is 'safe'. Needed
+   *  to recreate the road on rename, since the backend has no update endpoint for it. */
+  positions?: [number, number][]
+  /** Resource-point location (lat,lng) — only present when classification is 'alternative'.
+   *  Needed to recreate the point on rename, since the backend has no update endpoint for it. */
+  position?: [number, number]
 }
 
 export interface AdminMapsInsight {

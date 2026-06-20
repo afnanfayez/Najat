@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, ZoomControl, Polyline, Polygon, useMap } from 'react-leaflet'
 import { MAP_CENTER } from '@/lib/mocks/mapsMockData'
 import SafetyMapLayersOverlay from '@/components/maps/SafetyMapLayersOverlay'
@@ -12,6 +12,7 @@ import type {
   MapSafeRoad,
 } from '@/lib/maps/safetyMapTransforms'
 import type { AdminMapsDrawTool } from './AdminMapsEditorToolsPanel'
+import { ADMIN_MAPS_FONT } from '../adminMapsStyles'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 
@@ -25,6 +26,12 @@ export interface AdminMapsEditorMapInnerProps {
   flyTo: [number, number] | null
   activeTool: AdminMapsDrawTool
   onDrawComplete?: (tool: NonNullable<AdminMapsDrawTool>, geoCoords: number[][]) => void
+  /**
+   * Registration callback: called once (when the inner component mounts or activeTool changes)
+   * with the current save-shape function so the parent can invoke it externally.
+   * Pass null to unregister.
+   */
+  onRequestSaveShape?: (saveFn: (() => void) | null) => void
 }
 
 function isMapMounted(map: ReturnType<typeof useMap>) {
@@ -71,6 +78,8 @@ function FlyController({ flyTo }: { flyTo: [number, number] | null }) {
 interface DrawControllerProps {
   activeTool: AdminMapsDrawTool
   onDrawComplete?: (tool: NonNullable<AdminMapsDrawTool>, geoCoords: number[][]) => void
+  /** Ref to expose a save-current-points callback upward */
+  saveRef?: React.MutableRefObject<(() => void) | null>
 }
 
 /**
@@ -82,13 +91,20 @@ interface DrawControllerProps {
  * GeoJSON uses [lng, lat] order; Leaflet uses [lat, lng].
  * Conversion is handled here before calling onDrawComplete.
  */
-function DrawController({ activeTool, onDrawComplete }: DrawControllerProps) {
+function DrawController({ activeTool, onDrawComplete, saveRef }: DrawControllerProps) {
   const map = useMap()
   const [points, setPoints] = useState<[number, number][]>([])
+  const pointsRef = useRef<[number, number][]>([])
+
+  // Keep ref in sync with state so the save callback always has latest points
+  useEffect(() => {
+    pointsRef.current = points
+  }, [points])
 
   // Toggle crosshair cursor and double-click zoom based on tool selection.
   useEffect(() => {
     setPoints([])
+    pointsRef.current = []
     if (!isMapMounted(map)) return
 
     if (activeTool) {
@@ -105,6 +121,22 @@ function DrawController({ activeTool, onDrawComplete }: DrawControllerProps) {
       map.getContainer().style.cursor = ''
     }
   }, [activeTool, map])
+
+  // Expose a save callback via saveRef so parent can trigger save externally
+  useEffect(() => {
+    if (!saveRef) return
+    saveRef.current = () => {
+      if (!activeTool) return
+      const tool: NonNullable<AdminMapsDrawTool> = activeTool
+      const minPoints = tool === 'danger' ? 3 : 2
+      const currentPoints = pointsRef.current
+      if (currentPoints.length < minPoints) return
+      const geoCoords = currentPoints.map(([lat, lng]) => [lng, lat])
+      onDrawComplete?.(tool, geoCoords)
+      setPoints([])
+      pointsRef.current = []
+    }
+  }, [activeTool, onDrawComplete, saveRef])
 
   // Bind / unbind click and dblclick handlers.
   useEffect(() => {
@@ -130,7 +162,10 @@ function DrawController({ activeTool, onDrawComplete }: DrawControllerProps) {
     }
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setPoints([])
+      if (e.key === 'Escape') {
+        setPoints([])
+        pointsRef.current = []
+      }
     }
 
     map.on('click', onClick)
@@ -177,38 +212,83 @@ export default function AdminMapsEditorMapInner({
   flyTo,
   activeTool,
   onDrawComplete,
+  onRequestSaveShape,
 }: AdminMapsEditorMapInnerProps) {
   const anyLayerActive = showCorridors || showConflict || showHospitals
+  const saveRef = useRef<(() => void) | null>(null)
+  const handleRequestSave = () => {
+    saveRef.current?.()
+  }
+
+  // Register handleRequestSave callback with parent
+  useEffect(() => {
+    if (onRequestSaveShape) {
+      onRequestSaveShape(handleRequestSave)
+      return () => {
+        onRequestSaveShape(null)
+      }
+    }
+  }, [onRequestSaveShape])
 
   return (
-    <MapContainer
-      center={MAP_CENTER}
-      zoom={14}
-      maxZoom={19}
-      style={{ width: '100%', height: '100%' }}
-      zoomControl={false}
-    >
-      <TileLayer
-        attribution='&copy; OpenStreetMap &copy; CARTO'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {activeTool && (
+        <button
+          type="button"
+          onClick={handleRequestSave}
+          style={{
+            position: 'absolute',
+            bottom: '16px',
+            right: '50%',
+            transform: 'translateX(50%)',
+            zIndex: 1000,
+            background: activeTool === 'danger' ? '#EF4444' : activeTool === 'safe' ? '#22C55E' : '#2196F3',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '10px 24px',
+            fontSize: '14px',
+            fontWeight: 700,
+            fontFamily: ADMIN_MAPS_FONT,
+            cursor: 'pointer',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+        >
+          ✓ حفظ {activeTool === 'danger' ? 'منطقة الخطر' : 'المسار'}
+        </button>
+      )}
+      <MapContainer
+        center={MAP_CENTER}
+        zoom={14}
         maxZoom={19}
-      />
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+      >
+        <TileLayer
+          attribution='&copy; OpenStreetMap &copy; CARTO'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={19}
+        />
 
-      <ZoomControl position="bottomright" />
-      <MapResizeController />
-      <FlyController flyTo={flyTo} />
-      <DrawController activeTool={activeTool} onDrawComplete={onDrawComplete} />
+        <ZoomControl position="bottomright" />
+        <MapResizeController />
+        <FlyController flyTo={flyTo} />
+        <DrawController activeTool={activeTool} onDrawComplete={onDrawComplete} saveRef={saveRef} />
 
-      <SafetyMapLayersOverlay
-        showSafeRoutes={showCorridors}
-        showDangerZones={showConflict}
-        showResourceActivity={showHospitals}
-        safeRoads={safeRoads}
-        dangerZones={dangerZones}
-        resourcePoints={resourcePoints}
-        fitToLayers={anyLayerActive && !flyTo}
-      />
-    </MapContainer>
+        <SafetyMapLayersOverlay
+          showSafeRoutes={showCorridors}
+          showDangerZones={showConflict}
+          showResourceActivity={showHospitals}
+          safeRoads={safeRoads}
+          dangerZones={dangerZones}
+          resourcePoints={resourcePoints}
+          fitToLayers={anyLayerActive && !flyTo}
+        />
+      </MapContainer>
+    </div>
   )
 }

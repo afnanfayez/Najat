@@ -32,6 +32,7 @@ interface AdminMapsEditorMapProps {
   activeTool: AdminMapsDrawTool
   onDrawComplete?: AdminMapsEditorMapInnerProps['onDrawComplete']
   externalFlyTo?: [number, number] | null
+  onSaveCurrentShape?: AdminMapsEditorMapInnerProps['onRequestSaveShape']
 }
 
 export default function AdminMapsEditorMap({
@@ -40,6 +41,7 @@ export default function AdminMapsEditorMap({
   activeTool,
   onDrawComplete,
   externalFlyTo,
+  onSaveCurrentShape,
 }: AdminMapsEditorMapProps) {
   const [query, setQuery] = useState('')
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
@@ -83,6 +85,7 @@ export default function AdminMapsEditorMap({
         flyTo={flyTo}
         activeTool={activeTool}
         onDrawComplete={onDrawComplete}
+        onRequestSaveShape={onSaveCurrentShape}
         {...mapLayers}
       />
     </div>

@@ -483,7 +483,7 @@ function contentBodyToArticle(body: CreateAdminHealthContentBody): CreateArticle
     titleAr: body.title,
     contentAr: contentAr,
     category: body.category,
-    image: body.thumbnailUrl ?? null,
+    ...(body.thumbnailUrl && { image: body.thumbnailUrl }),
     readTime: Math.max(1, Math.ceil(wordCount / 180)),
     isActive: body.status === 'published',
   }
@@ -493,7 +493,7 @@ function contentUpdateToArticle(body: UpdateAdminHealthContentBody): UpdateArtic
   const result: UpdateArticleBody = {}
   if (body.title !== undefined) result.titleAr = body.title
   if (body.category !== undefined) result.category = body.category
-  if (body.thumbnailUrl !== undefined) result.image = body.thumbnailUrl ?? null
+  if (body.thumbnailUrl) result.image = body.thumbnailUrl
 
   if (body.body !== undefined || body.references !== undefined) {
     let contentAr = body.body ?? ''

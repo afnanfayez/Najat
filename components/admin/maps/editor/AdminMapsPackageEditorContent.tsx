@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
@@ -81,6 +81,13 @@ export default function AdminMapsPackageEditorContent() {
   const [mobileTab, setMobileTab] = useState<AdminMapsEditorMobileTab>('map')
   const [mapFlyTo, setMapFlyTo] = useState<[number, number] | null>(null)
   const [quickActions, setQuickActions] = useState<AdminMapsPackageEditorData['quickActions']>([])
+  // Ref to hold the "save in-progress shape" callback exposed by the map inner component
+  const saveShapeCallbackRef = useRef<(() => void) | null>(null)
+
+  // Stable callback so tools panel can trigger a shape save
+  const handleSaveCurrentShape = useCallback(() => {
+    saveShapeCallbackRef.current?.()
+  }, [])
 
   useEffect(() => {
     const data = getEditorFeedData()
@@ -119,7 +126,6 @@ export default function AdminMapsPackageEditorContent() {
             description: 'منطقة خطر جديدة',
             dangerLevel: 'medium',
             area: { type: 'Polygon', coordinates: [ring] },
-            isDraft: false,
             isActive: true,
           })
           toast.success('تمت إضافة منطقة الخطر', { position: 'top-center' })
@@ -129,7 +135,6 @@ export default function AdminMapsPackageEditorContent() {
             name: tool === 'safe' ? 'مسار آمن جديد' : 'مسار بديل جديد',
             description: '',
             path: { type: 'LineString', coordinates: geoCoords },
-            isDraft: false,
             isActive: true,
           })
           toast.success('تمت إضافة المسار الآمن', { position: 'top-center' })
@@ -173,7 +178,6 @@ export default function AdminMapsPackageEditorContent() {
             name: feature.properties?.name || 'مسار آمن مستورد',
             description: 'مسار مستورد من خريطة أساس',
             path: { type: 'LineString', coordinates: feature.geometry.coordinates },
-            isDraft: false,
             isActive: true,
           })
           toast.success('تم استيراد المسار بنجاح', { position: 'top-center' })
@@ -183,7 +187,6 @@ export default function AdminMapsPackageEditorContent() {
             description: feature.properties?.name || 'منطقة مستوردة',
             dangerLevel: 'medium',
             area: { type: 'Polygon', coordinates: feature.geometry.coordinates },
-            isDraft: false,
             isActive: true,
           })
           toast.success('تم استيراد المنطقة بنجاح', { position: 'top-center' })
@@ -267,6 +270,7 @@ export default function AdminMapsPackageEditorContent() {
                 onToolChange={setActiveTool}
                 onLayerToggle={handleLayerToggle}
                 onUploadMap={handleUploadMap}
+                onSaveCurrentShape={handleSaveCurrentShape}
               />
             </div>
 
@@ -281,6 +285,7 @@ export default function AdminMapsPackageEditorContent() {
                 activeTool={activeTool}
                 onDrawComplete={handleDrawComplete}
                 externalFlyTo={mapFlyTo}
+                onSaveCurrentShape={(cb) => { saveShapeCallbackRef.current = cb ?? null }}
               />
             </div>
 

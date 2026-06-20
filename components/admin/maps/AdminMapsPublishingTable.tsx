@@ -81,9 +81,33 @@ export default function AdminMapsPublishingTable({
         body: { description: data.areaName },
       })
       toast.success('تم تحديث البيانات', { position: 'top-center' })
+    } else if (classification === 'safe' && editingRow.positions?.length) {
+      // The real backend has no update endpoint for safe roads — recreate it
+      // with the new name/description, then remove the old record.
+      await mutations.createSafeRoad.mutateAsync({
+        name: data.areaName,
+        description: data.changeImpact,
+        path: {
+          type: 'LineString',
+          coordinates: editingRow.positions.map(([lat, lng]) => [lng, lat]),
+        },
+        isActive: true,
+      })
+      await mutations.deleteSafeRoad.mutateAsync(editingRow.id)
+      toast.success('تم تحديث البيانات', { position: 'top-center' })
+    } else if (classification === 'alternative' && editingRow.position) {
+      // Same limitation as safe roads — no update endpoint for resource points.
+      const [lat, lng] = editingRow.position
+      await mutations.createResourcePoint.mutateAsync({
+        name: data.areaName,
+        type: editingRow.changeImpact,
+        location: { type: 'Point', coordinates: [lng, lat] },
+        isActive: true,
+      })
+      await mutations.deleteResourcePoint.mutateAsync(editingRow.id)
+      toast.success('تم تحديث البيانات', { position: 'top-center' })
     } else {
-      // Safe roads and resource points don't have a coordinate-update API;
-      // direct the user to the map editor for geometry changes.
+      // No geometry available on this row (older cached data) — fall back to the editor.
       toast.info(
         'لتعديل إحداثيات المسار أو نقطة الموارد، استخدم محرر الخرائط',
         { duration: 5000 },

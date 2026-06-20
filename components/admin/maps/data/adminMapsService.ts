@@ -47,6 +47,7 @@ export function buildDashboardFromSafetyData(
       status: (r.isActive ? 'published' : 'failed') as MapPublishStatus,
       classification: 'safe' as MapRouteClassification,
       operationalStatus: (r.isActive ? 'open' : 'closed') as MapRouteOperationalStatus,
+      positions: r.positions,
     })),
     ...layers.resourcePoints.map((p) => ({
       id: p.id,
@@ -57,6 +58,7 @@ export function buildDashboardFromSafetyData(
       status: (p.isActive ? 'published' : 'failed') as MapPublishStatus,
       classification: 'alternative' as MapRouteClassification,
       operationalStatus: (p.isActive ? 'open' : 'closed') as MapRouteOperationalStatus,
+      position: p.position,
     })),
   ]
 
