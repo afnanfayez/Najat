@@ -1,3 +1,5 @@
+import { isConnectivityError } from '@/lib/api/api'
+import { enqueueOfflineOp, updateLocalDataRequestStatus, deleteLocalDataRequest } from '@/lib/offline/db'
 import {
   approveAdminDataRequestFromApi,
   deleteAdminDataRequestFromApi,
@@ -59,11 +61,49 @@ export async function fetchAdminDataSyncDashboard(): Promise<AdminDataSyncDashbo
 }
 
 export async function deleteAdminDataRequest(id: string): Promise<void> {
-  await deleteAdminDataRequestFromApi(id)
+  const handleOffline = async () => {
+    await deleteLocalDataRequest(id)
+    await enqueueOfflineOp({
+      type: 'DELETE_DATA_REQUEST',
+      payload: { id },
+    })
+  }
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    await deleteAdminDataRequestFromApi(id)
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function approveAdminDataRequest(id: string): Promise<void> {
-  await approveAdminDataRequestFromApi(id)
+  const handleOffline = async () => {
+    await updateLocalDataRequestStatus(id, 'approved')
+    await enqueueOfflineOp({
+      type: 'APPROVE_DATA_REQUEST',
+      payload: { id },
+    })
+  }
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    await approveAdminDataRequestFromApi(id)
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function submitAdminDataReview(

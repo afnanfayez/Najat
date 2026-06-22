@@ -40,6 +40,18 @@ export default function AdminDataContent() {
     loadDashboard()
   }, [loadDashboard])
 
+  useEffect(() => {
+    const handleSync = () => {
+      void loadDashboard()
+    }
+    window.addEventListener('najat:sync-queue-processed', handleSync)
+    window.addEventListener('najat:session-refresh', handleSync)
+    return () => {
+      window.removeEventListener('najat:sync-queue-processed', handleSync)
+      window.removeEventListener('najat:session-refresh', handleSync)
+    }
+  }, [loadDashboard])
+
   const filtered = useMemo(() => {
     if (!dashboard) return []
     return filterAdminDataRequests(dashboard.requests, activeTab)
