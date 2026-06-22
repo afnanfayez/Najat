@@ -202,7 +202,7 @@ async function syncAdminAidRequests(): Promise<void> {
   try {
     const token = getToken()
     if (!token) return
-    const requests = await fetchAdminAidRequestsFromApi({ limit: 100 })
+    const requests = await fetchAdminAidRequestsFromApi()
     if (requests.length > 0) {
       await putAidRequests(requests)
     }

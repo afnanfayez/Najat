@@ -139,6 +139,8 @@ export type OfflineSyncType =
   // Admin communication mutations
   | 'CREATE_COMMUNICATION_TASK'
   | 'LAUNCH_COMMUNICATION_BROADCAST'
+  | 'APPROVE_DATA_REQUEST'
+  | 'DELETE_DATA_REQUEST'
 
 export type OfflineSyncStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'conflict'
 
@@ -777,4 +779,125 @@ export async function getApiResponse<T = unknown>(key: string): Promise<T | unde
   const db = getOfflineDB()
   const row = await db.apiCache.get(key)
   return row ? (row.data as T) : undefined
+}
+
+export async function updateLocalDataRequestStatus(id: string, status: 'approved' | 'rejected'): Promise<void> {
+  const db = getOfflineDB()
+  // 1. Update /v1/admin/data/sync cached GET results
+  const syncKeys = await db.apiCache.filter(x => x.key.includes('/v1/admin/data/sync')).toArray()
+  for (const entry of syncKeys) {
+    let changed = false
+    const raw = entry.data as any
+    if (raw) {
+      // Direct array
+      if (Array.isArray(raw)) {
+        for (const item of raw) {
+          if (item && item.id === id) {
+            item.status = status
+            changed = true
+          }
+        }
+      }
+      // Wrapped in data
+      else if (raw.data) {
+        if (Array.isArray(raw.data)) {
+          for (const item of raw.data) {
+            if (item && item.id === id) {
+              item.status = status
+              changed = true
+            }
+          }
+        }
+        // Double-wrapped in data.data
+        else if (raw.data.data && Array.isArray(raw.data.data)) {
+          for (const item of raw.data.data) {
+            if (item && item.id === id) {
+              item.status = status
+              changed = true
+            }
+          }
+        }
+      }
+    }
+    if (changed) {
+      await db.apiCache.put({ ...entry, cachedAt: Date.now() })
+    }
+  }
+
+  // 2. Update /v1/admin/data/dashboard cached GET results (stats count)
+  const dashKeys = await db.apiCache.filter(x => x.key.includes('/v1/admin/data/dashboard')).toArray()
+  for (const entry of dashKeys) {
+    const raw = entry.data as any
+    if (raw) {
+      const data = raw.data?.data || raw.data || raw
+      if (data && typeof data === 'object') {
+        if (typeof data.pendingRequests === 'number' && data.pendingRequests > 0) {
+          data.pendingRequests -= 1
+        }
+        if (status === 'approved') {
+          if (typeof data.approvedRequests === 'number') data.approvedRequests += 1
+          if (typeof data.publishedRequests === 'number') data.publishedRequests += 1
+        } else if (status === 'rejected') {
+          if (typeof data.rejectedRequests === 'number') data.rejectedRequests += 1
+        }
+        await db.apiCache.put({ ...entry, cachedAt: Date.now() })
+      }
+    }
+  }
+}
+
+export async function deleteLocalDataRequest(id: string): Promise<void> {
+  const db = getOfflineDB()
+  // 1. Delete from /v1/admin/data/sync cached GET results
+  const syncKeys = await db.apiCache.filter(x => x.key.includes('/v1/admin/data/sync')).toArray()
+  for (const entry of syncKeys) {
+    let changed = false
+    const raw = entry.data as any
+    if (raw) {
+      if (Array.isArray(raw)) {
+        const initialLength = raw.length
+        const filtered = raw.filter((item: any) => item && item.id !== id)
+        if (filtered.length !== initialLength) {
+          entry.data = filtered
+          changed = true
+        }
+      } else if (raw.data) {
+        if (Array.isArray(raw.data)) {
+          const initialLength = raw.data.length
+          const filtered = raw.data.filter((item: any) => item && item.id !== id)
+          if (filtered.length !== initialLength) {
+            raw.data = filtered
+            entry.data = raw
+            changed = true
+          }
+        } else if (raw.data.data && Array.isArray(raw.data.data)) {
+          const initialLength = raw.data.data.length
+          const filtered = raw.data.data.filter((item: any) => item && item.id !== id)
+          if (filtered.length !== initialLength) {
+            raw.data.data = filtered
+            entry.data = raw
+            changed = true
+          }
+        }
+      }
+    }
+    if (changed) {
+      await db.apiCache.put({ ...entry, cachedAt: Date.now() })
+    }
+  }
+
+  // 2. Update stats count in dashboard
+  const dashKeys = await db.apiCache.filter(x => x.key.includes('/v1/admin/data/dashboard')).toArray()
+  for (const entry of dashKeys) {
+    const raw = entry.data as any
+    if (raw) {
+      const data = raw.data?.data || raw.data || raw
+      if (data && typeof data === 'object') {
+        if (typeof data.pendingRequests === 'number' && data.pendingRequests > 0) {
+          data.pendingRequests -= 1
+        }
+        await db.apiCache.put({ ...entry, cachedAt: Date.now() })
+      }
+    }
+  }
 }

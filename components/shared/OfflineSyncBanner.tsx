@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
-import { idbGetPendingSyncCount } from '@/lib/pwa/offlineDB'
 import { getLastSyncTime, getPendingOfflineOpsCount } from '@/lib/offline/db'
 
 export function OfflineSyncBanner() {
@@ -12,11 +11,8 @@ export function OfflineSyncBanner() {
 
   const refreshPendingCount = useCallback(async () => {
     try {
-      const [idbCount, dexieCount] = await Promise.all([
-        idbGetPendingSyncCount(),
-        getPendingOfflineOpsCount(),
-      ])
-      setPendingCount(idbCount + dexieCount)
+      const count = await getPendingOfflineOpsCount()
+      setPendingCount(count)
     } catch {
       setPendingCount(0)
     }
@@ -41,34 +37,50 @@ export function OfflineSyncBanner() {
     }
   }, [])
 
+  // Refresh counts whenever the offline state changes
   useEffect(() => {
-    if (!isOffline) return
-    refreshPendingCount()
-    refreshLastSync()
+    if (isOffline) {
+      refreshPendingCount()
+      refreshLastSync()
+    }
   }, [isOffline, refreshLastSync, refreshPendingCount])
 
+  // Also react to browser online/offline events and internal sync events
   useEffect(() => {
     const handleOffline = () => {
+      console.log(`[CONN-DEBUG] OfflineSyncBanner 'offline' handler @ ${Date.now()}`)
       refreshPendingCount()
       refreshLastSync()
     }
 
     const handleOnline = () => {
-      setPendingCount(0)
+      console.log(`[CONN-DEBUG] OfflineSyncBanner 'online'/session-refresh handler @ ${Date.now()}`)
+      // Re-read pending count after sync so the banner updates immediately
+      // (isOffline will become false from the hook, hiding the banner)
+      refreshPendingCount()
+      refreshLastSync()
+    }
+
+    const handleSyncComplete = () => {
+      console.log(`[CONN-DEBUG] OfflineSyncBanner sync-queue-processed handler @ ${Date.now()}`)
+      refreshPendingCount()
       refreshLastSync()
     }
 
     window.addEventListener('offline', handleOffline)
     window.addEventListener('online', handleOnline)
     window.addEventListener('najat:session-refresh', handleOnline)
+    window.addEventListener('najat:sync-queue-processed', handleSyncComplete)
 
     return () => {
       window.removeEventListener('offline', handleOffline)
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('najat:session-refresh', handleOnline)
+      window.removeEventListener('najat:sync-queue-processed', handleSyncComplete)
     }
   }, [refreshLastSync, refreshPendingCount])
 
+  console.log(`[CONN-DEBUG] OfflineSyncBanner render @ ${Date.now()} isOffline=${isOffline} pendingCount=${pendingCount}`)
   if (!isOffline) return null
 
   return (

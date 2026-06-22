@@ -81,6 +81,12 @@ export function unwrapPaginated(raw: unknown): unknown {
   return raw
 }
 
+export function isConnectivityError(err: any): boolean {
+  if (!err) return false
+  const status = err.status
+  return status === 0 || status === 502 || status === 504 || status === undefined
+}
+
 export async function request(endpoint: string, options: RequestInit = {}) {
   let url = `${BASE_URL}${endpoint}`
 

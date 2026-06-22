@@ -17,11 +17,21 @@ import {
   updateAdminHealthContentFromApi,
   deleteAdminHealthContentFromApi,
 } from '@/lib/api/adminHealth'
-import { updateAdminAidRequestStatusFromApi } from '@/lib/api/adminAid'
+import {
+  updateAdminAidRequestStatusFromApi,
+  createAdminAidPointFromApi,
+  updateAdminAidPointFromApi,
+  deleteAdminAidPointFromApi,
+} from '@/lib/api/adminAid'
+import type { AdminAidDistributionPoint } from '@/schemas/adminAid'
 import {
   createAdminCommunicationTaskFromApi,
   launchAdminCommunicationBroadcastFromApi,
 } from '@/lib/api/adminCommunication'
+import {
+  approveAdminDataRequestFromApi,
+  deleteAdminDataRequestFromApi,
+} from '@/lib/api/adminData'
 import type {
   CreateAdminCommunicationTaskBody,
   LaunchAdminCommunicationBroadcastBody,
@@ -42,6 +52,7 @@ import { getToken } from '@/lib/api/auth'
 import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
 import { updateOfflineLoginProfile } from '@/lib/auth/offlineLogin'
 import { clearLocalOverrides } from '@/lib/profile/localProfileStorage'
+import { isConnectivityError } from '@/lib/api/api'
 import {
   getPendingOfflineOps,
   markOfflineOpSyncing,
@@ -52,7 +63,9 @@ import {
   putAdminFacilities,
   getAdminFacilityById,
   putAdminUsers,
+  putAdminHealthContent,
   putAidRequests,
+  putAdminAidPoints,
   updateCachedAidRequestStatus,
   getOfflineDB,
   type OfflineSyncQueueItem,
@@ -93,6 +106,46 @@ function clearFailedProfileOverrides(payload: Record<string, unknown>): void {
   clearLocalOverrides(userId, Object.keys(payload) as (keyof UpdateUserProfileBody)[])
 }
 
+/** Toast shown once a previously-queued offline mutation has synced successfully. */
+const SYNC_SUCCESS_MESSAGES: Partial<Record<OfflineSyncQueueItem['type'], string>> = {
+  CREATE_VOLUNTEER: 'تم إنشاء المتطوع ومزامنته بنجاح',
+  CREATE_RESIDENT: 'تم إنشاء بيانات المستفيد ومزامنتها بنجاح',
+  UPDATE_ADMIN_USER: 'تم تحديث بيانات المستخدم ومزامنته بنجاح',
+  SET_ADMIN_USER_ACTIVE: 'تم تحديث حالة المستخدم ومزامنته بنجاح',
+  DELETE_ADMIN_USER: 'تم حذف المستخدم ومزامنته بنجاح',
+  RESTORE_ADMIN_USER: 'تمت استعادة المستخدم ومزامنته بنجاح',
+  CREATE_FACILITY_TYPED: 'تم إنشاء المنشأة ومزامنتها بنجاح',
+  UPDATE_FACILITY_TYPED: 'تم تحديث المنشأة ومزامنتها بنجاح',
+  DELETE_FACILITY_TYPED: 'تم حذف المنشأة ومزامنتها بنجاح',
+  CREATE_HEALTH_CONTENT: 'تم نشر المحتوى الطبي ومزامنته بنجاح',
+  UPDATE_HEALTH_CONTENT: 'تم تحديث المحتوى الطبي ومزامنته بنجاح',
+  DELETE_HEALTH_CONTENT: 'تم حذف المحتوى الطبي ومزامنته بنجاح',
+  CREATE_AID_POINT: 'تم إنشاء نقطة التوزيع ومزامنتها بنجاح',
+  UPDATE_AID_POINT: 'تم تحديث نقطة التوزيع ومزامنتها بنجاح',
+  DELETE_AID_POINT: 'تم حذف نقطة التوزيع ومزامنتها بنجاح',
+  APPROVE_DATA_REQUEST: 'تم اعتماد طلب تحديث البيانات بنجاح',
+  DELETE_DATA_REQUEST: 'تم رفض/حذف طلب تحديث البيانات بنجاح',
+}
+
+/** Entity caches holding an optimistic temp record that must be dropped if the create is permanently rejected. */
+const OPTIMISTIC_CREATE_TABLES: Partial<Record<OfflineSyncQueueItem['type'], 'adminUsers' | 'adminFacilities' | 'adminHealthContent' | 'adminAidPoints'>> = {
+  CREATE_VOLUNTEER: 'adminUsers',
+  CREATE_RESIDENT: 'adminUsers',
+  CREATE_FACILITY_TYPED: 'adminFacilities',
+  CREATE_HEALTH_CONTENT: 'adminHealthContent',
+  CREATE_AID_POINT: 'adminAidPoints',
+}
+
+/** Remove the optimistic local record for a queued create the backend permanently rejected. */
+async function rollbackOptimisticCreate(item: OfflineSyncQueueItem): Promise<void> {
+  const table = OPTIMISTIC_CREATE_TABLES[item.type]
+  if (!table) return
+  const { tempId } = item.payload as { tempId?: string }
+  if (!tempId) return
+  const db = getOfflineDB()
+  await db[table].delete(tempId).catch(() => {})
+}
+
 async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'AID_REQUEST') {
     const result = await submitAidHelpRequest(item.payload as AidHelpRequestForm)
@@ -131,20 +184,38 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   }
 
   if (item.type === 'CREATE_AID_POINT') {
-    const { body } = item.payload as { body: Record<string, unknown> }
-    await aidAPI.create(body)
+    const { body, tempId } = item.payload as { body: AdminAidDistributionPoint; tempId?: string }
+    const created = await createAdminAidPointFromApi(body)
+    const db = getOfflineDB()
+    if (tempId) {
+      await db.adminAidPoints.delete(tempId)
+    }
+    await putAdminAidPoints([created])
     return true
   }
 
   if (item.type === 'UPDATE_AID_POINT') {
-    const { id, body } = item.payload as { id: string; body: Record<string, unknown> }
-    await aidAPI.update(id, body)
+    const { body } = item.payload as { body: AdminAidDistributionPoint }
+    const updated = await updateAdminAidPointFromApi(body)
+    await putAdminAidPoints([updated])
     return true
   }
 
   if (item.type === 'DELETE_AID_POINT') {
     const { id } = item.payload as { id: string }
-    await aidAPI.softDelete(id)
+    await deleteAdminAidPointFromApi(id)
+    return true
+  }
+
+  if (item.type === 'APPROVE_DATA_REQUEST') {
+    const { id } = item.payload as { id: string }
+    await approveAdminDataRequestFromApi(id)
+    return true
+  }
+
+  if (item.type === 'DELETE_DATA_REQUEST') {
+    const { id } = item.payload as { id: string }
+    await deleteAdminDataRequestFromApi(id)
     return true
   }
 
@@ -239,14 +310,21 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   }
 
   if (item.type === 'CREATE_HEALTH_CONTENT') {
-    const { body } = item.payload as { body: CreateAdminHealthContentBody }
-    await createAdminHealthContentFromApi(body)
+    const { body, tempId } = item.payload as { body: CreateAdminHealthContentBody; tempId?: string }
+    const created = await createAdminHealthContentFromApi(body)
+    // Replace optimistic temp record with the real server record
+    if (tempId) {
+      const db = getOfflineDB()
+      await db.adminHealthContent.delete(tempId)
+    }
+    await putAdminHealthContent([created])
     return true
   }
 
   if (item.type === 'UPDATE_HEALTH_CONTENT') {
     const { id, body } = item.payload as { id: string; body: UpdateAdminHealthContentBody }
-    await updateAdminHealthContentFromApi(id, body)
+    const updated = await updateAdminHealthContentFromApi(id, body)
+    await putAdminHealthContent([updated])
     return true
   }
 
@@ -319,21 +397,33 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
 let isProcessing = false
 
 export async function processSyncQueue(): Promise<void> {
-  if (typeof window === 'undefined' || !navigator.onLine) return
+  console.log(`[CONN-DEBUG] processSyncQueue() called @ ${Date.now()} navigator.onLine=${typeof window !== 'undefined' ? navigator.onLine : 'n/a'} isProcessing=${isProcessing}`)
+  if (typeof window === 'undefined' || !navigator.onLine) {
+    console.log(`[CONN-DEBUG] processSyncQueue() EXIT early — window undefined or navigator.onLine=false`)
+    return
+  }
   // Multiple independent triggers (online event, SW background sync message,
   // manual calls) can all fire processSyncQueue() within the same moment —
   // without this guard, the same queued item could be sent to the backend
   // twice before the first call marks it done.
-  if (isProcessing) return
+  if (isProcessing) {
+    console.log(`[CONN-DEBUG] processSyncQueue() EXIT early — already processing`)
+    return
+  }
   isProcessing = true
+
+  let processedAny = false
 
   try {
     const items = await getPendingOfflineOps()
+    console.log(`[CONN-DEBUG] processSyncQueue() found ${items.length} pending item(s): ${items.map((i) => i.type).join(', ') || '(none)'}`)
     for (const item of items) {
       if (item.id == null) continue
+      processedAny = true
 
       if (item.retries >= MAX_RETRIES) {
         await markOfflineOpFailed(item.id, 'max retries exceeded')
+        await rollbackOptimisticCreate(item)
         continue
       }
 
@@ -343,14 +433,29 @@ export async function processSyncQueue(): Promise<void> {
         const ok = await processDexieItem(item)
         if (ok) {
           await markOfflineOpDone(item.id)
+          const successMsg = SYNC_SUCCESS_MESSAGES[item.type]
+          if (successMsg) toast.success(successMsg, { duration: 3500 })
         } else {
           await incrementOfflineOpRetry(item.id)
         }
       } catch (err) {
+        const isConnErr = isConnectivityError(err) ||
+          (err && typeof err === 'object' && 'status' in err && (err as any).status === 0) ||
+          (err instanceof Error && err.message.toLowerCase().includes('failed to fetch'))
+
+        if (isConnErr) {
+          console.warn(`[Sync Queue] Connectivity error during sync. Aborting queue processing to avoid losing changes.`, err)
+          const db = getOfflineDB()
+          await db.offlineSyncQueue.update(item.id, { status: 'pending' }).catch(() => {})
+          break
+        }
+
         const status = getErrStatus(err)
         const msg = getErrMessage(err)
         const nonRetryable = isNonRetryable(status)
         const exhausted = item.retries + 1 >= MAX_RETRIES
+
+        console.error(`[Sync Queue] Error processing item ${item.id} (${item.type}):`, err)
 
         // A backend rejection (e.g. failed validation) will never succeed on
         // retry. Fail it immediately and roll back the optimistic local state so
@@ -360,6 +465,11 @@ export async function processSyncQueue(): Promise<void> {
           if (item.type === 'PROFILE_SYNC') {
             clearFailedProfileOverrides(item.payload)
             toast.error(`تعذّر حفظ تعديلات الملف الشخصي: ${msg}`)
+          } else if (OPTIMISTIC_CREATE_TABLES[item.type]) {
+            await rollbackOptimisticCreate(item)
+            toast.error(`تعذّر حفظ العملية: ${msg}`, { duration: 5000 })
+          } else {
+            toast.error(`تعذّر مزامنة العملية (${item.type}): ${msg}`, { duration: 5000 })
           }
           continue
         }
@@ -373,11 +483,20 @@ export async function processSyncQueue(): Promise<void> {
           if (item.type === 'PROFILE_SYNC') {
             clearFailedProfileOverrides(item.payload)
             toast.error('تعذّر مزامنة تعديلات الملف الشخصي بعد عدة محاولات')
+          } else if (OPTIMISTIC_CREATE_TABLES[item.type]) {
+            await rollbackOptimisticCreate(item)
+            toast.error('تعذّرت مزامنة العملية بعد عدة محاولات', { duration: 5000 })
+          } else {
+            toast.error(`فشلت مزامنة العملية (${item.type}) بعد عدة محاولات`, { duration: 5000 })
           }
         }
       }
     }
   } finally {
     isProcessing = false
+    console.log(`[CONN-DEBUG] processSyncQueue() finished @ ${Date.now()} processedAny=${processedAny}`)
+    if (processedAny && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('najat:sync-queue-processed'))
+    }
   }
 }

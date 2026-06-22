@@ -15,7 +15,7 @@
 //  - SHELL_CACHE: versioned; BUMP ON EVERY DEPLOY (shells, RSC, /_next/static)
 //  - IMAGE_CACHE: durable; survives deploys so images aren't re-downloaded
 //  - MAP_TILES_CACHE: durable; survives deploys
-const SHELL_CACHE = 'najat-shell-v27'
+const SHELL_CACHE = 'najat-shell-v28'
 const IMAGE_CACHE = 'najat-images-v1'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 // API responses are NOT cached by the SW — they are handled by IndexedDB sync (lib/offline/db.ts)
@@ -467,6 +467,8 @@ async function cacheFirstWithRevalidate(
 }
 
 self.addEventListener('install', (event) => {
+  console.log(`[CONN-DEBUG][SW] install event @ ${Date.now()} — calling self.skipWaiting() (note: contradicts the "no skipWaiting" comment below)`)
+  self.skipWaiting()
   event.waitUntil(
     Promise.all([
       caches
@@ -702,6 +704,7 @@ self.addEventListener('fetch', (event) => {
         .then(async (cache) => {
           const pathname = normalizePathname(url.pathname)
 
+          console.log(`[CONN-DEBUG][SW] navigation fetch ${pathname} @ ${Date.now()} self.navigator.onLine=${self.navigator.onLine}`)
           if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
 
           try {

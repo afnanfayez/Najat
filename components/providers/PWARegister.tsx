@@ -9,7 +9,7 @@ import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
 import { precacheRoutesForRole, precacheStaticAssets } from '@/lib/pwa/precacheRoute'
 import { requestPersistentStorage, getStorageEstimate } from '@/lib/pwa/persistStorage'
 
-const SYNC_SIGNAL_THROTTLE_MS = 10_000
+const SYNC_SIGNAL_THROTTLE_MS = 2_000
 
 type SyncServiceWorkerRegistration = ServiceWorkerRegistration & {
   sync?: {
@@ -68,7 +68,7 @@ export default function PWARegister() {
 
     const devMode = process.env.NODE_ENV !== 'production'
 
-    let lastSyncSignalAt = 0
+    let lastSyncSignalAt = Date.now()
     const shouldHandleSyncSignal = () => {
       const now = Date.now()
       if (now - lastSyncSignalAt < SYNC_SIGNAL_THROTTLE_MS) return false
@@ -140,14 +140,24 @@ export default function PWARegister() {
 
     // ── 2. عند عودة الإنترنت → طلب Background Sync من SW ────────────────────
     const handleOnline = async () => {
-      if (!shouldHandleSyncSignal()) return
+      console.log(`[CONN-DEBUG] PWARegister 'online' event fired @ ${Date.now()} navigator.onLine=${navigator.onLine}`)
+      // Wait 750 ms for the OS/browser network stack to fully stabilise before
+      // making API calls. Without this delay, requests fired immediately after the
+      // 'online' event fail with network errors (DNS not yet resolved, TCP not
+      // established), silently consuming retries without actually syncing.
+      await new Promise((r) => setTimeout(r, 750))
 
-      toast.success('تمت استعادة الاتصال بالإنترنت', {
-        id: 'pwa-online',
-        duration: 3000,
-      })
+      console.log(`[CONN-DEBUG] PWARegister calling processSyncQueue() + scheduleDataSync(true) @ ${Date.now()}`)
       void processSyncQueue()
       scheduleDataSync(true)
+
+      if (shouldHandleSyncSignal()) {
+        toast.success('تمت استعادة الاتصال بالإنترنت', {
+          id: 'pwa-online',
+          duration: 3000,
+        })
+      }
+
       try {
         const reg = (await navigator.serviceWorker.ready) as SyncServiceWorkerRegistration
 
@@ -167,11 +177,12 @@ export default function PWARegister() {
     }
 
     window.addEventListener('online', handleOnline)
+    console.log(`[CONN-DEBUG] PWARegister MOUNTED @ ${Date.now()}, 'online' listener attached`)
 
     // ── 3. استقبال رسالة BACKGROUND_SYNC_TRIGGERED من SW ────────────────────
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data?.type !== 'BACKGROUND_SYNC_TRIGGERED') return
-      if (!shouldHandleSyncSignal()) return
+      console.log(`[CONN-DEBUG] PWARegister SW message BACKGROUND_SYNC_TRIGGERED @ ${Date.now()}`)
       console.log('[PWA] Background sync triggered by SW — refreshing session')
 
       void processSyncQueue()
@@ -179,17 +190,26 @@ export default function PWARegister() {
       // أطلق حدث داخلي تستمع إليه AuthContext لإعادة جلب بيانات المستخدم
       window.dispatchEvent(new Event('najat:session-refresh'))
 
-      toast.success('تم استعادة الاتصال — جارٍ مزامنة البيانات', {
-        id: 'pwa-online',
-        duration: 3000,
-      })
+      if (shouldHandleSyncSignal()) {
+        toast.success('تم استعادة الاتصال — جارٍ مزامنة البيانات', {
+          id: 'pwa-online',
+          duration: 3000,
+        })
+      }
+    }
+
+    const handleControllerChange = () => {
+      console.log(`[CONN-DEBUG] PWARegister SW controllerchange @ ${Date.now()} -> forcing window.location.reload()`)
+      window.location.reload()
     }
 
     navigator.serviceWorker.addEventListener('message', handleSWMessage)
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
 
     return () => {
       window.removeEventListener('online', handleOnline)
       navigator.serviceWorker.removeEventListener('message', handleSWMessage)
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
     }
   }, [])
 

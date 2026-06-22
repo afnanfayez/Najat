@@ -5,6 +5,8 @@ import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-quer
 import { toast } from 'sonner'
 import { enqueueOfflineOp, type OfflineSyncType } from '@/lib/offline/db'
 
+import { isBrowserOffline } from '@/lib/offline/connectionState'
+
 type SyncType = OfflineSyncType
 
 export interface UseOfflineMutationOptions<TInput, TOutput> {
@@ -70,7 +72,7 @@ export function useOfflineMutation<TInput, TOutput = unknown>(
 
   const mutation = useMutation<TOutput, Error, TInput>({
     mutationFn: async (input: TInput): Promise<TOutput> => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
+      const offline = isBrowserOffline()
 
       if (offline) {
         if (requiresOnline) {
@@ -97,7 +99,7 @@ export function useOfflineMutation<TInput, TOutput = unknown>(
     },
 
     onSuccess: () => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
+      const offline = isBrowserOffline()
       if (offline) return // لا تُعيد تحميل البيانات عند الـ offline
 
       for (const key of queryKeysToInvalidate) {
