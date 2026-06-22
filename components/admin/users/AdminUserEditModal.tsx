@@ -13,6 +13,7 @@ import {
   ADMIN_USER_ROLE_OPTIONS,
 } from '@/lib/mocks/adminUsersMockData'
 import { useUpdateAdminUser } from '@/hooks/useAdminUsers'
+import { toast } from 'sonner'
 import type { AdminManagedUser, AdminUserRole, AdminUserStatus } from '@/schemas/adminUser'
 import {
   ADMIN_USERS_BLUE,
@@ -58,6 +59,7 @@ export default function AdminUserEditModal({ user, open, onClose }: AdminUserEdi
 
   async function handleSave() {
     if (!user) return
+    console.log(`[CONN-DEBUG] AdminUserEditModal handleSave() CLICKED @ ${Date.now()}`)
     setSaving(true)
     setError(null)
     try {
@@ -65,8 +67,11 @@ export default function AdminUserEditModal({ user, open, onClose }: AdminUserEdi
         id: user.id,
         body: { name, email, role, region, status },
       })
+      console.log(`[CONN-DEBUG] AdminUserEditModal handleSave() mutateAsync RESOLVED @ ${Date.now()}`)
+      toast.success('تم حفظ التعديلات بنجاح', { duration: 5000 })
       onClose()
     } catch (err: unknown) {
+      console.log(`[CONN-DEBUG] AdminUserEditModal handleSave() mutateAsync REJECTED @ ${Date.now()}`, err)
       setError(getErrorMessage(err, 'حدث خطأ أثناء الحفظ'))
     } finally {
       setSaving(false)

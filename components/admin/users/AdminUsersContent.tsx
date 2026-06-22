@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import AdminShell from '../AdminShell'
 import AdminUsersPageHeader from './AdminUsersPageHeader'
@@ -34,14 +34,18 @@ export default function AdminUsersContent() {
     return () => window.clearTimeout(timer)
   }, [search])
 
-  const { users, stats, total, page: currentPage, isLoading, isError } = useAdminUsers({
-    search: debouncedSearch,
-    role,
-    region,
-    withDeleted: showDeleted || undefined,
-    page,
-    pageSize: PAGE_SIZE,
-  })
+  const usersQueryParams = useMemo(
+    () => ({
+      search: debouncedSearch,
+      role,
+      region,
+      withDeleted: showDeleted || undefined,
+      page,
+      pageSize: PAGE_SIZE,
+    }),
+    [debouncedSearch, role, region, showDeleted, page],
+  )
+  const { users, stats, total, page: currentPage, isLoading, isError } = useAdminUsers(usersQueryParams)
   const setActiveMutation = useSetAdminUserActive()
   const restoreMutation = useRestoreAdminUser()
   const deleteMutation = useDeleteAdminUser()

@@ -231,13 +231,47 @@ export async function fetchAdminUsersFromApi(
   params: Record<string, string | number | boolean | undefined> = {},
 ): Promise<AdminUsersListResponse> {
   const page = typeof params.page === 'number' ? params.page : 1
-  const pageSize = typeof params.pageSize === 'number' ? params.pageSize : 10
+  const rawPageSize = typeof params.pageSize === 'number' ? params.pageSize : 10
+  const pageSize = Math.min(rawPageSize, 100)
+
+  if (params.withDeleted) {
+    const path = `${V1_ROOT}/users?since=2000-01-01T00:00:00Z&limit=${pageSize}&page=${page}`
+    const [listResponse, statsResponse] = await Promise.all([
+      request(path, { method: 'GET' }),
+      request(`${V1_ROOT}/admin/users/stats`, { method: 'GET' }),
+    ])
+
+    const response = normalizeUsersResponse(listResponse, statsResponse, page, pageSize)
+
+    let filteredUsers = response.users
+
+    if (params.role && params.role !== 'all') {
+      filteredUsers = filteredUsers.filter((u) => u.role === params.role)
+    }
+
+    if (params.search) {
+      const q = String(params.search).toLowerCase()
+      filteredUsers = filteredUsers.filter(
+        (u) =>
+          u.fullName.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          (u.phoneNumber && u.phoneNumber.toLowerCase().includes(q)),
+      )
+    }
+
+    return {
+      ...response,
+      users: filteredUsers,
+      total: filteredUsers.length, // use filtered length for correct local pagination
+    }
+  }
+
   const searchParams = new URLSearchParams()
 
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === '' || value === 'all') return
     if (key === 'pageSize') {
-      searchParams.set('limit', String(value))
+      searchParams.set('limit', String(pageSize))
       return
     }
     if (key === 'region') return

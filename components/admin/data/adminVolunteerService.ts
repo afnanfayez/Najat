@@ -7,6 +7,7 @@ import {
 import { enqueueOfflineOp, putAdminUsers } from '@/lib/offline/db'
 import type { AdminUserDto } from '@/schemas/adminUser'
 import type { VolunteerFormData } from '@/components/admin/users/add-volunteer/types'
+import { isConnectivityError } from '@/lib/api/api'
 
 export type CreateVolunteerResult = {
   user: AdminUserDto | null
@@ -148,8 +149,7 @@ export async function createVolunteerFromForm(
 ): Promise<CreateVolunteerResult> {
   const body = mapVolunteerFormToCreateBody(data)
 
-  // Offline: optimistically cache with a temp ID, queue for later sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const tempId = `offline-${Date.now()}`
     const optimistic = buildOptimisticAdminUser(tempId, 'volunteer', body)
     await putAdminUsers([optimistic])
@@ -157,8 +157,20 @@ export async function createVolunteerFromForm(
     return { user: optimistic, temporaryPassword: body.password }
   }
 
-  const user = await createAdminVolunteer(body)
-  return { user, temporaryPassword: body.password }
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const user = await createAdminVolunteer(body)
+    return { user, temporaryPassword: body.password }
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export function mapResidentFormToCreateBody(
@@ -192,8 +204,7 @@ export async function createResidentFromForm(
 ): Promise<CreateVolunteerResult> {
   const body = mapResidentFormToCreateBody(data)
 
-  // Offline: optimistically cache with a temp ID, queue for later sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const tempId = `offline-${Date.now()}`
     const optimistic = buildOptimisticAdminUser(tempId, 'resident', body)
     await putAdminUsers([optimistic])
@@ -201,6 +212,18 @@ export async function createResidentFromForm(
     return { user: optimistic, temporaryPassword: body.password }
   }
 
-  const user = await createAdminResident(body)
-  return { user, temporaryPassword: body.password }
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const user = await createAdminResident(body)
+    return { user, temporaryPassword: body.password }
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }

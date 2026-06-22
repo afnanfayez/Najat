@@ -128,7 +128,7 @@ export async function fetchAdminUsers(
         role: params.role,
         withDeleted: true,
         page: 1,
-        pageSize: 200,
+        pageSize: 100,
       })
       const page = params.page ?? 1
       const pageSize = params.pageSize ?? 4

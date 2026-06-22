@@ -5,6 +5,8 @@ import { Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import AdminUsersToggle from './AdminUsersToggle'
 import { ADMIN_USERS_BLUE, ADMIN_USERS_FONT } from './adminUsersStyles'
 import type { AdminManagedUser } from '@/schemas/adminUser'
+import { isPendingSyncId } from '@/lib/offline/isPendingSync'
+import { PendingSyncBadge } from '@/components/shared/PendingSyncBadge'
 
 interface AdminUsersTableProps {
   users: AdminManagedUser[]
@@ -65,12 +67,15 @@ export default function AdminUsersTable({
                   >
                     <td className={`${tdClass} text-right`}>
                       <div>
-                        <p
-                          className="text-[15px] font-bold text-[#1e293b]"
-                          style={{ fontFamily: ADMIN_USERS_FONT }}
-                        >
-                          {user.name}
-                        </p>
+                        <div className="flex items-center justify-end gap-2">
+                          <p
+                            className="text-[15px] font-bold text-[#1e293b]"
+                            style={{ fontFamily: ADMIN_USERS_FONT }}
+                          >
+                            {user.name}
+                          </p>
+                          {isPendingSyncId(user.id) && <PendingSyncBadge />}
+                        </div>
                         <p
                           className="mt-1 text-[13px] text-[#94A3B8]"
                           style={{ fontFamily: ADMIN_USERS_FONT }}
@@ -167,12 +172,15 @@ export default function AdminUsersTable({
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0 text-right">
-                  <p
-                    className="text-base font-bold text-[#1e293b]"
-                    style={{ fontFamily: ADMIN_USERS_FONT }}
-                  >
-                    {user.name}
-                  </p>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <p
+                      className="text-base font-bold text-[#1e293b]"
+                      style={{ fontFamily: ADMIN_USERS_FONT }}
+                    >
+                      {user.name}
+                    </p>
+                    {isPendingSyncId(user.id) && <PendingSyncBadge />}
+                  </div>
                   <p
                     className="mt-1 break-all text-xs text-[#94A3B8]"
                     style={{ fontFamily: ADMIN_USERS_FONT }}

@@ -107,22 +107,29 @@ export default function AddVolunteerContent() {
   async function handleSubmit() {
     if (!validate(4)) return
     setSubmitting(true)
+    let succeeded = false
+    let tempPass = ''
     try {
       const isResident = formData.userType === 'resident'
       const result = isResident
         ? await createResidentFromForm(formData)
         : await createVolunteerFromForm(formData)
-      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      tempPass = result.temporaryPassword
       clearDraft()
       setSubmitted(true)
       const roleLabel = isResident ? 'المقيم' : 'المتطوع'
-      toast.success(`تم إنشاء حساب ${roleLabel}. كلمة المرور المؤقتة: ${result.temporaryPassword}`)
+      toast.success(`تم إنشاء حساب ${roleLabel}. كلمة المرور المؤقتة: ${tempPass}`)
+      succeeded = true
     } catch (err: unknown) {
       const message = getVolunteerCreateErrorMessage(err)
       setValidationError(message)
       toast.error(message)
     } finally {
       setSubmitting(false)
+    }
+
+    if (succeeded && typeof window !== 'undefined') {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] }).catch(() => {})
     }
   }
 
