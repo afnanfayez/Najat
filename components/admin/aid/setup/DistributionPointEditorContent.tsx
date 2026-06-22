@@ -119,30 +119,58 @@ export default function DistributionPointEditorContent({
     }
 
     setSaving(true)
+    let saved = false
     try {
       await saveAdminAidDistributionPoint(form)
-      // Invalidate both admin and beneficiary caches so fresh data appears on return
-      await queryClient.invalidateQueries({ queryKey: ['aid'] })
-      toast.success(isEdit ? 'تم تحديث نقطة التوزيع' : 'تم إنشاء نقطة التوزيع')
-      router.push('/admin/aid')
+      toast.success(isEdit ? 'تم تحديث نقطة التوزيع' : 'تم إنشاء نقطة التوزيع', { duration: 5000 })
+      saved = true
     } catch {
       toast.error('تعذّر حفظ البيانات')
     } finally {
       setSaving(false)
+    }
+
+    if (saved) {
+      const isOffline = typeof window !== 'undefined' && !navigator.onLine
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        queryClient.invalidateQueries({ queryKey: ['aid'] }).catch(() => {})
+      }
+      if (isOffline) {
+        setTimeout(() => {
+          router.push('/admin/aid')
+        }, 2500)
+      } else {
+        router.push('/admin/aid')
+      }
     }
   }
 
   async function handleDelete() {
     if (!pointId) return
     setDeleting(true)
+    let deleted = false
     try {
       await deleteAdminAidDistributionPoint(pointId)
-      toast.success('تم حذف نقطة التوزيع')
-      router.push('/admin/aid')
+      toast.success('تم حذف نقطة التوزيع', { duration: 5000 })
+      deleted = true
     } catch {
       toast.error('تعذّر حذف نقطة التوزيع')
     } finally {
       setDeleting(false)
+    }
+
+    if (deleted) {
+      const isOffline = typeof window !== 'undefined' && !navigator.onLine
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        queryClient.invalidateQueries({ queryKey: ['aid'] }).catch(() => {})
+      }
+      if (isOffline) {
+        setTimeout(() => {
+          router.push('/admin/aid')
+        }, 2500)
+      } else {
+        router.push('/admin/aid')
+      }
     }
   }
 

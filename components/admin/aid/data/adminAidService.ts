@@ -1,4 +1,5 @@
 import { USE_MOCK_ADMIN_AID } from '@/lib/mocks/mockConfig'
+import { isConnectivityError } from '@/lib/api/api'
 import {
   getAdminAidPoints,
   getAdminAidPointById,
@@ -134,23 +135,34 @@ export async function saveAdminAidDistributionPoint(
 
   const isNew = point.id.startsWith('new-')
 
-  // Offline: cache optimistically and queue for sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const tempId = isNew ? `offline-aid-${Date.now()}` : point.id
     const optimistic = { ...point, id: tempId }
     await putAdminAidPoints([optimistic]).catch(() => {})
     await enqueueOfflineOp({
       type: isNew ? 'CREATE_AID_POINT' : 'UPDATE_AID_POINT',
-      payload: isNew ? { body: point } : { id: point.id, body: point },
+      payload: isNew ? { body: point, tempId } : { id: point.id, body: point },
     })
     return optimistic
   }
 
-  const result = isNew
-    ? await createAdminAidPointFromApi(point)
-    : await updateAdminAidPointFromApi(point)
-  await putAdminAidPoints([result]).catch(() => {})
-  return result
+  // Offline: cache optimistically and queue for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const result = isNew
+      ? await createAdminAidPointFromApi(point)
+      : await updateAdminAidPointFromApi(point)
+    await putAdminAidPoints([result]).catch(() => {})
+    return result
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function deleteAdminAidDistributionPoint(id: string): Promise<void> {
@@ -162,16 +174,27 @@ export async function deleteAdminAidDistributionPoint(id: string): Promise<void>
     return
   }
 
-  // Offline: remove from local cache and queue for sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const db = getOfflineDB()
     await db.adminAidPoints.delete(id).catch(() => {})
     await enqueueOfflineOp({ type: 'DELETE_AID_POINT', payload: { id } })
-    return
   }
-  await deleteAdminAidPointFromApi(id)
-  const db = getOfflineDB()
-  await db.adminAidPoints.delete(id).catch(() => {})
+
+  // Offline: remove from local cache and queue for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    await deleteAdminAidPointFromApi(id)
+    const db = getOfflineDB()
+    await db.adminAidPoints.delete(id).catch(() => {})
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {

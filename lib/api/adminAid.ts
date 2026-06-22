@@ -117,7 +117,7 @@ export async function deleteAdminAidPointFromApi(id: string): Promise<void> {
 }
 
 export async function fetchAdminAidRequestsFromApi(
-  params?: { page?: number; limit?: number },
+  params?: { aidPointId?: string },
 ): Promise<AidRequestDto[]> {
   const response = await aidAPI.listRequests(params)
   return response.data

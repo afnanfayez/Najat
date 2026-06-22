@@ -51,6 +51,7 @@ export default function AdminAidContent() {
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<AdminAidViewTab>('distribution')
   const [loading, setLoading] = useState(true)
+  const [reloadCounter, setReloadCounter] = useState(0)
 
   const [stats, setStats] = useState<AdminAidDistributionStats | null>(null)
   const [areas, setAreas] = useState<AdminAidAreaCoverage[]>([])
@@ -115,6 +116,18 @@ export default function AdminAidContent() {
     return () => {
       cancelled = true
       window.clearTimeout(timer)
+    }
+  }, [reloadCounter])
+
+  useEffect(() => {
+    const handleSync = () => {
+      setReloadCounter((prev) => prev + 1)
+    }
+    window.addEventListener('najat:sync-queue-processed', handleSync)
+    window.addEventListener('najat:session-refresh', handleSync)
+    return () => {
+      window.removeEventListener('najat:sync-queue-processed', handleSync)
+      window.removeEventListener('najat:session-refresh', handleSync)
     }
   }, [])
 
