@@ -1,4 +1,4 @@
-import { request } from '@/lib/api/api'
+import { request, isConnectivityError } from '@/lib/api/api'
 import type { AidRequestDto } from '@/schemas/aidApi'
 import type { AidHelpRequestForm } from '@/schemas/aidHelpRequest'
 
@@ -62,6 +62,9 @@ export async function submitAidHelpRequest(
       data: data?.data,
     }
   } catch (err: unknown) {
+    if (isConnectivityError(err)) {
+      throw err
+    }
     const fieldErrors = extractErrors(getErrorField(err, 'errors'))
     const topMsg =
       getErrorField<string>(err, 'message') ||

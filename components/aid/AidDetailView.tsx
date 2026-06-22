@@ -15,6 +15,7 @@ import { getToken } from '@/lib/api/auth'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
 import { enqueueOfflineOp, upsertAidRequest } from '@/lib/offline/db'
 import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
+import { isConnectivityError } from '@/lib/api/api'
 import { metersToKmLabel } from '@/lib/mappers/hospital'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
 import {
@@ -181,13 +182,62 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     form.setValue('aidOrganizationId', aid.id)
   }, [aid.id, form])
 
+  const handleOffline = useCallback(async (variables: AidHelpRequestForm) => {
+    const payloadWithOrg = { ...variables, aidOrganizationName: aid.name }
+    const localRequestId = `offline-request-${Date.now()}`
+    const now = new Date().toISOString()
+    const userId = getUserIdFromToken(getToken()) ?? undefined
+    const localRequest: AidRequestDto = {
+      id: localRequestId,
+      aidPointId: aid.id,
+      aidOrganizationId: aid.id,
+      aidOrganizationName: aid.name,
+      userId,
+      husbandName: variables.husbandName,
+      wifeName: variables.wifeName,
+      phoneNumber: variables.phone,
+      currentLocation: variables.currentLocation,
+      femaleChildrenCount: variables.daughtersCount,
+      maleChildrenCount: variables.sonsCount,
+      requestedSupplies: [],
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    }
+    await upsertAidRequest(localRequest)
+    await enqueueOfflineOp({
+      type: 'AID_REQUEST',
+      payload: {
+        ...payloadWithOrg,
+        localRequestId,
+      } as unknown as Record<string, unknown>,
+    })
+    toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
+    if (typeof window !== 'undefined' && navigator.onLine) {
+      queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] }).catch(() => {})
+    }
+    form.reset({
+      aidOrganizationId: aid.id,
+      husbandName: '',
+      husbandNationalId: '',
+      wifeName: '',
+      wifeNationalId: '',
+      daughtersCount: 0,
+      sonsCount: 0,
+      phone: '',
+      currentLocation: '',
+    })
+  }, [aid.id, aid.name, form, queryClient])
+
   const mutation = useMutation({
     mutationFn: submitAidHelpRequest,
     onSuccess: async (result) => {
       if (result.ok) {
         if (result.data) await upsertAidRequest(result.data).catch(() => {})
         toast.success(result.message)
-        queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })
+        if (typeof window !== 'undefined' && navigator.onLine) {
+          queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] }).catch(() => {})
+        }
         form.reset({
           aidOrganizationId: aid.id,
           husbandName: '',
@@ -203,7 +253,11 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
         toast.error(result.message)
       }
     },
-    onError: () => {
+    onError: async (err, variables) => {
+      if (isConnectivityError(err)) {
+        await handleOffline(variables)
+        return
+      }
       toast.error('تعذر إرسال الطلب. تحقق من الاتصال وحاول مرة أخرى.')
     },
   })
@@ -218,52 +272,12 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     async (data: AidHelpRequestForm) => {
       const payloadWithOrg = { ...data, aidOrganizationName: aid.name }
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        const localRequestId = `offline-request-${Date.now()}`
-        const now = new Date().toISOString()
-        const userId = getUserIdFromToken(getToken()) ?? undefined
-        const localRequest: AidRequestDto = {
-          id: localRequestId,
-          aidPointId: aid.id,
-          aidOrganizationId: aid.id,
-          aidOrganizationName: aid.name,
-          userId,
-          husbandName: data.husbandName,
-          wifeName: data.wifeName,
-          phoneNumber: data.phone,
-          currentLocation: data.currentLocation,
-          femaleChildrenCount: data.daughtersCount,
-          maleChildrenCount: data.sonsCount,
-          requestedSupplies: [],
-          status: 'pending',
-          createdAt: now,
-          updatedAt: now,
-        }
-        await upsertAidRequest(localRequest)
-        await enqueueOfflineOp({
-          type: 'AID_REQUEST',
-          payload: {
-            ...payloadWithOrg,
-            localRequestId,
-          } as unknown as Record<string, unknown>,
-        })
-        toast.success('تم حفظ طلبك وسيُرسل تلقائياً عند عودة الاتصال')
-        queryClient.invalidateQueries({ queryKey: ['my-aid-requests'] })
-        form.reset({
-          aidOrganizationId: aid.id,
-          husbandName: '',
-          husbandNationalId: '',
-          wifeName: '',
-          wifeNationalId: '',
-          daughtersCount: 0,
-          sonsCount: 0,
-          phone: '',
-          currentLocation: '',
-        })
+        await handleOffline(data)
         return
       }
       mutation.mutate(payloadWithOrg)
     },
-    [aid.id, aid.name, form, mutation, queryClient],
+    [aid.name, handleOffline, mutation],
   )
 
   return (

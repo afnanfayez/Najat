@@ -20,6 +20,13 @@ export type ListAidParams = {
   since?: string
 }
 
+// GET /v1/aid/requests does not support pagination — it only accepts an
+// optional aidPointId filter. Sending page/limit returns a 400 "not a
+// recognized parameter" error.
+export type ListAidRequestsParams = {
+  aidPointId?: string
+}
+
 export type AidStatus = 'active' | 'suspended' | 'limited'
 export type AidRequestStatus = AidRequestDto['status']
 
@@ -95,10 +102,9 @@ export const aidAPI = {
     return request(`${V1_ROOT}/aid/${encodeURIComponent(id)}`, { method: 'DELETE' })
   },
 
-  listRequests(params?: ListAidParams): Promise<AidRequestsPaginatedResponse> {
+  listRequests(params?: ListAidRequestsParams): Promise<AidRequestsPaginatedResponse> {
     const qs = new URLSearchParams()
-    if (params?.page != null) qs.set('page', String(params.page))
-    if (params?.limit != null) qs.set('limit', String(params.limit))
+    if (params?.aidPointId) qs.set('aidPointId', params.aidPointId)
     const query = qs.toString()
     return request(`${V1_ROOT}/aid/requests${query ? `?${query}` : ''}`).then((raw) => {
       // Backend returns { data: { data: [...], meta: {} } } — unwrap before parsing
