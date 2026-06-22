@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRouter, usePathname } from 'next/navigation'
 import { getToken } from '@/lib/api/auth'
 import { useAuth } from '@/context/AuthContext'
 import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
@@ -11,7 +12,7 @@ import { DashboardShellContext } from './DashboardShellContext'
 import { OfflineSyncBanner } from '@/components/shared/OfflineSyncBanner'
 import { initOfflineSync } from '@/lib/offline/sync'
 
-function activeNavFromRoute(pathname: string, tab: string | null): string {
+function activeNavFromRoute(pathname: string): string {
   if (isHealthFacilityPath(pathname)) return 'health'
   if (pathname.startsWith('/humanitarian-aid')) return 'humanaid'
   if (pathname.startsWith('/health-guide')) return 'guide'
@@ -31,16 +32,49 @@ export default function DashboardLayoutClient({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const tab = searchParams.get('tab')
   const activeNav = useMemo(
-    () => activeNavFromRoute(pathname, tab),
-    [pathname, tab],
+    () => activeNavFromRoute(pathname),
+    [pathname],
   )
 
   const [hoveredNav, setHoveredNav] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, role, isLoading, isHydrated, logout } = useAuth()
+  const queryClient = useQueryClient()
+
+  // Background sync (processSyncQueue) writes straight to the offline IndexedDB
+  // cache, not to the React Query cache — without this, admins keep seeing
+  // stale/optimistic rows (e.g. a synced volunteer's temp record) until they
+  // navigate away and back.
+  useEffect(() => {
+    // invalidateQueries() already triggers a refetch for any actively-mounted
+    // query on its own — a follow-up refetchQueries() call for the same key is
+    // redundant and, combined with the per-page listeners this used to overlap
+    // with, caused multiple in-flight requests for the same key to race each
+    // other. Whichever response happened to land last won the cache, even when
+    // it wasn't the freshest one — silently leaving stale data on screen.
+    const handleSyncProcessed = () => {
+      const keys = [
+        'admin-users',
+        'admin-health-facilities',
+        'health-facilities',
+        'admin-health-content',
+        'health-guide',
+        'aid',
+        'safety',
+        'admin-alerts',
+      ]
+      for (const key of keys) {
+        queryClient.invalidateQueries({ queryKey: [key] }).catch(() => {})
+      }
+    }
+    window.addEventListener('najat:sync-queue-processed', handleSyncProcessed)
+    window.addEventListener('najat:session-refresh', handleSyncProcessed)
+    return () => {
+      window.removeEventListener('najat:sync-queue-processed', handleSyncProcessed)
+      window.removeEventListener('najat:session-refresh', handleSyncProcessed)
+    }
+  }, [queryClient])
 
   // Initialize lightweight background data sync once per session. Deliberately
   // does NOT depend on isLoading — that flag flips on every refreshUser() call

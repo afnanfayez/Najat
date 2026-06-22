@@ -21,6 +21,14 @@ function createQueryClient() {
         },
         refetchOnWindowFocus: false,
       },
+      mutations: {
+        // Same reasoning as queries above: the default 'online' networkMode
+        // makes React Query itself pause mutationFn — never even calling it —
+        // until its own onlineManager sees 'online' again. That silently
+        // bypasses every mutation's own isOffline()/IndexedDB-queue branch and
+        // leaves the UI stuck on a loading state with no feedback while offline.
+        networkMode: 'offlineFirst',
+      },
     },
   })
 }
