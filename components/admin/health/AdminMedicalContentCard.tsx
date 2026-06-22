@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { AdminHealthMedicalContent } from '@/schemas/adminHealth'
 import { ADMIN_HEALTH_BLUE, ADMIN_HEALTH_FONT } from './adminHealthStyles'
+import { isPendingSyncId } from '@/lib/offline/isPendingSync'
+import { PendingSyncBadge } from '@/components/shared/PendingSyncBadge'
 
 interface AdminMedicalContentCardProps {
   item: AdminHealthMedicalContent
@@ -70,12 +72,15 @@ export default function AdminMedicalContentCard({
           >
             {item.author} — {item.date}
           </p>
-          <h3
-            className="mt-1 text-lg font-bold text-white sm:text-xl"
-            style={{ fontFamily: ADMIN_HEALTH_FONT }}
-          >
-            {item.title}
-          </h3>
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-2">
+            <h3
+              className="text-lg font-bold text-white sm:text-xl"
+              style={{ fontFamily: ADMIN_HEALTH_FONT }}
+            >
+              {item.title}
+            </h3>
+            {isPendingSyncId(item.id) && <PendingSyncBadge />}
+          </div>
           <p
             className="mt-1 line-clamp-2 text-xs leading-6 text-white/80 sm:text-sm"
             style={{ fontFamily: ADMIN_HEALTH_FONT }}

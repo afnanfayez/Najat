@@ -96,21 +96,35 @@ export default function MedicalContentEditorContent({
     }
 
     setSaving(true)
+    let saved = false
     try {
       if (isEdit && contentId) {
         await updateAdminHealthContent(contentId, form)
-        toast.success('تم تحديث المحتوى بنجاح')
+        toast.success('تم تحديث المحتوى بنجاح', { duration: 5000 })
       } else {
         await createAdminHealthContent(form)
-        toast.success('تم إنشاء المحتوى بنجاح')
+        toast.success('تم إنشاء المحتوى بنجاح', { duration: 5000 })
       }
-      await queryClient.invalidateQueries({ queryKey: ['admin-health-content'] })
-      await queryClient.invalidateQueries({ queryKey: ['health-guide'] })
-      router.push('/admin/health?tab=content')
+      saved = true
     } catch {
       toast.error('تعذّر حفظ المحتوى')
     } finally {
       setSaving(false)
+    }
+
+    if (saved) {
+      const isOffline = typeof window !== 'undefined' && !navigator.onLine
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        queryClient.invalidateQueries({ queryKey: ['admin-health-content'] }).catch(() => {})
+        queryClient.invalidateQueries({ queryKey: ['health-guide'] }).catch(() => {})
+      }
+      if (isOffline) {
+        setTimeout(() => {
+          router.push('/admin/health?tab=content')
+        }, 2500)
+      } else {
+        router.push('/admin/health?tab=content')
+      }
     }
   }
 

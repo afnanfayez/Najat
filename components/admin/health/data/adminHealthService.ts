@@ -22,6 +22,7 @@ import {
   getOfflineDB,
 } from '@/lib/offline/db'
 import { USE_MOCK_ADMIN_HEALTH } from '@/lib/mocks/mockConfig'
+import { isConnectivityError } from '@/lib/api/api'
 import {
   ADMIN_HEALTH_FACILITIES,
   ADMIN_HEALTH_MEDICAL_CONTENT,
@@ -363,8 +364,7 @@ export async function createAdminHealthFacility(
     return createMockFacility(body, form)
   }
 
-  // Offline: optimistically cache with a temp ID, queue for later sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const tempId = `offline-${Date.now()}`
     const optimistic: AdminHealthFacility = {
       id: tempId,
@@ -383,11 +383,23 @@ export async function createAdminHealthFacility(
     return optimistic
   }
 
-  const payload = hasImages ? buildFacilityFormData(form) : body
-  const facility = await createAdminHealthFacilityFromApi(payload, facilityType)
-  await putAdminFacilities([facility]).catch(() => {})
-  mockFacilityFormsStore[facility.id] = form
-  return facility
+  // Offline: optimistically cache with a temp ID, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const payload = hasImages ? buildFacilityFormData(form) : body
+    const facility = await createAdminHealthFacilityFromApi(payload, facilityType)
+    await putAdminFacilities([facility]).catch(() => {})
+    mockFacilityFormsStore[facility.id] = form
+    return facility
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function fetchAdminHealthFacilityById(
@@ -425,8 +437,7 @@ export async function updateAdminHealthFacility(
     return updateMockFacility(id, body, form)
   }
 
-  // Offline: optimistically update cache, queue for later sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const existing = await getAdminFacilityById(id)
     const optimistic: AdminHealthFacility = {
       ...(existing ?? { id, workloadPercent: 0, facilityType }),
@@ -445,11 +456,23 @@ export async function updateAdminHealthFacility(
     return optimistic
   }
 
-  const payload = hasImages ? buildFacilityFormData(form) : body
-  const facility = await updateAdminHealthFacilityFromApi(id, payload, facilityType)
-  await putAdminFacilities([facility]).catch(() => {})
-  mockFacilityFormsStore[id] = form
-  return facility
+  // Offline: optimistically update cache, queue for later sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const payload = hasImages ? buildFacilityFormData(form) : body
+    const facility = await updateAdminHealthFacilityFromApi(id, payload, facilityType)
+    await putAdminFacilities([facility]).catch(() => {})
+    mockFacilityFormsStore[id] = form
+    return facility
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function updateAdminHospitalStatus(
@@ -465,7 +488,7 @@ export async function updateAdminHospitalStatus(
     return updated
   }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const existing = await getAdminFacilityById(id)
     if (!existing) throw new Error('المنشأة غير متوفرة في وضع عدم الاتصال')
     const optimistic: AdminHealthFacility = {
@@ -478,9 +501,20 @@ export async function updateAdminHospitalStatus(
     return optimistic
   }
 
-  const facility = await updateAdminHospitalStatusFromApi(id, status)
-  await putAdminFacilities([facility]).catch(() => {})
-  return facility
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const facility = await updateAdminHospitalStatusFromApi(id, status)
+    await putAdminFacilities([facility]).catch(() => {})
+    return facility
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 /**
@@ -502,7 +536,7 @@ export async function updateAdminHealthFacilityStatus(
     return updated
   }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const existing = await getAdminFacilityById(id)
     if (!existing) throw new Error('المنشأة غير متوفرة في وضع عدم الاتصال')
     const optimistic: AdminHealthFacility = {
@@ -518,36 +552,47 @@ export async function updateAdminHealthFacilityStatus(
     return optimistic
   }
 
-  if (!facilityType || facilityType === 'hospital') {
-    const updated = await updateAdminHospitalStatusFromApi(id, status)
-    await putAdminFacilities([updated]).catch(() => {})
-    return updated
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
   }
 
-  const existing = await fetchAdminHealthFacilityByIdFromApi(id, facilityType)
-  const updated = await updateAdminHealthFacilityFromApi(
-    id,
-    {
-      name: existing.name,
-      address: existing.address,
-      phone: existing.phone,
-      region: existing.region,
-      imageUrl: existing.imageUrl,
-      latitude: existing.latitude,
-      longitude: existing.longitude,
-      workingDoctors: existing.workingDoctors?.map((doctor) => ({
-        ...doctor,
-        workingDays: doctor.workingDays ?? [],
-        workingHours: doctor.workingHours ?? '',
-      })),
-      currentMedications: existing.currentMedications,
-      workingHours: existing.workingHours,
-      workingDays: existing.workingDays,
-      status,
-    },
-    facilityType,
-  )
-  return updated
+  try {
+    if (!facilityType || facilityType === 'hospital') {
+      const updated = await updateAdminHospitalStatusFromApi(id, status)
+      await putAdminFacilities([updated]).catch(() => {})
+      return updated
+    }
+
+    const existing = await fetchAdminHealthFacilityByIdFromApi(id, facilityType)
+    const updated = await updateAdminHealthFacilityFromApi(
+      id,
+      {
+        name: existing.name,
+        address: existing.address,
+        phone: existing.phone,
+        region: existing.region,
+        imageUrl: existing.imageUrl,
+        latitude: existing.latitude,
+        longitude: existing.longitude,
+        workingDoctors: existing.workingDoctors?.map((doctor) => ({
+          ...doctor,
+          workingDays: doctor.workingDays ?? [],
+          workingHours: doctor.workingHours ?? '',
+        })),
+        currentMedications: existing.currentMedications,
+        workingHours: existing.workingHours,
+        workingDays: existing.workingDays,
+        status,
+      },
+      facilityType,
+    )
+    return updated
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function deleteAdminHealthFacility(
@@ -562,8 +607,7 @@ export async function deleteAdminHealthFacility(
     return
   }
 
-  // Offline: remove from local cache immediately, queue delete for sync
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const db = getOfflineDB()
     await db.adminFacilities.delete(id)
     await enqueueOfflineOp({
@@ -571,13 +615,24 @@ export async function deleteAdminHealthFacility(
       payload: { id, facilityType },
     })
     delete mockFacilityFormsStore[id]
-    return
   }
 
-  await deleteAdminHealthFacilityFromApi(id, facilityType)
-  const db = getOfflineDB()
-  await db.adminFacilities.delete(id).catch(() => {})
-  delete mockFacilityFormsStore[id]
+  // Offline: remove from local cache immediately, queue delete for sync
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    await deleteAdminHealthFacilityFromApi(id, facilityType)
+    const db = getOfflineDB()
+    await db.adminFacilities.delete(id).catch(() => {})
+    delete mockFacilityFormsStore[id]
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function fetchAdminHealthContentById(
@@ -611,16 +666,28 @@ export async function createAdminHealthContent(
     return createMockContent(body)
   }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
-    const optimistic = createMockContent(body)
+  const handleOffline = async () => {
+    const tempId = `offline-${Date.now()}`
+    const optimistic: AdminHealthMedicalContent = { ...createMockContent(body), id: tempId }
     await putAdminHealthContent([optimistic]).catch(() => {})
-    await enqueueOfflineOp({ type: 'CREATE_HEALTH_CONTENT', payload: { body } })
+    await enqueueOfflineOp({ type: 'CREATE_HEALTH_CONTENT', payload: { body, tempId } })
     return optimistic
   }
 
-  const content = await createAdminHealthContentFromApi(body)
-  await putAdminHealthContent([content]).catch(() => {})
-  return content
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const content = await createAdminHealthContentFromApi(body)
+    await putAdminHealthContent([content]).catch(() => {})
+    return content
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function updateAdminHealthContent(
@@ -634,7 +701,7 @@ export async function updateAdminHealthContent(
     return updateMockContent(id, body)
   }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const existing = await getAdminHealthContentById(id)
     const optimistic: AdminHealthMedicalContent = { ...(existing ?? { id, date: '', author: '', thumbnailUrl: '', status: 'draft', category: 'first-aid', description: '', body: '', references: '' }), ...body, id }
     await putAdminHealthContent([optimistic]).catch(() => {})
@@ -642,9 +709,20 @@ export async function updateAdminHealthContent(
     return optimistic
   }
 
-  const content = await updateAdminHealthContentFromApi(id, body)
-  await putAdminHealthContent([content]).catch(() => {})
-  return content
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    const content = await updateAdminHealthContentFromApi(id, body)
+    await putAdminHealthContent([content]).catch(() => {})
+    return content
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }
 
 export async function deleteAdminHealthContent(id: string): Promise<void> {
@@ -656,14 +734,24 @@ export async function deleteAdminHealthContent(id: string): Promise<void> {
     return
   }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const handleOffline = async () => {
     const db = getOfflineDB()
     await db.adminHealthContent.delete(id).catch(() => {})
     await enqueueOfflineOp({ type: 'DELETE_HEALTH_CONTENT', payload: { id } })
-    return
   }
 
-  await deleteAdminHealthContentFromApi(id)
-  const db = getOfflineDB()
-  await db.adminHealthContent.delete(id).catch(() => {})
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    return handleOffline()
+  }
+
+  try {
+    await deleteAdminHealthContentFromApi(id)
+    const db = getOfflineDB()
+    await db.adminHealthContent.delete(id).catch(() => {})
+  } catch (err) {
+    if (isConnectivityError(err)) {
+      return handleOffline()
+    }
+    throw err
+  }
 }

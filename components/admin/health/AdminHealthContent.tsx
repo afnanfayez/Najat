@@ -144,15 +144,20 @@ export default function AdminHealthContent() {
     newStatus: AdminHealthFacility['status'],
   ) {
     setUpdatingStatusId(facility.id)
+    let succeeded = false
     try {
       await updateAdminHealthFacilityStatus(facility.id, newStatus!, facility.facilityType)
-      await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
-      await queryClient.invalidateQueries({ queryKey: ['health-facilities'] })
       toast.success(`تم تغيير حالة ${facility.name} إلى "${newStatus === 'open' ? 'مفتوح' : 'مغلق'}"`)
+      succeeded = true
     } catch {
       toast.error(`تعذّر تغيير حالة ${facility.name}`)
     } finally {
       setUpdatingStatusId(null)
+    }
+
+    if (succeeded && typeof window !== 'undefined' && navigator.onLine) {
+      queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] }).catch(() => {})
+      queryClient.invalidateQueries({ queryKey: ['health-facilities'] }).catch(() => {})
     }
   }
 
@@ -169,15 +174,20 @@ export default function AdminHealthContent() {
     if (!confirmed) return
 
     setDeletingId(item.id)
+    let succeeded = false
     try {
       await deleteAdminHealthContent(item.id)
-      await queryClient.invalidateQueries({ queryKey: ['admin-health-content'] })
-      await queryClient.invalidateQueries({ queryKey: ['health-guide', 'articles'] })
       toast.success('تم حذف المحتوى بنجاح', { position: 'top-center' })
+      succeeded = true
     } catch {
       toast.error('تعذّر حذف المحتوى', { position: 'top-center' })
     } finally {
       setDeletingId(null)
+    }
+
+    if (succeeded && typeof window !== 'undefined' && navigator.onLine) {
+      queryClient.invalidateQueries({ queryKey: ['admin-health-content'] }).catch(() => {})
+      queryClient.invalidateQueries({ queryKey: ['health-guide', 'articles'] }).catch(() => {})
     }
   }
 
@@ -185,16 +195,21 @@ export default function AdminHealthContent() {
     if (!facilityToDelete) return
 
     setDeletingId(facilityToDelete.id)
+    let succeeded = false
     try {
       await deleteAdminHealthFacility(facilityToDelete.id, facilityToDelete.facilityType)
-      await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
-      await queryClient.invalidateQueries({ queryKey: ['health-facilities'] })
-      setFacilityToDelete(null)
       toast.success('تم حذف المنشأة بنجاح', { position: 'top-center' })
+      succeeded = true
     } catch {
       toast.error('تعذّر حذف المنشأة', { position: 'top-center' })
     } finally {
       setDeletingId(null)
+      setFacilityToDelete(null)
+    }
+
+    if (succeeded && typeof window !== 'undefined' && navigator.onLine) {
+      queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] }).catch(() => {})
+      queryClient.invalidateQueries({ queryKey: ['health-facilities'] }).catch(() => {})
     }
   }
 

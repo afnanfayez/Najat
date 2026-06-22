@@ -286,15 +286,7 @@ function normalizeMultipartFacilityPayload(
   return fd
 }
 
-function buildHospitalCreateFormData(payload: FormData): FormData {
-  const fd = new FormData()
-  for (const key of ['name', 'latitude', 'longitude', 'address', 'contactNumber', 'image']) {
-    payload.getAll(key).forEach((value) => fd.append(key, value))
-  }
-  return fd
-}
-
-/** Full PATCH payload — accepted by all facility types for updates */
+/** Full PATCH/POST payload — accepted by all facility types */
 function buildCreatePayload(b: CreateAdminHealthFacilityBody): Record<string, unknown> {
   return {
     name: b.name,
@@ -313,28 +305,42 @@ function buildCreatePayload(b: CreateAdminHealthFacilityBody): Record<string, un
   }
 }
 
-/** Basic fields only — hospital POST accepts ONLY these, not status/workingDoctors */
-function buildHospitalCreatePayload(b: CreateAdminHealthFacilityBody): Record<string, unknown> {
-  return {
-    name: b.name,
-    address: b.address,
-    ...(b.latitude != null && { latitude: b.latitude }),
-    ...(b.longitude != null && { longitude: b.longitude }),
-    ...(b.phone && { contactNumber: b.phone }),
-    ...(b.imageUrl?.startsWith('http') && { image: b.imageUrl }),
-  }
-}
+/**
+ * Adds the facility-type-specific fields required by the backend's create DTOs.
+ * The PATCH endpoints for clinics/dental-clinics/labs reuse those same create DTOs,
+ * so updates need these fields too or the backend's validation blows up.
+ */
+function buildTypedFacilityPayload(
+  b: CreateAdminHealthFacilityBody,
+  facilityType?: AdminHealthFacilityType,
+): Record<string, unknown> {
+  const full = buildCreatePayload(b)
+  const categories = b.healthcareCategories?.length ? b.healthcareCategories : ['طب عام']
 
-/** Operational fields — sent via PATCH after hospital creation */
-function buildOperationalPayload(b: CreateAdminHealthFacilityBody): Record<string, unknown> {
-  return {
-    status: adminStatusToCapacityStatus(b.status),
-    workingDoctors: b.workingDoctors ?? [],
-    currentMedications: b.currentMedications ?? [],
-    workingHours: b.workingHours ?? 'على مدار 24 ساعة',
-    workingDays: b.workingDays ?? [],
-    medicalSupplies: b.medicalSupplies ?? [],
-    healthcareCategories: b.healthcareCategories ?? [],
+  switch (facilityType) {
+    case 'lab':
+      return {
+        ...full,
+        availableTests: [{ name: 'فحص عام', type: 'general', resultTime: '24 ساعة' }],
+        homeCollection: false,
+        isoCertified: false,
+      }
+    case 'clinic':
+      return {
+        ...full,
+        specialties: categories,
+        practitionersCount: b.workingDoctors?.length ?? 1,
+      }
+    case 'dental_clinic':
+      return {
+        ...full,
+        dentalChairs: 1,
+        implantsAvailable: false,
+        orthodonticsAvailable: false,
+        availableTests: [{ name: 'فحص أسنان عام', type: 'general', resultTime: '24 ساعة' }],
+      }
+    default:
+      return full
   }
 }
 
@@ -350,55 +356,27 @@ export async function createAdminHealthFacilityFromApi(
       case 'clinic':    return mapClinic(await clinicsAPI.create(payload))
       case 'dental_clinic': return mapDentalClinic(await dentalClinicsAPI.create(payload))
       default: {
-        const created = await hospitalsAPI.create(buildHospitalCreateFormData(payload))
-        try {
-          const updated = await hospitalsAPI.update(created.id, payload)
-          return mapHospital(updated)
-        } catch {
-          return mapHospital(created)
-        }
+        const created = await hospitalsAPI.create(payload)
+        return mapHospital(created)
       }
     }
   }
 
   const b = body as CreateAdminHealthFacilityBody
-  // Non-hospital types accept workingDoctors/status etc. directly in CREATE
-  const full = buildCreatePayload(b)
-  const categories = b.healthcareCategories?.length ? b.healthcareCategories : ['طب عام']
+  const payload = buildTypedFacilityPayload(b, facilityType)
 
   switch (facilityType) {
     case 'pharmacy':
-      return mapPharmacy(await pharmaciesAPI.create(full))
+      return mapPharmacy(await pharmaciesAPI.create(payload))
     case 'lab':
-      return mapLab(await labsAPI.create({
-        ...full,
-        availableTests: [{ name: 'فحص عام', type: 'general', resultTime: '24 ساعة' }],
-        homeCollection: false,
-        isoCertified: false,
-      }))
+      return mapLab(await labsAPI.create(payload))
     case 'clinic':
-      return mapClinic(await clinicsAPI.create({
-        ...full,
-        specialties: categories,
-        practitionersCount: b.workingDoctors?.length ?? 1,
-      }))
+      return mapClinic(await clinicsAPI.create(payload))
     case 'dental_clinic':
-      return mapDentalClinic(await dentalClinicsAPI.create({
-        ...full,
-        dentalChairs: 1,
-        implantsAvailable: false,
-        orthodonticsAvailable: false,
-        availableTests: [{ name: 'فحص أسنان عام', type: 'general', resultTime: '24 ساعة' }],
-      }))
+      return mapDentalClinic(await dentalClinicsAPI.create(payload))
     default: {
-      // Hospital POST only accepts basic fields — send operational data via PATCH afterwards
-      const created = await hospitalsAPI.create(buildHospitalCreatePayload(b))
-      try {
-        const updated = await hospitalsAPI.update(created.id, buildOperationalPayload(b))
-        return mapHospital(updated)
-      } catch {
-        return mapHospital(created)
-      }
+      const created = await hospitalsAPI.create(payload)
+      return mapHospital(created)
     }
   }
 }
@@ -415,7 +393,7 @@ export async function updateAdminHealthFacilityFromApi(
     payload = normalizeMultipartFacilityPayload(body, facilityType)
   } else {
     // Use the full payload (same fields as create) so the backend has all required data
-    payload = buildCreatePayload(body as CreateAdminHealthFacilityBody)
+    payload = buildTypedFacilityPayload(body as CreateAdminHealthFacilityBody, facilityType)
   }
 
   await api.update(id, payload as Record<string, unknown>)

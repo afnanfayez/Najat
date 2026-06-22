@@ -231,21 +231,35 @@ export default function AddFacilityContent({ facilityId, facilityType }: AddFaci
     }
 
     setSaving(true)
+    let saved = false
     try {
       if (isEdit && facilityId) {
         await updateAdminHealthFacility(facilityId, form, facilityType ?? selectedFacilityType)
-        toast.success('تم تحديث المنشأة بنجاح')
+        toast.success('تم تحديث المنشأة بنجاح', { duration: 5000 })
       } else {
         await createAdminHealthFacility(form, selectedFacilityType)
-        toast.success('تم حفظ المنشأة بنجاح')
+        toast.success('تم حفظ المنشأة بنجاح', { duration: 5000 })
       }
-      await queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] })
-      await queryClient.invalidateQueries({ queryKey: ['health-facilities'] })
-      router.push('/admin/health')
+      saved = true
     } catch {
       toast.error(isEdit ? 'تعذّر تحديث المنشأة' : 'تعذّر حفظ المنشأة')
     } finally {
       setSaving(false)
+    }
+
+    if (saved) {
+      const isOffline = typeof window !== 'undefined' && !navigator.onLine
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        queryClient.invalidateQueries({ queryKey: ['admin-health-facilities'] }).catch(() => {})
+        queryClient.invalidateQueries({ queryKey: ['health-facilities'] }).catch(() => {})
+      }
+      if (isOffline) {
+        setTimeout(() => {
+          router.push('/admin/health')
+        }, 2500)
+      } else {
+        router.push('/admin/health')
+      }
     }
   }
 

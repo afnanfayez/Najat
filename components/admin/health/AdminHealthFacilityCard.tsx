@@ -5,6 +5,8 @@ import { MapPin, Phone, Pencil, Trash2 } from 'lucide-react'
 import { availabilityBarColor } from '@/lib/mappers/medicationAvailability'
 import type { AdminHealthFacility } from '@/schemas/adminHealth'
 import { ADMIN_HEALTH_BLUE, ADMIN_HEALTH_FONT } from './adminHealthStyles'
+import { isPendingSyncId } from '@/lib/offline/isPendingSync'
+import { PendingSyncBadge } from '@/components/shared/PendingSyncBadge'
 
 interface AdminHealthFacilityCardProps {
   facility: AdminHealthFacility
@@ -119,12 +121,15 @@ export default function AdminHealthFacilityCard({
         </div>
 
         <div className="absolute bottom-3 right-3 left-3 text-right">
-          <h3
-            className="text-lg font-bold text-white sm:text-xl"
-            style={{ fontFamily: ADMIN_HEALTH_FONT }}
-          >
-            {facility.name}
-          </h3>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <h3
+              className="text-lg font-bold text-white sm:text-xl"
+              style={{ fontFamily: ADMIN_HEALTH_FONT }}
+            >
+              {facility.name}
+            </h3>
+            {isPendingSyncId(facility.id) && <PendingSyncBadge />}
+          </div>
           <div className="mt-1 flex items-center justify-start gap-1.5 text-white/90">
             <MapPin size={14} className="shrink-0" />
             <span className="text-xs font-medium sm:text-sm">{facility.address}</span>
