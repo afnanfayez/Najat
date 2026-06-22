@@ -14,9 +14,11 @@ import {
   type UpdateAdminUserBody,
 } from '@/lib/api/adminUsers'
 import { enqueueOfflineOp, getAdminUserById, putAdminUsers } from '@/lib/offline/db'
+import { isConnectivityError } from '@/lib/api/api'
+import { isBrowserOffline } from '@/lib/offline/connectionState'
 
 function isOffline() {
-  return typeof navigator !== 'undefined' && !navigator.onLine
+  return isBrowserOffline()
 }
 
 export function useAdminUsers(params: AdminUsersQueryParams) {
@@ -46,8 +48,11 @@ export function useUpdateAdminUser() {
 
   return useMutation({
     mutationFn: async ({ id, body }: { id: string; body: UpdateAdminUserBody }) => {
-      if (isOffline()) {
+      console.log(`[CONN-DEBUG] useUpdateAdminUser mutationFn START @ ${Date.now()} isOffline()=${isOffline()} navigator.onLine=${navigator.onLine}`)
+      const handleOffline = async () => {
+        console.log(`[CONN-DEBUG] useUpdateAdminUser handleOffline() START @ ${Date.now()}`)
         const cached = await getAdminUserById(id)
+        console.log(`[CONN-DEBUG] useUpdateAdminUser handleOffline() got cached @ ${Date.now()} found=${!!cached}`)
         if (cached) {
           await putAdminUsers([{
             ...cached,
@@ -58,14 +63,35 @@ export function useUpdateAdminUser() {
             region: body.region ?? cached.region,
             phoneNumber: body.phoneNumber ?? cached.phoneNumber,
           }])
+          console.log(`[CONN-DEBUG] useUpdateAdminUser handleOffline() putAdminUsers done @ ${Date.now()}`)
         }
         await enqueueOfflineOp({ type: 'UPDATE_ADMIN_USER', payload: { id, body } })
+        console.log(`[CONN-DEBUG] useUpdateAdminUser handleOffline() enqueueOfflineOp done @ ${Date.now()}`)
         return cached
       }
-      return updateAdminUser(id, body)
+
+      if (isOffline()) {
+        console.log(`[CONN-DEBUG] useUpdateAdminUser taking OFFLINE branch @ ${Date.now()}`)
+        return handleOffline()
+      }
+
+      console.log(`[CONN-DEBUG] useUpdateAdminUser taking ONLINE branch (calling real API) @ ${Date.now()}`)
+      try {
+        const result = await updateAdminUser(id, body)
+        console.log(`[CONN-DEBUG] useUpdateAdminUser ONLINE branch SUCCEEDED @ ${Date.now()}`)
+        return result
+      } catch (err) {
+        console.log(`[CONN-DEBUG] useUpdateAdminUser ONLINE branch FAILED @ ${Date.now()} isConnectivityError=${isConnectivityError(err)} err=`, err)
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      if (typeof window !== 'undefined') {
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] }).catch(() => {})
+      }
     },
   })
 }
@@ -75,7 +101,7 @@ export function useSetAdminUserActive() {
 
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      if (isOffline()) {
+      const handleOffline = async () => {
         const cached = await getAdminUserById(id)
         if (cached) {
           await putAdminUsers([{ ...cached, isActive, enabled: isActive }])
@@ -83,10 +109,24 @@ export function useSetAdminUserActive() {
         await enqueueOfflineOp({ type: 'SET_ADMIN_USER_ACTIVE', payload: { id, isActive } })
         return cached
       }
-      return setAdminUserActive(id, isActive)
+
+      if (isOffline()) {
+        return handleOffline()
+      }
+
+      try {
+        return await setAdminUserActive(id, isActive)
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      if (typeof window !== 'undefined') {
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] }).catch(() => {})
+      }
     },
   })
 }
@@ -96,7 +136,7 @@ export function useRestoreAdminUser() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      if (isOffline()) {
+      const handleOffline = async () => {
         const cached = await getAdminUserById(id)
         if (cached) {
           await putAdminUsers([{ ...cached, deletedAt: null }])
@@ -104,10 +144,24 @@ export function useRestoreAdminUser() {
         await enqueueOfflineOp({ type: 'RESTORE_ADMIN_USER', payload: { id } })
         return cached
       }
-      return restoreAdminUser(id)
+
+      if (isOffline()) {
+        return handleOffline()
+      }
+
+      try {
+        return await restoreAdminUser(id)
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      if (typeof window !== 'undefined') {
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] }).catch(() => {})
+      }
     },
   })
 }
@@ -117,18 +171,32 @@ export function useDeleteAdminUser() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      if (isOffline()) {
+      const handleOffline = async () => {
         const cached = await getAdminUserById(id)
         if (cached) {
           await putAdminUsers([{ ...cached, deletedAt: new Date().toISOString() }])
         }
         await enqueueOfflineOp({ type: 'DELETE_ADMIN_USER', payload: { id } })
-        return
+        return cached
       }
-      return deleteAdminUser(id)
+
+      if (isOffline()) {
+        return handleOffline()
+      }
+
+      try {
+        return await deleteAdminUser(id)
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      if (typeof window !== 'undefined') {
+        queryClient.invalidateQueries({ queryKey: ['admin-users'] }).catch(() => {})
+      }
     },
   })
 }

@@ -5,6 +5,8 @@ import { toast } from 'sonner'
 import { hospitalsAPI } from '@/lib/api/hospitals'
 import { enqueueOfflineOp } from '@/lib/offline/db'
 import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
+import { isConnectivityError } from '@/lib/api/api'
+import { isBrowserOffline } from '@/lib/offline/connectionState'
 
 /** Ready-to-use mutations for ADMIN/VOLUNTEER flows with offline support. */
 export function useHospitalAdminMutations() {
@@ -17,12 +19,16 @@ export function useHospitalAdminMutations() {
   // ── Create — يتطلب إنترنت (FormData + صور) ──────────────────────────────
   const createHospital = useMutation({
     mutationFn: (formData: FormData) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (isBrowserOffline()) {
         return Promise.reject(new Error('يتطلب إنشاء مرفق جديد اتصالاً بالإنترنت (يحتوي على صور)'))
       }
       return hospitalsAPI.create(formData)
     },
-    onSuccess: invalidateLists,
+    onSuccess: () => {
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        invalidateLists()
+      }
+    },
     onError: (err) => {
       toast.error(err.message ?? 'فشل إنشاء المرفق', { duration: 4000 })
     },
@@ -37,12 +43,16 @@ export function useHospitalAdminMutations() {
       id: string
       body: Record<string, unknown> | FormData
     }) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (isBrowserOffline()) {
         return Promise.reject(new Error('يتطلب تعديل المرفق اتصالاً بالإنترنت (يحتوي على صور)'))
       }
       return hospitalsAPI.update(id, body)
     },
-    onSuccess: invalidateLists,
+    onSuccess: () => {
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        invalidateLists()
+      }
+    },
     onError: (err) => {
       toast.error(err.message ?? 'فشل تعديل المرفق', { duration: 4000 })
     },
@@ -51,9 +61,7 @@ export function useHospitalAdminMutations() {
   // ── Delete — يعمل offline عبر الـ queue ─────────────────────────────────
   const deleteHospital = useMutation({
     mutationFn: async (id: string) => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
-
-      if (offline) {
+      const handleOffline = async () => {
         await enqueueOfflineOp({
           type: 'DELETE_FACILITY',
           payload: { id, updatedAt: Date.now() },
@@ -74,10 +82,24 @@ export function useHospitalAdminMutations() {
         return null
       }
 
-      return hospitalsAPI.softDelete(id)
+      const offline = isBrowserOffline()
+      if (offline) {
+        return handleOffline()
+      }
+
+      try {
+        return await hospitalsAPI.softDelete(id)
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: (result) => {
-      if (result !== null) invalidateLists()
+      if (result !== null && typeof window !== 'undefined' && navigator.onLine) {
+        invalidateLists()
+      }
     },
     onError: (err) => {
       toast.error(err.message ?? 'فشل حذف المرفق', { duration: 4000 })
@@ -93,9 +115,7 @@ export function useHospitalAdminMutations() {
       id: string
       status: HospitalCapacityStatus
     }) => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
-
-      if (offline) {
+      const handleOffline = async () => {
         await enqueueOfflineOp({
           type: 'UPDATE_FACILITY_STATUS',
           payload: { id, status, updatedAt: Date.now() },
@@ -117,10 +137,24 @@ export function useHospitalAdminMutations() {
         return null
       }
 
-      return hospitalsAPI.updateStatus(id, { status })
+      const offline = isBrowserOffline()
+      if (offline) {
+        return handleOffline()
+      }
+
+      try {
+        return await hospitalsAPI.updateStatus(id, { status })
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: (result) => {
-      if (result !== null) invalidateLists()
+      if (result !== null && typeof window !== 'undefined' && navigator.onLine) {
+        invalidateLists()
+      }
     },
     onError: (err) => {
       toast.error(err.message ?? 'فشل تحديث حالة المرفق', { duration: 4000 })

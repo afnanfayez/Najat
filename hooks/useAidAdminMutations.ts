@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { aidAPI, type AidStatus } from '@/lib/api/aid'
 import { enqueueOfflineOp } from '@/lib/offline/db'
+import { isConnectivityError } from '@/lib/api/api'
+import { isBrowserOffline } from '@/lib/offline/connectionState'
 
 /** Mutations for ADMIN aid management with offline support. */
 export function useAidAdminMutations() {
@@ -16,12 +18,16 @@ export function useAidAdminMutations() {
   // ── Create Aid Point — يتطلب إنترنت (قد يحتوي صور) ──────────────────────
   const createAidPoint = useMutation({
     mutationFn: (body: Record<string, unknown>) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (isBrowserOffline()) {
         return Promise.reject(new Error('يتطلب إنشاء نقطة مساعدة اتصالاً بالإنترنت'))
       }
       return aidAPI.create(body)
     },
-    onSuccess: invalidateAid,
+    onSuccess: () => {
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        invalidateAid()
+      }
+    },
     onError: (err) => {
       toast.error(err.message ?? 'فشل إنشاء نقطة المساعدة', { duration: 4000 })
     },
@@ -30,12 +36,16 @@ export function useAidAdminMutations() {
   // ── Update Aid Point — يتطلب إنترنت (قد يحتوي صور) ─────────────────────
   const updateAidPoint = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      if (isBrowserOffline()) {
         return Promise.reject(new Error('يتطلب تعديل نقطة المساعدة اتصالاً بالإنترنت'))
       }
       return aidAPI.update(id, body)
     },
-    onSuccess: invalidateAid,
+    onSuccess: () => {
+      if (typeof window !== 'undefined' && navigator.onLine) {
+        invalidateAid()
+      }
+    },
     onError: (err) => {
       toast.error(err.message ?? 'فشل تعديل نقطة المساعدة', { duration: 4000 })
     },
@@ -44,9 +54,7 @@ export function useAidAdminMutations() {
   // ── Delete Aid Point — يعمل offline عبر الـ queue ───────────────────────
   const deleteAidPoint = useMutation({
     mutationFn: async (id: string) => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
-
-      if (offline) {
+      const handleOffline = async () => {
         await enqueueOfflineOp({
           type: 'DELETE_AID_POINT',
           payload: { id, updatedAt: Date.now() },
@@ -63,10 +71,24 @@ export function useAidAdminMutations() {
         return null
       }
 
-      return aidAPI.softDelete(id)
+      const offline = isBrowserOffline()
+      if (offline) {
+        return handleOffline()
+      }
+
+      try {
+        return await aidAPI.softDelete(id)
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: (result) => {
-      if (result !== null) invalidateAid()
+      if (result !== null && typeof window !== 'undefined' && navigator.onLine) {
+        invalidateAid()
+      }
     },
     onError: (err) => {
       toast.error(err.message ?? 'فشل حذف نقطة المساعدة', { duration: 4000 })
@@ -76,9 +98,7 @@ export function useAidAdminMutations() {
   // ── Update Aid Status — يعمل offline عبر الـ queue ──────────────────────
   const updateAidStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AidStatus }) => {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine
-
-      if (offline) {
+      const handleOffline = async () => {
         await enqueueOfflineOp({
           type: 'UPDATE_AID_STATUS',
           payload: { id, status, updatedAt: Date.now() },
@@ -95,10 +115,24 @@ export function useAidAdminMutations() {
         return null
       }
 
-      return aidAPI.updateStatus(id, { status })
+      const offline = isBrowserOffline()
+      if (offline) {
+        return handleOffline()
+      }
+
+      try {
+        return await aidAPI.updateStatus(id, { status })
+      } catch (err) {
+        if (isConnectivityError(err)) {
+          return handleOffline()
+        }
+        throw err
+      }
     },
     onSuccess: (result) => {
-      if (result !== null) invalidateAid()
+      if (result !== null && typeof window !== 'undefined' && navigator.onLine) {
+        invalidateAid()
+      }
     },
     onError: (err) => {
       toast.error(err.message ?? 'فشل تحديث حالة المساعدة', { duration: 4000 })
