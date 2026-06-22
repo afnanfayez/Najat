@@ -28,38 +28,80 @@ export function buildDashboardFromSafetyData(
     totalEntities > 0 ? Math.round((activeEntities / totalEntities) * 100) : 100
 
   const publishLogs: AdminMapsPublishLog[] = [
-    ...layers.dangerZones.map((z) => ({
-      id: z.id,
-      geographicScope: z.description,
-      publishedAt: '—',
-      deviceCount: null,
-      changeImpact: `مستوى الخطر: ${z.dangerLevel}`,
-      status: (z.isActive ? 'published' : 'failed') as MapPublishStatus,
-      classification: 'danger' as MapRouteClassification,
-      operationalStatus: (z.isActive ? 'open' : 'closed') as MapRouteOperationalStatus,
-    })),
-    ...layers.safeRoads.map((r) => ({
-      id: r.id,
-      geographicScope: r.name,
-      publishedAt: '—',
-      deviceCount: null,
-      changeImpact: r.description || '',
-      status: (r.isActive ? 'published' : 'failed') as MapPublishStatus,
-      classification: 'safe' as MapRouteClassification,
-      operationalStatus: (r.isActive ? 'open' : 'closed') as MapRouteOperationalStatus,
-      positions: r.positions,
-    })),
-    ...layers.resourcePoints.map((p) => ({
-      id: p.id,
-      geographicScope: p.name,
-      publishedAt: '—',
-      deviceCount: null,
-      changeImpact: p.type,
-      status: (p.isActive ? 'published' : 'failed') as MapPublishStatus,
-      classification: 'alternative' as MapRouteClassification,
-      operationalStatus: (p.isActive ? 'open' : 'closed') as MapRouteOperationalStatus,
-      position: p.position,
-    })),
+    ...layers.dangerZones.map((z) => {
+      const isMaintenance = z.description.endsWith(' [MAINTENANCE]')
+      const cleanDescription = isMaintenance
+        ? z.description.replace(' [MAINTENANCE]', '')
+        : z.description
+      const opStatus: MapRouteOperationalStatus = !z.isActive
+        ? 'closed'
+        : isMaintenance
+          ? 'maintenance'
+          : 'open'
+
+      return {
+        id: z.id,
+        geographicScope: cleanDescription,
+        publishedAt: '—',
+        deviceCount: null,
+        changeImpact:
+          z.dangerLevel === 'high' || z.dangerLevel === 'critical'
+            ? 'مستوى الخطر: مرتفع'
+            : z.dangerLevel === 'low'
+              ? 'مستوى الخطر: منخفض'
+              : 'مستوى الخطر: متوسط',
+        status: (z.isActive ? 'published' : 'failed') as MapPublishStatus,
+        classification: 'danger' as MapRouteClassification,
+        operationalStatus: opStatus,
+        positions: z.rings[0],
+      }
+    }),
+    ...layers.safeRoads.map((r) => {
+      const isMaintenance = r.name.endsWith(' [MAINTENANCE]')
+      const cleanName = isMaintenance
+        ? r.name.replace(' [MAINTENANCE]', '')
+        : r.name
+      const opStatus: MapRouteOperationalStatus = !r.isActive
+        ? 'closed'
+        : isMaintenance
+          ? 'maintenance'
+          : 'open'
+
+      return {
+        id: r.id,
+        geographicScope: cleanName,
+        publishedAt: '—',
+        deviceCount: null,
+        changeImpact: r.description || '',
+        status: (r.isActive ? 'published' : 'failed') as MapPublishStatus,
+        classification: 'safe' as MapRouteClassification,
+        operationalStatus: opStatus,
+        positions: r.positions,
+      }
+    }),
+    ...layers.resourcePoints.map((p) => {
+      const isMaintenance = p.name.endsWith(' [MAINTENANCE]')
+      const cleanName = isMaintenance
+        ? p.name.replace(' [MAINTENANCE]', '')
+        : p.name
+      const opStatus: MapRouteOperationalStatus = !p.isActive
+        ? 'closed'
+        : isMaintenance
+          ? 'maintenance'
+          : 'open'
+
+      return {
+        id: p.id,
+        geographicScope: cleanName,
+        publishedAt: '—',
+        deviceCount: null,
+        changeImpact: p.type,
+        status: (p.isActive ? 'published' : 'failed') as MapPublishStatus,
+        classification: 'alternative' as MapRouteClassification,
+        operationalStatus: opStatus,
+        position: p.position,
+      }
+    }),
   ]
 
   const insights: AdminMapsInsight[] = [

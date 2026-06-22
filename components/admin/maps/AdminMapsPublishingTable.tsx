@@ -31,6 +31,28 @@ function formatDevices(count: number | null): string {
   return count.toLocaleString('en-US')
 }
 
+function parseDangerLevel(impactText: string): 'low' | 'medium' | 'high' {
+  const text = impactText.toLowerCase()
+  if (text.includes('high') || text.includes('مرتفع') || text.includes('شديد') || text.includes('خطر كبير')) {
+    return 'high'
+  }
+  if (text.includes('low') || text.includes('منخفض') || text.includes('بسيط')) {
+    return 'low'
+  }
+  return 'medium'
+}
+
+function getStatusBadge(row: AdminMapsPublishLog) {
+  const opStatus = row.operationalStatus ?? (row.status === 'failed' ? 'closed' : 'open')
+  if (opStatus === 'maintenance') {
+    return { label: 'صيانة', color: '#FF9800', bg: '#FFF3E0' }
+  }
+  if (opStatus === 'closed') {
+    return { label: 'مغلق', color: '#EF4444', bg: '#FEE2E2' }
+  }
+  return { label: 'مفتوح', color: '#4CAF50', bg: '#E8F5E9' }
+}
+
 function rowToFormValues(row: AdminMapsPublishLog): Partial<RouteFormData> {
   return {
     areaName: row.geographicScope,
@@ -73,46 +95,168 @@ export default function AdminMapsPublishingTable({
   async function handleSaveRoute(data: RouteFormData) {
     if (!editingRow) return
 
-    const classification = editingRow.classification ?? data.classification
+    const oldClassification = editingRow.classification
+    const newClassification = data.classification
 
-    if (classification === 'danger') {
-      await mutations.updateZone.mutateAsync({
-        id: editingRow.id,
-        body: { description: data.areaName },
-      })
-      toast.success('تم تحديث البيانات', { position: 'top-center' })
-    } else if (classification === 'safe' && editingRow.positions?.length) {
-      // The real backend has no update endpoint for safe roads — recreate it
-      // with the new name/description, then remove the old record.
-      await mutations.createSafeRoad.mutateAsync({
-        name: data.areaName,
-        description: data.changeImpact,
-        path: {
-          type: 'LineString',
-          coordinates: editingRow.positions.map(([lat, lng]) => [lng, lat]),
-        },
-        isActive: true,
-      })
-      await mutations.deleteSafeRoad.mutateAsync(editingRow.id)
-      toast.success('تم تحديث البيانات', { position: 'top-center' })
-    } else if (classification === 'alternative' && editingRow.position) {
-      // Same limitation as safe roads — no update endpoint for resource points.
-      const [lat, lng] = editingRow.position
-      await mutations.createResourcePoint.mutateAsync({
-        name: data.areaName,
-        type: editingRow.changeImpact,
-        location: { type: 'Point', coordinates: [lng, lat] },
-        isActive: true,
-      })
-      await mutations.deleteResourcePoint.mutateAsync(editingRow.id)
-      toast.success('تم تحديث البيانات', { position: 'top-center' })
+    const resolvedName = data.status === 'maintenance'
+      ? `${data.areaName} [MAINTENANCE]`
+      : data.areaName
+
+    const resolvedDangerLevel = parseDangerLevel(data.changeImpact)
+
+    // Check if the user changed the classification of the route
+    if (oldClassification && oldClassification !== newClassification) {
+      if (oldClassification === 'danger') {
+        if (newClassification === 'safe' && editingRow.positions?.length) {
+          // Recreate danger zone as safe road
+          await mutations.createSafeRoad.mutateAsync({
+            name: resolvedName,
+            description: data.changeImpact || '',
+            path: {
+              type: 'LineString',
+              coordinates: editingRow.positions.map(([lat, lng]) => [lng, lat]),
+            },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteZone.mutateAsync(editingRow.id)
+          toast.success('تم تحويل منطقة الخطر إلى مسار آمن بنجاح', { position: 'top-center' })
+        } else if (newClassification === 'alternative' && editingRow.positions?.length) {
+          // Recreate danger zone as resource point
+          const [lat, lng] = editingRow.positions[0]
+          await mutations.createResourcePoint.mutateAsync({
+            name: resolvedName,
+            type: 'medical',
+            description: data.changeImpact || '',
+            location: { type: 'Point', coordinates: [lng, lat] },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteZone.mutateAsync(editingRow.id)
+          toast.success('تم تحويل منطقة الخطر إلى نقطة موارد بنجاح', { position: 'top-center' })
+        } else {
+          toast.error('تعذر تحويل التصنيف لعدم توفر الإحداثيات اللازمة')
+        }
+      } else if (oldClassification === 'safe') {
+        if (newClassification === 'danger' && editingRow.positions?.length) {
+          // Recreate safe road as danger zone (close the line to form a polygon)
+          const coords = [...editingRow.positions]
+          if (coords.length > 0) {
+            const first = coords[0]
+            const last = coords[coords.length - 1]
+            if (first[0] !== last[0] || first[1] !== last[1]) {
+              coords.push(first)
+            }
+          }
+          await mutations.createZone.mutateAsync({
+            description: resolvedName,
+            dangerLevel: resolvedDangerLevel,
+            area: {
+              type: 'Polygon',
+              coordinates: [coords.map(([lat, lng]) => [lng, lat])],
+            },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteSafeRoad.mutateAsync(editingRow.id)
+          toast.success('تم تحويل المسار الآمن إلى منطقة خطر بنجاح', { position: 'top-center' })
+        } else if (newClassification === 'alternative' && editingRow.positions?.length) {
+          // Recreate safe road as resource point
+          const [lat, lng] = editingRow.positions[0]
+          await mutations.createResourcePoint.mutateAsync({
+            name: resolvedName,
+            type: 'medical',
+            description: data.changeImpact || '',
+            location: { type: 'Point', coordinates: [lng, lat] },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteSafeRoad.mutateAsync(editingRow.id)
+          toast.success('تم تحويل المسار الآمن إلى نقطة موارد بنجاح', { position: 'top-center' })
+        } else {
+          toast.error('تعذر تحويل التصنيف لعدم توفر الإحداثيات اللازمة')
+        }
+      } else if (oldClassification === 'alternative') {
+        if (newClassification === 'danger' && editingRow.position) {
+          // Recreate resource point as danger zone (small square polygon)
+          const [lat, lng] = editingRow.position
+          const d = 0.0002
+          const coords = [
+            [lng - d, lat - d],
+            [lng + d, lat - d],
+            [lng + d, lat + d],
+            [lng - d, lat + d],
+            [lng - d, lat - d]
+          ]
+          await mutations.createZone.mutateAsync({
+            description: resolvedName,
+            dangerLevel: resolvedDangerLevel,
+            area: {
+              type: 'Polygon',
+              coordinates: [coords],
+            },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteResourcePoint.mutateAsync(editingRow.id)
+          toast.success('تم تحويل نقطة الموارد إلى منطقة خطر بنجاح', { position: 'top-center' })
+        } else if (newClassification === 'safe' && editingRow.position) {
+          // Recreate resource point as safe road (short line segment)
+          const [lat, lng] = editingRow.position
+          await mutations.createSafeRoad.mutateAsync({
+            name: resolvedName,
+            description: data.changeImpact || '',
+            path: {
+              type: 'LineString',
+              coordinates: [[lng, lat], [lng + 0.0001, lat + 0.0001]],
+            },
+            isActive: data.status !== 'closed',
+          })
+          await mutations.deleteResourcePoint.mutateAsync(editingRow.id)
+          toast.success('تم تحويل نقطة الموارد إلى مسار آمن بنجاح', { position: 'top-center' })
+        } else {
+          toast.error('تعذر تحويل التصنيف لعدم توفر الإحداثيات اللازمة')
+        }
+      }
     } else {
-      // No geometry available on this row (older cached data) — fall back to the editor.
-      toast.info(
-        'لتعديل إحداثيات المسار أو نقطة الموارد، استخدم محرر الخرائط',
-        { duration: 5000 },
-      )
-      router.push('/admin/maps/new')
+      // Normal update when classification remains unchanged
+      if (newClassification === 'danger') {
+        await mutations.updateZone.mutateAsync({
+          id: editingRow.id,
+          body: {
+            description: resolvedName,
+            dangerLevel: resolvedDangerLevel,
+            isActive: data.status !== 'closed',
+          },
+        })
+        toast.success('تم تحديث البيانات', { position: 'top-center' })
+      } else if (newClassification === 'safe' && editingRow.positions?.length) {
+        // Safe road update: delete and recreate with new fields
+        await mutations.createSafeRoad.mutateAsync({
+          name: resolvedName,
+          description: data.changeImpact || '',
+          path: {
+            type: 'LineString',
+            coordinates: editingRow.positions.map(([lat, lng]) => [lng, lat]),
+          },
+          isActive: data.status !== 'closed',
+        })
+        await mutations.deleteSafeRoad.mutateAsync(editingRow.id)
+        toast.success('تم تحديث البيانات', { position: 'top-center' })
+      } else if (newClassification === 'alternative' && editingRow.position) {
+        // Resource point update: delete and recreate with new fields
+        const [lat, lng] = editingRow.position
+        await mutations.createResourcePoint.mutateAsync({
+          name: resolvedName,
+          type: 'medical',
+          description: data.changeImpact || '',
+          location: { type: 'Point', coordinates: [lng, lat] },
+          isActive: data.status !== 'closed',
+        })
+        await mutations.deleteResourcePoint.mutateAsync(editingRow.id)
+        toast.success('تم تحديث البيانات', { position: 'top-center' })
+      } else {
+        toast.info(
+          'لتعديل إحداثيات المسار أو نقطة الموارد، استخدم محرر الخرائط',
+          { duration: 5000 },
+        )
+        router.push('/admin/maps/new')
+      }
     }
 
     closeModal()
@@ -214,7 +358,7 @@ export default function AdminMapsPublishingTable({
                   </thead>
                   <tbody>
                     {rows.map((row) => {
-                      const status = STATUS_LABELS[row.status]
+                      const status = getStatusBadge(row)
                       const typeLabel =
                         row.classification === 'danger'
                           ? 'منطقة خطر'
@@ -296,7 +440,7 @@ export default function AdminMapsPublishingTable({
               {/* Mobile cards */}
               <div className="flex flex-col gap-3 p-4 md:hidden">
                 {rows.map((row) => {
-                  const status = STATUS_LABELS[row.status]
+                  const status = getStatusBadge(row)
                   const typeLabel =
                     row.classification === 'danger'
                       ? 'منطقة خطر'
