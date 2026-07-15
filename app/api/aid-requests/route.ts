@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import { normalizeUserRole } from '@/lib/auth/roleUtils'
+import { isMockMode } from '@/lib/mocks/isMockMode'
 
 type AidRequestStatus = 'pending' | 'in_progress' | 'approved' | 'rejected' | 'fulfilled'
 
@@ -320,6 +321,7 @@ async function findBackendRequestById(
   requestId: string,
   authHeader: string,
 ): Promise<Record<string, unknown> | null> {
+  if (isMockMode()) return null
   const backendRes = await fetchWithTimeout(
     `${REAL_BACKEND_ROOT}/aid/requests`,
     {
@@ -386,31 +388,33 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: 'توكن غير صالح' }, { status: 401 })
   }
 
-  try {
-    const target = role === 'admin'
-      ? `${REAL_BACKEND_ROOT}/aid/requests`
-      : `${REAL_BACKEND_ROOT}/aid/requests`
-    const backendRes = await fetchWithTimeout(
-      target,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: authHeader,
-          'Cache-Control': 'no-cache',
+  if (!isMockMode()) {
+    try {
+      const target = role === 'admin'
+        ? `${REAL_BACKEND_ROOT}/aid/requests`
+        : `${REAL_BACKEND_ROOT}/aid/requests`
+      const backendRes = await fetchWithTimeout(
+        target,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: authHeader,
+            'Cache-Control': 'no-cache',
+          },
         },
-      },
-      9000,
-    )
+        9000,
+      )
 
-    if (backendRes.ok) {
-      const body = await backendRes.json().catch(() => null)
-      const overrides = await readStatusOverrides(req)
-      return NextResponse.json(applyStatusOverrides(body ?? {}, overrides), {
-        status: backendRes.status,
-      })
+      if (backendRes.ok) {
+        const body = await backendRes.json().catch(() => null)
+        const overrides = await readStatusOverrides(req)
+        return NextResponse.json(applyStatusOverrides(body ?? {}, overrides), {
+          status: backendRes.status,
+        })
+      }
+    } catch (err) {
+      console.warn('[Aid Requests GET] Backend unavailable; falling back to local JSON:', err)
     }
-  } catch (err) {
-    console.warn('[Aid Requests GET] Backend unavailable; falling back to local JSON:', err)
   }
 
   try {
@@ -470,40 +474,42 @@ export async function POST(req: Request) {
       updatedAt: now,
     }
 
-    try {
-      const forwardRes = await fetchWithTimeout(
-        `${REAL_BACKEND_ROOT}/aid/${encodeURIComponent(aidOrganizationId)}/requests`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: authHeader,
-            'Content-Type': 'application/json',
+    if (!isMockMode()) {
+      try {
+        const forwardRes = await fetchWithTimeout(
+          `${REAL_BACKEND_ROOT}/aid/${encodeURIComponent(aidOrganizationId)}/requests`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: authHeader,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(forwardBody),
           },
-          body: JSON.stringify(forwardBody),
-        },
-        3000,
-      )
+          3000,
+        )
 
-      if (forwardRes.ok) {
-        const backendBody = await forwardRes.json().catch(() => null)
-        const backendData = isRecord(backendBody) ? backendBody.data : null
-        const storedRequest = isRecord(backendData)
-          ? { ...newRequest, ...backendData, aidOrganizationName: asString(aidOrganizationName) }
-          : newRequest
-        const db = await readDb()
-        const userRequests = db[userId] || []
-        userRequests.unshift(storedRequest as AidRequestRecord)
-        db[userId] = userRequests
-        await tryWriteDb(db)
-        return NextResponse.json(backendBody ?? { success: true, data: storedRequest }, {
-          status: forwardRes.status,
-        })
-      } else {
-        const text = await forwardRes.text().catch(() => '')
-        console.warn('[Aid Forward] Backend rejected request:', forwardRes.status, text)
+        if (forwardRes.ok) {
+          const backendBody = await forwardRes.json().catch(() => null)
+          const backendData = isRecord(backendBody) ? backendBody.data : null
+          const storedRequest = isRecord(backendData)
+            ? { ...newRequest, ...backendData, aidOrganizationName: asString(aidOrganizationName) }
+            : newRequest
+          const db = await readDb()
+          const userRequests = db[userId] || []
+          userRequests.unshift(storedRequest as AidRequestRecord)
+          db[userId] = userRequests
+          await tryWriteDb(db)
+          return NextResponse.json(backendBody ?? { success: true, data: storedRequest }, {
+            status: forwardRes.status,
+          })
+        } else {
+          const text = await forwardRes.text().catch(() => '')
+          console.warn('[Aid Forward] Backend rejected request:', forwardRes.status, text)
+        }
+      } catch (err) {
+        console.warn('Aid request forwarding failed; saved locally:', err)
       }
-    } catch (err) {
-      console.warn('Aid request forwarding failed; saved locally:', err)
     }
 
     const db = await readDb()

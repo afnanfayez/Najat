@@ -14,8 +14,11 @@ import { NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
 import { mapUserProfile } from '@/lib/profile/mapUserProfile'
+import { isMockMode } from '@/lib/mocks/isMockMode'
 
 const DB_PATH = path.join(process.cwd(), 'data', 'profile_store.json')
+// The Railway host below has permanently expired — see lib/mocks/isMockMode.ts.
+// It's only ever contacted when NEXT_PUBLIC_USE_MOCK_DATA=false.
 const BACKEND_ME_URL = 'https://graduation-project-api-production-8251.up.railway.app/api/v1/auth/me'
 
 async function readDb(): Promise<Record<string, any>> {
@@ -33,6 +36,19 @@ async function writeDb(data: Record<string, any>) {
     await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2), 'utf-8')
   } catch (err) {
     console.error('Failed to write profile store:', err)
+  }
+}
+
+function decodeJwtPayload(authHeader: string): Record<string, unknown> | null {
+  try {
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const payload = token.split('.')[1]
+    if (!payload) return null
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const decoded = Buffer.from(base64, 'base64').toString('utf-8')
+    return JSON.parse(decoded)
+  } catch {
+    return null
   }
 }
 
@@ -73,68 +89,70 @@ export async function GET(req: Request) {
 
   const userId = getUserIdFromAuthHeader(authHeader)
 
-  try {
-    // 1. One single GET request to the real backend with a short timeout
-    const backendRes = await fetchWithTimeout(BACKEND_ME_URL, {
-      method: 'GET',
-      headers: {
-        'Authorization': authHeader,
-        'Cache-Control': 'no-cache',
-      },
-    }, 9000)
+  if (!isMockMode()) {
+    try {
+      // 1. One single GET request to the real backend with a short timeout
+      const backendRes = await fetchWithTimeout(BACKEND_ME_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': authHeader,
+          'Cache-Control': 'no-cache',
+        },
+      }, 9000)
 
-    if (backendRes.ok) {
-      const rawUser = await backendRes.json()
-      const mapped = mapUserProfile(rawUser)
-      if (mapped) {
-        // 2. Read local server db and merge
-        const db = await readDb()
-        const local = db[mapped.id] || {}
+      if (backendRes.ok) {
+        const rawUser = await backendRes.json()
+        const mapped = mapUserProfile(rawUser)
+        if (mapped) {
+          // 2. Read local server db and merge
+          const db = await readDb()
+          const local = db[mapped.id] || {}
 
-        const merged = {
-          ...mapped,
-          // Local-only fields: always prefer the locally stored value, never overwrite with null from backend
-          avatarUrl: local.avatarUrl ?? mapped.avatarUrl ?? null,
-          assistancePreferences: local.assistancePreferences ?? mapped.assistancePreferences ?? null,
-          assistanceLocation: local.assistanceLocation ?? mapped.assistanceLocation ?? null,
-          assistanceRadius: local.assistanceRadius ?? mapped.assistanceRadius ?? null,
-          emergencyContacts: local.emergencyContacts ?? null,
-          sosMessage: local.sosMessage ?? null,
-          bloodType: local.bloodType ?? null,
+          const merged = {
+            ...mapped,
+            // Local-only fields: always prefer the locally stored value, never overwrite with null from backend
+            avatarUrl: local.avatarUrl ?? mapped.avatarUrl ?? null,
+            assistancePreferences: local.assistancePreferences ?? mapped.assistancePreferences ?? null,
+            assistanceLocation: local.assistanceLocation ?? mapped.assistanceLocation ?? null,
+            assistanceRadius: local.assistanceRadius ?? mapped.assistanceRadius ?? null,
+            emergencyContacts: local.emergencyContacts ?? null,
+            sosMessage: local.sosMessage ?? null,
+            bloodType: local.bloodType ?? null,
+          }
+
+          // Cache ONLY backend fields + preserve existing local-only fields.
+          // IMPORTANT: do NOT spread `merged` here because it would overwrite locally-stored
+          // values (avatarUrl, emergencyContacts, bloodType, etc.) with null if the backend
+          // doesn't know about them.
+          db[mapped.id] = {
+            ...local,                                    // preserve ALL existing local fields first
+            // then update backend-authoritative fields only
+            id: mapped.id,
+            fullName: mapped.fullName,
+            email: mapped.email,
+            role: mapped.role,
+            phoneNumber: mapped.phoneNumber,
+            gender: mapped.gender,
+            ageGroup: mapped.ageGroup,
+            maritalStatus: mapped.maritalStatus,
+            healthStatus: mapped.healthStatus,
+            nationalId: mapped.nationalId,
+            housingStatus: mapped.housingStatus,
+            familyMembersCount: mapped.familyMembersCount,
+            femalesCount: mapped.femalesCount,
+            malesCount: mapped.malesCount,
+            region: mapped.region,
+            isVerified: (mapped as any).isVerified,
+            isActive: (mapped as any).isActive,
+          }
+          await writeDb(db)
+
+          return NextResponse.json({ success: true, data: merged })
         }
-
-        // Cache ONLY backend fields + preserve existing local-only fields.
-        // IMPORTANT: do NOT spread `merged` here because it would overwrite locally-stored
-        // values (avatarUrl, emergencyContacts, bloodType, etc.) with null if the backend
-        // doesn't know about them.
-        db[mapped.id] = {
-          ...local,                                    // preserve ALL existing local fields first
-          // then update backend-authoritative fields only
-          id: mapped.id,
-          fullName: mapped.fullName,
-          email: mapped.email,
-          role: mapped.role,
-          phoneNumber: mapped.phoneNumber,
-          gender: mapped.gender,
-          ageGroup: mapped.ageGroup,
-          maritalStatus: mapped.maritalStatus,
-          healthStatus: mapped.healthStatus,
-          nationalId: mapped.nationalId,
-          housingStatus: mapped.housingStatus,
-          familyMembersCount: mapped.familyMembersCount,
-          femalesCount: mapped.femalesCount,
-          malesCount: mapped.malesCount,
-          region: mapped.region,
-          isVerified: (mapped as any).isVerified,
-          isActive: (mapped as any).isActive,
-        }
-        await writeDb(db)
-
-        return NextResponse.json({ success: true, data: merged })
       }
+    } catch (err) {
+      console.warn('[Profile GET] Remote backend unreachable or timed out. Falling back to server database:', err)
     }
-  } catch (err) {
-    console.warn('[Profile GET] Remote backend unreachable or timed out. Falling back to server database:', err)
   }
 
   // Fallback: load directly from server DB when offline
@@ -167,6 +185,40 @@ export async function GET(req: Request) {
         bloodType: local.bloodType ?? null,
       }
       return NextResponse.json({ success: true, data: fallbackProfile })
+    }
+
+    // Mock mode: a brand-new user (register/login just happened) has no local
+    // record yet — synthesize a minimal default profile from the JWT instead
+    // of 504ing, since there's no real backend to have ever populated one.
+    if (isMockMode()) {
+      const payload = decodeJwtPayload(authHeader)
+      const email = typeof payload?.email === 'string' ? payload.email : ''
+      const role = typeof payload?.role === 'string' ? payload.role : 'resident'
+      const defaultProfile = {
+        id: userId,
+        fullName: email ? email.split('@')[0] : 'مستخدم نجاة',
+        email,
+        role,
+        phoneNumber: null,
+        gender: null,
+        ageGroup: null,
+        maritalStatus: null,
+        healthStatus: null,
+        nationalId: null,
+        housingStatus: null,
+        familyMembersCount: null,
+        femalesCount: null,
+        malesCount: null,
+        region: null,
+        avatarUrl: null,
+        assistancePreferences: null,
+        assistanceLocation: null,
+        assistanceRadius: null,
+        emergencyContacts: null,
+        sosMessage: null,
+        bloodType: null,
+      }
+      return NextResponse.json({ success: true, data: defaultProfile })
     }
   }
 
@@ -225,6 +277,41 @@ export async function PATCH(req: Request) {
 
     let refreshedMapped: any = null
     const hasBackendFields = Object.keys(backendBody).length > 0
+
+    // Mock mode: there's no real backend to be authoritative, so backend fields
+    // are written straight into the local store, same as local-only fields.
+    if (isMockMode()) {
+      if (hasBackendFields) {
+        Object.assign(local, backendBody)
+        db[userId] = local
+        await writeDb(db)
+      }
+      const finalMerged = {
+        id: userId,
+        fullName: local.fullName ?? 'مستخدم نجاة',
+        email: local.email ?? '',
+        role: local.role ?? 'resident',
+        phoneNumber: local.phoneNumber ?? null,
+        gender: local.gender ?? null,
+        ageGroup: local.ageGroup ?? null,
+        maritalStatus: local.maritalStatus ?? null,
+        healthStatus: local.healthStatus ?? null,
+        nationalId: local.nationalId ?? null,
+        housingStatus: local.housingStatus ?? null,
+        familyMembersCount: local.familyMembersCount ?? null,
+        femalesCount: local.femalesCount ?? null,
+        malesCount: local.malesCount ?? null,
+        region: local.region ?? null,
+        avatarUrl: local.avatarUrl ?? null,
+        assistancePreferences: local.assistancePreferences ?? null,
+        assistanceLocation: local.assistanceLocation ?? null,
+        assistanceRadius: local.assistanceRadius ?? null,
+        emergencyContacts: local.emergencyContacts ?? null,
+        sosMessage: local.sosMessage ?? null,
+        bloodType: local.bloodType ?? null,
+      }
+      return NextResponse.json({ success: true, data: finalMerged })
+    }
 
     // 4. The backend is authoritative for backend fields. Only report success if
     //    it actually accepted the change — never fake success on error/timeout.
