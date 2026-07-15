@@ -1,5 +1,7 @@
 import { request } from '@/lib/api/api'
 import { getToken } from '@/lib/api/auth'
+import { isMockMode } from '@/lib/mocks/isMockMode'
+import { simulateDelay } from '@/lib/mocks/store/delay'
 import type {
   AdminDataDashboard,
   AdminDataDashboardQueryParams,
@@ -264,6 +266,11 @@ export async function publishAllAdminDataSyncFromApi(): Promise<{ processed: num
 }
 
 export async function downloadAdminDataReviewReportFromApi(id: string): Promise<Blob> {
+  if (isMockMode()) {
+    await simulateDelay()
+    const text = `Najat — Data Review Report (mock)\nRequest: ${id}\nGenerated: ${new Date().toISOString()}\n`
+    return new Blob([text], { type: 'application/pdf' })
+  }
   const token =
     typeof window !== 'undefined' ? getToken() : null
 
@@ -279,6 +286,11 @@ export async function downloadAdminDataReviewReportFromApi(id: string): Promise<
 }
 
 export async function exportAdminDataSyncCsvFromApi(): Promise<Blob> {
+  if (isMockMode()) {
+    await simulateDelay()
+    const text = `id,entityName,action,status\n`
+    return new Blob([text], { type: 'text/csv' })
+  }
   const token =
     typeof window !== 'undefined' ? getToken() : null
 

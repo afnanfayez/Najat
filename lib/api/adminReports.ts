@@ -1,5 +1,7 @@
 import { request } from '@/lib/api/api'
 import { getToken } from '@/lib/api/auth'
+import { isMockMode } from '@/lib/mocks/isMockMode'
+import { simulateDelay } from '@/lib/mocks/store/delay'
 
 const V1 = '/v1/admin/reports'
 const BASE_URL =
@@ -46,6 +48,11 @@ export async function fetchAdminReportsDashboardFromApi(): Promise<AdminReportsA
  * lose the binary content.
  */
 export async function exportAdminReportsPdfFromApi(): Promise<Blob> {
+  if (isMockMode()) {
+    await simulateDelay()
+    const text = `Najat — System Report (mock)\nGenerated: ${new Date().toISOString()}\n`
+    return new Blob([text], { type: 'application/pdf' })
+  }
   const token = typeof window !== 'undefined' ? getToken() : null
   const res = await fetch(`${BASE_URL}${V1}/export/pdf`, {
     headers: {
