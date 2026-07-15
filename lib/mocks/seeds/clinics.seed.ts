@@ -1,0 +1,88 @@
+import type { ClinicDto } from '@/schemas/clinicApi'
+
+export function seedClinics(): ClinicDto[] {
+  const now = new Date().toISOString()
+  const items: Array<Omit<ClinicDto, 'createdAt' | 'updatedAt'>> = [
+    {
+      id: 'clinic-001',
+      name: 'عيادة الأمل التخصصية',
+      address: 'شارع الرمال، مدينة غزة',
+      contactNumber: '082863000',
+      image: null,
+      latitude: 31.5091,
+      longitude: 34.4478,
+      status: 'available',
+      specialties: ['باطنية', 'جلدية'],
+      practitionersCount: 4,
+      workingDoctors: [
+        { name: 'د. منى الشريف', specialty: 'جلدية', workingDays: ['السبت', 'الاثنين'], workingHours: '10:00 - 18:00' },
+      ],
+      currentMedications: [],
+      workingHours: '10:00 - 18:00',
+      workingDays: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء'],
+      medicalSupplies: [],
+      healthcareCategories: ['باطنية', 'جلدية'],
+    },
+    {
+      id: 'clinic-002',
+      name: 'عيادة خان يونس للأسرة',
+      address: 'خان يونس - حي الأمل',
+      contactNumber: '082053000',
+      image: null,
+      latitude: 31.3401,
+      longitude: 34.3072,
+      status: 'available',
+      specialties: ['طب أسرة', 'أطفال'],
+      practitionersCount: 2,
+      workingDoctors: [
+        { name: 'د. وائل حمدان', specialty: 'طب أسرة', workingDays: ['السبت', 'الأحد'], workingHours: '09:00 - 17:00' },
+      ],
+      currentMedications: [],
+      workingHours: '09:00 - 17:00',
+      workingDays: ['السبت', 'الأحد', 'الاثنين'],
+      medicalSupplies: [],
+      healthcareCategories: ['طب أسرة'],
+    },
+    {
+      id: 'clinic-003',
+      name: 'عيادة رفح النسائية',
+      address: 'رفح - حي تل السلطان',
+      contactNumber: '082133000',
+      image: null,
+      latitude: 31.2938,
+      longitude: 34.2381,
+      status: 'limited',
+      specialties: ['نساء وولادة'],
+      practitionersCount: 1,
+      workingDoctors: [
+        { name: 'د. إيمان بركة', specialty: 'نساء وولادة', workingDays: ['الأحد', 'الثلاثاء'], workingHours: '11:00 - 19:00' },
+      ],
+      currentMedications: [],
+      workingHours: '11:00 - 19:00',
+      workingDays: ['الأحد', 'الثلاثاء'],
+      medicalSupplies: [],
+      healthcareCategories: ['نساء وولادة'],
+    },
+    {
+      id: 'clinic-004',
+      name: 'عيادة دير البلح للعظام',
+      address: 'دير البلح - الشارع الرئيسي',
+      contactNumber: '082534000',
+      image: null,
+      latitude: 31.4171,
+      longitude: 34.3499,
+      status: 'available',
+      specialties: ['عظام', 'علاج طبيعي'],
+      practitionersCount: 2,
+      workingDoctors: [
+        { name: 'د. رامي صيام', specialty: 'عظام', workingDays: ['كل أيام الأسبوع'], workingHours: '08:00 - 16:00' },
+      ],
+      currentMedications: [],
+      workingHours: '08:00 - 16:00',
+      workingDays: ['كل أيام الأسبوع'],
+      medicalSupplies: [],
+      healthcareCategories: ['عظام'],
+    },
+  ]
+  return items.map((item) => ({ ...item, createdAt: now, updatedAt: now }))
+}

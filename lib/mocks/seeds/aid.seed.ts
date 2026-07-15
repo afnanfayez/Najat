@@ -1,0 +1,88 @@
+import type { AidDto } from '@/schemas/aidApi'
+
+export function seedAid(): AidDto[] {
+  const now = new Date().toISOString()
+  const items: Array<Omit<AidDto, 'createdAt' | 'updatedAt'>> = [
+    {
+      id: 'aid-001',
+      name: 'مركز توزيع الأونروا - الرمال',
+      label: 'مواد غذائية',
+      status: 'active',
+      type: 'food',
+      latitude: 31.5104,
+      longitude: 34.4432,
+      availableSupplies: ['طرود غذائية', 'أرز', 'زيت', 'سكر'],
+    },
+    {
+      id: 'aid-002',
+      name: 'نقطة توزيع المياه - خان يونس',
+      label: 'مياه شرب',
+      status: 'active',
+      type: 'water',
+      latitude: 31.3465,
+      longitude: 34.3038,
+      availableSupplies: ['مياه معبأة', 'صهاريج مياه'],
+    },
+    {
+      id: 'aid-003',
+      name: 'مركز الإيواء - مدرسة الشابورة',
+      label: 'إيواء',
+      status: 'limited',
+      type: 'shelter',
+      latitude: 31.2989,
+      longitude: 34.2455,
+      availableSupplies: ['خيام', 'بطانيات'],
+    },
+    {
+      id: 'aid-004',
+      name: 'نقطة توزيع الملابس - دير البلح',
+      label: 'ملابس وبطانيات',
+      status: 'active',
+      type: 'clothing_blankets',
+      latitude: 31.4183,
+      longitude: 34.3529,
+      availableSupplies: ['ملابس شتوية', 'بطانيات صوف'],
+    },
+    {
+      id: 'aid-005',
+      name: 'عيادة صحية متنقلة - جباليا',
+      label: 'دعم صحي',
+      status: 'active',
+      type: 'health',
+      latitude: 31.5289,
+      longitude: 34.4839,
+      availableSupplies: ['أدوية أساسية', 'مستلزمات إسعافات أولية'],
+    },
+    {
+      id: 'aid-006',
+      name: 'منظمة الهلال الأحمر - رفح',
+      label: 'منظمة إغاثية',
+      status: 'active',
+      type: 'organizations',
+      latitude: 31.2955,
+      longitude: 34.2408,
+      availableSupplies: ['مساعدات متنوعة'],
+    },
+    {
+      id: 'aid-007',
+      name: 'مركز توزيع الغذاء - بيت لاهيا',
+      label: 'مواد غذائية',
+      status: 'suspended',
+      type: 'food',
+      latitude: 31.5473,
+      longitude: 34.5029,
+      availableSupplies: [],
+    },
+    {
+      id: 'aid-008',
+      name: 'نقطة إغاثة شاملة - مدينة غزة',
+      label: 'إغاثة شاملة',
+      status: 'active',
+      type: 'all',
+      latitude: 31.5017,
+      longitude: 34.4661,
+      availableSupplies: ['غذاء', 'مياه', 'أدوية', 'ملابس'],
+    },
+  ]
+  return items.map((item) => ({ ...item, createdAt: now, updatedAt: now }))
+}
