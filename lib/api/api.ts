@@ -1,6 +1,8 @@
 import { getToken } from '@/lib/api/auth'
 import { fetchWithTimeout } from '@/lib/api/fetchWithTimeout'
 import { getApiResponse, putApiResponse } from '@/lib/offline/db'
+import { isMockMode } from '@/lib/mocks/isMockMode'
+import { dispatchMock } from '@/lib/mocks/mockRouter'
 
 async function readCachedGet(key: string): Promise<unknown> {
   if (typeof window === 'undefined') return undefined
@@ -90,18 +92,43 @@ export function isConnectivityError(err: any): boolean {
 export async function request(endpoint: string, options: RequestInit = {}) {
   let url = `${BASE_URL}${endpoint}`
 
+  const method = (options.method ?? 'GET').toUpperCase()
+  const isGet = method === 'GET'
+
   const matchAidRequest = endpoint.match(/\/aid\/([^/]+)\/requests$/)
+  const isLocalProxyEndpoint =
+    endpoint === `${V1_ROOT}/auth/me` ||
+    endpoint === '/v1/auth/me' ||
+    endpoint === `${V1_ROOT}/aid/requests` ||
+    endpoint === '/v1/aid/requests' ||
+    (Boolean(matchAidRequest) && method === 'POST')
+
   if (endpoint === `${V1_ROOT}/auth/me` || endpoint === '/v1/auth/me') {
     url = '/api/profile'
   } else if (endpoint === `${V1_ROOT}/aid/requests` || endpoint === '/v1/aid/requests') {
     url = '/api/aid-requests'
-  } else if (matchAidRequest && (options.method ?? 'GET').toUpperCase() === 'POST') {
+  } else if (matchAidRequest && method === 'POST') {
     const orgId = matchAidRequest[1]
     url = `/api/aid-requests?aidOrganizationId=${encodeURIComponent(orgId)}`
   }
 
-  const method = (options.method ?? 'GET').toUpperCase()
-  const isGet = method === 'GET'
+  // The backend has permanently expired — see lib/mocks/isMockMode.ts. Everything
+  // except the two local-proxy endpoints above (which handle their own mock-mode
+  // fallback server-side) is served from the local mock layer instead of a real fetch.
+  if (isMockMode() && !isLocalProxyEndpoint) {
+    try {
+      const data = await dispatchMock(endpoint, options)
+      if (isGet) writeCachedGet(endpoint, data)
+      return data
+    } catch (err: any) {
+      if (err && typeof err === 'object' && 'status' in err) throw err
+      if (isGet) {
+        const cached = await readCachedGet(endpoint)
+        if (cached !== undefined) return cached
+      }
+      throw { status: 0, message: 'Network error / CORS issue', errors: null }
+    }
+  }
 
   const config: RequestInit = {
     cache: 'no-store', // Disable browser and Next.js fetch caching
