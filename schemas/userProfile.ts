@@ -79,6 +79,16 @@ export const updateUserProfileSchema = z.object({
   assistancePreferences: assistancePreferencesSchema.optional(),
   assistanceLocation: z.string().optional(),
   assistanceRadius: z.coerce.number().optional(),
+  // Now persisted server-side for real (previously local-only in the mock
+  // layer) — see docs/BACKEND_API_SPEC.md migration plan, Phase 1 §1 & Phase 4.
+  emergencyContacts: z
+    .array(z.object({ id: z.string(), name: z.string(), phone: z.string() }))
+    .optional(),
+  sosMessage: z.string().optional(),
+  bloodType: z.string().optional(),
+  // A freshly-picked avatar, as a data: URL — the Profile route handler
+  // uploads it to Supabase Storage and stores the resulting URL.
+  avatarDataUrl: z.string().optional(),
 })
 
 export type UpdateUserProfileBody = z.infer<typeof updateUserProfileSchema>
