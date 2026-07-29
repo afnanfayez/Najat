@@ -11,31 +11,9 @@ export function normalizeUserRole(raw: unknown): UserRole | null {
   return USER_ROLES.includes(value as UserRole) ? (value as UserRole) : null
 }
 
-export function getRoleFromJwt(token: string | null | undefined): UserRole | null {
-  if (!token) return null
-  try {
-    const payload = token.split('.')[1]
-    if (!payload) return null
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-    const json = JSON.parse(atob(base64)) as { role?: unknown }
-    return normalizeUserRole(json.role)
-  } catch {
-    return null
-  }
-}
-
-/** Prefer API role, then JWT (current session), then saved role. */
-export function resolveAuthRole(
-  apiRole: unknown,
-  options?: { storedRole?: unknown; token?: string | null },
-): UserRole | null {
-  const fromApi = normalizeUserRole(apiRole)
-  if (fromApi) return fromApi
-
-  const fromJwt = getRoleFromJwt(options?.token)
-  if (fromJwt) return fromJwt
-
-  return normalizeUserRole(options?.storedRole)
+/** Prefer the API/session role, then the locally cached one. */
+export function resolveAuthRole(apiRole: unknown, storedRole?: unknown): UserRole | null {
+  return normalizeUserRole(apiRole) ?? normalizeUserRole(storedRole)
 }
 
 export const ROLE_LABELS: Record<string, string> = {

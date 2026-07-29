@@ -1,5 +1,4 @@
 import { request } from '@/lib/api/api'
-import { getToken } from '@/lib/api/auth'
 import { isMockMode } from '@/lib/mocks/isMockMode'
 import { simulateDelay } from '@/lib/mocks/store/delay'
 
@@ -53,10 +52,10 @@ export async function exportAdminReportsPdfFromApi(): Promise<Blob> {
     const text = `Najat — System Report (mock)\nGenerated: ${new Date().toISOString()}\n`
     return new Blob([text], { type: 'application/pdf' })
   }
-  const token = typeof window !== 'undefined' ? getToken() : null
+  // Same-origin fetch carries the Supabase session cookie automatically —
+  // no manual Authorization header needed.
   const res = await fetch(`${BASE_URL}${V1}/export/pdf`, {
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       Accept: 'application/pdf',
       'Cache-Control': 'no-cache',
     },

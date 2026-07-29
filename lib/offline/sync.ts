@@ -4,7 +4,7 @@ import { fetchLiveNonHospitalFacilities } from '@/lib/health/healthFacilitiesBac
 import { fetchAllHospitalPages } from '@/lib/health/hospitalsBackend'
 import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import { safetyAPI } from '@/lib/api/safety'
-import { getToken } from '@/lib/api/auth'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { fetchAdminHealthFacilitiesFromApi } from '@/lib/api/adminHealth'
 import { fetchAdminAidRequestsFromApi } from '@/lib/api/adminAid'
 import {
@@ -164,8 +164,7 @@ async function syncAid(): Promise<void> {
 
 async function syncSafetyMap(): Promise<void> {
   try {
-    const token = getToken()
-    if (!token) return
+    if (!getCurrentUserId()) return
     const layers = await safetyAPI.getMapData({ limit: 100 })
     await putSafetyMapLayers(layers)
   } catch {
@@ -187,8 +186,7 @@ async function syncArticles(): Promise<void> {
 
 async function syncAdminFacilities(): Promise<void> {
   try {
-    const token = getToken()
-    if (!token) return
+    if (!getCurrentUserId()) return
     const result = await fetchAdminHealthFacilitiesFromApi({})
     if (result.facilities.length > 0) {
       await putAdminFacilities(result.facilities)
@@ -200,8 +198,7 @@ async function syncAdminFacilities(): Promise<void> {
 
 async function syncAdminAidRequests(): Promise<void> {
   try {
-    const token = getToken()
-    if (!token) return
+    if (!getCurrentUserId()) return
     const requests = await fetchAdminAidRequestsFromApi()
     if (requests.length > 0) {
       await putAidRequests(requests)

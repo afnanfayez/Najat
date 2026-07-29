@@ -1,4 +1,3 @@
-import { getToken } from '@/lib/api/auth'
 import { getUserRole } from '@/lib/auth/sessionRole'
 import { isAdmin, resolveAuthRole, type UserRole } from '@/lib/auth/roleUtils'
 
@@ -22,15 +21,18 @@ export function routeForRole(role: UserRole | null | undefined): string {
   return '/dashboard'
 }
 
-/** Always resolves from API field + JWT + stored role (JWT beats stale storage). */
+/**
+ * Resolves the current role from the live Supabase session (passed in as
+ * `apiRole` by AuthContext, decoded from the access token's JWT claims — see
+ * lib/supabase/decodeRoleClaim.ts) or else the locally cached role — a
+ * last-resort instant-paint fallback for the brief window before the session
+ * resolves on page load.
+ */
 export function getCurrentAuthRole(apiRole?: unknown): UserRole | null {
   if (typeof window === 'undefined') {
-    return resolveAuthRole(apiRole)
+    return resolveAuthRole(apiRole, undefined)
   }
-  return resolveAuthRole(apiRole, {
-    storedRole: getUserRole(),
-    token: getToken(),
-  })
+  return resolveAuthRole(apiRole, getUserRole())
 }
 
 export function canAccessAdmin(apiRole?: unknown): boolean {

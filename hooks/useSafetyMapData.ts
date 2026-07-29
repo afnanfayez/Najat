@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getToken } from '@/lib/api/auth'
 import { safetyAPI } from '@/lib/api/safety'
 import { useAuth } from '@/context/AuthContext'
 import type { SafetyMapLayers } from '@/lib/maps/safetyMapTransforms'
@@ -64,7 +63,7 @@ function isPointInPolygon(point: [number, number], polygon: [number, number][]) 
 }
 
 export function useSafetyMapData() {
-  const { isHydrated } = useAuth()
+  const { isHydrated, user } = useAuth()
 
   return useQuery({
     queryKey: ['safety', 'map-data'],
@@ -86,7 +85,7 @@ export function useSafetyMapData() {
         return (await getSafetyMapLayers()) ?? getEmptyLayers()
       }
     },
-    enabled: isHydrated && Boolean(getToken()),
+    enabled: isHydrated && Boolean(user),
     staleTime: 1000 * 10,
     refetchOnWindowFocus: true,
     retry: 1,
@@ -94,7 +93,7 @@ export function useSafetyMapData() {
 }
 
 export function useSafetyCheck(lat: number | null, lng: number | null) {
-  const { isHydrated } = useAuth()
+  const { isHydrated, user } = useAuth()
 
   return useQuery({
     queryKey: ['safety', 'check', lat, lng],
@@ -132,7 +131,7 @@ export function useSafetyCheck(lat: number | null, lng: number | null) {
         return { safe: true, zones: [] }
       }
     },
-    enabled: isHydrated && Boolean(getToken()) && lat != null && lng != null,
+    enabled: isHydrated && Boolean(user) && lat != null && lng != null,
     staleTime: 1000 * 60,
     retry: 1,
   })

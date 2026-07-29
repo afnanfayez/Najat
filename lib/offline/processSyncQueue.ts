@@ -48,9 +48,8 @@ import {
   type UpdateAdminUserBody,
 } from '@/lib/api/adminUsers'
 import { toast } from 'sonner'
-import { getToken } from '@/lib/api/auth'
-import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
-import { updateOfflineLoginProfile } from '@/lib/auth/offlineLogin'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
+import { cacheProfileForOffline } from '@/lib/auth/offlineLogin'
 import { clearLocalOverrides } from '@/lib/profile/localProfileStorage'
 import { isConnectivityError } from '@/lib/api/api'
 import {
@@ -101,7 +100,7 @@ function isNonRetryable(status?: number): boolean {
 
 /** Drop the optimistic local override for a profile edit the backend refused. */
 function clearFailedProfileOverrides(payload: Record<string, unknown>): void {
-  const userId = getUserIdFromToken(getToken())
+  const userId = getCurrentUserId()
   if (!userId) return
   clearLocalOverrides(userId, Object.keys(payload) as (keyof UpdateUserProfileBody)[])
 }
@@ -163,7 +162,7 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'PROFILE_SYNC') {
     const body = item.payload as UpdateUserProfileBody
     const result = await profileAPI.update(body)
-    await updateOfflineLoginProfile(result.profile)
+    await cacheProfileForOffline(result.profile)
     clearLocalOverrides(
       result.profile.id,
       Object.keys(body) as (keyof UpdateUserProfileBody)[],

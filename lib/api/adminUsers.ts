@@ -1,5 +1,6 @@
 import { request } from '@/lib/api/api'
-import { extractAuthPayload } from '@/lib/api/extractAuth'
+import { createClient } from '@/lib/supabase/client'
+import { decodeRoleClaim } from '@/lib/supabase/decodeRoleClaim'
 import { getOfflineDB } from '@/lib/offline/db'
 import type {
   AdminBackendUserDto,
@@ -389,25 +390,24 @@ export async function restoreAdminUser(id: string): Promise<AdminUserDto> {
   return mapped
 }
 
+/**
+ * Re-verifies the currently logged-in admin's own password before a sensitive
+ * action. Signing back in with the same credentials just refreshes their
+ * session — Supabase has no separate "verify without changing session"
+ * primitive, and re-authenticating as the same user isn't disruptive.
+ */
 export async function verifyAdminPassword(
   email: string,
   password: string,
 ): Promise<void> {
-  let response: unknown
-  try {
-    response = await request(`${V1_ROOT}/auth/login`, {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    })
-  } catch (err) {
-    const status = (err as { status?: number }).status
-    if (status === 401 || status === 403) {
-      throw { status: 401, message: 'كلمة مرور المسؤول غير صحيحة' }
-    }
-    // Re-throw network errors and 5xx so the UI can show "connection error"
-    throw err
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) {
+    throw { status: 401, message: 'كلمة مرور المسؤول غير صحيحة' }
   }
-  const { role } = extractAuthPayload(response)
+  // Decoded from the access token, not data.user.app_metadata — see
+  // lib/supabase/decodeRoleClaim.ts for why.
+  const role = decodeRoleClaim(data.session?.access_token)
   if (role !== 'admin') {
     throw { status: 403, message: 'ليس لديك صلاحيات المسؤول' }
   }

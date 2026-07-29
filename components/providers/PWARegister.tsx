@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { processSyncQueue } from '@/lib/offline/processSyncQueue'
 import { syncAllData } from '@/lib/offline/sync'
-import { getToken } from '@/lib/api/auth'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
 import { precacheRoutesForRole, precacheStaticAssets } from '@/lib/pwa/precacheRoute'
 import { requestPersistentStorage, getStorageEstimate } from '@/lib/pwa/persistStorage'
@@ -108,7 +108,7 @@ export default function PWARegister() {
           )
         }
 
-        if (getToken()) {
+        if (getCurrentUserId()) {
           void precacheRoutesForRole(getCurrentAuthRole())
           scheduleDataSync(true)
           // Background full-static precache so every route boots offline.

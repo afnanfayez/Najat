@@ -1,40 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { authAPI } from '@/lib/api/api'
-import { extractAuthPayload } from '@/lib/api/extractAuth'
-import { saveToken } from '@/lib/api/auth'
-import { notifyAuthSessionChanged } from '@/lib/auth/authEvents'
-import { resetBrowserSession } from '@/lib/auth/resetBrowserSession'
-import { saveUserRole } from '@/lib/auth/sessionRole'
-import { getRoleFromJwt, normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
+import { createClient } from '@/lib/supabase/client'
+import { decodeRoleClaim } from '@/lib/supabase/decodeRoleClaim'
+import { mapSupabaseAuthError } from '@/lib/auth/supabaseAuthErrors'
+import { normalizeUserRole, type UserRole } from '@/lib/auth/roleUtils'
 import { saveLoginRedirect, routeForRole } from '@/lib/auth/currentAuthRole'
-import {
-  saveOfflineLoginSnapshot,
-  tryOfflineLogin,
-} from '@/lib/auth/offlineLogin'
 import { precacheAppRoute, precacheRoutesForRole } from '@/lib/pwa/precacheRoute'
-import { profileAPI } from '@/lib/api/profile'
 import { syncAllData } from '@/lib/offline/sync'
 import { toast } from 'sonner'
-
-async function restoreOfflineSession(email: string, password: string) {
-  const restored = await tryOfflineLogin(email, password)
-  if (!restored) return null
-
-  notifyAuthSessionChanged()
-  const destination = routeForRole(restored.role)
-  saveLoginRedirect(destination)
-  void precacheAppRoute(destination)
-  void precacheRoutesForRole(restored.role)
-
-  return restored
-}
-
-function canUseOfflineLoginFallback(err: any): boolean {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) return true
-  if (!err?.status || err.status === 0) return true
-  return err.status >= 500
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,6 +58,10 @@ interface LoginState {
   verifyForgotCode: (code: string) => Promise<boolean>
   resetPasswordWithCode: (newPassword: string) => Promise<boolean>
   resetLogin: () => void
+}
+
+function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && !navigator.onLine
 }
 
 // ─── Store ────────────────────────────────────────────────────────────────────
@@ -152,7 +129,7 @@ export const useLoginStore = create<LoginState>()(
           forgotError: null,
         }),
 
-      // Composite: successful login → make API call
+      // Composite: sign in via Supabase Auth
       handleLoginSuccess: async () => {
         const { email, password } = get()
         set({
@@ -162,96 +139,38 @@ export const useLoginStore = create<LoginState>()(
           passwordError: false,
         })
 
-        if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          try {
-            const restored = await restoreOfflineSession(email, password)
-            if (!restored) {
-              set({
-                isError: true,
-                emailError: true,
-                passwordError: true,
-                isSubmitting: false,
-              })
-              return
-            }
-            set({
-              isSuccess: true,
-              isSubmitting: false,
-              postLoginRole: restored.role,
-            })
-          } catch {
-            set({
-              isSubmitting: false,
-              isError: true,
-              emailError: true,
-              passwordError: true,
-            })
-          }
+        // Signing in always needs connectivity — Supabase Auth has no offline
+        // fallback (see docs/BACKEND_API_SPEC.md migration plan, Phase 2).
+        if (isOffline()) {
+          const msg = 'تسجيل الدخول يحتاج اتصالاً بالإنترنت. يرجى المحاولة بعد عودة الاتصال.'
+          toast.error(msg, { id: 'login-offline', position: 'top-center' })
+          set({ isSubmitting: false, isError: true, emailError: true, passwordError: true })
           return
         }
 
-        try {
-          const res = await authAPI.login({ email, password })
-          const { token, role } = extractAuthPayload(res)
-          if (!token) {
-            throw new Error('لم يتم استلام رمز الدخول من الخادم')
-          }
-          resetBrowserSession({ keepLoginEmail: true })
-          saveToken(token)
-          new BroadcastChannel('najat-auth').postMessage('login')
-          const resolvedRole =
-            normalizeUserRole(role) ?? getRoleFromJwt(token)
-          if (resolvedRole) {
-            saveUserRole(resolvedRole)
-          }
-          notifyAuthSessionChanged()
+        const supabase = createClient()
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-          const profile = await profileAPI.me().catch(() => null)
-          await saveOfflineLoginSnapshot(
-            email,
-            password,
-            token,
-            resolvedRole,
-            profile,
-          )
-
-          const destination = routeForRole(resolvedRole)
-          void precacheAppRoute(destination)
-          void precacheRoutesForRole(resolvedRole)
-          void syncAllData(true)
-          saveLoginRedirect(destination)
-          set({
-            isSuccess: true,
-            isSubmitting: false,
-            postLoginRole: resolvedRole ?? null,
-          })
-        } catch (err: any) {
-          // ── Network error → try offline credentials as fallback ────────────
-          if (canUseOfflineLoginFallback(err)) {
-            try {
-              const restored = await restoreOfflineSession(email, password)
-              if (restored) {
-                set({
-                  isSuccess: true,
-                  isSubmitting: false,
-                  postLoginRole: restored.role,
-                })
-                return
-              }
-            } catch {
-              // offline snapshot not found – fall through to error state
-            }
-          }
-
-          const msg = err?.message ?? 'تعذّر الاتصال بالخادم، حاول مرة أخرى'
+        if (error || !data.session) {
+          const msg = error ? mapSupabaseAuthError(error) : 'تعذّر تسجيل الدخول'
           toast.error(msg)
-          set({
-            isError: true,
-            emailError: true,
-            passwordError: true,
-            isSubmitting: false,
-          })
+          set({ isError: true, emailError: true, passwordError: true, isSubmitting: false })
+          return
         }
+
+        // role is written into the JWT's claims by the Custom Access Token
+        // Hook (supabase/migrations/0014_auth_hook.sql) — decode it from the
+        // access token, NOT data.user.app_metadata (which does not reflect
+        // the hook's injected claim — see lib/supabase/decodeRoleClaim.ts).
+        const resolvedRole =
+          normalizeUserRole(decodeRoleClaim(data.session.access_token)) ?? 'resident'
+
+        const destination = routeForRole(resolvedRole)
+        void precacheAppRoute(destination)
+        void precacheRoutesForRole(resolvedRole)
+        void syncAllData(true)
+        saveLoginRedirect(destination)
+        set({ isSuccess: true, isSubmitting: false, postLoginRole: resolvedRole })
       },
 
       // Composite: failed login → show error state
@@ -265,45 +184,35 @@ export const useLoginStore = create<LoginState>()(
 
       // ─── Forgot Password Flow ──────────────────────────────────────────
 
-      /**
-       * Step 1: Send a password reset code to the user's email.
-       * POST /v1/auth/forgot-password { email }
-       */
+      /** Step 1: Send a password reset code to the user's email. */
       sendForgotPasswordCode: async (email: string) => {
-        if (typeof navigator !== 'undefined' && !navigator.onLine) {
-          const msg = 'استعادة كلمة المرور تحتاج اتصالاً بالإنترنت. يرجى الانتظار حتى يعود الاتصال ثم المحاولة مرة أخرى.'
+        if (isOffline()) {
+          const msg =
+            'استعادة كلمة المرور تحتاج اتصالاً بالإنترنت. يرجى الانتظار حتى يعود الاتصال ثم المحاولة مرة أخرى.'
           set({ isSubmitting: false, forgotError: msg })
           toast.error(msg, { id: 'forgot-offline-action', position: 'top-center' })
           return false
         }
 
         set({ isSubmitting: true, forgotError: null })
-        try {
-          await authAPI.forgotPassword({ email })
-          set({
-            forgotEmail: email,
-            isCodeSent: true,
-            isSubmitting: false,
-          })
-          toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
-          return true
-        } catch (err: any) {
-          const msg = err?.message ?? 'حدث خطأ أثناء إرسال الرمز'
-          set({
-            forgotError:
-              typeof msg === 'string' ? msg : 'حدث خطأ أثناء إرسال الرمز',
-            isSubmitting: false,
-          })
+        const supabase = createClient()
+        const { error } = await supabase.auth.resetPasswordForEmail(email)
+        if (error) {
+          const msg = mapSupabaseAuthError(error)
+          set({ forgotError: msg, isSubmitting: false })
           toast.error(msg)
           return false
         }
+        set({ forgotEmail: email, isCodeSent: true, isSubmitting: false })
+        toast.success('تم إرسال رمز الاستعادة إلى بريدك الإلكتروني')
+        return true
       },
 
       /**
        * Step 2: Store the 6-digit code and advance to the new password screen.
-       * No API call is made here — /v1/auth/verify is for account registration only.
-       * Calling it would consume/invalidate the OTP before /reset-password can use it,
-       * causing a 410 error. The code is validated by the backend in step 3.
+       * The code itself is verified in step 3 together with the password
+       * change, in a single short-lived recovery session that's signed out
+       * of immediately after — see resetPasswordWithCode.
        */
       verifyForgotCode: async (code: string) => {
         set({
@@ -316,11 +225,12 @@ export const useLoginStore = create<LoginState>()(
       },
 
       /**
-       * Step 3: Reset the password using email + code + newPassword.
-       * POST /v1/auth/reset-password { email, code, newPassword }
+       * Step 3: Verify the code (establishing a brief recovery session),
+       * set the new password, then immediately sign out of the recovery
+       * session so it can't be mistaken for a normal login by middleware.ts.
        */
       resetPasswordWithCode: async (newPassword: string) => {
-        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        if (isOffline()) {
           const msg = 'تعيين كلمة مرور جديدة يحتاج اتصالاً بالإنترنت. يرجى المحاولة بعد عودة الاتصال.'
           set({ isSubmitting: false, forgotError: msg })
           toast.error(msg, { id: 'forgot-offline-action', position: 'top-center' })
@@ -329,32 +239,36 @@ export const useLoginStore = create<LoginState>()(
 
         const { forgotEmail, forgotCode } = get()
         set({ isSubmitting: true, forgotError: null })
-        try {
-          await authAPI.resetPassword({
-            email: forgotEmail,
-            code: forgotCode,
-            newPassword,
-          })
-          set({
-            isSubmitting: false,
-            isResetting: false,
-            isSuccess: true,
-            // Clear sensitive data
-            forgotCode: '',
-            forgotError: null,
-          })
-          return true
-        } catch (err: any) {
-          const msg = err?.message ?? 'حدث خطأ أثناء إعادة تعيين كلمة المرور'
-          set({
-            forgotError:
-              typeof msg === 'string'
-                ? msg
-                : 'حدث خطأ أثناء إعادة تعيين كلمة المرور',
-            isSubmitting: false,
-          })
+
+        const supabase = createClient()
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          email: forgotEmail,
+          token: forgotCode,
+          type: 'recovery',
+        })
+        if (verifyError) {
+          const msg = mapSupabaseAuthError(verifyError)
+          set({ forgotError: msg, isSubmitting: false })
           return false
         }
+
+        const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+        await supabase.auth.signOut()
+
+        if (updateError) {
+          const msg = mapSupabaseAuthError(updateError)
+          set({ forgotError: msg, isSubmitting: false })
+          return false
+        }
+
+        set({
+          isSubmitting: false,
+          isResetting: false,
+          isSuccess: true,
+          forgotCode: '',
+          forgotError: null,
+        })
+        return true
       },
 
       // Reset entire login flow
