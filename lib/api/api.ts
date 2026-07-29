@@ -1,4 +1,3 @@
-import { getToken } from '@/lib/api/auth'
 import { fetchWithTimeout } from '@/lib/api/fetchWithTimeout'
 import { getApiResponse, putApiResponse } from '@/lib/offline/db'
 import { isMockMode } from '@/lib/mocks/isMockMode'
@@ -50,10 +49,9 @@ function buildHeaders(options: RequestInit): HeadersInit {
     merged.set('Content-Type', 'application/json')
   }
 
-  const token = getToken()
-  if (token && !merged.has('Authorization')) {
-    merged.set('Authorization', `Bearer ${token}`)
-  }
+  // No manual Authorization header: real (non-mock) requests are same-origin
+  // Route Handlers, which authenticate via the Supabase session cookie that
+  // rides along automatically — see lib/supabase/server.ts.
 
   // Prevent browser and proxy caching of API calls
   merged.set('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -177,32 +175,4 @@ export async function request(endpoint: string, options: RequestInit = {}) {
       errors: null,
     }
   }
-}
-
-export const authAPI = {
-  register: (body: any) =>
-    request(`${V1_ROOT}/auth/register`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-
-  login: (body: any) =>
-    request(`${V1_ROOT}/auth/login`, { method: 'POST', body: JSON.stringify(body) }),
-
-  verify: (body: any) =>
-    request(`${V1_ROOT}/auth/verify`, { method: 'POST', body: JSON.stringify(body) }),
-
-  forgotPassword: (body: { email: string }) =>
-    request(`${V1_ROOT}/auth/forgot-password`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-
-  resetPassword: (body: { email: string; code: string; newPassword: string }) =>
-    request(`${V1_ROOT}/auth/reset-password`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-
-  me: () => request(`${V1_ROOT}/auth/me`),
 }
