@@ -2,44 +2,28 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { getToken } from '@/lib/api/auth'
 import { profileAPI } from '@/lib/api/profile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
-import {
-  mergeProfileAvatarOnly,
-  saveLocalProfileData,
-  saveLocalOverrides,
-  type LocalProfileData,
-} from '@/lib/profile/localProfileStorage'
 import { validateProfileUpdate } from '@/schemas/userProfile'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import { useAuth } from '@/context/AuthContext'
 import { enqueueOfflineOp } from '@/lib/offline/db'
-import {
-  getOfflineCachedProfile,
-  updateOfflineLoginProfile,
-} from '@/lib/auth/offlineLogin'
+import { getOfflineCachedProfile, cacheProfileForOffline } from '@/lib/auth/offlineLogin'
 
-export type ProfileSavePayload = UpdateUserProfileBody & {
-  avatarDataUrl?: string
-  emergencyContacts?: LocalProfileData['emergencyContacts']
-  sosMessage?: string
-  bloodType?: string
-}
+export type ProfileSavePayload = UpdateUserProfileBody
 
 async function loadProfileOffline() {
   const cached = await getOfflineCachedProfile()
   if (!cached) {
     throw { status: 0, message: 'الملف الشخصي غير متوفر دون اتصال' }
   }
-  return mergeProfileAvatarOnly(cached)
+  return cached
 }
 
 export function useProfile() {
-  const { isHydrated, refreshUser } = useAuth()
+  const { isHydrated, user, refreshUser } = useAuth()
   const queryClient = useQueryClient()
-  const token = getToken()
-  const queryKey = getProfileQueryKey(token)
+  const queryKey = getProfileQueryKey()
   const query = useQuery({
     queryKey,
     queryFn: async () => {
@@ -50,8 +34,8 @@ export function useProfile() {
 
       try {
         const profile = await profileAPI.me()
-        await updateOfflineLoginProfile(profile)
-        return mergeProfileAvatarOnly(profile)
+        await cacheProfileForOffline(profile)
+        return profile
       } catch (err) {
         try {
           return await loadProfileOffline()
@@ -60,7 +44,7 @@ export function useProfile() {
         }
       }
     },
-    enabled: isHydrated && Boolean(token),
+    enabled: isHydrated && Boolean(user),
     staleTime: 60_000,
     retry: (count) => {
       if (typeof navigator !== 'undefined' && !navigator.onLine) return false
@@ -71,77 +55,34 @@ export function useProfile() {
 
   const mutation = useMutation({
     mutationFn: async (payload: ProfileSavePayload) => {
-      const id = query.data?.id
-      if (!id) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
-
-      const {
-        avatarDataUrl,
-        assistancePreferences,
-        assistanceLocation,
-        assistanceRadius,
-        emergencyContacts,
-        sosMessage,
-        bloodType,
-        ...backendBody
-      } = payload
-
-      // Validate backend-bound fields up front so invalid input is rejected the
-      // same way whether online or offline (prevents permanently-stuck overrides).
-      if (Object.keys(backendBody).length > 0) {
-        const validationError = validateProfileUpdate(backendBody)
-        if (validationError) throw { status: 422, message: validationError }
-      }
-
-      const localDataToSave: Partial<LocalProfileData> = {}
-      if (avatarDataUrl !== undefined) {
-        localDataToSave.avatarDataUrl = avatarDataUrl
-      }
-      if (assistancePreferences !== undefined) {
-        localDataToSave.assistancePreferences = assistancePreferences
-      }
-      if (assistanceLocation !== undefined) {
-        localDataToSave.assistanceLocation = assistanceLocation
-      }
-      if (assistanceRadius !== undefined) {
-        localDataToSave.assistanceRadius = assistanceRadius
-      }
-      if (emergencyContacts !== undefined) {
-        localDataToSave.emergencyContacts = emergencyContacts
-      }
-      if (sosMessage !== undefined) {
-        localDataToSave.sosMessage = sosMessage
-      }
-      if (bloodType !== undefined) {
-        localDataToSave.bloodType = bloodType
-      }
-
-      if (Object.keys(localDataToSave).length > 0) {
-        saveLocalProfileData(id, localDataToSave)
-      }
-
       const current = query.data ?? (await loadProfileOffline().catch(() => null))
       if (!current) throw { status: 400, message: 'لم يتم تحميل الملف الشخصي بعد' }
 
-      const merged = mergeProfileAvatarOnly({
-        ...current,
-        ...payload,
-      })
+      // Every field is server-persisted now (see docs/BACKEND_API_SPEC.md
+      // migration plan Phase 1 §1 & Phase 4) — validate the whole payload up
+      // front so invalid input is rejected the same way whether online or
+      // offline (prevents permanently-stuck optimistic edits).
+      const validationError = validateProfileUpdate(payload)
+      if (validationError) throw { status: 422, message: validationError }
+
+      // Optimistic local view while offline/queued — never permanently
+      // shadows the server; overwritten by the real response once synced.
+      const optimistic = { ...current, ...payload }
 
       const offline = typeof navigator !== 'undefined' && !navigator.onLine
       if (offline) {
-        saveLocalOverrides(id, backendBody)
-        await updateOfflineLoginProfile(merged)
+        await cacheProfileForOffline(optimistic)
         await enqueueOfflineOp({
           type: 'PROFILE_SYNC',
           payload: payload as Record<string, unknown>,
         })
         toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
-        return { profile: merged, syncedWithServer: false }
+        return { profile: optimistic, syncedWithServer: false }
       }
 
       try {
         const result = await profileAPI.update(payload)
-        await updateOfflineLoginProfile(result.profile)
+        await cacheProfileForOffline(result.profile)
         return result
       } catch (err) {
         // Distinguish a real backend rejection (validation) from a connectivity
@@ -152,18 +93,17 @@ export function useProfile() {
           status === 0 || status === 504 || status === 502 || status === undefined
         if (!isConnectivity) throw err
 
-        saveLocalOverrides(id, backendBody)
-        await updateOfflineLoginProfile(merged)
+        await cacheProfileForOffline(optimistic)
         await enqueueOfflineOp({
           type: 'PROFILE_SYNC',
           payload: payload as Record<string, unknown>,
         })
         toast.success('تم حفظ التعديلات محلياً وسيتم رفعها عند عودة الاتصال')
-        return { profile: merged, syncedWithServer: false }
+        return { profile: optimistic, syncedWithServer: false }
       }
     },
     onSuccess: async ({ profile, syncedWithServer }) => {
-      queryClient.setQueryData(getProfileQueryKey(token), profile)
+      queryClient.setQueryData(getProfileQueryKey(), profile)
       if (syncedWithServer !== false) {
         await refreshUser()
       }

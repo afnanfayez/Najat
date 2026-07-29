@@ -9,7 +9,6 @@ import { useProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/context/AuthContext'
 import type { AssistancePreferences } from '@/schemas/userProfile'
 import { getProfileQueryKey } from '@/lib/auth/tokenIdentity'
-import { getToken } from '@/lib/api/auth'
 
 const DEFAULT_PREFERENCES: AssistancePreferences = {
   food: false,
@@ -24,8 +23,7 @@ export default function AssistancePreferences() {
   const { user } = useAuth()
   const { profile, saveProfile, isSaving } = useProfile()
   const queryClient = useQueryClient()
-  const token = getToken()
-  const queryKey = getProfileQueryKey(token)
+  const queryKey = getProfileQueryKey()
 
   // Local state
   const [preferences, setPreferences] = useState<AssistancePreferences>(DEFAULT_PREFERENCES)
