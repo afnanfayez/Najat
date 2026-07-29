@@ -1,7 +1,6 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getToken } from '@/lib/api/auth'
 import { fetchAllArticlePages } from '@/lib/api/articles'
 import { mapArticleDtoToUi } from '@/lib/mappers/article'
 import type { Article, ArticleUiCategory } from '@/schemas/healthGuide'
@@ -30,7 +29,7 @@ function filterByCategory(
 }
 
 export function useHealthGuideArticles(params?: HealthGuideArticlesParams) {
-  const { isHydrated } = useAuth()
+  const { isHydrated, user } = useAuth()
 
   const query = useQuery({
     queryKey: ['health-guide', 'articles'],
@@ -55,7 +54,7 @@ export function useHealthGuideArticles(params?: HealthGuideArticlesParams) {
     },
     select: (articles) =>
       filterBySearch(filterByCategory(articles, params?.category), params?.search),
-    enabled: isHydrated && Boolean(getToken()),
+    enabled: isHydrated && Boolean(user),
     staleTime: 1000 * 10,
     refetchOnWindowFocus: true,
     retry: 1,
