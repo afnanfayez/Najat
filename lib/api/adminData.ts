@@ -1,5 +1,4 @@
 import { request } from '@/lib/api/api'
-import { getToken } from '@/lib/api/auth'
 import { isMockMode } from '@/lib/mocks/isMockMode'
 import { simulateDelay } from '@/lib/mocks/store/delay'
 import type {
@@ -271,16 +270,12 @@ export async function downloadAdminDataReviewReportFromApi(id: string): Promise<
     const text = `Najat — Data Review Report (mock)\nRequest: ${id}\nGenerated: ${new Date().toISOString()}\n`
     return new Blob([text], { type: 'application/pdf' })
   }
-  const token =
-    typeof window !== 'undefined' ? getToken() : null
-
   const base =
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     ''
-  const res = await fetch(`${base}${V1}/requests/${id}/report`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
+  // Same-origin fetch carries the Supabase session cookie automatically.
+  const res = await fetch(`${base}${V1}/requests/${id}/report`)
   if (!res.ok) throw new Error('تعذّر تحميل التقرير')
   return res.blob()
 }
@@ -291,16 +286,12 @@ export async function exportAdminDataSyncCsvFromApi(): Promise<Blob> {
     const text = `id,entityName,action,status\n`
     return new Blob([text], { type: 'text/csv' })
   }
-  const token =
-    typeof window !== 'undefined' ? getToken() : null
-
   const base =
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     ''
-  const res = await fetch(`${base}${V1}/sync/export`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
+  // Same-origin fetch carries the Supabase session cookie automatically.
+  const res = await fetch(`${base}${V1}/sync/export`)
   if (!res.ok) throw new Error('تعذّر تصدير الملف')
   return res.blob()
 }
