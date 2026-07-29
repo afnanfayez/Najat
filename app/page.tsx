@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { getToken } from '@/lib/api/auth'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { getCurrentAuthRole, routeForRole } from '@/lib/auth/currentAuthRole'
 
 /**
@@ -13,8 +13,8 @@ import { getCurrentAuthRole, routeForRole } from '@/lib/auth/currentAuthRole'
  */
 export default function RootPage() {
   useEffect(() => {
-    const token = getToken()
-    if (token) {
+    const userId = getCurrentUserId()
+    if (userId) {
       const role = getCurrentAuthRole()
       const destination = routeForRole(role)
       window.location.replace(destination)

@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
-import { getToken } from '@/lib/api/auth'
 import { useAuth } from '@/context/AuthContext'
 import { isHealthFacilityPath } from '@/lib/health/healthFacilityRoutes'
 import AdminMobileHeader from '@/components/admin/dashboard/AdminMobileHeader'
@@ -83,20 +82,20 @@ export default function DashboardLayoutClient({
   // syncAllData call) on every profile refresh.
   useEffect(() => {
     if (!isHydrated) return
-    if (!getToken()) return
+    if (!user) return
     const cleanup = initOfflineSync()
     return cleanup
-  }, [isHydrated])
+  }, [isHydrated, user])
 
   // Auth guard
   useEffect(() => {
     if (!isHydrated) return      // wait for client-side hydration
     if (isLoading) return        // wait for auth check to finish
-    if (!getToken()) {
+    if (!user) {
       router.replace('/login')
       return
     }
-  }, [isHydrated, isLoading, pathname, router])
+  }, [isHydrated, isLoading, user, pathname, router])
 
   const setNav = useCallback(
     (id: string) => {

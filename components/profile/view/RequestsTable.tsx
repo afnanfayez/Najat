@@ -3,8 +3,7 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { request } from '@/lib/api/api'
-import { getToken } from '@/lib/api/auth'
-import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { getAidRequests, putAidRequests } from '@/lib/offline/db'
 
 interface AidRequestItem {
@@ -53,7 +52,7 @@ export default function RequestsTable() {
   const { data, isLoading, error } = useQuery<{ success: boolean; data: AidRequestItem[] }>({
     queryKey: ['my-aid-requests'],
     queryFn: async () => {
-      const userId = getUserIdFromToken(getToken()) ?? undefined
+      const userId = getCurrentUserId() ?? undefined
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         return { success: true, data: await getAidRequests(userId) }
       }

@@ -11,10 +11,9 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { aidAPI } from '@/lib/api/aid'
-import { getToken } from '@/lib/api/auth'
 import { submitAidHelpRequest } from '@/lib/api/submitAidHelpRequest'
 import { enqueueOfflineOp, upsertAidRequest } from '@/lib/offline/db'
-import { getUserIdFromToken } from '@/lib/auth/tokenIdentity'
+import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { isConnectivityError } from '@/lib/api/api'
 import { metersToKmLabel } from '@/lib/mappers/hospital'
 import type { HumanitarianAid } from '@/schemas/humanitarianAid'
@@ -186,7 +185,7 @@ export default function AidDetailView({ aid, onBack }: AidDetailViewProps) {
     const payloadWithOrg = { ...variables, aidOrganizationName: aid.name }
     const localRequestId = `offline-request-${Date.now()}`
     const now = new Date().toISOString()
-    const userId = getUserIdFromToken(getToken()) ?? undefined
+    const userId = getCurrentUserId() ?? undefined
     const localRequest: AidRequestDto = {
       id: localRequestId,
       aidPointId: aid.id,
