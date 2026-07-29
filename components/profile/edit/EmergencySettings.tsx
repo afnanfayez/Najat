@@ -24,7 +24,7 @@ export default function EmergencySettings() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
 
-  // Load data from profile (server-side profile_store.json via API) — works on any device/browser
+  // Load data from profile (server-side, via /api/profile) — works on any device/browser
   useEffect(() => {
     if (!profile) return
     // Only initialize once to avoid overwriting user edits on re-renders
