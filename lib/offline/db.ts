@@ -160,10 +160,11 @@ export interface OfflineSyncQueueItem {
 // Auth snapshot (replaces raw IDB najat-offline-db → auth-snapshots)
 // ──────────────────────────────────────────────────────────────────────────────
 
+// Cached profile snapshot for offline viewing only (Supabase Auth owns real
+// sign-in/session state now — see docs/BACKEND_API_SPEC.md migration plan
+// Phase 2). No password/token is stored anymore.
 export interface AuthSnapshot {
   email: string       // keyPath
-  passwordHash: string
-  token: string
   role: string
   profile: unknown | null
   savedAt: number     // was _savedAt in the old raw IDB type
