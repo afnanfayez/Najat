@@ -66,9 +66,12 @@ import {
   putAidRequests,
   putAdminAidPoints,
   updateCachedAidRequestStatus,
+  updateCachedVolunteerTaskStatus,
   getOfflineDB,
   type OfflineSyncQueueItem,
 } from '@/lib/offline/db'
+import { volunteerAPI } from '@/lib/api/volunteer'
+import type { VolunteerTaskStatus } from '@/schemas/volunteerApi'
 import type { AidHelpRequestForm } from '@/schemas/aidHelpRequest'
 import type { UpdateUserProfileBody } from '@/schemas/userProfile'
 import type { HospitalCapacityStatus } from '@/schemas/hospitalApi'
@@ -122,6 +125,7 @@ const SYNC_SUCCESS_MESSAGES: Partial<Record<OfflineSyncQueueItem['type'], string
   CREATE_AID_POINT: 'تم إنشاء نقطة التوزيع ومزامنتها بنجاح',
   UPDATE_AID_POINT: 'تم تحديث نقطة التوزيع ومزامنتها بنجاح',
   DELETE_AID_POINT: 'تم حذف نقطة التوزيع ومزامنتها بنجاح',
+  UPDATE_VOLUNTEER_TASK_STATUS: 'تم تحديث حالة المهمة ومزامنتها بنجاح',
   APPROVE_DATA_REQUEST: 'تم اعتماد طلب تحديث البيانات بنجاح',
   DELETE_DATA_REQUEST: 'تم رفض/حذف طلب تحديث البيانات بنجاح',
 }
@@ -215,6 +219,16 @@ async function processDexieItem(item: OfflineSyncQueueItem): Promise<boolean> {
   if (item.type === 'DELETE_DATA_REQUEST') {
     const { id } = item.payload as { id: string }
     await deleteAdminDataRequestFromApi(id)
+    return true
+  }
+
+  if (item.type === 'UPDATE_VOLUNTEER_TASK_STATUS') {
+    const { taskId, status } = item.payload as {
+      taskId: string
+      status: VolunteerTaskStatus
+    }
+    await volunteerAPI.updateTaskStatus(taskId, status)
+    await updateCachedVolunteerTaskStatus(taskId, status)
     return true
   }
 

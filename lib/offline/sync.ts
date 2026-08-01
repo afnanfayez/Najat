@@ -7,10 +7,8 @@ import { safetyAPI } from '@/lib/api/safety'
 import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { fetchAdminHealthFacilitiesFromApi } from '@/lib/api/adminHealth'
 import { fetchAdminAidRequestsFromApi } from '@/lib/api/adminAid'
-import {
-  precacheAllFacilityMapTiles,
-  precacheMainMapArea,
-} from '@/lib/pwa/mapTileCache'
+import { precacheMainMapArea } from '@/lib/pwa/mapTileCache'
+import { enqueueBackgroundTask } from '@/lib/pwa/backgroundScheduler'
 import {
   putFacilities,
   putAid,
@@ -55,10 +53,11 @@ function scheduleHeavyAssetsSync(): void {
   if (typeof window === 'undefined') return
   if (sessionStorage.getItem(HEAVY_SYNC_SESSION_KEY) === '1') return
 
-  const run = () => {
-    if (isHeavySyncing || !navigator.onLine) return
-    isHeavySyncing = true
-    void (async () => {
+  enqueueBackgroundTask(
+    'heavy-assets',
+    async () => {
+      if (isHeavySyncing || !navigator.onLine) return
+      isHeavySyncing = true
       try {
         await syncMapTiles()
         await warmCachedImages()
@@ -66,21 +65,16 @@ function scheduleHeavyAssetsSync(): void {
       } finally {
         isHeavySyncing = false
       }
-    })()
-  }
-
-  if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(run, { timeout: 5 * 60_000 })
-  } else {
-    setTimeout(run, 5 * 60_000)
-  }
+    },
+    { heavy: true, timeout: 60_000 },
+  )
 }
 
 async function syncHospitals(): Promise<void> {
   try {
     const hospitals = await fetchAllHospitalPages()
     if (hospitals.length > 0) {
-      await putFacilities(hospitals)
+      await putFacilities(hospitals, { reconcile: true })
       const places = facilitiesToLocalPlaces(hospitals, 'hospital')
       await putLocalPlaces(places)
     }
@@ -93,7 +87,7 @@ async function syncPharmacies(): Promise<void> {
   try {
     const { facilities } = await fetchLiveNonHospitalFacilities({ category: 'pharmacies' })
     if (facilities.length > 0) {
-      await putFacilities(facilities)
+      await putFacilities(facilities, { reconcile: true })
       await putLocalPlaces(facilitiesToLocalPlaces(facilities, 'pharmacy'))
     }
   } catch {
@@ -105,7 +99,7 @@ async function syncClinics(): Promise<void> {
   try {
     const { facilities } = await fetchLiveNonHospitalFacilities({ category: 'clinics' })
     if (facilities.length > 0) {
-      await putFacilities(facilities)
+      await putFacilities(facilities, { reconcile: true })
       await putLocalPlaces(facilitiesToLocalPlaces(facilities, 'clinic'))
     }
   } catch {
@@ -117,7 +111,7 @@ async function syncLabs(): Promise<void> {
   try {
     const { facilities } = await fetchLiveNonHospitalFacilities({ category: 'labs' })
     if (facilities.length > 0) {
-      await putFacilities(facilities)
+      await putFacilities(facilities, { reconcile: true })
       await putLocalPlaces(facilitiesToLocalPlaces(facilities, 'lab'))
     }
   } catch {
@@ -129,7 +123,7 @@ async function syncDental(): Promise<void> {
   try {
     const { facilities } = await fetchLiveNonHospitalFacilities({ category: 'dental' })
     if (facilities.length > 0) {
-      await putFacilities(facilities)
+      await putFacilities(facilities, { reconcile: true })
       await putLocalPlaces(facilitiesToLocalPlaces(facilities, 'dental'))
     }
   } catch {
@@ -141,7 +135,7 @@ async function syncAid(): Promise<void> {
   try {
     const aid = await fetchAllAidPages()
     if (aid.length > 0) {
-      await putAid(aid)
+      await putAid(aid, { reconcile: true })
       const aidPlaces: LocalPlace[] = aid
         .filter((a) => (a as unknown as { latitude?: number }).latitude != null)
         .map((a) => {
@@ -177,7 +171,7 @@ async function syncArticles(): Promise<void> {
     const dtos = await fetchAllArticlePages()
     if (dtos.length > 0) {
       const articles = dtos.map(mapArticleDtoToUi)
-      await putArticles(articles)
+      await putArticles(articles, { reconcile: true })
     }
   } catch {
     // fail silently
@@ -208,18 +202,18 @@ async function syncAdminAidRequests(): Promise<void> {
   }
 }
 
+/**
+ * Precache only the main Gaza map area (~75 tiles).
+ *
+ * This used to also walk 25 facilities and 15 aid points at four zoom levels
+ * each — 1,457 tiles, tens of MB, and enough to overflow the SW's 1,500-tile
+ * cap so it evicted what it had just downloaded. Individual facility areas now
+ * cache naturally via precacheTilesFromMapView() as the user actually pans the
+ * map, which is both far cheaper and better targeted at where they're looking.
+ */
 async function syncMapTiles(): Promise<void> {
   try {
-    const facilities = await getAllFacilities()
-    const aid = await getAllAid()
     await precacheMainMapArea()
-    await precacheAllFacilityMapTiles(facilities.slice(0, 25))
-    await precacheAllFacilityMapTiles(
-      aid.slice(0, 15).map((a) => {
-        const anyA = a as unknown as { latitude?: number; longitude?: number }
-        return { latitude: anyA.latitude, longitude: anyA.longitude }
-      }),
-    )
   } catch {
     // fail silently
   }

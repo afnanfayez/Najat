@@ -7,6 +7,7 @@ import type { AdminHealthFacility, AdminHealthMedicalContent } from '@/schemas/a
 import type { AdminAidDistributionPoint } from '@/schemas/adminAid'
 import type { AdminUserDto } from '@/schemas/adminUser'
 import type { AidRequestDto } from '@/schemas/aidApi'
+import type { VolunteerTask } from '@/schemas/volunteerApi'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Cached entity types
@@ -103,6 +104,7 @@ export interface CachedAdminHealthContent {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type OfflineSyncType =
+  | 'UPDATE_VOLUNTEER_TASK_STATUS'
   | 'UPDATE_FACILITY_STATUS'
   | 'DELETE_FACILITY'
   | 'CREATE_AID_POINT'
@@ -143,6 +145,14 @@ export type OfflineSyncType =
   | 'DELETE_DATA_REQUEST'
 
 export type OfflineSyncStatus = 'pending' | 'syncing' | 'done' | 'failed' | 'conflict'
+
+/** Volunteer's assigned tasks, cached so the field view works without signal. */
+export interface CachedVolunteerTask {
+  id: string
+  task: VolunteerTask
+  status: VolunteerTask['status']
+  cachedAt: number
+}
 
 export interface OfflineSyncQueueItem {
   id?: number
@@ -198,6 +208,7 @@ class NajatOfflineDB extends Dexie {
   adminHealthContent!: Table<CachedAdminHealthContent, string>
   apiCache!: Table<ApiCacheEntry, string>
   aidRequests!: Table<CachedAidRequest, string>
+  volunteerTasks!: Table<CachedVolunteerTask, string>
 
   constructor() {
     super('najat-offline-v2')
@@ -348,6 +359,24 @@ class NajatOfflineDB extends Dexie {
       adminHealthContent: 'id, cachedAt',
       apiCache: 'key, cachedAt',
     })
+    this.version(12).stores({
+      facilities: 'id, category, cachedAt',
+      facilityDetails: 'id, category, cachedAt',
+      aid: 'id, cachedAt',
+      aidRequests: 'id, userId, status, cachedAt, createdAt',
+      safetyMap: 'id',
+      localPlaces: 'id, name, type',
+      syncMeta: 'key',
+      articles: 'id, category, cachedAt',
+      offlineSyncQueue: '++id, type, status, createdAt',
+      authSnapshots: 'email, savedAt',
+      adminFacilities: 'id, cachedAt',
+      adminAidPoints: 'id, cachedAt',
+      adminUsers: 'id, cachedAt',
+      adminHealthContent: 'id, cachedAt',
+      apiCache: 'key, cachedAt',
+      volunteerTasks: 'id, status, cachedAt',
+    })
   }
 }
 
@@ -385,7 +414,16 @@ export async function getFacilityDetail(id: string): Promise<HealthFacility | nu
   return row?.facility ?? null
 }
 
-export async function putFacilities(facilities: HealthFacility[]): Promise<void> {
+/**
+ * @param reconcile See {@link putAdminAidPoints} — same full-list-vs-upsert
+ * distinction, scoped per category (a batch may cover one or more categories;
+ * only those categories' stale rows are pruned, other cached categories are
+ * left untouched).
+ */
+export async function putFacilities(
+  facilities: HealthFacility[],
+  { reconcile = false }: { reconcile?: boolean } = {},
+): Promise<void> {
   const db = getOfflineDB()
   const now = Date.now()
   const rows = facilities.map((f) => ({
@@ -401,6 +439,21 @@ export async function putFacilities(facilities: HealthFacility[]): Promise<void>
     await db.facilityDetails.bulkPut(
       rows.map(({ version, ...row }) => row),
     )
+    if (reconcile) {
+      const freshIdsByCategory = new Map<string, Set<string>>()
+      for (const f of facilities) {
+        if (!freshIdsByCategory.has(f.category)) freshIdsByCategory.set(f.category, new Set())
+        freshIdsByCategory.get(f.category)!.add(f.id)
+      }
+      for (const [category, freshIds] of freshIdsByCategory) {
+        const existingIds = await db.facilities.where('category').equals(category).primaryKeys()
+        const staleIds = existingIds.filter((id) => !freshIds.has(id as string))
+        if (staleIds.length > 0) {
+          await db.facilities.bulkDelete(staleIds)
+          await db.facilityDetails.bulkDelete(staleIds)
+        }
+      }
+    }
   })
 }
 
@@ -426,12 +479,25 @@ export async function getAllAid(): Promise<HumanitarianAid[]> {
   return rows.map((r) => r.aid)
 }
 
-export async function putAid(items: HumanitarianAid[]): Promise<void> {
+/** @param reconcile See {@link putAdminAidPoints} — same full-list-vs-upsert distinction. */
+export async function putAid(
+  items: HumanitarianAid[],
+  { reconcile = false }: { reconcile?: boolean } = {},
+): Promise<void> {
   const db = getOfflineDB()
   const now = Date.now()
-  await db.aid.bulkPut(
-    items.map((a) => ({ id: a.id, aid: a, cachedAt: now, updatedAt: now, version: 1 }))
-  )
+  const freshIds = new Set(items.map((a) => a.id))
+  await db.transaction('rw', db.aid, async () => {
+    await db.aid.bulkPut(
+      items.map((a) => ({ id: a.id, aid: a, cachedAt: now, updatedAt: now, version: 1 }))
+    )
+    if (reconcile) {
+      const staleIds = (await db.aid.toCollection().primaryKeys()).filter(
+        (id) => !freshIds.has(id as string),
+      )
+      if (staleIds.length > 0) await db.aid.bulkDelete(staleIds)
+    }
+  })
 }
 
 export async function putAidRequests(items: AidRequestDto[]): Promise<void> {
@@ -466,6 +532,59 @@ export async function getAidRequests(userId?: string): Promise<AidRequestDto[]> 
 
 export async function upsertAidRequest(request: AidRequestDto): Promise<void> {
   await putAidRequests([request])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Volunteer tasks
+// ──────────────────────────────────────────────────────────────────────────────
+
+export async function putVolunteerTasks(
+  items: VolunteerTask[],
+  { reconcile = false }: { reconcile?: boolean } = {},
+): Promise<void> {
+  const db = getOfflineDB()
+  const now = Date.now()
+  const freshIds = new Set(items.map((t) => t.id))
+  await db.transaction('rw', db.volunteerTasks, async () => {
+    await db.volunteerTasks.bulkPut(
+      items.map((task) => ({ id: task.id, task, status: task.status, cachedAt: now })),
+    )
+    if (reconcile) {
+      // A task the admin unassigned or deleted must not linger in the field view.
+      const staleIds = (await db.volunteerTasks.toCollection().primaryKeys()).filter(
+        (id) => !freshIds.has(id as string),
+      )
+      if (staleIds.length > 0) await db.volunteerTasks.bulkDelete(staleIds)
+    }
+  })
+}
+
+export async function getAllVolunteerTasks(): Promise<VolunteerTask[]> {
+  const db = getOfflineDB()
+  const rows = await db.volunteerTasks.toArray()
+  return rows
+    .map((row) => row.task)
+    .sort((a, b) => {
+      const aTime = new Date(a.createdAt ?? 0).getTime()
+      const bTime = new Date(b.createdAt ?? 0).getTime()
+      return bTime - aTime
+    })
+}
+
+/**
+ * Apply a status change to the cached copy so the UI stays correct while the
+ * real PATCH sits in the offline queue.
+ */
+export async function updateCachedVolunteerTaskStatus(
+  id: string,
+  status: VolunteerTask['status'],
+): Promise<VolunteerTask | null> {
+  const db = getOfflineDB()
+  const row = await db.volunteerTasks.get(id)
+  if (!row) return null
+  const updated: VolunteerTask = { ...row.task, status }
+  await db.volunteerTasks.put({ ...row, task: updated, status })
+  return updated
 }
 
 export async function updateCachedAidRequestStatus(
@@ -565,17 +684,30 @@ export async function getArticleById(id: string): Promise<Article | null> {
   return row?.article ?? null
 }
 
-export async function putArticles(articles: Article[]): Promise<void> {
+/** @param reconcile See {@link putAdminAidPoints} — same full-list-vs-upsert distinction. */
+export async function putArticles(
+  articles: Article[],
+  { reconcile = false }: { reconcile?: boolean } = {},
+): Promise<void> {
   const db = getOfflineDB()
   const now = Date.now()
-  await db.articles.bulkPut(
-    articles.map((a) => ({
-      id: a.id,
-      category: a.category,
-      article: a,
-      cachedAt: now,
-    })),
-  )
+  const freshIds = new Set(articles.map((a) => a.id))
+  await db.transaction('rw', db.articles, async () => {
+    await db.articles.bulkPut(
+      articles.map((a) => ({
+        id: a.id,
+        category: a.category,
+        article: a,
+        cachedAt: now,
+      })),
+    )
+    if (reconcile) {
+      const staleIds = (await db.articles.toCollection().primaryKeys()).filter(
+        (id) => !freshIds.has(id as string),
+      )
+      if (staleIds.length > 0) await db.articles.bulkDelete(staleIds)
+    }
+  })
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -705,10 +837,30 @@ export async function getAdminFacilityById(id: string): Promise<AdminHealthFacil
 // Admin aid point cache helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-export async function putAdminAidPoints(items: AdminAidDistributionPoint[]): Promise<void> {
+/**
+ * @param reconcile When true, `items` is treated as the complete authoritative
+ * list (a full list-fetch, not a single-record optimistic update) — any
+ * previously cached point whose id is absent from `items` is deleted, so
+ * records removed upstream don't linger as unreachable offline-cache ghosts
+ * forever (e.g. leftover ids from a prior mock-data era). Leave false for
+ * single/few-record upserts after a create/update mutation.
+ */
+export async function putAdminAidPoints(
+  items: AdminAidDistributionPoint[],
+  { reconcile = false }: { reconcile?: boolean } = {},
+): Promise<void> {
   const db = getOfflineDB()
   const now = Date.now()
-  await db.adminAidPoints.bulkPut(items.map((p) => ({ id: p.id, data: p, cachedAt: now })))
+  const freshIds = new Set(items.map((p) => p.id))
+  await db.transaction('rw', db.adminAidPoints, async () => {
+    await db.adminAidPoints.bulkPut(items.map((p) => ({ id: p.id, data: p, cachedAt: now })))
+    if (reconcile) {
+      const staleIds = (await db.adminAidPoints.toCollection().primaryKeys()).filter(
+        (id) => !freshIds.has(id as string),
+      )
+      if (staleIds.length > 0) await db.adminAidPoints.bulkDelete(staleIds)
+    }
+  })
 }
 
 export async function getAdminAidPoints(): Promise<AdminAidDistributionPoint[]> {
