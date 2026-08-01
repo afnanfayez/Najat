@@ -11,12 +11,17 @@ import {
   updateCachedAidRequestStatus,
 } from '@/lib/offline/db'
 import {
+  createAdminAidDonorFromApi,
   createAdminAidPointFromApi,
+  deleteAdminAidDonorFromApi,
   deleteAdminAidPointFromApi,
+  fetchAdminAidDonorByIdFromApi,
+  fetchAdminAidDonorsFromApi,
   fetchAdminAidPointByIdFromApi,
   fetchAdminAidPointsFromApi,
   fetchAdminAidRequestsFromApi,
   fetchAdminAidStatsFromApi,
+  updateAdminAidDonorFromApi,
   updateAdminAidPointFromApi,
   updateAdminAidRequestStatusFromApi,
 } from '@/lib/api/adminAid'
@@ -74,7 +79,7 @@ export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistrib
     try {
       const res = await fetch('/api/mock/aid-points')
       const points: AdminAidDistributionPoint[] = await res.json()
-      await putAdminAidPoints(points).catch(() => {})
+      await putAdminAidPoints(points, { reconcile: true }).catch(() => {})
       return points
     } catch {
       const cached = await getAdminAidPoints().catch(() => [])
@@ -84,7 +89,7 @@ export async function fetchAdminAidDistributionPoints(): Promise<AdminAidDistrib
 
   try {
     const result = await fetchAdminAidPointsFromApi()
-    putAdminAidPoints(result).catch(() => {})
+    putAdminAidPoints(result, { reconcile: true }).catch(() => {})
     return result
   } catch {
     const cached = await getAdminAidPoints().catch(() => [])
@@ -205,9 +210,18 @@ export async function fetchAdminAidDonorStats(): Promise<AdminAidDonorStats> {
 }
 
 export async function fetchAdminAidDonors(): Promise<AdminAidDonor[]> {
+  if (USE_MOCK_ADMIN_AID) {
+    try {
+      const res = await fetch('/api/mock/aid-donors')
+      const donors: AdminAidDonorDetail[] = await res.json()
+      return donors.map(donorToListItem)
+    } catch {
+      return [...ADMIN_AID_DONORS]
+    }
+  }
+
   try {
-    const res = await fetch('/api/mock/aid-donors')
-    const donors: AdminAidDonorDetail[] = await res.json()
+    const donors = await fetchAdminAidDonorsFromApi()
     return donors.map(donorToListItem)
   } catch {
     return [...ADMIN_AID_DONORS]
@@ -227,10 +241,18 @@ function donorToListItem(donor: AdminAidDonorDetail): AdminAidDonor {
 export async function fetchAdminAidDonorById(
   id: string,
 ): Promise<AdminAidDonorDetail | null> {
+  if (USE_MOCK_ADMIN_AID) {
+    try {
+      const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`)
+      if (!res.ok) return null
+      return res.json()
+    } catch {
+      return ADMIN_AID_DONOR_DETAILS.find((donor) => donor.id === id) ?? null
+    }
+  }
+
   try {
-    const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`)
-    if (!res.ok) return null
-    return res.json()
+    return await fetchAdminAidDonorByIdFromApi(id)
   } catch {
     return ADMIN_AID_DONOR_DETAILS.find((donor) => donor.id === id) ?? null
   }
@@ -239,25 +261,38 @@ export async function fetchAdminAidDonorById(
 export async function saveAdminAidDonor(
   donor: AdminAidDonorDetail,
 ): Promise<AdminAidDonorDetail> {
-  const checkRes = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(donor.id)}`)
-  const method = checkRes.ok ? 'PUT' : 'POST'
   const payload = {
     ...donor,
     subtitle: buildDonorSubtitle(donor),
   }
-  const res = await fetch('/api/mock/aid-donors', {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  return res.json()
+
+  if (USE_MOCK_ADMIN_AID) {
+    const checkRes = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(donor.id)}`)
+    const method = checkRes.ok ? 'PUT' : 'POST'
+    const res = await fetch('/api/mock/aid-donors', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    return res.json()
+  }
+
+  const isNew = donor.id.startsWith('donor-')
+  return isNew
+    ? await createAdminAidDonorFromApi(payload)
+    : await updateAdminAidDonorFromApi(payload)
 }
 
 export async function deleteAdminAidDonor(id: string): Promise<void> {
-  const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`, {
-    method: 'DELETE'
-  })
-  if (!res.ok) throw new Error('Failed to delete donor')
+  if (USE_MOCK_ADMIN_AID) {
+    const res = await fetch(`/api/mock/aid-donors?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    })
+    if (!res.ok) throw new Error('Failed to delete donor')
+    return
+  }
+
+  await deleteAdminAidDonorFromApi(id)
 }
 
 function buildDonorSubtitle(donor: AdminAidDonorDetail): string {

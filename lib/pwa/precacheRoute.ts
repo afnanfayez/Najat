@@ -85,21 +85,13 @@ function routesForRole(role: OfflinePrecacheRole): readonly string[] {
   return RESIDENT_ROUTES
 }
 
-async function warmRoutesInBatches(paths: readonly string[]): Promise<void> {
-  if (typeof window === 'undefined' || !navigator.onLine) return
-  const batchSize = 3
-
-  for (let i = 0; i < paths.length; i += batchSize) {
-    const batch = paths.slice(i, i + batchSize)
-    await Promise.allSettled(batch.map((path) => warmRscRoute(path)))
-  }
-}
-
 export async function precacheRoutesForRole(role: OfflinePrecacheRole): Promise<void> {
   const paths = routesForRole(role)
   try {
+    // The SW's PRECACHE_ROUTES handler already fetches each route's RSC payload
+    // via cacheRscPayload(). Warming them again from the page (as this used to)
+    // doubled the request count for no benefit.
     await postToServiceWorker({ type: 'PRECACHE_ROUTES', paths })
-    await warmRoutesInBatches(paths)
   } catch {
     // ignore precache failures
   }

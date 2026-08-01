@@ -2,7 +2,6 @@
 
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef } from 'react'
-import { precacheMainMapArea } from '@/lib/pwa/mapTileCache'
 import { syncMapAssetsForOffline } from '@/lib/offline/sync'
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 
@@ -110,7 +109,8 @@ export default function LeafletMapInner({
   useEffect(() => {
     if (warmedTilesRef.current) return
     warmedTilesRef.current = true
-    void precacheMainMapArea()
+    // syncMapAssetsForOffline() already covers the main area — calling
+    // precacheMainMapArea() alongside it fetched every tile twice.
     void syncMapAssetsForOffline()
   }, [])
 

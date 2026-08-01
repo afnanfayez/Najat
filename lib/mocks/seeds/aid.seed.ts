@@ -84,5 +84,5 @@ export function seedAid(): AidDto[] {
       availableSupplies: ['غذاء', 'مياه', 'أدوية', 'ملابس'],
     },
   ]
-  return items.map((item) => ({ ...item, createdAt: now, updatedAt: now }))
+  return items.map((item) => ({ ...item, createdAt: now, updatedAt: now })) as AidDto[]
 }

@@ -6,10 +6,18 @@
  * public/sw.js to match (SHELL_CACHE / IMAGE_CACHE / MAP_TILES_CACHE).
  *
  * Versioning policy:
- *  - SHELL_CACHE is bumped on every deploy (holds shells, RSC, hashed /_next/static).
+ *  - SHELL_CACHE and DOC_CACHE are bumped on every deploy (BUILD_VERSION).
  *  - IMAGE_CACHE and MAP_TILES_CACHE are durable and survive deploys so that
  *    images and map tiles are NOT re-downloaded on every release.
+ *
+ * SHELL_CACHE (hashed /_next/static) and DOC_CACHE (page shells + RSC payloads)
+ * are separate so each can carry its own entry cap. Mixed in one bucket, FIFO
+ * eviction let a burst of RSC prefetches push out the static chunks needed to
+ * boot offline — and the combined cache had no cap at all.
  */
-export const SHELL_CACHE = 'najat-shell-v28'
+const BUILD_VERSION = 'v29'
+
+export const SHELL_CACHE = `najat-shell-${BUILD_VERSION}`
+export const DOC_CACHE = `najat-docs-${BUILD_VERSION}`
 export const IMAGE_CACHE = 'najat-images-v1'
 export const MAP_TILES_CACHE = 'najat-map-tiles-v1'

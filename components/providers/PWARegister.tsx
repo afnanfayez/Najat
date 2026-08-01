@@ -8,6 +8,7 @@ import { getCurrentUserId } from '@/lib/auth/tokenIdentity'
 import { getCurrentAuthRole } from '@/lib/auth/currentAuthRole'
 import { precacheRoutesForRole, precacheStaticAssets } from '@/lib/pwa/precacheRoute'
 import { requestPersistentStorage, getStorageEstimate } from '@/lib/pwa/persistStorage'
+import { enqueueBackgroundTask } from '@/lib/pwa/backgroundScheduler'
 
 const SYNC_SIGNAL_THROTTLE_MS = 2_000
 
@@ -18,16 +19,7 @@ type SyncServiceWorkerRegistration = ServiceWorkerRegistration & {
 }
 
 function scheduleDataSync(force = false): void {
-  if (typeof window === 'undefined') return
-  const run = () => {
-    void syncAllData(force)
-  }
-
-  if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(run, { timeout: 15_000 })
-  } else {
-    window.setTimeout(run, 3_000)
-  }
+  enqueueBackgroundTask('data-sync', () => syncAllData(force), { timeout: 15_000 })
 }
 
 async function unregisterDevServiceWorkers(): Promise<void> {
@@ -109,15 +101,20 @@ export default function PWARegister() {
         }
 
         if (getCurrentUserId()) {
-          void precacheRoutesForRole(getCurrentAuthRole())
+          // All three run through one serial, visibility-gated queue. Scheduled
+          // independently they used to fire together the moment the tab was
+          // backgrounded and saturate the network — see lib/pwa/backgroundScheduler.ts.
+          enqueueBackgroundTask(
+            'precache-routes',
+            () => precacheRoutesForRole(getCurrentAuthRole()),
+            { timeout: 10_000 },
+          )
           scheduleDataSync(true)
           // Background full-static precache so every route boots offline.
-          const warmStatic = () => void precacheStaticAssets()
-          if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(warmStatic, { timeout: 20_000 })
-          } else {
-            window.setTimeout(warmStatic, 8_000)
-          }
+          enqueueBackgroundTask('precache-static', () => precacheStaticAssets(), {
+            heavy: true,
+            timeout: 20_000,
+          })
         }
         console.log('[PWA] Service Worker registered ✓')
       } catch (err) {
@@ -140,14 +137,12 @@ export default function PWARegister() {
 
     // ── 2. عند عودة الإنترنت → طلب Background Sync من SW ────────────────────
     const handleOnline = async () => {
-      console.log(`[CONN-DEBUG] PWARegister 'online' event fired @ ${Date.now()} navigator.onLine=${navigator.onLine}`)
       // Wait 750 ms for the OS/browser network stack to fully stabilise before
       // making API calls. Without this delay, requests fired immediately after the
       // 'online' event fail with network errors (DNS not yet resolved, TCP not
       // established), silently consuming retries without actually syncing.
       await new Promise((r) => setTimeout(r, 750))
 
-      console.log(`[CONN-DEBUG] PWARegister calling processSyncQueue() + scheduleDataSync(true) @ ${Date.now()}`)
       void processSyncQueue()
       scheduleDataSync(true)
 
@@ -177,12 +172,10 @@ export default function PWARegister() {
     }
 
     window.addEventListener('online', handleOnline)
-    console.log(`[CONN-DEBUG] PWARegister MOUNTED @ ${Date.now()}, 'online' listener attached`)
 
     // ── 3. استقبال رسالة BACKGROUND_SYNC_TRIGGERED من SW ────────────────────
     const handleSWMessage = (event: MessageEvent) => {
       if (event.data?.type !== 'BACKGROUND_SYNC_TRIGGERED') return
-      console.log(`[CONN-DEBUG] PWARegister SW message BACKGROUND_SYNC_TRIGGERED @ ${Date.now()}`)
       console.log('[PWA] Background sync triggered by SW — refreshing session')
 
       void processSyncQueue()
@@ -199,7 +192,6 @@ export default function PWARegister() {
     }
 
     const handleControllerChange = () => {
-      console.log(`[CONN-DEBUG] PWARegister SW controllerchange @ ${Date.now()} -> forcing window.location.reload()`)
       window.location.reload()
     }
 

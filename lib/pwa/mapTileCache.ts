@@ -1,5 +1,4 @@
 import { MAP_CENTER } from '@/lib/mocks/mapsMockData'
-import type { HealthFacility } from '@/schemas/healthFacility'
 
 const CARTO_TILE_URL =
   'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
@@ -72,24 +71,14 @@ export async function precacheTilesForBounds(
   }
 }
 
-export async function precacheAllFacilityMapTiles(
-  facilities: Array<{ latitude?: number | null; longitude?: number | null }>,
-): Promise<void> {
-  const coords = facilities.filter(
-    (f) => f.latitude != null && f.longitude != null,
-  )
-  for (let i = 0; i < coords.length; i++) {
-    const f = coords[i]
-    await precacheTilesForPoint(f.latitude!, f.longitude!, [13, 14, 15, 16], 1)
-    if (i > 0 && i % 5 === 0) {
-      await new Promise((r) => setTimeout(r, 100))
-    }
-  }
-}
-
+/**
+ * Warm the core Gaza area so the map is usable offline: zooms 13–15 at radius 2
+ * → 3 × 25 = 75 tiles. Previously z12–16 at radius 2 (125 tiles); the outer
+ * zooms cost bandwidth without adding much practical offline coverage.
+ */
 export async function precacheMainMapArea(): Promise<void> {
   const [lat, lng] = MAP_CENTER
-  await precacheTilesForPoint(lat, lng, [12, 13, 14, 15, 16], 2)
+  await precacheTilesForPoint(lat, lng, [13, 14, 15], 2)
 }
 
 export async function precacheTilesFromMapView(

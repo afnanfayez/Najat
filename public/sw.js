@@ -3,19 +3,28 @@
  *
  * Caching strategy:
  *  - Static assets (/_next/static/, /assets/)  → cache-first, update in background
- *  - Page shells / RSC payloads               → stale-while-revalidate (APP_SHELL_TIMEOUT_MS)
+ *  - Page shells (document navigations)       → network-first, cache as fallback
+ *  - RSC payloads (client-side navigation)    → stale-while-revalidate
  *  - Map tiles (CartoCDN, OSM)                → cache-first, update in background
  *  - External cacheable assets (Leaflet etc.) → cache-first, update in background
  *  - API responses (/v1/*)                    → NOT cached here; handled by IndexedDB (lib/offline/db.ts)
  *
- * BUMP SHELL_CACHE ON EVERY DEPLOY so stale shells are evicted on activate.
+ * Documents are network-first ON PURPOSE. They are what middleware.ts gates on,
+ * so serving a cached authenticated shell would walk a signed-out user straight
+ * past the auth redirect. RSC payloads are already behind that gate, so they can
+ * safely be served stale and revalidated.
+ *
+ * BUMP BUILD_VERSION ON EVERY DEPLOY so stale shells/docs are evicted on activate.
  */
 
 // Cache buckets — keep these literals in sync with lib/pwa/cacheNames.ts
-//  - SHELL_CACHE: versioned; BUMP ON EVERY DEPLOY (shells, RSC, /_next/static)
+//  - SHELL_CACHE: versioned; BUMP ON EVERY DEPLOY (hashed /_next/static)
+//  - DOC_CACHE:   versioned; page shells + RSC payloads (separate cap)
 //  - IMAGE_CACHE: durable; survives deploys so images aren't re-downloaded
 //  - MAP_TILES_CACHE: durable; survives deploys
-const SHELL_CACHE = 'najat-shell-v28'
+const BUILD_VERSION = 'v29'
+const SHELL_CACHE = `najat-shell-${BUILD_VERSION}`
+const DOC_CACHE = `najat-docs-${BUILD_VERSION}`
 const IMAGE_CACHE = 'najat-images-v1'
 const MAP_TILES_CACHE = 'najat-map-tiles-v1'
 // API responses are NOT cached by the SW — they are handled by IndexedDB sync (lib/offline/db.ts)
@@ -34,19 +43,22 @@ const TILE_MAX_AGE_MS = 30 * ONE_DAY_MS   // map tiles rarely change
 // the whole origin's storage. Oldest entries (FIFO via cache insertion order)
 // are pruned first.
 const IMAGE_MAX_ENTRIES = 300
-const TILE_MAX_ENTRIES = 1500
+// The main-area precache emits ~75 tiles and panning adds more; 600 leaves
+// generous headroom while staying far below the old 1,500 (which the previous
+// 1,457-tile precache overflowed on its very first run, evicting as it wrote).
+const TILE_MAX_ENTRIES = 600
+// 234 hashed assets in the build manifest + runtime chunks + headroom.
+const SHELL_MAX_ENTRIES = 400
+// ~31 precached routes × (document + RSC), plus room for ad-hoc navigation.
+const DOC_MAX_ENTRIES = 120
 // في وضع التطوير نتجنب تخزين ملفات /_next/ حتى لا تتأثر آلية HMR
 const IS_DEV = self.location.search.includes('dev=1')
 
-// Shells & documents → SHELL_CACHE (versioned)
-const CORE_SHELL_ASSETS = [
-  '/',
-  '/login',
-  '/logout',
-  '/dashboard',
-  '/admin',
-  '/manifest.webmanifest',
-]
+// Documents → DOC_CACHE, stored under pageCacheKey() like every other shell.
+const CORE_DOCUMENT_ROUTES = ['/', '/login', '/logout', '/dashboard', '/admin']
+
+// Non-document static resources → SHELL_CACHE (versioned)
+const CORE_SHELL_ASSETS = ['/manifest.webmanifest']
 
 // Images & icons → IMAGE_CACHE (durable across deploys)
 const CORE_IMAGE_ASSETS = [
@@ -119,12 +131,22 @@ const OFFLINE_FALLBACK_HTML = `<!DOCTYPE html>
 </body>
 </html>`
 
+// Synthetic same-origin cache keys for page shells and RSC payloads.
+//
+// These MUST be http(s) URLs: Cache.put() rejects any other scheme with
+// "Request scheme 'x' is unsupported". The previous `page-shell:${p}` /
+// `rsc-shell:${p}` keys were custom-scheme, so every put() against them threw
+// silently — page shells only survived because they were also written under
+// the raw Request and pathname, and the RSC shell cache never worked at all.
+//
+// Nothing ever fetches these paths; they exist purely as cache keys, and the
+// __najat__ prefix keeps them from colliding with a real route.
 function rscCacheKey(pathname) {
-  return `rsc-shell:${pathname}`
+  return `${self.location.origin}/__najat__/rsc${pathname === '/' ? '/index' : pathname}`
 }
 
 function pageCacheKey(pathname) {
-  return `page-shell:${pathname}`
+  return `${self.location.origin}/__najat__/page${pathname === '/' ? '/index' : pathname}`
 }
 
 function normalizePathname(pathname) {
@@ -313,6 +335,7 @@ async function precacheStaticManifest() {
       }
     }
     await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+    await trimCache(SHELL_CACHE, SHELL_MAX_ENTRIES)
   } catch {
     // ignore — best effort
   }
@@ -325,7 +348,10 @@ async function cacheDocument(cache, path) {
     const response = await fetch(normalizedPath)
     if (response.ok && !response.redirected) {
       const html = await response.clone().text()
-      await cache.put(normalizedPath, response.clone())
+      // One canonical key per document. This used to also put the same body
+      // under the raw pathname (and, in the fetch handler, under the Request
+      // itself) — three copies of every shell for a lookup serveCachedDocument
+      // can normalise instead.
       await cache.put(pageCacheKey(normalizedPath), response.clone())
       await cacheRscPayload(cache, normalizedPath)
       await cacheReferencedStaticAssets(html)
@@ -335,20 +361,16 @@ async function cacheDocument(cache, path) {
   }
 }
 
-async function serveCachedDocument(cache, request, url) {
+async function serveCachedDocument(cache, url) {
   const pathname = normalizePathname(url.pathname)
   const fallbackPath = fallbackDocument(pathname)
 
+  // Documents live under exactly one key — pageCacheKey(normalisedPathname) —
+  // so this walks the fallback chain rather than a list of key aliases.
   return (
-    (await cache.match(request)) ||
-    (await cache.match(url.pathname)) ||
-    (await cache.match(pathname)) ||
     (await cache.match(pageCacheKey(pathname))) ||
-    (await cache.match(fallbackPath)) ||
     (await cache.match(pageCacheKey(fallbackPath))) ||
-    (await cache.match('/dashboard')) ||
     (await cache.match(pageCacheKey('/dashboard'))) ||
-    (await cache.match('/login')) ||
     (await cache.match(pageCacheKey('/login'))) ||
     new Response(OFFLINE_FALLBACK_HTML, {
       status: 200,
@@ -409,12 +431,30 @@ async function trimCache(cacheName, maxEntries) {
     const cache = await caches.open(cacheName)
     const keys = await cache.keys()
     const excess = keys.length - maxEntries
-    for (let i = 0; i < excess; i++) {
-      await cache.delete(keys[i])
-    }
+    if (excess <= 0) return
+    // Delete in parallel — the old serial await-in-a-loop made a single trim
+    // take as long as `excess` sequential round-trips to the Cache Storage.
+    await Promise.all(keys.slice(0, excess).map((key) => cache.delete(key)))
   } catch {
     // ignore
   }
+}
+
+// trimCache() enumerates the WHOLE cache (cache.keys()), so calling it after
+// every write made bulk precaching quadratic: ~1,500 tile writes × a 1,500-key
+// enumeration each. Amortise it — count writes in memory and only pay for the
+// enumeration once every TRIM_INTERVAL_WRITES.
+const TRIM_INTERVAL_WRITES = 50
+const writesSinceTrim = new Map()
+
+function shouldTrim(cacheName) {
+  const next = (writesSinceTrim.get(cacheName) ?? 0) + 1
+  if (next < TRIM_INTERVAL_WRITES) {
+    writesSinceTrim.set(cacheName, next)
+    return false
+  }
+  writesSinceTrim.set(cacheName, 0)
+  return true
 }
 
 // Cache-first with TTL-gated revalidation:
@@ -447,7 +487,7 @@ async function cacheFirstWithRevalidate(
     .then(async (response) => {
       if (isCacheableResponse(response)) {
         await putWithTimestamp(cache, request, response)
-        if (maxEntries > 0) void trimCache(cacheName, maxEntries)
+        if (maxEntries > 0 && shouldTrim(cacheName)) void trimCache(cacheName, maxEntries)
       }
       return response
     })
@@ -466,11 +506,28 @@ async function cacheFirstWithRevalidate(
   )
 }
 
+// Core documents must land under pageCacheKey() so serveCachedDocument() finds
+// them — cache.add() would key them by URL, which nothing looks up any more.
+async function precacheCoreDocuments() {
+  const cache = await caches.open(DOC_CACHE)
+  await Promise.all(
+    CORE_DOCUMENT_ROUTES.map(async (path) => {
+      try {
+        const response = await fetch(path)
+        if (response.ok && !response.redirected) {
+          await cache.put(pageCacheKey(normalizePathname(path)), response)
+        }
+      } catch {
+        // ignore — best effort
+      }
+    }),
+  )
+}
+
 self.addEventListener('install', (event) => {
-  console.log(`[CONN-DEBUG][SW] install event @ ${Date.now()} — calling self.skipWaiting() (note: contradicts the "no skipWaiting" comment below)`)
-  self.skipWaiting()
   event.waitUntil(
     Promise.all([
+      precacheCoreDocuments(),
       caches
         .open(SHELL_CACHE)
         .then((cache) =>
@@ -493,7 +550,7 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  const keepCaches = new Set([SHELL_CACHE, IMAGE_CACHE, MAP_TILES_CACHE])
+  const keepCaches = new Set([SHELL_CACHE, DOC_CACHE, IMAGE_CACHE, MAP_TILES_CACHE])
   event.waitUntil(
     caches
       .keys()
@@ -504,11 +561,13 @@ self.addEventListener('activate', (event) => {
           }),
         ),
       )
-      // Bound the durable caches in case they grew under a previous version.
+      // Bound every capped cache in case one grew under a previous version.
       .then(() =>
         Promise.all([
           trimCache(IMAGE_CACHE, IMAGE_MAX_ENTRIES),
           trimCache(MAP_TILES_CACHE, TILE_MAX_ENTRIES),
+          trimCache(SHELL_CACHE, SHELL_MAX_ENTRIES),
+          trimCache(DOC_CACHE, DOC_MAX_ENTRIES),
         ]),
       )
       .then(() => self.clients.claim()),
@@ -530,7 +589,7 @@ self.addEventListener('message', (event) => {
 
   if (type === 'PRECACHE_ROUTE') {
     if (typeof path !== 'string' || !path.startsWith('/')) return
-    event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cacheDocument(cache, path)))
+    event.waitUntil(caches.open(DOC_CACHE).then((cache) => cacheDocument(cache, path)))
     return
   }
 
@@ -538,10 +597,24 @@ self.addEventListener('message', (event) => {
     const paths = Array.isArray(event.data?.paths) ? event.data.paths : []
     const safePaths = paths.filter((item) => typeof item === 'string' && item.startsWith('/'))
     if (safePaths.length === 0) return
+    // Each cacheDocument() call fans out into several more fetches internally
+    // (RSC payload + every referenced /_next/static chunk) — running all
+    // routes via Promise.all can spike to 100+ simultaneous connections and
+    // trip the browser's ERR_INSUFFICIENT_RESOURCES cap. Throttle like
+    // precacheStaticManifest() does.
     event.waitUntil(
-      caches.open(SHELL_CACHE).then((cache) =>
-        Promise.all(safePaths.map((routePath) => cacheDocument(cache, routePath))),
-      ),
+      caches.open(DOC_CACHE).then(async (cache) => {
+        const CONCURRENCY = 3
+        let i = 0
+        async function worker() {
+          while (i < safePaths.length) {
+            const routePath = safePaths[i++]
+            await cacheDocument(cache, routePath)
+          }
+        }
+        await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+        await trimCache(DOC_CACHE, DOC_MAX_ENTRIES)
+      }),
     )
     return
   }
@@ -640,7 +713,7 @@ self.addEventListener('fetch', (event) => {
     // في وضع التطوير: تجاوز تخزين ملفات /_next/ لضمان عمل HMR بشكل سليم
     if (IS_DEV && url.pathname.startsWith('/_next/')) return
     event.respondWith(
-      cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS).catch(
+      cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS, SHELL_MAX_ENTRIES).catch(
         () => new Response('', { status: 503, statusText: 'Offline' }),
       ),
     )
@@ -653,7 +726,7 @@ self.addEventListener('fetch', (event) => {
     !url.pathname.startsWith('/_next/')
   ) {
     event.respondWith(
-      caches.open(SHELL_CACHE).then(async (cache) => {
+      caches.open(DOC_CACHE).then(async (cache) => {
         const pathname = normalizePathname(url.pathname)
         const shellKey = rscCacheKey(pathname)
         const fallbackPath = fallbackDocument(pathname)
@@ -666,30 +739,35 @@ self.addEventListener('fetch', (event) => {
           headers: { 'Content-Type': 'text/x-component' },
         })
 
-        if (!self.navigator.onLine) {
-          return (
-            (await cache.match(request)) ||
-            (await cache.match(shellKey)) ||
-            (!isSubRoute ? await cache.match(rscCacheKey(fallbackPath)) : null) ||
-            emptyRsc
-          )
+        // Keyed ONLY by rscCacheKey(pathname). Storing the raw Request too meant
+        // every prefetch of the same route landed under a different key — Next
+        // varies the `_rsc=` query per build — so the cache accumulated
+        // duplicate payloads without bound.
+        const cachedRsc =
+          (await cache.match(shellKey)) ||
+          (!isSubRoute ? await cache.match(rscCacheKey(fallbackPath)) : null)
+
+        if (!self.navigator.onLine) return cachedRsc || emptyRsc
+
+        // Stale-while-revalidate: client-side navigation gets its payload
+        // immediately from cache instead of waiting up to APP_SHELL_TIMEOUT_MS
+        // on the network. Full document navigations stay network-first below so
+        // the middleware's auth redirect is never bypassed.
+        const revalidate = fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
+          .then(async (response) => {
+            if (response.ok && !response.redirected) {
+              await cache.put(shellKey, response.clone())
+            }
+            return response
+          })
+          .catch(() => null)
+
+        if (cachedRsc) {
+          revalidate.catch(() => undefined)
+          return cachedRsc
         }
 
-        try {
-          const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
-          if (response.ok && !response.redirected) {
-            await cache.put(shellKey, response.clone())
-            await cache.put(request, response.clone())
-          }
-          return response
-        } catch {
-          return (
-            (await cache.match(request)) ||
-            (await cache.match(shellKey)) ||
-            (!isSubRoute ? await cache.match(rscCacheKey(fallbackPath)) : null) ||
-            emptyRsc
-          )
-        }
+        return (await revalidate) || emptyRsc
       }).catch(
         () => new Response('', { status: 200, headers: { 'Content-Type': 'text/x-component' } }),
       ),
@@ -700,24 +778,26 @@ self.addEventListener('fetch', (event) => {
   if (isAppRouteRequest(request, url)) {
     event.respondWith(
       caches
-        .open(SHELL_CACHE)
+        .open(DOC_CACHE)
         .then(async (cache) => {
           const pathname = normalizePathname(url.pathname)
 
-          console.log(`[CONN-DEBUG][SW] navigation fetch ${pathname} @ ${Date.now()} self.navigator.onLine=${self.navigator.onLine}`)
-          if (!self.navigator.onLine) return serveCachedDocument(cache, request, url)
+          if (!self.navigator.onLine) return serveCachedDocument(cache, url)
 
+          // Deliberately network-first (NOT stale-while-revalidate): a document
+          // navigation is what middleware.ts gates on, so serving a cached
+          // authenticated shell would let a signed-out user straight past the
+          // auth redirect. Only the fallback path reads from cache.
           try {
             const response = await fetchWithTimeout(request, APP_SHELL_TIMEOUT_MS)
             if (response.status === 200 && !response.redirected) {
-              await cache.put(request, response.clone())
-              await cache.put(pathname, response.clone())
               await cache.put(pageCacheKey(pathname), response.clone())
               cacheRscPayload(cache, pathname)
+              if (shouldTrim(DOC_CACHE)) void trimCache(DOC_CACHE, DOC_MAX_ENTRIES)
             }
             return response
           } catch {
-            return serveCachedDocument(cache, request, url)
+            return serveCachedDocument(cache, url)
           }
         })
         // Last-resort safety net: if anything above throws (corrupted cache,
@@ -735,7 +815,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS).catch(
+    cacheFirstWithRevalidate(request, SHELL_CACHE, STATIC_MAX_AGE_MS, SHELL_MAX_ENTRIES).catch(
       () => new Response('', { status: 503, statusText: 'Offline' }),
     ),
   )

@@ -205,7 +205,7 @@ function dtoBase(
       medicationAvailabilityPercent(medRows),
     ),
     phone: dto.contactNumber ?? undefined,
-    imageUrl: pickLocalImage('hospitals', dto.id),
+    imageUrl: dto.image ?? pickLocalImage('hospitals', dto.id),
     latitude: dto.latitude,
     longitude: dto.longitude,
     capacityStatus: dto.status,
@@ -214,7 +214,7 @@ function dtoBase(
     updatedAt: dto.updatedAt,
     fromHospitalApi: true,
     detail: {
-      mapPreviewImageUrl: pickLocalImage('hospitals', dto.id),
+      mapPreviewImageUrl: dto.image ?? pickLocalImage('hospitals', dto.id),
       lastUpdatedAt: dto.updatedAt
         ? formatUpdatedRelative(dto.updatedAt)
         : undefined,
