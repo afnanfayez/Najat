@@ -171,12 +171,31 @@ function normalizeUsersResponse(
   fallbackPage = 1,
   fallbackPageSize = 10,
 ): AdminUsersListResponse {
-  const payload = getEnvelopeData<BackendUsersPayload>(rawList)
-  const users = Array.isArray(payload?.data)
-    ? payload.data.map(mapBackendAdminUser)
-    : []
+  const rawData = getEnvelopeData<unknown>(rawList)
 
-  const meta = payload?.meta
+  let rawUsers: AdminBackendUserDto[] = []
+  let meta: BackendUsersPayload['meta'] = undefined
+
+  if (Array.isArray(rawData)) {
+    rawUsers = rawData as AdminBackendUserDto[]
+    if (rawList && typeof rawList === 'object' && 'meta' in rawList) {
+      meta = (rawList as { meta?: BackendUsersPayload['meta'] }).meta
+    }
+  } else if (rawData && typeof rawData === 'object' && 'data' in rawData) {
+    const nested = rawData as BackendUsersPayload
+    rawUsers = Array.isArray(nested.data) ? nested.data : []
+    meta = nested.meta
+  } else if (rawList && typeof rawList === 'object' && 'data' in rawList) {
+    const directData = (rawList as { data?: unknown }).data
+    if (Array.isArray(directData)) {
+      rawUsers = directData as AdminBackendUserDto[]
+    }
+    if ('meta' in rawList) {
+      meta = (rawList as { meta?: BackendUsersPayload['meta'] }).meta
+    }
+  }
+
+  const users = rawUsers.map(mapBackendAdminUser)
   const stats = normalizeStats(getEnvelopeData<BackendStatsPayload>(rawStats))
 
   return {
