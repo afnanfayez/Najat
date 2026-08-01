@@ -1,7 +1,7 @@
 import { request } from '@/lib/api/api'
 import type { AdminSecurityUpdateScheduleBody } from '@/schemas/adminSecurity'
 
-const V1 = '/v1/admin/security'
+const V1 = `${process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'}/admin/security`
 
 function unwrap<T>(raw: unknown): T {
   if (!raw || typeof raw !== 'object') return raw as T

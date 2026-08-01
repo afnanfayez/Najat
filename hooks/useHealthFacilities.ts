@@ -87,7 +87,7 @@ async function fetchCategoryFacilities(
 
   const saveFresh = (fresh: HealthFacility[]) => {
     if (fresh.length > 0) {
-      putFacilities(fresh).catch(() => {})
+      putFacilities(fresh, { reconcile: true }).catch(() => {})
       onFreshData?.(fresh)
     }
   }

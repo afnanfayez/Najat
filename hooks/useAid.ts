@@ -79,7 +79,7 @@ async function fetchAidCatalog(
   const livePromise = fetchAllAidPages()
   const saveFresh = (fresh: HumanitarianAid[]) => {
     if (fresh.length > 0) {
-      putAid(fresh).catch(() => {})
+      putAid(fresh, { reconcile: true }).catch(() => {})
       onFreshData?.(fresh)
     }
   }

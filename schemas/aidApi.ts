@@ -1,6 +1,21 @@
 import { z } from 'zod'
 import { bilingualMessageSchema } from '@/schemas/shared'
 
+/**
+ * A string array column that may arrive as `null` from Postgres.
+ *
+ * `.optional()` accepts only `undefined` and `.default([])` only fills
+ * `undefined` — neither tolerates an explicit JSON `null`. Because these DTOs
+ * are parsed inside `z.array(...)`, one NULL column rejected the whole page of
+ * results and blanked the entire aid list (see
+ * supabase/migrations/0024_fix_null_aid_arrays.sql). Normalise null/undefined
+ * to an empty array so bad data degrades one field instead of the whole list.
+ */
+const nullableStringArray = z
+  .array(z.string())
+  .nullish()
+  .transform((value) => value ?? [])
+
 /** Matches AidPointResponseDto / NearbyAidPointResponseDto in Najat OpenAPI */
 export const aidPointStatusSchema = z.enum(['active', 'suspended', 'limited'])
 
@@ -20,7 +35,7 @@ export const nearbyAidPointDtoSchema = z
     name: z.string(),
     label: z.string().optional().nullable(),
     status: z.union([aidPointStatusSchema, z.string()]),
-    availableSupplies: z.array(z.string()).optional().default([]),
+    availableSupplies: nullableStringArray,
     latitude: z.coerce.number(),
     longitude: z.coerce.number(),
     type: z.union([aidPointTypeSchema, z.string()]).optional().nullable(),
@@ -40,20 +55,26 @@ export const aidNearbyEnvelopeSchema = z
 
 export type NearbyAidPointDto = z.infer<typeof nearbyAidPointDtoSchema>
 
-export const aidDtoSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  label: z.string().optional().nullable(),
-  status: z.string().optional().nullable(),
-  type: z.string().optional().nullable(),
-  latitude: z.coerce.number(),
-  longitude: z.coerce.number(),
-  availableSupplies: z.array(z.string()).optional(),
-  deletedAt: z.string().nullable().optional(),
-  version: z.number().optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-})
+export const aidDtoSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    label: z.string().optional().nullable(),
+    status: z.string().optional().nullable(),
+    type: z.string().optional().nullable(),
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
+    availableSupplies: nullableStringArray,
+    deletedAt: z.string().nullable().optional(),
+    version: z.number().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  // `aid_points` also carries the admin "distribution point" extended
+  // columns (region, manager, remaining, inventory, ...) folded in per
+  // docs/BACKEND_API_SPEC.md §2 — passthrough so lib/api/adminAid.ts can
+  // read them instead of always falling back to TODO placeholders.
+  .passthrough()
 
 export type AidDto = z.infer<typeof aidDtoSchema>
 

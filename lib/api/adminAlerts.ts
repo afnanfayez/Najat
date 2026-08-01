@@ -1,6 +1,8 @@
 import { request } from '@/lib/api/api'
 import type { AdminAlertDto, AdminAlertsListResponse } from '@/schemas/adminAlert'
 
+const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
+
 function normalizeAlertsResponse(raw: unknown): AdminAlertsListResponse {
   if (Array.isArray(raw)) {
     return { alerts: raw as AdminAlertDto[] }
@@ -29,6 +31,6 @@ function normalizeAlertsResponse(raw: unknown): AdminAlertsListResponse {
  * فعّل عبر NEXT_PUBLIC_ADMIN_ALERTS_API=1 ثم عدّل المسار حسب عقد API الفعلي.
  */
 export async function fetchAdminAlertsFromApi(): Promise<AdminAlertsListResponse> {
-  const response = await request('/v1/admin/alerts', { method: 'GET' })
+  const response = await request(`${V1_ROOT}/admin/alerts`, { method: 'GET' })
   return normalizeAlertsResponse(response)
 }

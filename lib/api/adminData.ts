@@ -11,7 +11,7 @@ import type {
   SubmitAdminDataReviewBody,
 } from '@/schemas/adminData'
 
-const V1 = '/v1/admin/data'
+const V1 = `${process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'}/admin/data`
 
 /** Matches DataSyncDashboardResponseDto from the API */
 interface ApiDataDashboard {

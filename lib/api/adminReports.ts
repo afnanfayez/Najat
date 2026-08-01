@@ -2,7 +2,7 @@ import { request } from '@/lib/api/api'
 import { isMockMode } from '@/lib/mocks/isMockMode'
 import { simulateDelay } from '@/lib/mocks/store/delay'
 
-const V1 = '/v1/admin/reports'
+const V1 = `${process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'}/admin/reports`
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||

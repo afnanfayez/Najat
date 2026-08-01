@@ -44,7 +44,7 @@ export function useHealthGuideArticles(params?: HealthGuideArticlesParams) {
         const dtos = await fetchAllArticlePages()
         const articles = dtos.map(mapArticleDtoToUi)
         if (articles.length > 0) {
-          putArticles(articles).catch(() => {})
+          putArticles(articles, { reconcile: true }).catch(() => {})
         }
         return articles
       } catch (e) {

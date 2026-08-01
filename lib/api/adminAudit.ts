@@ -7,7 +7,7 @@ import type {
   UpdateAdminAuditReportBody,
 } from '@/schemas/adminAudit'
 
-const V1 = '/v1/admin/audit'
+const V1 = `${process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'}/admin/audit`
 
 interface ApiAuditDashboard {
   approvedCount?: number

@@ -6,7 +6,7 @@ import type {
 } from '@/schemas/adminCommunication'
 import { ADMIN_COMMUNICATION_DASHBOARD } from '@/lib/mocks/adminCommunicationMockData'
 
-const V1 = '/v1/admin/communication'
+const V1 = `${process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'}/admin/communication`
 
 interface ApiCommunicationDashboard {
   tasks?: {

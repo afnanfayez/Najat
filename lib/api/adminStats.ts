@@ -1,5 +1,7 @@
 import { request } from '@/lib/api/api'
 
+const V1_ROOT = process.env.NEXT_PUBLIC_API_V1_ROOT?.replace(/\/$/, '') ?? '/v1'
+
 export interface AdminSystemStatsDto {
   responseTime?: string | number
   informationAccuracy?: number
@@ -16,7 +18,7 @@ export interface AdminSystemStatsDto {
 }
 
 export async function fetchAdminSystemStatsFromApi(): Promise<AdminSystemStatsDto> {
-  const response = await request('/v1/admin/stats', { method: 'GET' })
+  const response = await request(`${V1_ROOT}/admin/stats`, { method: 'GET' })
   if (response && typeof response === 'object' && 'data' in response) {
     return (response as { data: AdminSystemStatsDto }).data ?? response
   }
