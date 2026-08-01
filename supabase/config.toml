@@ -250,6 +250,15 @@ otp_expiry = 600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Custom email templates for signup & confirmation
+[auth.email.template.signup]
+subject = "رمز التحقق من الحساب - منصة نجاة"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.confirmation]
+subject = "رمز التحقق من الحساب - منصة نجاة"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
