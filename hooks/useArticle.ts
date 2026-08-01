@@ -38,7 +38,7 @@ export function useArticle(id: string, initialArticle?: Article | null) {
     retry: 1,
   })
 
-  const isLoading = !isHydrated || query.isLoading
+  const isLoading = !isHydrated || !user || query.isLoading
 
   return { ...query, isLoading }
 }

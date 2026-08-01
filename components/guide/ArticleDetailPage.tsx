@@ -25,10 +25,15 @@ interface Props {
 
 export default function ArticleDetailPage({ articleId, initialArticle = null, onBack }: Props) {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
   const { data: article, isLoading, isError, error, refetch } =
     useArticle(articleId, initialArticle)
 
   const [isSaved, setIsSaved] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!article) return
@@ -156,10 +161,10 @@ export default function ArticleDetailPage({ articleId, initialArticle = null, on
 
       <div className="max-w-3xl mx-auto px-4 sm:px-8 py-8 pb-16">
         <GuideQueryState
-          isLoading={isLoading}
-          isError={isError}
+          isLoading={!mounted || isLoading}
+          isError={mounted && isError}
           error={error}
-          isEmpty={!article && !isLoading && !isError}
+          isEmpty={mounted && !article && !isLoading && !isError}
           emptyMessage="المقال غير موجود"
           onRetry={() => refetch()}
         >
