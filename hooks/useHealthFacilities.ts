@@ -107,23 +107,10 @@ async function fetchCategoryFacilities(
   }
 
   try {
-    const facilities = await Promise.race([
-      livePromise,
-      timeout<HealthFacility[]>(INITIAL_NETWORK_WAIT_MS),
-    ])
-
+    const facilities = await livePromise
     saveFresh(facilities)
     return { facilities, total: facilities.length, source: 'network' }
   } catch (e) {
-    if (e instanceof Error && e.message === 'slow-network') {
-      livePromise
-        .then(saveFresh)
-        .catch(() => {
-          // keep the non-blocking slow state visible until the user retries
-        })
-      return { facilities: [], total: 0, source: 'empty', refreshing: true }
-    }
-
     console.warn('Network request failed, falling back to offline DB', e)
     const [fallback, cachedAt] = await Promise.all([
       fetchFromIndexedDB(category),

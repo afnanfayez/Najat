@@ -92,17 +92,10 @@ async function fetchAidCatalog(
   }
 
   try {
-    const base = await Promise.race([
-      livePromise,
-      timeout<HumanitarianAid[]>(INITIAL_NETWORK_WAIT_MS),
-    ])
+    const base = await livePromise
     saveFresh(base)
     return base
   } catch (e) {
-    if (e instanceof Error && e.message === 'slow-network') {
-      livePromise.then(saveFresh).catch(() => {})
-      return []
-    }
     console.warn('Network fetch failed, falling back to offline DB', e)
     return getAllAid()
   }
