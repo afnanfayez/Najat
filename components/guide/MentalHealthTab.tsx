@@ -15,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { EMOTIONS, MENTAL_TIPS } from '@/lib/guide/mentalHealthContent'
-import { fetchAdminUsers } from '@/components/admin/data/adminUsersService'
+import { fetchPublicVolunteers, FALLBACK_VOLUNTEERS, type PublicVolunteer } from '@/lib/api/volunteers'
 import { useHealthGuideArticles } from '@/hooks/useHealthGuideArticles'
 import ArticleDetailPage from './ArticleDetailPage'
 import type { Article } from '@/schemas/healthGuide'
@@ -42,7 +42,7 @@ export default function MentalHealthTab() {
 
   // Volunteer Directory states
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [volunteers, setVolunteers] = useState<AdminUserDto[]>([])
+  const [volunteers, setVolunteers] = useState<Array<AdminUserDto | PublicVolunteer>>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -83,11 +83,11 @@ export default function MentalHealthTab() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetchAdminUsers({ role: 'volunteer', pageSize: 100 })
-      setVolunteers(res.users ?? [])
+      const list = await fetchPublicVolunteers()
+      setVolunteers(list.length > 0 ? list : FALLBACK_VOLUNTEERS)
     } catch (err) {
       console.error(err)
-      setError('تعذر تحميل المتطوعين. يرجى التحقق من الاتصال بالشبكة.')
+      setVolunteers(FALLBACK_VOLUNTEERS)
     } finally {
       setLoading(false)
     }
