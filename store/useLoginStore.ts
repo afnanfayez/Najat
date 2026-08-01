@@ -139,10 +139,30 @@ export const useLoginStore = create<LoginState>()(
           passwordError: false,
         })
 
-        // Signing in always needs connectivity — Supabase Auth has no offline
-        // fallback (see docs/BACKEND_API_SPEC.md migration plan, Phase 2).
+        // If offline, check if we have a saved offline session profile for this user
         if (isOffline()) {
-          const msg = 'تسجيل الدخول يحتاج اتصالاً بالإنترنت. يرجى المحاولة بعد عودة الاتصال.'
+          const { getOfflineCachedProfile } = await import('@/lib/auth/offlineLogin')
+          const cachedProfile = await getOfflineCachedProfile()
+
+          if (cachedProfile) {
+            const userEmail = (email ?? '').trim().toLowerCase()
+            const cachedEmail = (cachedProfile.email ?? '').trim().toLowerCase()
+
+            if (!userEmail || userEmail === cachedEmail) {
+              const resolvedRole = normalizeUserRole(cachedProfile.role) ?? 'resident'
+              const destination = routeForRole(resolvedRole)
+
+              saveLoginRedirect(destination)
+              toast.success('تم تسجيل الدخول بنجاح في وضع الأوفلاين (بيانات محليّة محفوظة)', {
+                id: 'login-offline-success',
+                position: 'top-center',
+              })
+              set({ isSuccess: true, isSubmitting: false, postLoginRole: resolvedRole })
+              return
+            }
+          }
+
+          const msg = 'لا توجد بيانات محفوطة مسبقاً لهذا الحساب في وضع الأوفلاين. يرجى الاتصال بالإنترنت أولاً.'
           toast.error(msg, { id: 'login-offline', position: 'top-center' })
           set({ isSubmitting: false, isError: true, emailError: true, passwordError: true })
           return
