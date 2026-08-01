@@ -25,12 +25,19 @@ const VerifyForm = () => {
     resendVerificationCode,
   } = useRegisterStore()
 
-  // Redirect to register if no email
+  const [mounted, setMounted] = useState(false)
+
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Redirect to register if no email (only after client mounting & hydration)
+  useEffect(() => {
+    if (!mounted) return
     if (!formData.email) {
       router.push('/register')
     }
-  }, [formData.email, router])
+  }, [mounted, formData.email, router])
 
   useEffect(() => {
     if (isOffline) {
