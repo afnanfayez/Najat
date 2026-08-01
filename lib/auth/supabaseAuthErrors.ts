@@ -18,6 +18,9 @@ export function mapSupabaseAuthError(error: AuthError | { message?: string; code
   if (code === 'weak_password' || message.includes('password should be')) {
     return 'كلمة المرور ضعيفة جداً'
   }
+  if (code === 'validation_failed' || message.includes('signup requires a valid password')) {
+    return 'يرجى إدخال كلمة مرور صالحة لإنشاء الحساب'
+  }
   if (
     code === 'over_email_send_rate_limit' ||
     code === 'over_request_rate_limit' ||

@@ -170,6 +170,19 @@ export const useRegisterStore = create<RegisterState>()(
 
         set({ isSubmitting: true, error: null, fieldErrors: {} })
         const state = get()
+
+        if (!state.formData.password || state.formData.password.trim() === '') {
+          const msg = 'كلمة المرور مطلوبة لإنشاء الحساب'
+          set({
+            isSubmitting: false,
+            error: msg,
+            step: 4,
+            fieldErrors: { password: msg },
+          })
+          toast.error(msg)
+          return false
+        }
+
         const supabase = createClient()
 
         const { error } = await supabase.auth.signUp({
@@ -261,15 +274,27 @@ export const useRegisterStore = create<RegisterState>()(
     }),
     {
       name: 'register-storage',
-      // Don't persist sensitive fields to localStorage
-      partialize: (state) => ({
-        step: state.step,
-        formData: {
-          ...state.formData,
-          password: '',
-          confirmPassword: '',
-        },
-      }),
+      // Don't persist sensitive fields to localStorage, but do NOT corrupt in-memory password
+      partialize: (state) => {
+        const { password, confirmPassword, ...safeFormData } = state.formData
+        return {
+          step: state.step,
+          formData: safeFormData,
+        }
+      },
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<RegisterState> | undefined
+        return {
+          ...currentState,
+          ...persisted,
+          formData: {
+            ...currentState.formData,
+            ...(persisted?.formData ?? {}),
+            password: currentState.formData.password || '',
+            confirmPassword: currentState.formData.confirmPassword || '',
+          },
+        }
+      },
     },
   ),
 )
