@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
 import ProfileAvatar from '@/components/profile/shared/ProfileAvatar'
-import { navItems, adminNavItem } from '../data/dashboardConstants'
-import { roleLabel, roleBadgeStyle, isAdmin } from '@/lib/auth/roleUtils'
+import { navItems, volunteerNavItem, adminNavItem } from '../data/dashboardConstants'
+import { roleLabel, roleBadgeStyle, isAdmin, isVolunteerOrAdmin } from '@/lib/auth/roleUtils'
 import type { AuthUser } from '@/context/AuthContext'
 import type { UserRole } from '@/lib/auth/roleUtils'
 
@@ -27,9 +27,14 @@ export default function SidebarContent({
   user,
   role,
 }: SidebarContentProps) {
-  const visibleNavItems = isAdmin(role)
-    ? [...navItems, adminNavItem]
-    : navItems
+  const items = [...navItems]
+  if (isVolunteerOrAdmin(role)) {
+    items.push(volunteerNavItem)
+  }
+  if (isAdmin(role)) {
+    items.push(adminNavItem)
+  }
+  const visibleNavItems = items
 
   const badge = roleBadgeStyle(role)
 

@@ -5,6 +5,7 @@ import {
   Compass,
   FilePlus,
   User,
+  UserCheck,
   Siren,
   Settings2,
 } from 'lucide-react'
@@ -42,6 +43,13 @@ export const navItems: NavItem[] = [
   { id: 'emergency', label: 'الطوارئ',             icon: Siren,      active: false, sos: true },
   { id: 'profile',   label: 'الملف الشخصي',        icon: User,       active: false },
 ]
+
+export const volunteerNavItem: NavItem = {
+  id: 'volunteer',
+  label: 'بوابة المتطوع',
+  icon: UserCheck,
+  active: false,
+}
 
 export const adminNavItem: NavItem = {
   id: 'admin',

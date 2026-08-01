@@ -19,7 +19,7 @@ function activeNavFromRoute(pathname: string): string {
   if (pathname.startsWith('/emergency')) return 'emergency'
   if (pathname.startsWith('/maps')) return 'maps'
   if (pathname.startsWith('/admin')) return 'admin'
-  if (pathname.startsWith('/volunteer')) return 'home'
+  if (pathname.startsWith('/volunteer')) return 'volunteer'
   if (pathname === '/dashboard') return 'home'
   return 'home'
 }
@@ -62,6 +62,7 @@ export default function DashboardLayoutClient({
         'aid',
         'safety',
         'admin-alerts',
+        'volunteer',
       ]
       for (const key of keys) {
         queryClient.invalidateQueries({ queryKey: [key] }).catch(() => {})
@@ -126,6 +127,10 @@ export default function DashboardLayoutClient({
       }
       if (id === 'maps') {
         router.push('/maps')
+        return
+      }
+      if (id === 'volunteer') {
+        router.push('/volunteer')
         return
       }
       if (id === 'admin') {
