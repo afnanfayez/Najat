@@ -172,6 +172,9 @@ routes.push(
   { method: 'GET', regex: /^\/admin\/communication\/broadcasts\/export$/, handler: () => adminCommunication.exportBroadcasts() },
   { method: 'GET', regex: /^\/admin\/communication\/feedback\/export$/, handler: () => adminCommunication.exportFeedback() },
 
+  { method: 'GET', regex: /^\/volunteer\/tasks$/, handler: () => adminCommunication.listVolunteerTasks() },
+  { method: 'PATCH', regex: /^\/volunteer\/tasks\/([^/]+)\/status$/, handler: (m, _q, o) => adminCommunication.updateVolunteerTaskStatus(decodeURIComponent(m[1]), o.body as MockRequestBody) },
+
   { method: 'GET', regex: /^\/admin\/data\/dashboard$/, handler: () => adminData.getDashboard() },
   { method: 'GET', regex: /^\/admin\/data\/sync$/, handler: () => adminData.getSync() },
   { method: 'GET', regex: /^\/admin\/data\/requests\/([^/]+)\/review$/, handler: (m) => adminData.getReview(decodeURIComponent(m[1])) },
