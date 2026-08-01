@@ -132,9 +132,11 @@ function DrawController({ activeTool, onDrawComplete, saveRef }: DrawControllerP
       const currentPoints = pointsRef.current
       if (currentPoints.length < minPoints) return
       const geoCoords = currentPoints.map(([lat, lng]) => [lng, lat])
-      onDrawComplete?.(tool, geoCoords)
       setPoints([])
       pointsRef.current = []
+      setTimeout(() => {
+        onDrawComplete?.(tool, geoCoords)
+      }, 0)
     }
   }, [activeTool, onDrawComplete, saveRef])
 
@@ -147,18 +149,26 @@ function DrawController({ activeTool, onDrawComplete, saveRef }: DrawControllerP
     const minPoints = tool === 'danger' ? 3 : 2
 
     function onClick(e: L.LeafletMouseEvent) {
-      setPoints((prev) => [...prev, [e.latlng.lat, e.latlng.lng]])
+      const next: [number, number] = [e.latlng.lat, e.latlng.lng]
+      setPoints((prev) => {
+        const updated = [...prev, next]
+        pointsRef.current = updated
+        return updated
+      })
     }
 
     function onDblClick(e: L.LeafletMouseEvent) {
       L.DomEvent.stopPropagation(e)
-      setPoints((prev) => {
-        if (prev.length < minPoints) return prev
-        // Convert [lat, lng] → GeoJSON [lng, lat]
-        const geoCoords = prev.map(([lat, lng]) => [lng, lat])
+      const currentPoints = pointsRef.current
+      if (currentPoints.length < minPoints) return
+
+      const geoCoords = currentPoints.map(([lat, lng]) => [lng, lat])
+      setPoints([])
+      pointsRef.current = []
+
+      setTimeout(() => {
         onDrawComplete?.(tool, geoCoords)
-        return []
-      })
+      }, 0)
     }
 
     function onKeyDown(e: KeyboardEvent) {
